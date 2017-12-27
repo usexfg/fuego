@@ -1,0 +1,2 @@
+/usr/bin/ar cr libJsonRpcServer.a  CMakeFiles/JsonRpcServer.dir/JsonRpcServer/JsonRpcServer.cpp.o
+/usr/bin/ranlib libJsonRpcServer.a

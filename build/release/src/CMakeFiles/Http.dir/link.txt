@@ -1,2 +1,0 @@
-/usr/bin/ar cr libHttp.a  CMakeFiles/Http.dir/HTTP/HttpResponse.cpp.o CMakeFiles/Http.dir/HTTP/HttpParser.cpp.o CMakeFiles/Http.dir/HTTP/HttpRequest.cpp.o CMakeFiles/Http.dir/HTTP/HttpParserErrorCodes.cpp.o
-/usr/bin/ranlib libHttp.a

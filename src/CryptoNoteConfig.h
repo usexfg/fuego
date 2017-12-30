@@ -87,7 +87,7 @@ const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT                = 5000;
 const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT           = 2000;          
 const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT                    = 60 * 2 * 1000; 
 const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          
-const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "0000000000000000000000000000000";
+const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 
 
 const std::initializer_list<const char*> SEED_NODES = {

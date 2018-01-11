@@ -20,9 +20,9 @@ It is @ that time when we shall start the trading of {DRAGONGLASS} with every ma
 _________________________________________________
 
 As for now, every House shall be called upon to join in alliance. We must fight together- alongside one another, to defeat our common enemy.  
-All contributions to any future {DRAGONGLASS} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
+Any contributions to all future {Dragonglass} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
 
-The process of mining , however..
+This process of mining , however..
 begins...Now.
 __________________________________________________________________
 

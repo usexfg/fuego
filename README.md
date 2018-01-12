@@ -61,49 +61,75 @@ You may download them from:
 * http://www.cmake.org/
 * http://www.boost.org/
 
-{Tested using Ubuntu 14.04}
 
-*** Alternatively, it may be possible to install them using a package manager.
+
+*** Alternatively, it may be possible to install them using a package manager by
+executing the following command. {Tested using Ubuntu 14.04}
  
  sudo apt-get install build-essential git cmake libboost1.55-all-dev
 _________________________________________________________________________________
 
 2. Clone {dragonglass} repository
 
-Execute the following command to copy a desired repository
+*** Execute the following command to copy a desired repository
 
 git clone https://github.com/ZirtysPerzys/dragonglass
 
 _______________________________________________________________________________
 
-3. Opening a folder with copied repository
+3. Open folder with copied repository
 
-Execute the following command to get into the directory with copied repository
+*** Execute the following command to get into the directory with copied repository
 
 cd dragonglass
 ______________________________________________________
 
 4. Building (Compiling)
 
-Execute the following command
+*** Execute the following command to compile
 
 make -j4  
 
 __________________________________________________
 The resulting executables can be found in `build/release/src`.
+________________________________________________
 
-  ./dragonglassd  to start daemon
+5. Starting {dragonglass} daemon
+*** Execute the following command to navigate to resulting executables
 
+cd dragonglass/build/release/src 
+
+
+
+*** Start daemon, typing the following command-
+
+
+  ./dragonglassd 
+
+
+_______________________________________________
 --help  for list of commands inside daemon
+_______________________________________________
 
-Next see {DragonglassWallet}
 
+
+After you are have very success!!!!
+
+Next see {DragonglassWallet} 
+
+https://github.com/ZirtysPerzys/Dragonglasswallet
+
+
+______________________________________________________________________________________________________
 **Advanced options:**
 
 * Parallel build: run `make -j<number of threads>` instead of `make`.
 * Debug build: run `make build-debug`.
 * Test suite: run `make test-release` to run tests in addition to building. Running `make test-debug` will do the same to the debug version.
 * Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++` before running `make`.
+
+
+
 
 ### On Windows
 Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
@@ -121,24 +147,3 @@ cmake -G "Visual Studio 12 Win64" ..
 
 And then do Build.
 Good luck!
- Following instruction is tested for Ubuntu 14.04
-
-1. Setting up an environment
-
-Execute the following command to get everything you need in order to setup an environment
-sudo apt-get install build-essential git cmake libboost1.55-all-dev
-
-2. Cloning a repository
-
-Execute the following command to copy a desired repository
-git clone https://github.com/cryptonotefoundation/cryptonote
-
-3. Opening a folder with copied repository
-
-Execute the following command to get into the directory with copied repository
-cd cryptonote
-
-4. Building
-
-Execute the following command to build a coin
-make -j

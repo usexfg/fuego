@@ -66,24 +66,25 @@ You may download them from:
 
 *** Alternatively, it may be possible to install them using a package manager by
 executing the following command.     {Tested using Ubuntu 14.04}
- 
+ ```
  sudo apt-get install build-essential git cmake libboost1.55-all-dev
+```
 ____________________________________________________________________
 
 2. Clone {dragonglass} repository
 
 *** Execute the following command to copy a desired repository
-`
+```
 git clone https://github.com/ZirtysPerzys/dragonglass
-`
+```
 
 
 3. Open folder with copied repository
 
 *** Execute the following command to get into the directory with copied repository
-`
-cd dragonglass
-`
+
+`cd dragonglass`
+
 
 
 4. Building (Compiling)

@@ -90,6 +90,7 @@ git clone https://github.com/ZirtysPerzys/dragonglass
 4. Building (Compiling)
 
 *** Execute the following command to compile
+
 `
 make -j4  
 `
@@ -99,10 +100,10 @@ The resulting executables can be found in build/release/src.
 
 5. Starting {dragonglass} daemon
 *** Execute the following command to navigate to resulting executables
+
 `
 cd dragonglass/build/release/src 
 `
-
 
 
 *** Start daemon, typing the following command-

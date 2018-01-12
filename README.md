@@ -73,51 +73,56 @@ ____________________________________________________________________
 2. Clone {dragonglass} repository
 
 *** Execute the following command to copy a desired repository
-
+`
 git clone https://github.com/ZirtysPerzys/dragonglass
-______________________________________________________
+`
+
 
 3. Open folder with copied repository
 
 *** Execute the following command to get into the directory with copied repository
-
+`
 cd dragonglass
-______________________________________________________
+`
+
 
 4. Building (Compiling)
 
 *** Execute the following command to compile
-
+`
 make -j4  
-_________________________________________________
-The resulting executables can be found in `build/release/src`.
+`
+
+The resulting executables can be found in build/release/src.
 
 
 5. Starting {dragonglass} daemon
 *** Execute the following command to navigate to resulting executables
-
+`
 cd dragonglass/build/release/src 
-______________________________________________
+`
+
 
 
 *** Start daemon, typing the following command-
 
+`
+./dragonglassd 
+`
 
-  ./dragonglassd 
-_______________________________________________
-for a list of commands type  --help
+for a list of commands in daemon type  --help
 
 
 
 
 After you are have very success!!!!
 
-Next see {DragonglassWallet} 
+ see {DragonglassWallet} 
 
 https://github.com/ZirtysPerzys/Dragonglasswallet
 
 
-
+_________________________________________________________
 **Advanced options:**
 
 * Parallel build: run `make -j<number of threads>` instead of `make`.

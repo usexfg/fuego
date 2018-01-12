@@ -53,16 +53,50 @@ ________________________________________________________________________________
 
 ### On *nix
 
-Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55.
+1. Dependencies: GCC 4.7.3 or later, CMake 2.8.6 or later, and Boost 1.55.
 
 You may download them from:
 
 * http://gcc.gnu.org/
 * http://www.cmake.org/
 * http://www.boost.org/
-* Alternatively, it may be possible to install them using a package manager.
 
-To build, change to a directory where this file is located, and run `make`. The resulting executables can be found in `build/release/src`.
+{Tested using Ubuntu 14.04}
+
+*** Alternatively, it may be possible to install them using a package manager.
+ 
+ sudo apt-get install build-essential git cmake libboost1.55-all-dev
+_________________________________________________________________________________
+
+2. Clone {dragonglass} repository
+
+Execute the following command to copy a desired repository
+
+git clone https://github.com/ZirtysPerzys/dragonglass
+
+_______________________________________________________________________________
+
+3. Opening a folder with copied repository
+
+Execute the following command to get into the directory with copied repository
+
+cd dragonglass
+______________________________________________________
+
+4. Building (Compiling)
+
+Execute the following command
+
+make -j4  
+
+__________________________________________________
+The resulting executables can be found in `build/release/src`.
+
+  ./dragonglassd  to start daemon
+
+--help  for list of commands inside daemon
+
+Next see {DragonglassWallet}
 
 **Advanced options:**
 
@@ -87,3 +121,24 @@ cmake -G "Visual Studio 12 Win64" ..
 
 And then do Build.
 Good luck!
+ Following instruction is tested for Ubuntu 14.04
+
+1. Setting up an environment
+
+Execute the following command to get everything you need in order to setup an environment
+sudo apt-get install build-essential git cmake libboost1.55-all-dev
+
+2. Cloning a repository
+
+Execute the following command to copy a desired repository
+git clone https://github.com/cryptonotefoundation/cryptonote
+
+3. Opening a folder with copied repository
+
+Execute the following command to get into the directory with copied repository
+cd cryptonote
+
+4. Building
+
+Execute the following command to build a coin
+make -j

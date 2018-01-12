@@ -108,7 +108,7 @@ cd dragonglass/build/release/src
 
 
 _______________________________________________
---help  for list of commands inside daemon
+for a list of commands type  --help
 _______________________________________________
 
 

@@ -75,7 +75,6 @@ ____________________________________________________________________
 *** Execute the following command to copy a desired repository
 
 git clone https://github.com/ZirtysPerzys/dragonglass
-
 ______________________________________________________
 
 3. Open folder with copied repository
@@ -90,27 +89,24 @@ ______________________________________________________
 *** Execute the following command to compile
 
 make -j4  
-
-__________________________________________________
+_________________________________________________
 The resulting executables can be found in `build/release/src`.
-________________________________________________
+
 
 5. Starting {dragonglass} daemon
 *** Execute the following command to navigate to resulting executables
 
 cd dragonglass/build/release/src 
-
+______________________________________________
 
 
 *** Start daemon, typing the following command-
 
 
   ./dragonglassd 
-
-
 _______________________________________________
 for a list of commands type  --help
-_______________________________________________
+
 
 
 
@@ -121,7 +117,7 @@ Next see {DragonglassWallet}
 https://github.com/ZirtysPerzys/Dragonglasswallet
 
 
-______________________________________________________________________________________________________
+
 **Advanced options:**
 
 * Parallel build: run `make -j<number of threads>` instead of `make`.
@@ -129,9 +125,7 @@ ________________________________________________________________________________
 * Test suite: run `make test-release` to run tests in addition to building. Running `make test-debug` will do the same to the debug version.
 * Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++` before running `make`.
 
-
-
-
+**************************************************************************************************
 ### On Windows
 Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
 

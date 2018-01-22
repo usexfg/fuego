@@ -215,7 +215,7 @@ namespace CryptoNote
       m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
     }
 
-    logger(INFO) << "Mining has started with " << threads_count << " threads, good luck!";
+    logger(INFO) << "{Dragonglass} mining BEGINS" << threads_count << " threads running,   while the army of the dead are marching........";
     return true;
   }
   
@@ -245,7 +245,7 @@ namespace CryptoNote
     }
 
     m_threads.clear();
-    logger(INFO) << "Mining has been stopped, " << m_threads.size() << " finished" ;
+    logger(INFO) << "{Dragonglass} mining has been stopped, " << m_threads.size() << " halted   The Long Night is coming" ;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
@@ -381,7 +381,7 @@ namespace CryptoNote
         //we lucky!
         ++m_config.current_extra_message_index;
 
-        logger(INFO, GREEN) << "Found block for difficulty: " << local_diff;
+        logger(INFO, GREEN) << "{Dragonglass} block FOUND at the difficulty of: " << local_diff;
 
         if(!m_handler.handle_block_found(b)) {
           --m_config.current_extra_message_index;

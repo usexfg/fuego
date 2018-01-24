@@ -1,3 +1,4 @@
+// {Dragonglass} 2018
 // Copyright (c) 2011-2016 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -215,7 +216,7 @@ namespace CryptoNote
       m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
     }
 
-    logger(INFO) << "{Dragonglass} mining BEGINS" << threads_count << " threads running,   while the army of the dead are marching........";
+    logger(INFO, BRIGHT_CYAN) << "{{{{DRAGONGLASS}}}} mining BEGINS - calling " << threads_count << " Banners to Arms    the Army of the dead are marching........";
     return true;
   }
   
@@ -245,7 +246,7 @@ namespace CryptoNote
     }
 
     m_threads.clear();
-    logger(INFO) << "{Dragonglass} mining has been stopped, " << m_threads.size() << " halted   The Long Night is coming" ;
+    logger(INFO, RED) << "{Dragonglass} mining has been stopped, " << m_threads.size() << " halted   The night is dark and full of terrors" ;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
@@ -337,7 +338,7 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------------------------
   bool miner::worker_thread(uint32_t th_local_index)
   {
-    logger(INFO) << "Miner thread was started ["<< th_local_index << "]";
+    logger(INFO, BRIGHT_BLUE) << "{DRGL} Bannermen "<< th_local_index << " ARMED";
     uint32_t nonce = m_starter_nonce + th_local_index;
     difficulty_type local_diff = 0;
     uint32_t local_template_ver = 0;
@@ -381,7 +382,7 @@ namespace CryptoNote
         //we lucky!
         ++m_config.current_extra_message_index;
 
-        logger(INFO, GREEN) << "{Dragonglass} block FOUND at the difficulty of: " << local_diff;
+        logger(INFO, BLUE) << "{{{{DRAGONGLASS}}}} block FOUND at difficulty of: " << local_diff;
 
         if(!m_handler.handle_block_found(b)) {
           --m_config.current_extra_message_index;

@@ -148,4 +148,9 @@ cmake -G "Visual Studio 12 Win64" ..
 ```
 
 And then do Build.
-Good luck!
+________________
+
+Also/and/or/maybe/too:)
+
+https://github.com/zone117x/cryptonote-easy-miner/releases/
+

@@ -109,8 +109,8 @@ __attribute__((unused))
 const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 800,   "c1c64f752f6f5f6f69671b3794f741af0707c71b35302ea4fc96b0befdce8ce9" },
 { 8008,  "299702f163995cd790b5c45362c78ad596f8717d749ff9016ce27eaa625b8a5e" },
-{ 18081, "5c2277ad926c3ce2c81cb05eec66ce2f7acd085de8c9bd225e550debc6bddd0c" },
-;
+{ 18008, "46baf8aea2b9472a9f127ad7cdcb01a871ecf20d710e9e0d3a2b13176a452112" },
+};
 } 
 
 #define ALLOW_DEBUG_COMMANDS

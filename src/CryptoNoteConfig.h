@@ -103,14 +103,14 @@ struct CheckpointData {
 #ifdef __GNUC__
 __attribute__((unused))
 #endif
-5c2277ad926c3ce2c81cb05eec66ce2f7acd085de8c9bd225e550debc6bddd0c
+
 
 // {<block height>, "<block hash>"},
 const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 800,   "c1c64f752f6f5f6f69671b3794f741af0707c71b35302ea4fc96b0befdce8ce9" },
 { 8008,  "299702f163995cd790b5c45362c78ad596f8717d749ff9016ce27eaa625b8a5e" },
 { 18081, "5c2277ad926c3ce2c81cb05eec66ce2f7acd085de8c9bd225e550debc6bddd0c" },
-};
+;
 } 
 
 #define ALLOW_DEBUG_COMMANDS

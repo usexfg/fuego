@@ -198,7 +198,7 @@ namespace CryptoNote
     std::lock_guard<std::mutex> lk(m_threads_lock);
 
     if(!m_threads.empty()) {
-      logger(ERROR) << "Unable to start miner because there are active mining threads";
+      logger(ERROR) << "Unable to start mining because there are Banners already at arms";
       return false;
     }
 
@@ -216,7 +216,7 @@ namespace CryptoNote
       m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
     }
 
-    logger(INFO, BRIGHT_CYAN) << "{{{{DRAGONGLASS}}}} mining BEGINS - calling " << threads_count << " Banners to Arms    the Army of the dead are marching........";
+    logger(INFO, BRIGHT_CYAN) << "{{{{DRAGONGLASS}}}} mining BEGINS now calling " << threads_count << " Banners to Arms    the Army of the dead are marching........";
     return true;
   }
   

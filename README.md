@@ -1,4 +1,4 @@
-{Dragonglass} kills white walkers.
+{Drægonglass} kills white walkers.
 
 
 It is more valuable to us now.. than gold.
@@ -16,11 +16,11 @@ Is one last and Final season..
         Season  8 
 of   GAME OF THRONES.
 
-It is @ that time when we shall start the trading of {DRAGONGLASS} with every man, woman, and child- whilst crowning only the most rightful heir of Exchange(s).. once our 8th and Final Season arrives.
+It is @ that time when we shall start the trading of {DRÆGONGLASS} with every man, woman, and child- whilst crowning only the most rightful heir of Exchange(s).. once our 8th and Final Season arrives.
 _________________________________________________
 
 As for now, every House shall be called upon to join in alliance. We must fight together- alongside one another, to defeat our common enemy.  
-Any contributions to all future {Dragonglass} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
+Any contributions to all future {Drægonglass} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
 
 This process of mining , however..
 begins...Now.
@@ -28,7 +28,7 @@ __________________________________________________________________
 
 CPU/GPU only egalitarian proof-of-work algorithm.
 
-~80% of all Dragonglass is set to be mined by FINAL season's debut.
+~80% of all Drægonglass is set to be mined by FINAL season's debut.
 
 ( 8000008 )  max supply (Eight million eight*)   *actual total supply [8000008.8000008]
 _________________________________________________
@@ -43,14 +43,14 @@ The Great War.
 And it is here.
 ________________________________________________________________________________________________________
 
-{Dragonglass} is a next-generation anonymous cryptocurrency built upon Cryptonote technologies.
+{Drægonglass} is a next-generation anonymous cryptocurrency built upon Cryptonote technologies.
 Read Cryptonote white paper at https://cryptonote.org/whitepaper.pdf
 
 
 
 ________________________________________________________________________________________________________________
 _______________________________________________________________________________________________________________
-## Building Dragonglass 
+## Building Drægonglass 
 
 ### On *nix
 

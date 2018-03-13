@@ -1,4 +1,4 @@
-   {Dragonglass} kills white walkers.
+   {Dragonglass} kills white walkers....
 ---------------------------------------
 
 It is more valuable to us now.. than gold.

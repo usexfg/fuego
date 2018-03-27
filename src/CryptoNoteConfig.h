@@ -103,7 +103,6 @@ struct CheckpointData {
 #ifdef __GNUC__
 __attribute__((unused))
 #endif
-19e65aec81a283e756c9b55a884927bcbffa4639c9fe21fd4894ef211e0e8472
 
 // {<block height>, "<block hash>"},
 const std::initializer_list<CheckpointData> CHECKPOINTS = {

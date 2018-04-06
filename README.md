@@ -20,7 +20,7 @@ It is @ that time when we shall start the trading of {DRGL} with every man, woma
 _________________________________________________
 
 As for now, every House shall be called upon to join in alliance. We must fight together- alongside one another, to defeat our common enemy.  
-Any contributions to all future {DRÆGONGLASS} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
+Any contributions to all future {DRAGONGLASS} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
 
 This process of mining , however..
 begins...Now.
@@ -43,7 +43,7 @@ The Great War.
 And it is here.
 ________________________________________________________________________________________________________
 
-{DRÆGONGLASS} is a next-generation anonymous cryptocurrency built upon Cryptonote technologies.
+{DRAGONGLASS} is a next-generation anonymous cryptocurrency built upon Cryptonote technologies.
 Read Cryptonote white paper at https://cryptonote.org/whitepaper.pdf
 
 

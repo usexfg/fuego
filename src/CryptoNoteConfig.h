@@ -1,4 +1,4 @@
-// {DRAGONGLASS} 2018
+// {DRÆGONGLASS} 2018
 // Copyright (c) 2011-2016 The Cryptonote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -110,7 +110,9 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 8008,  "299702f163995cd790b5c45362c78ad596f8717d749ff9016ce27eaa625b8a5e" },
 { 18008, "46baf8aea2b9472a9f127ad7cdcb01a871ecf20d710e9e0d3a2b13176a452112" },
 { 80008, "19e65aec81a283e756c9b55a884927bcbffa4639c9fe21fd4894ef211e0e8472" },
+{ 108801,"0cb48287678f9df42a63c6c344f448ddce5316f9c5c03548e77d9a1193ebf5fd" },
 };
 } 
 
 #define ALLOW_DEBUG_COMMANDS
+// The true enemy won't wait out the storm. He brings the storm.

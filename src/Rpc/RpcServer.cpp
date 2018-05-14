@@ -118,6 +118,9 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
 
   using namespace JsonRpc;
 
+  for (const auto& cors_domain: m_cors_domains) {
+    response.addHeader("Access-Control-Allow-Origin", cors_domain);
+}
   response.addHeader("Content-Type", "application/json");
 
   JsonRpcRequest jsonRequest;
@@ -161,6 +164,11 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
   return true;
 }
 
+  bool RpcServer::enableCors(const std::vector<std::string> domains) {
+  m_cors_domains = domains;
+  return true;
+}
+  
 bool RpcServer::isCoreReady() {
   return m_core.currency().isTestnet() || m_p2p.get_payload_object().isSynchronized();
 }

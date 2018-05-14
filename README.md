@@ -43,12 +43,12 @@ The Great War.
 And it is here.
 ________________________________________________________________________________________________________
 
-{DRAGONGLASS} is a next-generation anonymous cryptocurrency built upon Cryptonote technologies.
-Read Cryptonote white paper at https://cryptonote.org/whitepaper.pdf
-
-
+{DRAGONGLASS} Anonymous Encrypted Digital Currency - that kills white walkers.
+Built upon Cryptonote technologies. Read Cryptonote white paper at https://cryptonote.org/whitepaper.pdf
 
 ________________________________________________________________________________________________________________
+
+
 _______________________________________________________________________________________________________________
 ## Building {Dragonglass} 
 

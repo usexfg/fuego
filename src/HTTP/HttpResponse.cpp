@@ -42,7 +42,7 @@ namespace CryptoNote {
 
 HttpResponse::HttpResponse() {
   status = STATUS_200;
-  headers["Server"] = "CryptoNote-based HTTP server";
+  headers["Server"] = "{{{{DRGL}}}} HTTP server";
 }
 
 void HttpResponse::setStatus(HTTP_STATUS s) {

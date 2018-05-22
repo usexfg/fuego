@@ -16,7 +16,7 @@ Is one last and Final season..
         Season  8 
 of   GAME OF THRONES.
 
-It is @ that time when we shall start the trading of {DRGL} with every man, woman, and child- whilst crowning only the most rightful heir of Exchange(s).. once our 8th and Final Season arrives.
+It is @ that time when we shall start the trading of {DRGL} with every man, woman, and child- whilst crowning only the most rightful heir of Exchange(s).. as our 8th and Final Season arrives.
 _________________________________________________
 
 As for now, every House shall be called upon to join in alliance. We must fight together- alongside one another, to defeat our common enemy.  

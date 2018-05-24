@@ -20,13 +20,13 @@ It is @ that time when we shall start the trading of {DRGL} with every man, woma
 _________________________________________________
 
 As for now, every House shall be called upon to join in alliance. We must fight together- alongside one another, to defeat our common enemy.  
-Any contributions to all future {DRAGONGLASS} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
+Any contributions to all future {DRÆGONGLASS} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
 
 This process of mining , however..
 begins...Now.
 __________________________________________________________________
 
-CPU/GPU only egalitarian proof-of-work algorithm.
+CPU/GPU proof-of-work algorithm.
 
 ~80% of all {DRGL} is set to be mined by FINAL season's debut.
 
@@ -150,7 +150,52 @@ cmake -G "Visual Studio 12 Win64" ..
 And then do Build.
 ________________
 
-Also/and/or/maybe/too:)
+//courtesy of {WindowSlayer} aka Galapagos
+On windows 10
+Quick step by step tutorial
 
-https://github.com/zone117x/cryptonote-easy-miner/releases/
 
+Activate the Bash terminal as shown in this tutorial
+https://www.windowscentral.com/how-install-bash-shell-command-line-windows-10
+
+
+Start a Bash window and do as follow
+
+1:Go to root
+cd
+
+2: Run updates and install dependencies
+sudo apt-get update
+sudo apt-get install build-essential git cmake libboost-all-dev
+
+3: Git clone
+git clone https://github.com/ZirtysPerzys/dragonglass.git
+
+4: Build the files
+cd dragonglass
+make
+
+5: Sync blocks
+cd build/release/src/
+./dragonglassd
+
+!!keep this terminal running and open new terminal for next step!!
+
+6: Start simplewallet and create wallet (navigate to the folder where you created the wallet)
+~dragonglass/build/release/src$ ./simplewallet
+or
+cd dragonglass/build/release/src
+./simplewallet
+
+set up wallet name & password
+then start mining in wallet
+start_mining <number_of_threads>
+
+use "help" in wallet to check other commands
+
+------------------------
+
+!!Remember you have to use linux command in Bash
+
+You'll find your folders and wallet in
+C:\Users\YOURUSERNAME\AppData\Local\lxss\home

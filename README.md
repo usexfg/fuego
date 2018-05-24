@@ -150,8 +150,8 @@ cmake -G "Visual Studio 12 Win64" ..
 And then do Build.
 ________________
 
-//courtesy of {WindowSlayer} aka Galapagos
----------------
+//courtesy of the great {WindowSlayer} aka Galapagos
+
 On windows 10
 Quick step by step tutorial
 

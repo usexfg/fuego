@@ -355,28 +355,9 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     }
 
     b = boost::value_initialized<Block>();
-    b.majorVersion = m_blockchain.getBlockMajorVersionForHeight(height);
-
-    if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
-      b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
-    } else if (b.majorVersion >= BLOCK_MAJOR_VERSION_2) {
-      if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_3) == UpgradeDetectorBase::UNDEF_HEIGHT) {
-        b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_2 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
-      } else {
-        b.minorVersion = BLOCK_MINOR_VERSION_0;
-      }
-
-      b.parentBlock.majorVersion = BLOCK_MAJOR_VERSION_1;
-      b.parentBlock.majorVersion = BLOCK_MINOR_VERSION_0;
-      b.parentBlock.transactionCount = 1;
-      TransactionExtraMergeMiningTag mm_tag = boost::value_initialized<decltype(mm_tag)>();
-
-      if (!appendMergeMiningTagToExtra(b.parentBlock.baseTransaction.extra, mm_tag)) {
-        logger(ERROR, BRIGHT_RED) << "Failed to append merge mining tag to extra of the parent block miner transaction";
-        return false;
-      }
-    }
-
+    b.majorVersion = BLOCK_MAJOR_VERSION_1;
+    b.minorVersion = BLOCK_MINOR_VERSION_0;
+	  
     b.previousBlockHash = get_tail_id();
     b.timestamp = time(NULL);
 
@@ -421,7 +402,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
         if (!(cumulative_size + 1 == txs_size + getObjectBinarySize(b.baseTransaction))) { logger(ERROR, BRIGHT_RED) << "unexpected case: cumulative_size=" << cumulative_size << " + 1 is not equal txs_cumulative_size=" << txs_size << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction); return false; }
         b.baseTransaction.extra.resize(b.baseTransaction.extra.size() - 1);
         if (cumulative_size != txs_size + getObjectBinarySize(b.baseTransaction)) {
-          //fuck, not lucky, -1 makes varint-counter size smaller, in that case we continue to grow with cumulative_size
+          //not lucky, -1 makes varint-counter size smaller, in that case we continue to grow with cumulative_size
           logger(TRACE, BRIGHT_RED) <<
             "Miner tx creation have no luck with delta_extra size = " << delta << " and " << delta - 1;
           cumulative_size += delta - 1;

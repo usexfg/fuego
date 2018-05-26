@@ -377,7 +377,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
      block size, so first miner transaction generated with fake amount of money, and with phase we know think we know expected block size
      */
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
-  bool r = m_currency.constructMinerTx(b.majorVersion, height, median_size, already_generated_coins, txs_size, fee, adr, b.baseTransaction, ex_nonce, 11);
+  bool r = m_currency.constructMinerTx(height, median_size, already_generated_coins, txs_size, fee, adr, b.baseTransaction, ex_nonce, 11);
   if (!r) { 
     logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, first chance"; 
     return false; 
@@ -385,7 +385,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
 
   size_t cumulative_size = txs_size + getObjectBinarySize(b.baseTransaction);
   for (size_t try_count = 0; try_count != 10; ++try_count) {
-    r = m_currency.constructMinerTx(b.majorVersion, height, median_size, already_generated_coins, cumulative_size, fee, adr, b.baseTransaction, ex_nonce, 11);
+    r = m_currency.constructMinerTx(height, median_size, already_generated_coins, cumulative_size, fee, adr, b.baseTransaction, ex_nonce, 11);
 
     if (!(r)) { logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, second chance"; return false; }
     size_t coinbase_blob_size = getObjectBinarySize(b.baseTransaction);
@@ -402,7 +402,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
         if (!(cumulative_size + 1 == txs_size + getObjectBinarySize(b.baseTransaction))) { logger(ERROR, BRIGHT_RED) << "unexpected case: cumulative_size=" << cumulative_size << " + 1 is not equal txs_cumulative_size=" << txs_size << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction); return false; }
         b.baseTransaction.extra.resize(b.baseTransaction.extra.size() - 1);
         if (cumulative_size != txs_size + getObjectBinarySize(b.baseTransaction)) {
-          //not lucky, -1 makes varint-counter size smaller, in that case we continue to grow with cumulative_size
+          //fuck, not lucky, -1 makes varint-counter size smaller, in that case we continue to grow with cumulative_size
           logger(TRACE, BRIGHT_RED) <<
             "Miner tx creation have no luck with delta_extra size = " << delta << " and " << delta - 1;
           cumulative_size += delta - 1;
@@ -413,7 +413,6 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
       }
     }
     if (!(cumulative_size == txs_size + getObjectBinarySize(b.baseTransaction))) { logger(ERROR, BRIGHT_RED) << "unexpected case: cumulative_size=" << cumulative_size << " is not equal txs_cumulative_size=" << txs_size << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction); return false; }
-
     return true;
   }
 
@@ -845,9 +844,9 @@ bool core::getAlreadyGeneratedCoins(const Crypto::Hash& hash, uint64_t& generate
   return m_blockchain.getAlreadyGeneratedCoins(hash, generatedCoins);
 }
 
-bool core::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
+bool core::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
                           uint64_t& reward, int64_t& emissionChange) {
-  return m_currency.getBlockReward(blockMajorVersion, medianSize, currentBlockSize, alreadyGeneratedCoins, fee, reward, emissionChange);
+  return m_currency.getBlockReward(medianSize, currentBlockSize, alreadyGeneratedCoins, fee, reward, emissionChange);
 }
 
 bool core::scanOutputkeysForIndices(const KeyInput& txInToKey, std::list<std::pair<Crypto::Hash, size_t>>& outputReferences) {
@@ -933,25 +932,20 @@ bool core::getPoolTransactionsByTimestamp(uint64_t timestampBegin, uint64_t time
 
 bool core::getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<Transaction>& transactions) {
   std::vector<Crypto::Hash> blockchainTransactionHashes;
-  m_blockchain.getTransactionIdsByPaymentId(paymentId, blockchainTransactionHashes);
-
-  std::vector<Crypto::Hash> poolTransactionHashes;
-  m_mempool.getTransactionIdsByPaymentId(paymentId, poolTransactionHashes);
-
-  std::list<Transaction> txs;
-  std::list<Crypto::Hash> missed_txs;
-
-  if (!poolTransactionHashes.empty()) {
-    blockchainTransactionHashes.insert(blockchainTransactionHashes.end(), poolTransactionHashes.begin(), poolTransactionHashes.end());
-  }
-
-  if (blockchainTransactionHashes.empty()) {
+  if (!m_blockchain.getTransactionIdsByPaymentId(paymentId, blockchainTransactionHashes)) {
     return false;
   }
+  std::vector<Crypto::Hash> poolTransactionHashes;
+  if (!m_mempool.getTransactionIdsByPaymentId(paymentId, poolTransactionHashes)) {
+    return false;
+  }
+  std::list<Transaction> txs;
+  std::list<Crypto::Hash> missed_txs;
+  blockchainTransactionHashes.insert(blockchainTransactionHashes.end(), poolTransactionHashes.begin(), poolTransactionHashes.end());
 
   getTransactions(blockchainTransactionHashes, txs, missed_txs, true);
-    if (missed_txs.size() > 0) {
-      return false;
+  if (missed_txs.size() > 0) {
+    return false;
   }
 
   transactions.insert(transactions.end(), txs.begin(), txs.end());
@@ -1037,3 +1031,4 @@ bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
 }
 
 }
+

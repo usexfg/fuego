@@ -1,19 +1,6 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, The Karbowanec developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "Core.h"
 
@@ -127,7 +114,7 @@ size_t core::get_alternative_blocks_count() {
   return m_blockchain.getAlternativeBlocksCount();
   }
   //-----------------------------------------------------------------------------------------------
-bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool load_existing) {
+  bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool load_existing) {
     m_config_folder = config.configFolder;
     bool r = m_mempool.init(m_config_folder);
   if (!(r)) { logger(ERROR, BRIGHT_RED) << "Failed to initialize memory pool"; return false; }
@@ -276,39 +263,11 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block) {
 }
 
 bool core::check_tx_inputs_keyimages_diff(const Transaction& tx) {
-
-  // parameters used for the additional key_image check
-  static const Crypto::KeyImage Z = { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
-  static const Crypto::KeyImage I = { { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
-  static const Crypto::KeyImage L = { { 0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10 } };
-
   std::unordered_set<Crypto::KeyImage> ki;
-  std::set<std::pair<uint64_t, uint32_t>> outputsUsage;
-  for (const auto& input : tx.inputs) {
-    if (input.type() == typeid(KeyInput)) {
-      const KeyInput& in = boost::get<KeyInput>(input);
-      if (!ki.insert(in.keyImage).second) {
-        logger(ERROR) << "Transaction has identical key images";
-          return false;
-      }
-
-      if (in.outputIndexes.empty()) {
-        logger(ERROR) << "Transaction's input uses empty output";
+  for (const auto& in : tx.inputs) {
+    if (in.type() == typeid(KeyInput)) {
+      if (!ki.insert(boost::get<KeyInput>(in).keyImage).second)
         return false;
-      }
-
-	  // additional key_image check
-	  if (!(scalarmultKey(in.keyImage, L) == I)) {
-		  logger(ERROR) << "Transaction uses key image not in the valid domain";
-		  return false;
-	  }
-
-      // outputIndexes are packed here, first is absolute, others are offsets to previous,
-      // so first can be zero, others can't
-      if (std::find(++std::begin(in.outputIndexes), std::end(in.outputIndexes), 0) != std::end(in.outputIndexes)) {
-        logger(ERROR) << "Transaction has identical output indexes";
-        return false;
-      }
     }
   }
   return true;
@@ -357,7 +316,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     b = boost::value_initialized<Block>();
     b.majorVersion = BLOCK_MAJOR_VERSION_1;
     b.minorVersion = BLOCK_MINOR_VERSION_0;
-	  
+
     b.previousBlockHash = get_tail_id();
     b.timestamp = time(NULL);
 

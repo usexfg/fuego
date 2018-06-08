@@ -1,6 +1,22 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+// {DRGL} Kills White Walkers
+
+// ©2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016, The Forknote developers
+// This file is part of Bytecoin.
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+//You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TransactionPool.h"
 
@@ -89,13 +105,16 @@ namespace CryptoNote {
     const CryptoNote::Currency& currency, 
     CryptoNote::ITransactionValidator& validator, 
     CryptoNote::ITimeProvider& timeProvider,
-    Logging::ILogger& log) :
+    Logging::ILogger& log,
+    bool blockchainIndexesEnabled) :
     m_currency(currency),
     m_validator(validator), 
     m_timeProvider(timeProvider), 
     m_txCheckInterval(60, timeProvider),
     m_fee_index(boost::get<1>(m_transactions)),
-    logger(log, "txpool") {
+    logger(log, "txpool"),
+    m_paymentIdIndex(blockchainIndexesEnabled),
+    m_timestampIndex(blockchainIndexesEnabled) {
   }
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::add_tx(const Transaction &tx, /*const Crypto::Hash& tx_prefix_hash,*/ const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keptByBlock) {
@@ -113,7 +132,7 @@ namespace CryptoNote {
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
     if (outputs_amount > inputs_amount) {
-      logger(INFO) << "transaction use more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
+      logger(INFO) << "transaction uses more money than available: use " << m_currency.formatAmount(outputs_amount) <<
         ", have " << m_currency.formatAmount(inputs_amount);
       tvc.m_verifivation_failed = true;
       return false;
@@ -122,7 +141,7 @@ namespace CryptoNote {
     const uint64_t fee = inputs_amount - outputs_amount;
     bool isFusionTransaction = fee == 0 && m_currency.isFusionTransaction(tx, blobSize);
     if (!keptByBlock && !isFusionTransaction && fee < m_currency.minimumFee()) {
-      logger(INFO) << "transaction fee is not enough: " << m_currency.formatAmount(fee) <<
+      logger(INFO) << "transaction fee is insufficient: " << m_currency.formatAmount(fee) <<
         ", minimum fee: " << m_currency.formatAmount(m_currency.minimumFee());
       tvc.m_verifivation_failed = true;
       tvc.m_tx_fee_too_small = true;
@@ -331,14 +350,11 @@ namespace CryptoNote {
         << "max_used_block_height: " << txd.maxUsedBlock.height << std::endl
         << "max_used_block_id: " << txd.maxUsedBlock.id << std::endl
         << "last_failed_height: " << txd.lastFailedBlock.height << std::endl
-        // block explorer
-		
-		    << "amount_out: " << get_outs_money_amount(txd.tx) << std::endl
+
+		<< "last_failed_id: " << txd.lastFailedBlock.id << std::endl
+		<< "amount_out: " << get_outs_money_amount(txd.tx) << std::endl
         << "fee_atomic_units: " << txd.fee << std::endl
         << "received_timestamp: " << txd.receiveTime << std::endl
-		
-        // end of block explorer
-        << "last_failed_id: " << txd.lastFailedBlock.id << std::endl
         << "received: " << std::ctime(&txd.receiveTime) << std::endl;
     }
 
@@ -352,8 +368,8 @@ namespace CryptoNote {
     total_size = 0;
     fee = 0;
 
-    size_t max_total_size = 2 * median_size - m_currency.minerTxBlobReservedSize();
-    max_total_size = std::min(max_total_size, maxCumulativeSize);
+    size_t max_total_size = (125 * median_size) / 100;
+    max_total_size = std::min(max_total_size, maxCumulativeSize) - m_currency.minerTxBlobReservedSize();
 
     BlockTemplate blockTemplate;
 
@@ -367,6 +383,7 @@ namespace CryptoNote {
       TransactionCheckInfo checkInfo(txd);
       if (is_transaction_ready_to_go(txd.tx, checkInfo) && blockTemplate.addTransaction(txd.id, txd.tx)) {
         total_size += txd.blobSize;
+        logger(DEBUGGING) << "Fusion transaction " << txd.id << " included to block template";
       }
     }
 
@@ -389,6 +406,9 @@ namespace CryptoNote {
       if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) {
         total_size += txd.blobSize;
         fee += txd.fee;
+        logger(DEBUGGING) << "Transaction " << txd.id << " included to block template";
+      } else {
+        logger(DEBUGGING) << "Transaction " << txd.id << " is failed to include to block template";
       }
     }
 

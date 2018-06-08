@@ -4,7 +4,7 @@
 // ©2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016, The Forknote developers
+// Copyright (c) 2016, The Forknote developers, Karbowanec
 // This file is part of Bytecoin.
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -675,3 +675,4 @@ struct COMMAND_RPC_QUERY_BLOCKS_LITE {
 };
 
 }
+

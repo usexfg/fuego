@@ -1,18 +1,20 @@
+
+// {DRGL} Kills White Walkers
+
+// ©2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Forknote developers
 // Copyright (c) 2016, The Karbowanec developers
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -66,10 +68,10 @@ namespace
 }
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
+
 void print_genesis_tx_hex(const po::variables_map& vm, LoggerManager& logManager) {
   CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
   std::string tx_hex = Common::toHex(CryptoNote::toBinaryArray(tx));
-  std::cout << "Add this line into your coin configuration file as is: " << std::endl;
   std::cout << "\"GENESIS_COINBASE_TX_HEX\":\"" << tx_hex << "\"," << std::endl;
   return;
 }
@@ -119,12 +121,13 @@ int main(int argc, char* argv[])
     command_line::add_arg(desc_cmd_sett, arg_log_file);
     command_line::add_arg(desc_cmd_sett, arg_log_level);
     command_line::add_arg(desc_cmd_sett, arg_console);
-	command_line::add_arg(desc_cmd_sett, arg_restricted_rpc);
+  	command_line::add_arg(desc_cmd_sett, arg_restricted_rpc);
     command_line::add_arg(desc_cmd_sett, arg_testnet_on);
-	command_line::add_arg(desc_cmd_sett, arg_enable_cors);
-	command_line::add_arg(desc_cmd_sett, arg_enable_blockchain_indexes);
-	command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
+	  command_line::add_arg(desc_cmd_sett, arg_enable_cors);
+	  command_line::add_arg(desc_cmd_sett, arg_enable_blockchain_indexes);
+	  command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
 
+    
     RpcServerConfig::initOptions(desc_cmd_sett);
     CoreConfig::initOptions(desc_cmd_sett);
     NetNodeConfig::initOptions(desc_cmd_sett);
@@ -195,7 +198,7 @@ int main(int argc, char* argv[])
 
     bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
     if (testnet_mode) {
-      logger(INFO) << "Starting in testnet mode!";
+      logger(INFO) << "Starting in ****TESTNET**** MODE !";
     }
 
     //create objects and link them
@@ -231,7 +234,7 @@ int main(int argc, char* argv[])
 
     if (!coreConfig.configFolderDefaulted) {
       if (!Tools::directoryExists(coreConfig.configFolder)) {
-        throw std::runtime_error("Directory does not exist: " + coreConfig.configFolder);
+        throw std::runtime_error("Directory doesn't exist: " + coreConfig.configFolder);
       }
     } else {
       if (!Tools::create_directories_if_necessary(coreConfig.configFolder)) {

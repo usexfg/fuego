@@ -1,22 +1,23 @@
-// (c) 2018 {DRGL}
+
+// {DRGL} Kills White Walkers
+
+// ©2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Forknote developers
 // Copyright (c) 2016, The Karbowanec developers
-//
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+
 
 #include "RpcServer.h"
 
@@ -137,7 +138,8 @@ void RpcServer::processRequest(const HttpRequest& request, HttpResponse& respons
 bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& response) {
 
   using namespace JsonRpc;
-
+  
+  response.addHeader("Access-Control-Allow-Origin", "*");
   response.addHeader("Content-Type", "application/json");
   if (!m_cors_domain.empty()) {
 	response.addHeader("Access-Control-Allow-Origin", m_cors_domain);
@@ -497,6 +499,10 @@ bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMM
 // JSON RPC methods
 //------------------------------------------------------------------------------------------------------------------------------
 
+
+// block explorer
+
+
 bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::request& req, F_COMMAND_RPC_GET_BLOCKS_LIST::response& res) {
   if (m_core.get_current_blockchain_height() <= req.height) {
     throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
@@ -624,6 +630,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     return false;
   }
   if (!m_core.getBlockReward(res.block.major_version, res.block.sizeMedian, res.block.transactionsCumulativeSize, prevBlockGeneratedCoins, 0, currentReward, emissionChange)) {
+
     return false;
   }
 
@@ -764,6 +771,9 @@ bool RpcServer::f_getMixin(const Transaction& transaction, uint64_t& mixin) {
   }
   return true;
 }
+
+
+// end of block explorer
 
 
 bool RpcServer::on_getblockcount(const COMMAND_RPC_GETBLOCKCOUNT::request& req, COMMAND_RPC_GETBLOCKCOUNT::response& res) {
@@ -971,3 +981,4 @@ bool RpcServer::on_get_block_header_by_height(const COMMAND_RPC_GET_BLOCK_HEADER
 
 
 }
+

@@ -1,5 +1,6 @@
+
 // {DRGL} Kills White Walkers
-//
+
 // 2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org> 
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
@@ -34,7 +35,7 @@ const char* getStatusString(CryptoNote::HttpResponse::HTTP_STATUS status) {
   case CryptoNote::HttpResponse::STATUS_500:
     return "500 Internal Server Error";
   default:
-    throw std::runtime_error("Unknown HTTP status code is given");
+    throw std::runtime_error("Unknown HTTP status code given");
   }
 
   return ""; //unaccessible

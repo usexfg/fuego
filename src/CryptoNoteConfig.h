@@ -1,20 +1,21 @@
-// {DRÆGONGLASS} 2018
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
+
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers,
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+
 
 #pragma once
 
@@ -130,6 +131,7 @@ struct CheckpointData {
   const char* blockId;
 };
 
+
 const std::initializer_list<CheckpointData> CHECKPOINTS = { 
 { 800,   "c1c64f752f6f5f6f69671b3794f741af0707c71b35302ea4fc96b0befdce8ce9" },
 { 8008,  "299702f163995cd790b5c45362c78ad596f8717d749ff9016ce27eaa625b8a5e" },
@@ -142,4 +144,4 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 
 #define ALLOW_DEBUG_COMMANDS
 
-//The true enemy won't wait out the storm, he brings the storm.
+// The true enemy won't wait out the storm. He brings the storm.

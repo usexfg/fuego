@@ -1,20 +1,22 @@
+
+// {DRGL} Kills White Walkers
+
+// ©2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016, The Forknote developers
-//
+// Copyright (c) 2016, The Forknote developers, Karbowanec
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+
 
 #pragma once
 
@@ -410,7 +412,107 @@ struct BLOCK_HEADER_RESPONSE {
     KV_MEMBER(status)
   }
 };
+  
+// block explorer
 
+struct f_transaction_short_response {
+  std::string hash;
+  uint64_t fee;
+  uint64_t amount_out;
+  uint64_t size;
+
+  void serialize(ISerializer &s) {
+    KV_MEMBER(hash)
+    KV_MEMBER(fee)
+    KV_MEMBER(amount_out)
+    KV_MEMBER(size)
+  }
+};
+
+struct f_transaction_details_response {
+  std::string hash;
+  size_t size;
+  std::string paymentId;
+  uint64_t mixin;
+  uint64_t fee;
+  uint64_t amount_out;
+
+  void serialize(ISerializer &s) {
+    KV_MEMBER(hash)
+    KV_MEMBER(size)
+    KV_MEMBER(paymentId)
+    KV_MEMBER(mixin)
+    KV_MEMBER(fee)
+    KV_MEMBER(amount_out)
+  }
+};
+
+struct f_block_short_response {
+  uint64_t timestamp;
+  uint32_t height;
+  std::string hash;
+  uint64_t tx_count;
+  uint64_t cumul_size;
+
+  void serialize(ISerializer &s) {
+    KV_MEMBER(timestamp)
+    KV_MEMBER(height)
+    KV_MEMBER(hash)
+    KV_MEMBER(cumul_size)
+    KV_MEMBER(tx_count)
+  }
+};
+
+struct f_block_details_response {
+  uint8_t major_version;
+  uint8_t minor_version;  
+  uint64_t timestamp;
+  std::string prev_hash;
+  uint32_t nonce;
+  bool orphan_status;
+  uint64_t height;
+  uint64_t depth;
+  std::string hash;
+  difficulty_type difficulty;
+  uint64_t reward;
+  uint64_t blockSize;
+  size_t sizeMedian;
+  uint64_t effectiveSizeMedian;
+  uint64_t transactionsCumulativeSize;
+  std::string alreadyGeneratedCoins;
+  uint64_t alreadyGeneratedTransactions;
+  uint64_t baseReward;
+  double penalty;
+  uint64_t totalFeeAmount;
+  std::vector<f_transaction_short_response> transactions;
+
+  void serialize(ISerializer &s) {
+    KV_MEMBER(major_version)
+    KV_MEMBER(minor_version)
+    KV_MEMBER(timestamp)
+    KV_MEMBER(prev_hash)
+    KV_MEMBER(nonce)
+    KV_MEMBER(orphan_status)
+    KV_MEMBER(height)
+    KV_MEMBER(depth)
+    KV_MEMBER(hash)
+    KV_MEMBER(difficulty)
+    KV_MEMBER(reward)
+    KV_MEMBER(blockSize)
+    KV_MEMBER(sizeMedian)
+    KV_MEMBER(effectiveSizeMedian)
+    KV_MEMBER(transactionsCumulativeSize)
+    KV_MEMBER(alreadyGeneratedCoins)
+    KV_MEMBER(alreadyGeneratedTransactions)
+    KV_MEMBER(baseReward)
+    KV_MEMBER(penalty)
+    KV_MEMBER(transactions)
+    KV_MEMBER(totalFeeAmount)
+  }
+};
+
+
+// end of block explorer
 
 struct f_transaction_short_response {
   std::string hash;
@@ -539,6 +641,12 @@ struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT {
   typedef BLOCK_HEADER_RESPONSE response;
 };
 
+
+  
+  
+  // block explorer
+
+
 struct F_COMMAND_RPC_GET_BLOCKS_LIST {
   struct request {
     uint64_t height;
@@ -616,6 +724,11 @@ struct F_COMMAND_RPC_GET_POOL {
     }
   };
 };
+   
+
+// end of block explorer
+
+  
 
 struct COMMAND_RPC_QUERY_BLOCKS {
   struct request {

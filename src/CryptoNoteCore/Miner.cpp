@@ -1,19 +1,22 @@
+
+// {DRGL} Kills White Walkers
+
+// ©2018 {DRÆGONGLASS}
+
+// <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+
 
 #include "Miner.h"
 
@@ -224,7 +227,7 @@ namespace CryptoNote
     std::lock_guard<std::mutex> lk(m_threads_lock);
 
     if(!m_threads.empty()) {
-      logger(ERROR) << "Unable to start miner because there are active mining threads";
+      logger(ERROR) << "Unable to start mining because there are Banners already at arms";
       return false;
     }
 
@@ -242,7 +245,7 @@ namespace CryptoNote
       m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
     }
 
-    logger(INFO) << "Mining has started with " << threads_count << " threads, good luck!";
+    logger(INFO, BRIGHT_CYAN) << "{{{{DRAGONGLASS}}}} mining BEGINS now calling " << threads_count << " Banners to Arms    the Army of the dead are marching........";
     return true;
   }
   
@@ -272,7 +275,7 @@ namespace CryptoNote
     }
 
     m_threads.clear();
-    logger(INFO) << "Mining has been stopped, " << m_threads.size() << " finished" ;
+    logger(INFO, RED) << "{Dragonglass} mining has been stopped, " << m_threads.size() << " halted   The night is dark and full of terrors" ;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
@@ -364,7 +367,7 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------------------------
   bool miner::worker_thread(uint32_t th_local_index)
   {
-    logger(INFO) << "Miner thread was started ["<< th_local_index << "]";
+    logger(INFO, BRIGHT_BLUE) << "{DRGL} Bannermen "<< th_local_index << " ARMED";
     uint32_t nonce = m_starter_nonce + th_local_index;
     difficulty_type local_diff = 0;
     uint32_t local_template_ver = 0;
@@ -408,7 +411,7 @@ namespace CryptoNote
         //we lucky!
         ++m_config.current_extra_message_index;
 
-        logger(INFO, GREEN) << "Found block for difficulty: " << local_diff;
+        logger(INFO, BLUE) << "{{{{DRAGONGLASS}}}} block FOUND at difficulty of: " << local_diff;
 
         if(!m_handler.handle_block_found(b)) {
           --m_config.current_extra_message_index;
@@ -426,3 +429,4 @@ namespace CryptoNote
   }
   //-----------------------------------------------------------------------------------------------------
 }
+

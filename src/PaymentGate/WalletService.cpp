@@ -1,17 +1,18 @@
+
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -157,7 +158,7 @@ void addPaymentIdToExtra(const std::string& paymentId, std::string& extra) {
 
 void validatePaymentId(const std::string& paymentId, Logging::LoggerRef logger) {
   if (!checkPaymentId(paymentId)) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Can't validate payment id: " << paymentId;
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Can't validate payment Id: " << paymentId;
     throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_PAYMENT_ID_FORMAT));
   }
 }
@@ -318,7 +319,7 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
   wallet->initialize(conf.walletFile, conf.walletPassword);
   auto address = wallet->createAddress();
 
-  log(Logging::INFO, Logging::BRIGHT_WHITE) << "New wallet is generated. Address: " << address;
+  log(Logging::INFO, Logging::BRIGHT_WHITE) << "New wallet generated. Address: " << address;
 
   wallet->save(CryptoNote::WalletSaveLevel::SAVE_KEYS_ONLY);
   log(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet is saved";
@@ -1095,3 +1096,4 @@ std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(uint32
 }
 
 } //namespace PaymentService
+

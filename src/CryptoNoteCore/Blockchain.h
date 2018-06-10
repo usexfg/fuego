@@ -385,4 +385,3 @@ namespace CryptoNote {
     return true;
   }
 }
-

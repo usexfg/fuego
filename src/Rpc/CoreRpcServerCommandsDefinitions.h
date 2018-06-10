@@ -4,7 +4,7 @@
 // ©2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016, The Forknote developers, Karbowanec
+// Copyright (c) 2016, The Forknote developers, The Karbowanec developers
 // This file is part of Bytecoin.
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -309,7 +309,21 @@ struct COMMAND_RPC_STOP_DAEMON {
   typedef STATUS_STRUCT response;
 };
 
-//
+//-----------------------------------------------
+struct COMMAND_RPC_GET_FEE_ADDRESS {
+  typedef EMPTY_STRUCT request;
+
+  struct response {
+    std::string fee_address;
+	std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(fee_address)
+	  KV_MEMBER(status)
+    }
+  };
+};
+
 struct COMMAND_RPC_GETBLOCKCOUNT {
   typedef std::vector<std::string> request;
 

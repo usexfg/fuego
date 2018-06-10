@@ -1,18 +1,19 @@
+
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Karbowanec developers
-//
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -402,11 +403,13 @@ namespace CryptoNote {
 	difficulty_type Currency::nextDifficulty(uint8_t blockMajorVersion, std::vector<uint64_t> timestamps,
 		std::vector<difficulty_type> cumulativeDifficulties) const {
 
+		// new difficulty calculation
+		// based on Zawy difficulty algorithm v1.0
+		// next Diff = Avg past N Diff * TargetInterval / Avg past N solve times
+		// as described at https://github.com/monero-project/research-lab/issues/3
+		// Window time span and total difficulty is taken instead of average as suggested by Eugene
+
 		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
-
-			// default CN with smaller window DIFFICULTY_WINDOW_V2
-			// without DIFFICULTY_CUT it gives very similar results to the Zawy's formula below
-
 			size_t m_difficultyWindow_2 = CryptoNote::parameters::DIFFICULTY_WINDOW_V2;
 			assert(m_difficultyWindow_2 >= 2);
 
@@ -424,37 +427,31 @@ namespace CryptoNote {
 
 			sort(timestamps.begin(), timestamps.end());
 
-		/*	uint64_t timeSpan = timestamps[length - 1] - timestamps[0];
+			uint64_t timeSpan = timestamps.back() - timestamps.front();
 			if (timeSpan == 0) {
 				timeSpan = 1;
 			}
 
-			difficulty_type totalWork = cumulativeDifficulties[length - 1] - cumulativeDifficulties[0];
+			difficulty_type totalWork = cumulativeDifficulties.back() - cumulativeDifficulties.front();
 			assert(totalWork > 0);
 
-			uint64_t low, high;
+			// uint64_t nextDiffZ = totalWork * m_difficultyTarget / timeSpan; 
+
+ 			uint64_t low, high;
 			low = mul128(totalWork, m_difficultyTarget, &high);
-			if (high != 0 || low + timeSpan - 1 < low) {
+			// blockchain error "Difficulty overhead" if this function returns zero
+			if (high != 0) {
 				return 0;
-			} 
-
-			uint64_t nextDiffAlt = (low + timeSpan - 1) / timeSpan; */
-		//	return nextDiffAlt;
-
-			// Zawy difficulty algorithm v1.0
-			// next Diff = Avg past N Diff * TargetInterval / Avg past N solve times
-			// this gives almost same results as modified CN version without cut above
-
-			uint64_t avgWindowDiff = (cumulativeDifficulties.back() - cumulativeDifficulties.front()) / cumulativeDifficulties.size();
-			uint64_t avgSolveTime = (timestamps.back() - timestamps.front()) / timestamps.size();
-			uint64_t nextDiffZ = avgWindowDiff * m_difficultyTarget / avgSolveTime;
-
-			if (nextDiffZ <= 100000) {
-			nextDiffZ = 100000;
 			}
-			
+
+			uint64_t nextDiffZ = low / timeSpan;
+
+			// minimum limit
+			if (nextDiffZ <= 100000) {
+				nextDiffZ = 100000;
+			}
+
 			return nextDiffZ;
-		
 
 			// end of new difficulty calculation
 
@@ -710,3 +707,4 @@ namespace CryptoNote {
 	}
 
 }
+

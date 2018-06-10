@@ -1,4 +1,5 @@
 
+
 // {DRGL} Kills White Walkers
 
 // ©2018 {DRÆGONGLASS}
@@ -14,8 +15,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
-//You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TransactionPool.h"
@@ -132,7 +132,7 @@ namespace CryptoNote {
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
     if (outputs_amount > inputs_amount) {
-      logger(INFO) << "transaction uses more money than available: use " << m_currency.formatAmount(outputs_amount) <<
+      logger(INFO) << "transaction uses more money than have available: use " << m_currency.formatAmount(outputs_amount) <<
         ", have " << m_currency.formatAmount(inputs_amount);
       tvc.m_verifivation_failed = true;
       return false;
@@ -350,9 +350,8 @@ namespace CryptoNote {
         << "max_used_block_height: " << txd.maxUsedBlock.height << std::endl
         << "max_used_block_id: " << txd.maxUsedBlock.id << std::endl
         << "last_failed_height: " << txd.lastFailedBlock.height << std::endl
-
-		<< "last_failed_id: " << txd.lastFailedBlock.id << std::endl
-		<< "amount_out: " << get_outs_money_amount(txd.tx) << std::endl
+	<< "last_failed_id: " << txd.lastFailedBlock.id << std::endl
+	<< "amount_out: " << get_outs_money_amount(txd.tx) << std::endl
         << "fee_atomic_units: " << txd.fee << std::endl
         << "received_timestamp: " << txd.receiveTime << std::endl
         << "received: " << std::ctime(&txd.receiveTime) << std::endl;
@@ -662,3 +661,4 @@ namespace CryptoNote {
     return m_timestampIndex.find(timestampBegin, timestampEnd, transactionsNumberLimit, hashes, transactionsNumberWithinTimestamps);
   }
 }
+

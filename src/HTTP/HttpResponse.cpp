@@ -1,7 +1,9 @@
 
+
 // {DRGL} Kills White Walkers
 
-// 2018 {DRÆGONGLASS}
+// ©2018 {DRÆGONGLASS}
+
 // <http://www.ZirtysPerzys.org> 
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2016 XDN developers
@@ -103,3 +105,4 @@ std::ostream& HttpResponse::printHttpResponse(std::ostream& os) const {
 }
 
 } //namespace CryptoNote
+

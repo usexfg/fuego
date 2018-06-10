@@ -79,7 +79,7 @@ ____________________________________________________________________
 
 *** Execute the following command to copy a desired repository
 ```
-git clone https://github.com/ZirtysPerzys/dragonglass
+git clone https://github.com/ZirtysPerzys/DRGL
 ```
 
 
@@ -87,7 +87,7 @@ git clone https://github.com/ZirtysPerzys/dragonglass
 
 *** Execute the following command to get into the directory with copied repository
 
-`cd dragonglass`
+`cd DRGL`
 
 
 
@@ -106,7 +106,7 @@ The resulting executables can be found in build/release/src.
 *** Execute the following command to navigate to resulting executables
 
 `
-cd dragonglass/build/release/src 
+cd DRGL/build/release/src 
 `
 
 
@@ -152,7 +152,7 @@ cmake -G "Visual Studio 12 Win64" ..
 And then do Build.
 ________________
 
-//courtesy of Sir {WindowSlayer} aka Galapagos
+*courtesy of Sir {WindowSlayer} of Galapagos*
 
 On windows 10
 Quick step by step tutorial
@@ -172,7 +172,7 @@ sudo apt-get update
 sudo apt-get install build-essential git cmake libboost-all-dev
 
 3: Git clone
-git clone https://github.com/ZirtysPerzys/dragonglass.git
+git clone https://github.com/ZirtysPerzys/DRGL.git
 
 4: Build the files
 cd dragonglass
@@ -205,5 +205,5 @@ C:\Users\YOURUSERNAME\AppData\Local\lxss\home
 **************************************************
 ### On Mac
 
-Mac client/GUI build release Bounty of 15k DRGL
--Funded by {DRGL} community-
+Mac client/GUI build release Bounty of 15k DRGL*
+-Funded by members of {DRGL} community-

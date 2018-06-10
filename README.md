@@ -1,3 +1,4 @@
+
    {Dragonglass} kills white walkers....
 ---------------------------------------
 
@@ -16,21 +17,21 @@ Is one last and Final season..
         Season  8 
 of   GAME OF THRONES.
 
-It is @ that time when we shall start the trading of {DRGL} with every man, woman, and child- whilst crowning only the most rightful heir of Exchange(s).. as our 8th and Final Season arrives.
+We shall begin trading of {DRGL} with every man, woman, and child- whilst crowning only the most rightful of Exchange(s).. as our 8th and Final Season arrives.
 _________________________________________________
 
-As for now, every House shall be called upon to join in alliance. We must fight together- alongside one another, to defeat our common enemy.  
+Every House shall be called upon to join in alliance. We must fight together- alongside one another, to defeat our common enemy.  
 Any contributions to all future {DRÆGONGLASS} developments are not only welcomed, but encouraged. There is much, still, that remains to be done...For the Night is Dark, and Full of Terrors.
 
 This process of mining , however..
-begins...Now.
+must begin...now.
 __________________________________________________________________
 
-CPU/GPU proof-of-work algorithm.
+CryptoNight-Classic Proof-of-Work mining algorithm.
 
-~80% of all {DRGL} is set to be mined by FINAL season's debut.
+~80% of all {DRGL} is set to be mined by final season debut.
 
-( 8000008 )  max supply (Eight million eight*)   *actual total supply [8000008.8000008]
+( 8000008 )  maximum supply (Eight million eight*)   *exact max supply [8000008.8000008]
 _________________________________________________
 
 
@@ -43,8 +44,8 @@ The Great War.
 And it is here.
 ________________________________________________________________________________________________________
 
-{DRAGONGLASS} Anonymous Encrypted Digital Currency - that kills white walkers.
-Built upon Cryptonote technologies. Read Cryptonote white paper at https://cryptonote.org/whitepaper.pdf
+{DRAGONGLASS} ~Anonymous Encrypted Digital Currency~  ....that kills white walkers.
+Built upon CryptoNote technologies. Read the CryptoNote white paper at https://cryptonote.org/whitepaper.pdf
 
 ________________________________________________________________________________________________________________
 
@@ -117,10 +118,8 @@ for a list of commands in daemon type  --help
 
 
 
-After you are have very success!!!!
-
- see {DragonglassWallet} 
-
+After you are have very success,
+ see {DRAGONGLASS GUI Wallet} 
 https://github.com/ZirtysPerzys/Dragonglasswallet
 
 
@@ -150,7 +149,7 @@ cmake -G "Visual Studio 12 Win64" ..
 And then do Build.
 ________________
 
-//courtesy of the great {WindowSlayer} aka Galapagos
+//courtesy of Sir {WindowSlayer} aka Galapagos
 
 On windows 10
 Quick step by step tutorial
@@ -194,9 +193,13 @@ start_mining <number_of_threads>
 
 use "help" in wallet to check other commands
 
-------------------------
+------
 
 !!Remember you have to use linux command in Bash
 
 You'll find your folders and wallet in
 C:\Users\YOURUSERNAME\AppData\Local\lxss\home
+
+
+##Mac client/GUI build release
+Bounty of 15k DRGL

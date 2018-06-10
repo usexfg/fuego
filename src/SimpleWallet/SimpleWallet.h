@@ -1,6 +1,22 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, The Karbovanets developers
+// Copyright (c) 2014-2016 XDN developers
+// Copyright (c) 2014-2016 The Karbovanets developers
+// This file is part of Bytecoin.
+// Bytecoin is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// Bytecoin is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public License
+// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -26,10 +42,12 @@
 #include <System/Dispatcher.h>
 #include <System/Ipv4Address.h>
 
+std::string remote_fee_address;
+
 namespace CryptoNote
 {
   /************************************************************************/
-  /*                                                                      */
+  /*                                 DRGL                                 */
   /************************************************************************/
   class simple_wallet : public CryptoNote::INodeObserver, public CryptoNote::IWalletLegacyObserver, public CryptoNote::INodeRpcProxyObserver {
   public:
@@ -42,6 +60,7 @@ namespace CryptoNote
 
     bool process_command(const std::vector<std::string> &args);
     std::string get_commands_str();
+    std::string getFeeAddress();
 
     const CryptoNote::Currency& currency() const { return m_currency; }
 
@@ -166,3 +185,4 @@ namespace CryptoNote
     std::condition_variable m_walletSynchronizedCV;
   };
 }
+

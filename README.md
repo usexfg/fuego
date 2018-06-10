@@ -1,5 +1,5 @@
 
-   {Dragonglass} kills white walkers....
+   {DRGL} kills white walkers....
 ---------------------------------------
 
 It is more valuable to us now.. than gold.
@@ -15,7 +15,7 @@ The ONLY thing now that stands between us..
 and the Army of the dead - 
 Is one last and Final season..
         Season  8 
-of   GAME OF THRONES.
+     GAME OF THRONES.
 
 We shall begin trading of {DRGL} with every man, woman, and child- whilst crowning only the most rightful of Exchange(s).. as our 8th and Final Season arrives.
 _________________________________________________
@@ -26,12 +26,15 @@ Any contributions to all future {DRÆGONGLASS} developments are not only welcome
 This process of mining , however..
 must begin...now.
 __________________________________________________________________
+Block Time - 81 seconds
 
-CryptoNight-Classic Proof-of-Work mining algorithm.
+CryptoNight-Classic (Proof-of-Work) mining algorithm.
 
-~80% of all {DRGL} is set to be mined by final season debut.
+Block Reward - smooth emission (Genesis ~ 30 DRGL) slowly decreasing
 
-( 8000008 )  maximum supply (Eight million eight*)   *exact max supply [8000008.8000008]
+Approx 80% of all {DRGL} is set to be mined by final season debut.
+
+( 8000008 ) total maximum supply (Eight million eight*)   *exact max supply [8000008.8000008]
 _________________________________________________
 
 
@@ -44,7 +47,7 @@ The Great War.
 And it is here.
 ________________________________________________________________________________________________________
 
-{DRAGONGLASS} ~Anonymous Encrypted Digital Currency~  ....that kills white walkers.
+{DRÆGONGLASS}  Anonymous Encrypted Digital Currency  ....that kills white walkers.
 Built upon CryptoNote technologies. Read the CryptoNote white paper at https://cryptonote.org/whitepaper.pdf
 
 ________________________________________________________________________________________________________________
@@ -199,7 +202,8 @@ use "help" in wallet to check other commands
 
 You'll find your folders and wallet in
 C:\Users\YOURUSERNAME\AppData\Local\lxss\home
+**************************************************
+### On Mac
 
-
-##Mac client/GUI build release
-Bounty of 15k DRGL
+Mac client/GUI build release Bounty of 15k DRGL
+-Funded by {DRGL} community-

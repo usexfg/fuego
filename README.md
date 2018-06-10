@@ -34,8 +34,8 @@ Block Reward - smooth emission (Genesis ~ 30 DRGL) slowly decreasing
 
 Approx 80% of all {DRGL} is set to be mined by final season debut.
 
-( 8000008 ) total maximum supply (Eight million eight*)   *exact max supply [8000008.8000008]
-_________________________________________________
+8,000,008 max supply | 8 Million 8 | precisely: 8000008.8000008 DRGL
+__________________________________________________________________________
 
 
 THERE  IS  ONLY  ONE  WAR  THAT  MATTERS..
@@ -206,4 +206,5 @@ C:\Users\YOURUSERNAME\AppData\Local\lxss\home
 ### On Mac
 
 Mac client/GUI build release Bounty of 15k DRGL*
+
 -Funded by members of {DRGL} community-

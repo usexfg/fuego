@@ -1,18 +1,19 @@
+
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Karbowanec developers
-//
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -139,17 +140,11 @@ namespace CryptoNote {
 
 	bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
 		uint64_t fee, uint64_t& reward, int64_t& emissionChange) const {
-		// assert(alreadyGeneratedCoins <= m_moneySupply);
+		assert(alreadyGeneratedCoins <= m_moneySupply);
 		assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));
 
-		// Tail emission
-
 		uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
-		if (alreadyGeneratedCoins + CryptoNote::parameters::TAIL_EMISSION_REWARD >= m_moneySupply || baseReward < CryptoNote::parameters::TAIL_EMISSION_REWARD)
-		{
-			baseReward = CryptoNote::parameters::TAIL_EMISSION_REWARD;
-		}
-
+		
 		size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
 		medianSize = std::max(medianSize, blockGrantedFullRewardZone);
 		if (currentBlockSize > UINT64_C(2) * medianSize) {
@@ -168,6 +163,7 @@ namespace CryptoNote {
 
 		return true;
 	}
+
 
 	size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
 		assert(height <= std::numeric_limits<uint64_t>::max() / m_maxBlockSizeGrowthSpeedNumerator);
@@ -414,7 +410,6 @@ namespace CryptoNote {
 		// Window time span and total difficulty is taken instead of average as suggested by Eugene
 
 		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
-
 			size_t m_difficultyWindow_2 = CryptoNote::parameters::DIFFICULTY_WINDOW_V2;
 			assert(m_difficultyWindow_2 >= 2);
 
@@ -712,3 +707,4 @@ namespace CryptoNote {
 	}
 
 }
+

@@ -196,15 +196,16 @@ start_mining <number_of_threads>
 
 use "help" in wallet to check other commands
 
-------
-
 !!Remember you have to use linux command in Bash
 
 You'll find your folders and wallet in
 C:\Users\YOURUSERNAME\AppData\Local\lxss\home
 **************************************************
 ### On Mac
+------------
 
-Mac client/GUI build release Bounty of 15k DRGL*
+**Bounty of 15k DRGL**
+----------
+for Mac client/GUI build release
 
--Funded by members of {DRGL} community-
+-Reserved bounty funded by {DRGL} community-

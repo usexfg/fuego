@@ -1,4 +1,3 @@
-
    {Dragonglass} kills white walkers....
 ---------------------------------------
 
@@ -31,7 +30,7 @@ CryptoNight-Classic Proof-of-Work mining algorithm.
 
 ~80% of all {DRGL} is set to be mined by final season debut.
 
-( 8000008 )  maximum supply (Eight million eight*)   *exact max supply [8000008.8000008]
+Total supply 8000008 (Eight million eight*)   *exact max supply [8000008.8000008]
 _________________________________________________
 
 

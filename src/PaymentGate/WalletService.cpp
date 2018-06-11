@@ -1,9 +1,8 @@
-
 // {DRGL} Kills White Walkers
 
 // 2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, Karbowanec
 // This file is part of Bytecoin.
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -158,7 +157,7 @@ void addPaymentIdToExtra(const std::string& paymentId, std::string& extra) {
 
 void validatePaymentId(const std::string& paymentId, Logging::LoggerRef logger) {
   if (!checkPaymentId(paymentId)) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Can't validate payment Id: " << paymentId;
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Can't validate payment id: " << paymentId;
     throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_PAYMENT_ID_FORMAT));
   }
 }
@@ -319,7 +318,7 @@ void generateNewWallet(const CryptoNote::Currency& currency, const WalletConfigu
   wallet->initialize(conf.walletFile, conf.walletPassword);
   auto address = wallet->createAddress();
 
-  log(Logging::INFO, Logging::BRIGHT_WHITE) << "New wallet generated. Address: " << address;
+  log(Logging::INFO, Logging::BRIGHT_WHITE) << "New wallet is generated. Address: " << address;
 
   wallet->save(CryptoNote::WalletSaveLevel::SAVE_KEYS_ONLY);
   log(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet is saved";
@@ -672,7 +671,13 @@ std::error_code WalletService::getTransactions(const std::vector<std::string>& a
 
     Crypto::Hash blockHash = parseHash(blockHashString, logger);
 
-    transactions = getRpcTransactions(blockHash, blockCount, transactionFilter);
+	std::vector<TransactionsInBlockRpcInfo> txs = getRpcTransactions(blockHash, blockCount, transactionFilter);
+	for (TransactionsInBlockRpcInfo& b : txs){
+		for (TransactionRpcInfo& t : b.transactions){
+			t.confirmations = wallet.getBlockCount() - t.blockIndex;
+		}
+	}
+	transactions = txs;
   } catch (std::system_error& x) {
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while getting transactions: " << x.what();
     return x.code();
@@ -696,7 +701,13 @@ std::error_code WalletService::getTransactions(const std::vector<std::string>& a
 
     TransactionsInBlockInfoFilter transactionFilter(addresses, paymentId);
 
-    transactions = getRpcTransactions(firstBlockIndex, blockCount, transactionFilter);
+	std::vector<TransactionsInBlockRpcInfo> txs = getRpcTransactions(firstBlockIndex, blockCount, transactionFilter);
+	for (TransactionsInBlockRpcInfo& b : txs){
+		for (TransactionRpcInfo& t : b.transactions){
+			t.confirmations = wallet.getBlockCount() - t.blockIndex;
+		}
+	}
+	transactions = txs;
   } catch (std::system_error& x) {
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while getting transactions: " << x.what();
     return x.code();
@@ -720,7 +731,10 @@ std::error_code WalletService::getTransaction(const std::string& transactionHash
       return make_error_code(CryptoNote::error::OBJECT_NOT_FOUND);
     }
 
-    transaction = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
+	TransactionRpcInfo tempTrans = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
+	tempTrans.confirmations = wallet.getBlockCount() - transactionWithTransfers.transaction.blockHeight;
+	transaction = tempTrans;
+
   } catch (std::system_error& x) {
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while getting transaction: " << x.what();
     return x.code();
@@ -1096,4 +1110,3 @@ std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(uint32
 }
 
 } //namespace PaymentService
-

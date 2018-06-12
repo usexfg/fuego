@@ -447,8 +447,8 @@ namespace CryptoNote {
 			uint64_t nextDiffZ = low / timeSpan;
 
 			// minimum limit
-			if (nextDiffZ <= 100000) {
-				nextDiffZ = 100000;
+			if (nextDiffZ <= 10000) {
+				nextDiffZ = 10000;
 			}
 
 			return nextDiffZ;

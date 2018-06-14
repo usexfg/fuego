@@ -1,8 +1,64 @@
-DRGL Kills White Walkers
-
 2018 {DRÆGONGLASS}
 ------------------
 *Release notes*
+
+_____________________________________________
+{DRGL} v 1.3.0 Hardhome
+_____________________________________________
+
+- Android platform support
+
+- Added logging to blockchain synchronizer
+
+- Refactored mnemonics
+
+- Fixed memory leaks in mnemonics
+
+- Fixed memory leak in simplewallet
+
+- Fixed memory leak in cn_slow_hash
+
+- Minor optimization of JSON KV-serializer
+
+- LoggerMessage implementation is now platform-independent
+
+- Deterministic wallets and Mnemonic seed, courtesy of Monero Developers
+
+- Various build fixes
+
+- Transactions confirmations in RPC response for walletd
+
+- Log file location for simplewallet
+
+- New RPC methods
+
+- Support for solo GPU mining
+
+- Transaction size limit
+
+- Additional validation and attribution
+
+- Change of the Network ID 
+
+- Security update to address Disclosure of a Major Bug in CryptoNote Based Currencies by Monero developers
+
+- OpenAlias support in simplewallet
+
+- More friendly simplewallet prompt
+
+- Additional transaction validation
+
+- GUI wallet mining support
+
+- Simplewallet export/import keys
+
+- Simplewallet import paperwallet/backup keys
+
+- Simplewallet export/import tracking keys
+
+- Change password in simplewallet
+
+
 _____________________________________________________                                                        
 {DRGL} version 1.2.0 Release |  Beyond The Wall            
 ______________________________________________________
@@ -27,6 +83,15 @@ Enhancements new to {DRGL} include:
 
 - Blocksize increase  (20kb to 800kb)
 
+__________________________________________
+{DRGL} 1.1.2  
+__________________________________________
+
+- Console messages enhanced for solo mining
+
+_____________________________________________
+{Dragonglass} v1.1.1 Launch - Jan 8 2018
+_____________________________________________
 
 Bytecoin Release notes 1.0.8
 

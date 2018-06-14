@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, The Karbowanec developers
+=======
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+>>>>>>> master
 //
 // This file is part of Bytecoin.
 //
@@ -52,6 +56,10 @@ struct EllipticCurveScalar {
 
     static void generate_keys(PublicKey &, SecretKey &);
     friend void generate_keys(PublicKey &, SecretKey &);
+	static void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey& second);
+	friend void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey& second);
+	static SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey& recovery_key = SecretKey(), bool recover = false);
+	friend SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey& recovery_key, bool recover);
     static bool check_key(const PublicKey &);
     friend bool check_key(const PublicKey &);
     static bool secret_key_to_public_key(const SecretKey &, PublicKey &);
@@ -82,6 +90,8 @@ struct EllipticCurveScalar {
     friend bool check_signature(const Hash &, const PublicKey &, const Signature &);
     static void generate_key_image(const PublicKey &, const SecretKey &, KeyImage &);
     friend void generate_key_image(const PublicKey &, const SecretKey &, KeyImage &);
+    static KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a);
+    friend KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a);
     static void hash_data_to_ec(const uint8_t*, std::size_t, PublicKey&);
     friend void hash_data_to_ec(const uint8_t*, std::size_t, PublicKey&);
     static void generate_ring_signature(const Hash &, const KeyImage &,
@@ -137,6 +147,14 @@ struct EllipticCurveScalar {
    */
   inline void generate_keys(PublicKey &pub, SecretKey &sec) {
     crypto_ops::generate_keys(pub, sec);
+  }
+
+  inline void generate_deterministic_keys(PublicKey &pub, SecretKey &sec, SecretKey& second) {
+    crypto_ops::generate_deterministic_keys(pub, sec, second);
+  }
+
+  inline SecretKey generate_m_keys(PublicKey &pub, SecretKey &sec, const SecretKey& recovery_key = SecretKey(), bool recover = false) {
+    return crypto_ops::generate_m_keys(pub, sec, recovery_key, recover);
   }
 
   /* Check a public key. Returns true if it is valid, false otherwise.
@@ -217,6 +235,10 @@ struct EllipticCurveScalar {
    */
   inline void generate_key_image(const PublicKey &pub, const SecretKey &sec, KeyImage &image) {
     crypto_ops::generate_key_image(pub, sec, image);
+  }
+
+  inline KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a) {
+    return crypto_ops::scalarmultKey(P, a);
   }
 
   inline void hash_data_to_ec(const uint8_t* data, std::size_t len, PublicKey& key) {

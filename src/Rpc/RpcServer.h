@@ -99,7 +99,6 @@ private:
 
   bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
 
-
   Logging::LoggerRef logger;
   core& m_core;
   NodeServer& m_p2p;

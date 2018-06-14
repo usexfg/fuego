@@ -4,7 +4,7 @@
 // 2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// This file is part of Bytecoin.
+// This file is part of Bytecoin. Karbowanec
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or

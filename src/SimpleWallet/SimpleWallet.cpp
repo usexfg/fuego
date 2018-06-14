@@ -259,7 +259,6 @@ struct TransferCommand {
               logger(ERROR, BRIGHT_RED) << "Invalid payment ID usage. Please, use -p <payment_id>. See help for details.";
             } else {
 #ifndef __ANDROID__
-
 			  // if string doesn't contain a dot, we won't consider it a url for now.
 			  if (strchr(arg.c_str(), '.') == NULL) {
 				logger(ERROR, BRIGHT_RED) << "Wrong address or alias: " << arg;
@@ -687,7 +686,8 @@ bool simple_wallet::set_log(const std::vector<std::string> &args)
 	uint16_t l = 0;
 	if (!Common::fromString(args[0], l))
 	{
-		fail_msg_writer() << "number format is invalid, use: set_log <log_level_number_0-4>";
+
+		fail_msg_writer() << "wrong number format, use: set_log <log_level_number_0-4>";
 		return true;
 	}
  
@@ -1283,7 +1283,6 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 
 		AccountKeys keys;
 		m_wallet->getAccountKeys(keys);
-
 
 		logger(INFO, BRIGHT_WHITE) <<
 			"Generated new wallet: " << m_wallet->getAddress() << std::endl <<

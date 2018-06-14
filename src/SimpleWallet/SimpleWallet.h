@@ -1,12 +1,8 @@
-<<<<<<< HEAD
-=======
 
->>>>>>> master
 // {DRGL} Kills White Walkers
 
 // 2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
-<<<<<<< HEAD
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2016, XDN developers
 // Copyright (c) 2016-2018, Karbo developers
@@ -51,7 +47,6 @@
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
->>>>>>> master
 
 #pragma once
 

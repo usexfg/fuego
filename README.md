@@ -211,12 +211,12 @@ C:\Users\YOURUSERNAME\AppData\Local\lxss\home
 ------------
 
 **Bounty of 15k DRGL**
-----------
+
 for Mac client/GUI build release
 
 -Reserved bounty funded by {DRGL} community-
 
-
+***************************************************
 ### Building for Android on Linux
 
 Set up the 32 bit toolchain

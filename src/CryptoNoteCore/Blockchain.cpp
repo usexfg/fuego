@@ -1054,7 +1054,6 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
     // if block to be added connects to known blocks that aren't part of the
     // main chain -- that is, if we're adding on to an alternate chain
     if (alt_chain.size()) {
-      //make sure that it has right connection to main chain
 
       // make sure alt chain doesn't somehow start past the end of the main chain
       if (!(m_blocks.size() > alt_chain.front()->second.height)) { logger(ERROR, BRIGHT_RED) << "main blockchain wrong height"; return false; }

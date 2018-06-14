@@ -1,8 +1,10 @@
+
 // {DRGL} Kills White Walkers
 
-// 2018 {DRÆGONGLASS}
+// ©2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, Karbowanec
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2018, The Karbowanec developers
 // This file is part of Bytecoin.
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -367,7 +369,7 @@ void WalletService::saveWallet() {
 void WalletService::loadWallet() {
   logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Loading wallet";
   wallet.load(config.walletFile, config.walletPassword);
-  logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet loading is finished.";
+  logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet is finished loading.";
 }
 
 void WalletService::loadTransactionIdIndex() {
@@ -385,7 +387,7 @@ std::error_code WalletService::saveWalletNoThrow() {
     logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Saving wallet...";
 
     if (!inited) {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Save impossible: Wallet Service is not initialized";
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Save not possible: Wallet Service is not initialized";
       return make_error_code(CryptoNote::error::NOT_INITIALIZED);
     }
 
@@ -405,20 +407,20 @@ std::error_code WalletService::resetWallet() {
   try {
     System::EventLock lk(readyEvent);
 
-    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Reseting wallet";
+    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Resetting wallet";
 
     if (!inited) {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Reset impossible: Wallet Service is not initialized";
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Reset not possible: Wallet Service is not initialized";
       return make_error_code(CryptoNote::error::NOT_INITIALIZED);
     }
 
     reset();
     logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet has been reset";
   } catch (std::system_error& x) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while reseting wallet: " << x.what();
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
     return x.code();
   } catch (std::exception& x) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while reseting wallet: " << x.what();
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
     return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
   }
 
@@ -1112,3 +1114,4 @@ std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(uint32
 }
 
 } //namespace PaymentService
+

@@ -28,6 +28,7 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -476,7 +477,7 @@ void slow_hash_free_state(void)
     else
     {
 #if defined(_MSC_VER) || defined(__MINGW32__)
-        VirtualFree(hp_state, MEMORY, MEM_RELEASE);
+        VirtualFree(hp_state, 0, MEM_RELEASE);
 #else
         munmap(hp_state, MEMORY);
 #endif

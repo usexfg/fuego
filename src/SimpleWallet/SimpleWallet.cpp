@@ -2,6 +2,7 @@
 
 // 2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
+
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, The Karbovanets developers
 // Copyright (c) 2014-2016, XDN developers
 // Copyright (c) 2014-2017, The Forknote developers
@@ -532,7 +533,7 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
 
 		// Courtesy of Monero Project
 		// make sure the txt record has "oa1:krb" and find it
-		auto pos = s.find("oa1:krb");
+		auto pos = s.find("oa1:drgl");
 		if (pos == std::string::npos)
 			return false;
 		// search from there to find "recipient_address="
@@ -622,7 +623,7 @@ bool simple_wallet::seed(const std::vector<std::string> &args/* = std::vector<st
 
   if (success)
   {
-    std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. Please write them down and store them somewhere safe and secure. Please do not store them in your email or on file storage services outside of your immediate control.\n";
+    std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. Please write them down and store them somewhere safe & secure. Please do not store them in your email or on file storage services outside of YOUR immediate control.\n";
     std::cout << electrum_words << std::endl;
   }
   else
@@ -1131,7 +1132,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		if (keys.spendSecretKey == boost::value_initialized<Crypto::SecretKey>())
 		{
 			m_trackingWallet = true;
-			success_msg_writer() << "This is tracking wallet. Spending unavailable.\n";
+			success_msg_writer() << "This is a tracking wallet only. Spending unavailable.\n";
 		}
 
 		success_msg_writer() <<
@@ -1234,8 +1235,8 @@ bool simple_wallet::gen_wallet(const std::string &wallet_file, const std::string
 	if (!two_random)
 	{
 		std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. " <<
-			"Please write them down and store them somewhere safe and secure. Please do not store them in your email or " <<
-			"on file storage services outside of your immediate control.\n\n";
+			"Please write them down and store them somewhere safe & secure. Please do not store them in your email or " <<
+			"on file storage services outside of YOUR immediate control.\n\n";
 		std::cout << electrum_words << std::endl;
 	}
 	success_msg_writer() << "**********************************************************************";
@@ -1954,7 +1955,7 @@ std::string simple_wallet::getFeeAddress() {
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::transfer(const std::vector<std::string> &args) {
   if (m_trackingWallet){
-    fail_msg_writer() << "This is tracking wallet. Spending is impossible.";
+    fail_msg_writer() << "This is a tracking wallet only. Spending is impossible.";
     return true;
   }
   try {
@@ -2291,4 +2292,5 @@ int main(int argc, char* argv[]) {
   return 1;
   //CATCH_ENTRY_L0("main", 1);
 }
+
 

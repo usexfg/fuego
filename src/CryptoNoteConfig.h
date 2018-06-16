@@ -133,8 +133,8 @@ const uint32_t P2P_IDLE_CONNECTION_KILL_INTERVAL             = (5 * 60);      //
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 
 const char* const SEED_NODES[] = {
-"ice.zirtysperzys.info:10818",
-"fire.zirtysperzys.online:10818",
+"188.226.177.187:10818",
+"104.236.0.16:10818",
 "178.128.164.245:10818",
 };
 

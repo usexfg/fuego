@@ -3,6 +3,7 @@
 
 // 2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
+
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // This file is part of Bytecoin.
 // Bytecoin is free software: you can redistribute it and/or modify
@@ -116,3 +117,4 @@ public:
 };
 
 }
+

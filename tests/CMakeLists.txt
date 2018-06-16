@@ -80,6 +80,7 @@ set_property(TARGET
   HashTests
 PROPERTY FOLDER "tests")
 
+
 add_dependencies(IntegrationTestLibrary version)
 
 set_property(TARGET CoreTests PROPERTY OUTPUT_NAME "core_tests")
@@ -103,3 +104,5 @@ endforeach(hash)
 add_test(HashTargetTests hash_target_tests)
 add_test(SystemTests system_tests)
 add_test(UnitTests unit_tests)
+
+

@@ -44,15 +44,9 @@ public:
 	LoggerMessage& operator=(const LoggerMessage&) = delete;
 
 private:
-<<<<<<< HEAD
 	int sync() override;
 	std::streamsize xsputn(const char* s, std::streamsize n) override;
 	int overflow(int c) override;
-=======
-  int sync() override;
-  std::streamsize xsputn(const char* s, std::streamsize n) override;
-  int overflow(int c) override;
->>>>>>> master
 
 private:
 	ILogger& m_logger;

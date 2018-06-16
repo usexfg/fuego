@@ -50,16 +50,13 @@ const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1  = 20000;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(80000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(80000);
-
 
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DIFFICULTY_TARGET;
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
 const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(800000);
+const uint64_t MINIMUM_FEE                                   = UINT64_C(80000);
 const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(80000);
 const uint64_t MAX_TX_MIXIN_SIZE                             = 20;
 
@@ -83,7 +80,7 @@ const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 
 const uint32_t UPGRADE_HEIGHT_V2                             = 147958;
-const uint32_t UPGRADE_HEIGHT_V3                             = 150000;
+const uint32_t UPGRADE_HEIGHT_V3                             = 154321;
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
 const uint32_t UPGRADE_WINDOW                                = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
@@ -136,8 +133,9 @@ const uint32_t P2P_IDLE_CONNECTION_KILL_INTERVAL             = (5 * 60);      //
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 
 const char* const SEED_NODES[] = {
-"188.226.177.187:10818",
-"104.236.0.16:10818",
+"ice.zirtysperzys.info:10818",
+"fire.zirtysperzys.online:10818",
+"178.128.164.245:10818",
 };
 
 struct CheckpointData {

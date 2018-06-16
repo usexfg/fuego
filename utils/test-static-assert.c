@@ -1,3 +1,9 @@
+
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
+
 // Copyright (c) 2012-2014, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.

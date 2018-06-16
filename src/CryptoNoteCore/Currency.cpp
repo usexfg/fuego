@@ -3,6 +3,7 @@
 
 // 2018 {DRÆGONGLASS}
 // <http://www.ZirtysPerzys.org>
+
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018  zawy12
 // Copyright (c) 2016-2018, The Karbowanec developers
@@ -459,7 +460,6 @@ namespace CryptoNote {
 		if (high != 0 || low + timeSpan - 1 < low) {
 			return 0;
 		}
-
 		return (low + timeSpan - 1) / timeSpan;
 	}
 

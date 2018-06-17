@@ -87,3 +87,4 @@ private:
 	System::Event m_stopComplete;
 };
 } //Tools
+

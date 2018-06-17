@@ -479,3 +479,4 @@ bool wallet_rpc_server::on_gen_paymentid(const wallet_rpc::COMMAND_RPC_GEN_PAYME
 }
 
 } //Tools
+

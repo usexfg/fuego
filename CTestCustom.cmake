@@ -7,5 +7,6 @@ set(CTEST_CUSTOM_TESTS_IGNORE
   NodeRpcProxyTests
   PerformanceTests
   TransfersTests
-  )
+  ) 
+
 

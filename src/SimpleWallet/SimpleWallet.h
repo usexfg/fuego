@@ -1,3 +1,10 @@
+
+
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
+
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2016, XDN developers
 // Copyright (c) 2016-2018, Karbo developers
@@ -59,7 +66,7 @@ std::string remote_fee_address;
 namespace CryptoNote
 {
   /************************************************************************/
-  /*                                                                      */
+  /*                                 DRGL                                 */
   /************************************************************************/
   class simple_wallet : public CryptoNote::INodeObserver, public CryptoNote::IWalletLegacyObserver, public CryptoNote::INodeRpcProxyObserver {
   public:
@@ -219,3 +226,4 @@ namespace CryptoNote
     std::condition_variable m_walletSynchronizedCV;
   };
 }
+

@@ -1,3 +1,8 @@
+// {DRGL} Kills White Walkers
+
+// 2018 {DRÆGONGLASS}
+// <http://www.ZirtysPerzys.org>
+
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, The Karbovanets developers
 // Copyright (c) 2014-2016, XDN developers
 // Copyright (c) 2014-2017, The Forknote developers
@@ -157,7 +162,7 @@ inline std::string interpret_rpc_response(bool ok, const std::string& status) {
       err = status;
     }
   } else {
-    err = "possible lost connection to daemon";
+    err = "possibly lost connection to daemon";
   }
   return err;
 }
@@ -237,7 +242,7 @@ struct TransferCommand {
             }
 
             if (fee < m_currency.minimumFee()) {
-              logger(ERROR, BRIGHT_RED) << "Fee value is less than minimum: " << m_currency.minimumFee();
+              logger(ERROR, BRIGHT_RED) << "Fee value is less than the network's minimum fee: " << m_currency.minimumFee();
               return false;
             }
           }
@@ -254,6 +259,7 @@ struct TransferCommand {
               logger(ERROR, BRIGHT_RED) << "Invalid payment ID usage. Please, use -p <payment_id>. See help for details.";
             } else {
 #ifndef __ANDROID__
+
 			  // if string doesn't contain a dot, we won't consider it a url for now.
 			  if (strchr(arg.c_str(), '.') == NULL) {
 				logger(ERROR, BRIGHT_RED) << "Wrong address or alias: " << arg;
@@ -271,7 +277,8 @@ struct TransferCommand {
 #undef max
 #undef min
 #endif 
-			  logger(ERROR, BRIGHT_RED) << "amount is wrong: " << arg << ' ' << value <<
+
+			  logger(ERROR, BRIGHT_RED) << "Invalid amount: " << arg << ' ' << value <<
 				  ", expected number from 0 to " << m_currency.formatAmount(std::numeric_limits<uint64_t>::max());
 			  return false;
 		  }
@@ -292,8 +299,9 @@ struct TransferCommand {
           if (!remote_fee_address.empty()) {
             destination.address = remote_fee_address;
             int64_t remote_node_fee = static_cast<int64_t>(de.amount * 0.0025);
-            if (remote_node_fee > 10000000000000)
-                remote_node_fee = 10000000000000;
+            if (remote_node_fee > 100000000)
+                remote_node_fee = 100000000;
+
             destination.amount = remote_node_fee;
             dsts.push_back(destination);
           }
@@ -388,7 +396,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
           throw std::runtime_error("failed to load wallet: " + initError.message());
         }
 
-        logger(INFO) << "Storing wallet...";
+        logger(INFO) << "Preserving wallet...";
 
         try {
           CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
@@ -397,7 +405,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
           throw std::runtime_error("error saving wallet file '" + walletFileName + "'");
         }
 
-        logger(INFO, BRIGHT_GREEN) << "Stored ok";
+        logger(INFO, BRIGHT_GREEN) << "Wallet Preserved";
         return walletFileName;
       } else { // no keys, wallet error loading
         throw std::runtime_error("can't load wallet file '" + walletFileName + "', check password");
@@ -405,7 +413,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
     } else { //new wallet ok 
       return walletFileName;
     }
-  } else if (keysExists) { //wallet not exists but keys presented
+  } else if (keysExists) { //wallet doesn't exist but keys presented
     std::stringstream ss;
     CryptoNote::importLegacyKeys(keys_file, password, ss);
     boost::filesystem::rename(keys_file, keys_file + ".back");
@@ -422,7 +430,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
       throw std::runtime_error("failed to load wallet: " + initError.message());
     }
 
-    logger(INFO) << "Storing wallet...";
+    logger(INFO) << "Preserving wallet...";
 
     try {
       CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
@@ -431,7 +439,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
       throw std::runtime_error("error saving wallet file '" + walletFileName + "'");
     }
 
-    logger(INFO, BRIGHT_GREEN) << "Stored ok";
+    logger(INFO, BRIGHT_GREEN) << "Wallet Preserved";
     return walletFileName;
   } else { //no wallet no keys
     throw std::runtime_error("wallet file '" + walletFileName + "' is not found");
@@ -526,7 +534,7 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
 
 		// Courtesy of Monero Project
 		// make sure the txt record has "oa1:krb" and find it
-		auto pos = s.find("oa1:krb");
+		auto pos = s.find("oa1:drgl");
 		if (pos == std::string::npos)
 			return false;
 		// search from there to find "recipient_address="
@@ -616,7 +624,7 @@ bool simple_wallet::seed(const std::vector<std::string> &args/* = std::vector<st
 
   if (success)
   {
-    std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. Please write them down and store them somewhere safe and secure. Please do not store them in your email or on file storage services outside of your immediate control.\n";
+    std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. Please write them down and store them somewhere safe & secure. Please do not store them in your email or on file storage services outside of YOUR immediate control.\n";
     std::cout << electrum_words << std::endl;
   }
   else
@@ -1124,7 +1132,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		if (keys.spendSecretKey == boost::value_initialized<Crypto::SecretKey>())
 		{
 			m_trackingWallet = true;
-			success_msg_writer() << "This is tracking wallet. Spending unavailable.\n";
+			success_msg_writer() << "This is a tracking wallet only. Spending is not available.\n";
 		}
 
 		success_msg_writer() <<
@@ -1222,13 +1230,13 @@ bool simple_wallet::gen_wallet(const std::string &wallet_file, const std::string
 		"Use \"help\" command to see the list of available commands.\n" <<
 		"Always use \"exit\" command when closing simplewallet to save\n" <<
 		"current session's state. Otherwise, you will possibly need to synchronize \n" <<
-		"your wallet again. Your wallet key is NOT under risk anyway.\n";
+		"your wallet again - your wallet key is NOT under risk in any way.\n";
 
 	if (!two_random)
 	{
 		std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. " <<
-			"Please write them down and store them somewhere safe and secure. Please do not store them in your email or " <<
-			"on file storage services outside of your immediate control.\n\n";
+			"Please write them down and store them somewhere safe & secure. Please do not store them in your email or " <<
+			"on file storage services outside of YOUR immediate control.\n\n";
 		std::cout << electrum_words << std::endl;
 	}
 	success_msg_writer() << "**********************************************************************";
@@ -1800,7 +1808,7 @@ bool simple_wallet::show_payments(const std::vector<std::string> &args) {
         continue;
       }
     } else {
-      fail_msg_writer() << "payment ID has invalid format: \"" << arg << "\", expected 64-character string";
+      fail_msg_writer() << "Payment ID has invalid format: \"" << arg << "\", expected 64-character string";
     }
   }
 
@@ -1947,7 +1955,7 @@ std::string simple_wallet::getFeeAddress() {
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::transfer(const std::vector<std::string> &args) {
   if (m_trackingWallet){
-    fail_msg_writer() << "This is tracking wallet. Spending is impossible.";
+    fail_msg_writer() << "This is a tracking wallet only. Spending is impossible.";
     return true;
   }
   try {
@@ -2249,11 +2257,11 @@ int main(int argc, char* argv[]) {
     logger(INFO) << "Stopped wallet rpc server";
     
     try {
-      logger(INFO) << "Storing wallet...";
+      logger(INFO) << "Preserving wallet...";
       CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
-      logger(INFO, BRIGHT_GREEN) << "Stored ok";
+      logger(INFO, BRIGHT_GREEN) << "Wallet Preserved";
     } catch (const std::exception& e) {
-      logger(ERROR, BRIGHT_RED) << "Failed to store wallet: " << e.what();
+      logger(ERROR, BRIGHT_RED) << "Failed to preserve wallet: " << e.what();
       return 1;
     }
   } else {
@@ -2284,3 +2292,5 @@ int main(int argc, char* argv[]) {
   return 1;
   //CATCH_ENTRY_L0("main", 1);
 }
+
+

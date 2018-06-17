@@ -1,19 +1,15 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright(c) 2014 - 2017 XDN - project developers
 // Copyright(c) 2018 The Karbo developers
-//
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -186,9 +182,9 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
 
   node->init([&initPromise, &log](std::error_code ec) {
     if (ec) {
-      log(Logging::WARNING, Logging::YELLOW) << "Failed to init node: " << ec.message();
+      log(Logging::WARNING, Logging::YELLOW) << "Failed to initialize node: " << ec.message();
     } else {
-      log(Logging::INFO) << "node is inited successfully";
+      log(Logging::INFO) << "node is initialized successfully";
     }
 
     initPromise.set_value(ec);
@@ -244,7 +240,7 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
   try {
     service->init();
   } catch (std::exception& e) {
-    Logging::LoggerRef(logger, "run")(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to init walletService reason: " << e.what();
+    Logging::LoggerRef(logger, "run")(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to initialize walletService reason: " << e.what();
     return;
   }
 

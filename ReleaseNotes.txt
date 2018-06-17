@@ -1,3 +1,4 @@
+
 2018 {DRÆGONGLASS}
 ------------------
 *Release notes*
@@ -59,9 +60,9 @@ _____________________________________________
 - Change password in simplewallet
 
 
-_____________________________________________________                                                        
-{DRGL} version 1.2.0 Release |  Beyond The Wall            
-______________________________________________________
+___________________________________________________________                                                        
+{DRGL} version 1.2.0-1 Release |  Beyond The Wall/Stormborn           
+___________________________________________________________
 
 -Transition to Karbo's version of Bytecoin code 
  for their many improvements & leading development team.

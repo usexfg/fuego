@@ -687,13 +687,13 @@ bool simple_wallet::set_log(const std::vector<std::string> &args)
 	uint16_t l = 0;
 	if (!Common::fromString(args[0], l))
 	{
-		fail_msg_writer() << "number format is invalid, use: set_log <log_level_number_0-4>";
+		fail_msg_writer() << "wrong number format, use: set_log <log_level_number_0-4>";
 		return true;
 	}
  
 	if (l > Logging::TRACE)
 	{
-		fail_msg_writer() << "number range is invalid, use: set_log <log_level_number_0-4>";
+		fail_msg_writer() << "wrong number range, use: set_log <log_level_number_0-4>";
 		return true;
 	}
 
@@ -1132,7 +1132,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		if (keys.spendSecretKey == boost::value_initialized<Crypto::SecretKey>())
 		{
 			m_trackingWallet = true;
-			success_msg_writer() << "This is a tracking wallet only. Spending unavailable.\n";
+			success_msg_writer() << "This is a tracking wallet only. Spending is not available.\n";
 		}
 
 		success_msg_writer() <<
@@ -1230,7 +1230,7 @@ bool simple_wallet::gen_wallet(const std::string &wallet_file, const std::string
 		"Use \"help\" command to see the list of available commands.\n" <<
 		"Always use \"exit\" command when closing simplewallet to save\n" <<
 		"current session's state. Otherwise, you will possibly need to synchronize \n" <<
-		"your wallet again. Your wallet key is NOT under risk anyway.\n";
+		"your wallet again - your wallet key is NOT under risk in any way.\n";
 
 	if (!two_random)
 	{
@@ -1283,7 +1283,6 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 
 		AccountKeys keys;
 		m_wallet->getAccountKeys(keys);
-
 
 		logger(INFO, BRIGHT_WHITE) <<
 			"Generated new wallet: " << m_wallet->getAddress() << std::endl <<

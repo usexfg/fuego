@@ -257,8 +257,6 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
 
     Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO, Logging::BRIGHT_WHITE) << "JSON-RPC server stopped, stopping wallet service...";
 
-    Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO, Logging::BRIGHT_WHITE) << "JSON-RPC server stopped, stopping wallet service...";
-
     try {
       service->saveWallet();
     } catch (std::exception& ex) {

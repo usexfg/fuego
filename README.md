@@ -125,7 +125,7 @@ for a list of commands in daemon type  --help
 
 
 After you are have very success,
- see {DRAGONGLASS GUI Wallet} 
+see {DRAGONGLASS GUI Wallet} 
 https://github.com/ZirtysPerzys/Dragonglasswallet
 
 

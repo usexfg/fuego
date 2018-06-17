@@ -27,6 +27,7 @@
 namespace CryptoNote {
 namespace parameters {
 
+
 const uint64_t DIFFICULTY_TARGET                             = 81;//sec
 const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
@@ -53,12 +54,13 @@ const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DIFFICULTY_TARGET;
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
-const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
-const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks
+const size_t   DIFFICULTY_WINDOW_V2                          = 17;  // blocks
+const size_t   DIFFICULTY_WINDOW_V3                          = 60 + 1; // blocks (add one to compensate off-by-one in difficulty calculation)
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(80000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(80000);
-const uint64_t MAX_TX_MIXIN_SIZE                             = 20;
+
+const uint64_t MINIMUM_FEE                                   = UINT64_C(18000);
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(180);
+const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 
 const size_t   DIFFICULTY_CUT                                = 60;  // timestamps to cut after sorting
 const size_t   DIFFICULTY_LAG                                = 15;  // !!!

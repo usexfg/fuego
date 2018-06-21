@@ -1115,3 +1115,4 @@ std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(uint32
 }
 
 } //namespace PaymentService
+

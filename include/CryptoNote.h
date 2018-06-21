@@ -113,3 +113,4 @@ struct KeyPair {
 using BinaryArray = std::vector<uint8_t>;
 
 }
+

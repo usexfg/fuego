@@ -3359,3 +3359,4 @@ void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t>& de
 }
 
 } //namespace CryptoNote
+

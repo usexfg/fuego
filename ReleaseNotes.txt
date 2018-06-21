@@ -1,77 +1,100 @@
-Release notes Karbowanec 1.4.6
+
+2018 {DRÆGONGLASS}
+------------------
+*Release notes*
+
+_____________________________________________
+{DRGL} v 1.3.0 Hardhome
+_____________________________________________
 
 - Android platform support
+
 - Added logging to blockchain synchronizer
+
 - Refactored mnemonics
+
 - Fixed memory leaks in mnemonics
+
 - Fixed memory leak in simplewallet
+
 - Fixed memory leak in cn_slow_hash
+
 - Minor optimization of JSON KV-serializer
+
 - LoggerMessage implementation is now platform-independent
 
-Release notes Karbowanec 1.4.5
-
 - Deterministic wallets and Mnemonic seed, courtesy of Monero Developers
+
 - Various build fixes
+
 - Transactions confirmations in RPC response for walletd
+
 - Log file location for simplewallet
+
 - New RPC methods
+
 - Support for solo GPU mining
 
-Release notes Karbowanec 1.4.4
-
 - Transaction size limit
+
 - Additional validation and attribution
 
-Release notes Karbowanec 1.4.3
+- Change of the Network ID 
 
-- Change of the Network ID
 - Security update to address Disclosure of a Major Bug in CryptoNote Based Currencies by Monero developers
 
-Release notes Karbowanec 1.4.2
-
 - OpenAlias support in simplewallet
-- More friendly simplewallet prompt
 
-Release notes Karbowanec 1.4.1
+- More friendly simplewallet prompt
 
 - Additional transaction validation
 
-Release notes Karbowanec 1.4.0
-
 - GUI wallet mining support
+
 - Simplewallet export/import keys
+
 - Simplewallet import paperwallet/backup keys
+
 - Simplewallet export/import tracking keys
+
 - Change password in simplewallet
 
 
+___________________________________________________________                                                        
+{DRGL} version 1.2.0-1 Release |  Beyond The Wall/Stormborn           
+___________________________________________________________
 
-Release notes Karbowanec 1.3.0
+-Transition to Karbo's version of Bytecoin code 
+ for their many improvements & leading development team.
+Enhancements new to {DRGL} include:
 
 - Bytecoin core 1.0.11 transition
-- New difficulty algorithm
-- Tail emission
-- Daemon restricted RPC mode
-- Fees for open remote node
 
-Release notes 1.0.11
+- New difficulty algorithm -Zawy-
+
+- Timestamp Limit adjustment
+
+- Restricted RPC mode in Dæmon
+
+- Fees for open remote nodes
 
 - New Bytecoin Wallet file format
+
 - Daemon loading optimization
 
-Release notes 1.0.10
+- Blocksize increase  (20kb to 800kb)
 
-- Blocksize increase
-- Fusion transactions for Bytecoin RPC Wallet
-- Bytecoin RPC Wallet API improvements
+__________________________________________
+{DRGL} 1.1.2  
+__________________________________________
 
-Release notes 1.0.9
+- Console messages enhanced for solo mining
 
-- New API for Bytecoin RPC Wallet
-- Various improvements
+_____________________________________________
+{Dragonglass} v1.1.1 Launch - Jan 8 2018
+_____________________________________________
 
-Release notes 1.0.8
+Bytecoin Release notes 1.0.8
 
 - Fusion transactions for Bytecoin Wallet
 - IWallet high-level API update

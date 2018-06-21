@@ -1,3 +1,4 @@
+
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2016, XDN developers
 // Copyright (c) 2016-2018, Karbo developers
@@ -210,7 +211,7 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
 		CryptoNote::WalletHelper::SendCompleteResultObserver sent;
 		WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
 
-		CryptoNote::TransactionId tx = m_wallet.sendTransaction(transfers, req.fee, extraString, req.mixin, req.unlock_time);
+		CryptoNote::TransactionId tx = m_wallet.sendTransaction(transfers, req.fee == 0 ? m_currency.minimumFee() : req.fee, extraString, req.mixin, req.unlock_time);
 		if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID)
 			throw std::runtime_error("Couldn't send transaction");
 
@@ -329,7 +330,7 @@ bool wallet_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANS
 		transfer.blockIndex		 = txInfo.blockHeight;
 		transfer.unlockTime		 = txInfo.unlockTime;
 		transfer.paymentId		 = "";
-		transfer.confirmations = bc_height - txInfo.blockHeight;
+		transfer.confirmations	 = (txInfo.blockHeight != UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX ? bc_height - txInfo.blockHeight : 0);
 
 		std::vector<uint8_t> extraVec;
 		extraVec.reserve(txInfo.extra.size());
@@ -384,7 +385,7 @@ bool wallet_rpc_server::on_get_transaction(const wallet_rpc::COMMAND_RPC_GET_TRA
 			transfer.blockIndex = txInfo.blockHeight;
 			transfer.unlockTime = txInfo.unlockTime;
 			transfer.paymentId = "";
-			transfer.confirmations = bc_height - txInfo.blockHeight;
+			transfer.confirmations = (txInfo.blockHeight != UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX ? bc_height - txInfo.blockHeight : 0);
 
 			std::vector<uint8_t> extraVec;
 			extraVec.reserve(txInfo.extra.size());
@@ -479,4 +480,3 @@ bool wallet_rpc_server::on_gen_paymentid(const wallet_rpc::COMMAND_RPC_GEN_PAYME
 }
 
 } //Tools
-

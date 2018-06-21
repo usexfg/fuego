@@ -51,16 +51,20 @@ const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1  = 20000;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 
-
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DIFFICULTY_TARGET;
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
-const size_t   DIFFICULTY_WINDOW_V3                          = 60 + 1; // blocks (add one to compensate off-by-one in difficulty calculation)
+  
+  
+  
+const size_t   DIFFICULTY_WINDOW_V3                          = 80; // blocks
 
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(18000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(180);
+  
+const uint64_t MINIMUM_FEE                                   = UINT64_C(800000);
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(800);
 const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
+
 
 const size_t   DIFFICULTY_CUT                                = 60;  // timestamps to cut after sorting
 const size_t   DIFFICULTY_LAG                                = 15;  // !!!
@@ -135,8 +139,8 @@ const uint32_t P2P_IDLE_CONNECTION_KILL_INTERVAL             = (5 * 60);      //
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 
 const char* const SEED_NODES[] = {
-"188.226.177.187:10818",
-"104.236.0.16:10818",
+"ice.zirtysperzys.info:10818",
+"fire.zirtysperzys.online:10818",
 "178.128.164.245:10818",
 };
 
@@ -153,6 +157,7 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 108801, "0cb48287678f9df42a63c6c344f448ddce5316f9c5c03548e77d9a1193ebf5fd" },
 { 147959, "cecc0692782cd1956fb12bf170c4ebd6c7b6bb5c12e7071ef2d98e7c940f1961" },
 { 148000, "bd318f33b5f1804bc648ce847d4214cff8cfd7498483461db660a87e342eb0e9" },
+{ 154322, "73232b04d18cdc9cc6430194298166c6e775a55ff0f48e2f819f8ed5fd873df7" }
 };
 
 }

@@ -57,7 +57,7 @@ const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
   
   
   
-const size_t   DIFFICULTY_WINDOW_V3                          = 80; // blocks
+const size_t   DIFFICULTY_WINDOW_V3                          = 60; // blocks
 
 
   

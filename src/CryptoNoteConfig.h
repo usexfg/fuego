@@ -57,12 +57,12 @@ const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
   
   
   
-const size_t   DIFFICULTY_WINDOW_V3                          = 80; // blocks
+const size_t   DIFFICULTY_WINDOW_V3                          = 60; // blocks
 
 
   
 const uint64_t MINIMUM_FEE                                   = UINT64_C(800000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(800);
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(8000);
 const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 
 

@@ -535,7 +535,7 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
 	try {
 
 		// Courtesy of Monero Project
-		// make sure the txt record has "oa1:krb" and find it
+		// make sure the txt record has "oa1:drgl" and find it
 		auto pos = s.find("oa1:drgl");
 		if (pos == std::string::npos)
 			return false;
@@ -864,7 +864,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 	auto error = f_error.get();
 	if (error)
 	{
-		fail_msg_writer() << "failed to init NodeRPCProxy: " << error.message();
+		fail_msg_writer() << "failed to initialize NodeRPCProxy: " << error.message();
 		return false;
 	}
 
@@ -1506,12 +1506,12 @@ bool simple_wallet::new_tracking_wallet(AccountKeys &tracking_key, const std::st
     success_msg_writer() <<
         "**********************************************************************\n" <<
         "Your tracking wallet has been imported. It doesn't allow spending funds.\n" <<
-        "It allows to view incoming transactions but not outgoing ones. \n" <<
+        "It allows incoming transactions to be viewed- but not outgoing ones. \n" <<
         "If there were spendings total balance will be inaccurate. \n" <<
         "Use \"help\" command to see the list of available commands.\n" <<
         "Always use \"exit\" command when closing simplewallet to save\n" <<
         "current session's state. Otherwise, you will possibly need to synchronize \n" <<
-        "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
+        "your wallet again- your wallet key is NOT under risk in any way by doing so.\n" <<
         "**********************************************************************";
     return true;
 }

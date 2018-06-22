@@ -58,8 +58,8 @@ const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
 const size_t   DIFFICULTY_WINDOW_V3                          = 60 + 1; // blocks (add one to compensate off-by-one in difficulty calculation)
 
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(80000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(800);
+const uint64_t MINIMUM_FEE                                   = UINT64_C(18000);
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(180);
 const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 
 const size_t   DIFFICULTY_CUT                                = 60;  // timestamps to cut after sorting

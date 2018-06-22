@@ -469,8 +469,6 @@ endif()
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT ANDROID)
     set(CMAKE_EXE_LINKER_FLAGS "-pthread")
-	set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
 if (${BOOST_IGNORE_SYSTEM_PATHS} STREQUAL "ON")

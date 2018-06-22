@@ -58,8 +58,8 @@ const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
 const size_t   DIFFICULTY_WINDOW_V3                          = 60 + 1; // blocks (add one to compensate off-by-one in difficulty calculation)
 
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(18000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(180);
+const uint64_t MINIMUM_FEE                                   = UINT64_C(80000);
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(800);
 const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 
 const size_t   DIFFICULTY_CUT                                = 60;  // timestamps to cut after sorting
@@ -153,6 +153,8 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 108801, "0cb48287678f9df42a63c6c344f448ddce5316f9c5c03548e77d9a1193ebf5fd" },
 { 147959, "cecc0692782cd1956fb12bf170c4ebd6c7b6bb5c12e7071ef2d98e7c940f1961" },
 { 148000, "bd318f33b5f1804bc648ce847d4214cff8cfd7498483461db660a87e342eb0e9" },
+{ 154322, "73232b04d18cdc9cc6430194298166c6e775a55ff0f48e2f819f8ed5fd873df7" },
+{ 155433, "89be8af3d0a62454e95cf71cf7c17df9480ac337b4b5a294e0d75400b8989700" },
 };
 
 }

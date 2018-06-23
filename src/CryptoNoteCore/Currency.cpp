@@ -573,8 +573,8 @@ namespace CryptoNote {
 		next_difficulty = static_cast<uint64_t>(nextDifficulty);
 		
 		// minimum limit
-		if (next_difficulty < 80000) {
-			next_difficulty = 80000;
+		if (next_difficulty < 10000) {
+			next_difficulty = 10000;
 		}
 
 		return next_difficulty;

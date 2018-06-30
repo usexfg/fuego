@@ -1,62 +1,78 @@
+      							                                         {DRÆGONGLASS}  
+                                                 
+**Release Notes**                    			                  
+_____________________________________________
 
-2018 {DRÆGONGLASS}
-------------------
-*Release notes*
+	{DRGL} v 1.3.2 ==Longclaw==
+_____________________________________________
+
+Enhancements new to {DRGL} include:
+______________________________________
+(including commit credits: Aiwe/Karbo)
+* Stay N=60=18x
+* Update SimpleWallet.cpp
+* Add logging for failed tx ring signature check
+* Jagerman fix update
+	Don't generate a block template with invalid timestamp 
+* Fixes for debug build
+* Fix int/int division
+* Memory leak fix
+* Fix signed unsigned conversion and double
+	double_t is its interpreted differently on different compliers
+
+* Keep cryptonote's BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW = 60.
+	"The -7xT limit in LWMA is sufficient. It appears using 11 like bitcoin carries a risk  because  honest timestamp blocks can be rejected if  a >50%  		attacker "owns" the MTP with forward times." --Zawy
+
+* Default minimum fee if not set in rpc transfer method
+* More rigorous timestamp limits
+* simplewallet --reset flag to reset wallet on open
+* Difficulty algo clean up
+* top block hash in getinfo
+* Ask wallet password in RPC mode
+* rpc unconfirmed transaction confirmations fix
+* Change log level
+* Change wallet password via flags and exit simplewallet
+* Add rpc_connections_count in /getinfo
+* Min. fee tx validation
+* build fix
+* Fix sync issues
+* Raise stack size
+* Checkpoints
+* Transaction mixin limit
+* Difficulty algo minor amendments
+
+
 
 _____________________________________________
-{DRGL} v 1.3.0 Hardhome
+	
+	{DRGL} v 1.3.0 Hardhome
 _____________________________________________
 
 - Android platform support
-
 - Added logging to blockchain synchronizer
-
 - Refactored mnemonics
-
 - Fixed memory leaks in mnemonics
-
 - Fixed memory leak in simplewallet
-
 - Fixed memory leak in cn_slow_hash
-
 - Minor optimization of JSON KV-serializer
-
 - LoggerMessage implementation is now platform-independent
-
 - Deterministic wallets and Mnemonic seed, courtesy of Monero Developers
-
 - Various build fixes
-
 - Transactions confirmations in RPC response for walletd
-
 - Log file location for simplewallet
-
 - New RPC methods
-
 - Support for solo GPU mining
-
 - Transaction size limit
-
 - Additional validation and attribution
-
 - Change of the Network ID 
-
 - Security update to address Disclosure of a Major Bug in CryptoNote Based Currencies by Monero developers
-
 - OpenAlias support in simplewallet
-
 - More friendly simplewallet prompt
-
 - Additional transaction validation
-
 - GUI wallet mining support
-
 - Simplewallet export/import keys
-
 - Simplewallet import paperwallet/backup keys
-
 - Simplewallet export/import tracking keys
-
 - Change password in simplewallet
 
 
@@ -69,19 +85,12 @@ ___________________________________________________________
 Enhancements new to {DRGL} include:
 
 - Bytecoin core 1.0.11 transition
-
 - New difficulty algorithm -Zawy-
-
 - Timestamp Limit adjustment
-
 - Restricted RPC mode in Dæmon
-
 - Fees for open remote nodes
-
 - New Bytecoin Wallet file format
-
 - Daemon loading optimization
-
 - Blocksize increase  (20kb to 800kb)
 
 __________________________________________

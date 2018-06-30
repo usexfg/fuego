@@ -49,7 +49,7 @@ The Great War.
 And it is here.
 ________________________________________________________________________________________________________
 
-{DRÆGONGLASS}  Anonymous Encrypted Digital Currency  ....that kills white walkers.
+        {DRÆGONGLASS}  Anonymous Encrypted Digital Currency  ....that kills white walkers.
 
 Built upon CryptoNote technologies. Read the CryptoNote white paper at https://cryptonote.org/whitepaper.pdf
 
@@ -72,11 +72,11 @@ You may download them from:
 
 
 *** Alternatively, it may be possible to install them using a package manager by
-executing the following command.     {Tested using Ubuntu 14.04}
+executing the following command.     {Tested using Ubuntu 16.04}
  ```
- sudo apt-get install build-essential git cmake libboost1.55-all-dev
+ sudo apt-get install build-essential git cmake libboost-all-dev
 ```
-____________________________________________________________________
+_____________________________________________________________^ thanks- mauncoin
 
 2. Clone {dragonglass} repository
 

@@ -315,7 +315,7 @@ struct TransferCommand {
 #ifndef __ANDROID__
 		&& aliases.empty()
 #endif
-){
+){https://github.com/ZirtysPerzys
         logger(ERROR, BRIGHT_RED) << "At least one destination address is required";
         return false;
       }
@@ -548,10 +548,10 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
 		auto pos2 = s.find(";", pos);
 		if (pos2 != std::string::npos)
 		{
-			// length of address == 95, we can at least validate that much here
-			if (pos2 - pos == 95)
+			// length of address == 98, we can at least validate that much here
+			if (pos2 - pos == 98)
 			{
-				address = s.substr(pos, 95);
+				address = s.substr(pos, 98);
 			} else {
 				return false;
 			}

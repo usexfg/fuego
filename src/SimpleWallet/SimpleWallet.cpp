@@ -315,7 +315,7 @@ struct TransferCommand {
 #ifndef __ANDROID__
 		&& aliases.empty()
 #endif
-){https://github.com/ZirtysPerzys
+){
         logger(ERROR, BRIGHT_RED) << "At least one destination address is required";
         return false;
       }

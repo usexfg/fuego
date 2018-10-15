@@ -1,3 +1,8 @@
+// {DRGL} Kills White Walkers
+//
+// 2018 {DRÆGONGLASS}
+// <https://www.ZirtysPerzys.org>
+//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2017-2018, Karbo developers
 // 
@@ -101,7 +106,9 @@ public:
 
   virtual void getAccountKeys(AccountKeys& keys) override;
   virtual bool getSeed(std::string& electrum_words) override;
-
+  
+  virtual Crypto::SecretKey getTxKey(Crypto::Hash& txid) override;
+	  
 private:
 
   // IBlockchainSynchronizerObserver

@@ -468,7 +468,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
 
   uint32_t lastValidCheckpointHeight = 0;
   if (!checkCheckpoints(lastValidCheckpointHeight)) {
-    logger(WARNING, BRIGHT_YELLOW) << "Invalid checkpoint found. Rollback blockchain to height=" << lastValidCheckpointHeight;
+    logger(WARNING, BRIGHT_MAGENTA) << "Invalid checkpoint found. Rollback blockchain to height=" << lastValidCheckpointHeight;
     rollbackBlockchainTo(lastValidCheckpointHeight);
   }
 
@@ -487,7 +487,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     reinitUpgradeDetectors = true;
   } else if (!checkUpgradeHeight(m_upgradeDetectorV3)) {
     uint32_t upgradeHeight = m_upgradeDetectorV3.upgradeHeight();
-    logger(WARNING, BRIGHT_YELLOW) << "Invalid block version at " << upgradeHeight + 1 << ": real=" << static_cast<int>(m_blocks[upgradeHeight + 1].bl.majorVersion) <<
+    logger(WARNING, BRIGHT_MAGENTA) << "Invalid block version at " << upgradeHeight + 1 << ": real=" << static_cast<int>(m_blocks[upgradeHeight + 1].bl.majorVersion) <<
       " expected=" << static_cast<int>(m_upgradeDetectorV3.targetVersion()) << ". Rollback blockchain to height=" << upgradeHeight;
     rollbackBlockchainTo(upgradeHeight);
     reinitUpgradeDetectors = true;
@@ -505,7 +505,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     timestamp_diff = time(NULL) - 1341378000;
   }
 
-  logger(INFO, BRIGHT_GREEN)
+  logger(INFO, BRIGHT_BLUE)
     << "Blockchain initialized. last block: " << m_blocks.size() - 1 << ", "
     << Common::timeIntervalToString(timestamp_diff)
     << " time ago, current difficulty: " << getDifficultyForNextBlock();
@@ -807,7 +807,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
       block_verification_context bvc = boost::value_initialized<block_verification_context>();
       bool r = handle_alternative_block(old_ch_ent, get_block_hash(old_ch_ent), bvc, false);
       if (!r) {
-        logger(WARNING, BRIGHT_YELLOW) << ("Failed to push ex-main chain blocks to alternative chain ");
+        logger(WARNING, BRIGHT_MAGENTA) << ("Failed to push ex-main chain blocks to alternative chain ");
         break;
       }
     }
@@ -826,7 +826,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 
   sendMessage(BlockchainMessage(ChainSwitchMessage(std::move(blocksFromCommonRoot))));
 
-  logger(INFO, BRIGHT_GREEN) << "REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_blocks.size();
+  logger(INFO, BRIGHT_BLUE) << "REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_blocks.size();
   return true;
 }
 
@@ -1134,7 +1134,7 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
 
     if (is_a_checkpoint) {
       //do reorganize!
-      logger(INFO, BRIGHT_GREEN) <<
+      logger(INFO, BRIGHT_BLUE) <<
         "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 <<
         ", checkpoint is found in alternative chain on height " << bei.height;
       bool r = switch_to_alternative_blockchain(alt_chain, true);
@@ -1148,7 +1148,7 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
     } else if (m_blocks.back().cumulative_difficulty < bei.cumulative_difficulty) //check if difficulty bigger then in main chain
     {
       //do reorganize!
-      logger(INFO, BRIGHT_GREEN) <<
+      logger(INFO, BRIGHT_BLUE) <<
         "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 << " with cum_difficulty " << m_blocks.back().cumulative_difficulty
         << ENDL << " alternative blockchain size: " << alt_chain.size() << " with cum_difficulty " << bei.cumulative_difficulty;
       bool r = switch_to_alternative_blockchain(alt_chain, false);
@@ -1389,7 +1389,7 @@ void Blockchain::print_blockchain_outs(const std::string& file) {
     logger(INFO, BRIGHT_WHITE) <<
       "Current outputs index writen to file: " << file;
   } else {
-    logger(WARNING, BRIGHT_YELLOW) <<
+    logger(WARNING, BRIGHT_MAGENTA) <<
       "Failed to write current outputs index to file: " << file;
   }
 }
@@ -1953,7 +1953,7 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
 
   auto block_processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - blockProcessingStart).count();
 
-  logger(DEBUGGING) <<
+  logger(DEBUGGING, YELLOW) <<
     "+++++ BLOCK SUCCESSFULLY ADDED" << ENDL << "id:\t" << blockHash
     << ENDL << "PoW:\t" << proof_of_work
     << ENDL << "HEIGHT " << block.height << ", difficulty:\t" << currentDifficulty
@@ -2400,7 +2400,7 @@ bool Blockchain::loadBlockchainIndices() {
   loadFromBinaryFile(loader, appendPath(m_config_folder, m_currency.blockchinIndicesFileName()));
 
   if (!loader.loaded()) {
-    logger(WARNING, BRIGHT_YELLOW) << "No actual blockchain indices for BlockchainExplorer found, rebuilding...";
+    logger(WARNING, BRIGHT_MAGENTA) << "No actual blockchain indices for BlockchainExplorer found, rebuilding...";
     std::chrono::steady_clock::time_point timePoint = std::chrono::steady_clock::now();
 
     m_paymentIdIndex.clear();
@@ -2470,7 +2470,7 @@ void Blockchain::saveTransactions(const std::vector<Transaction>& transactions) 
   tx_verification_context context;
   for (size_t i = 0; i < transactions.size(); ++i) {
     if (!m_tx_pool.add_tx(transactions[transactions.size() - 1 - i], context, true)) {
-      logger(WARNING, BRIGHT_YELLOW) << "Blockchain::saveTransactions, failed to add transaction to pool";
+      logger(WARNING, BRIGHT_MAGENTA) << "Blockchain::saveTransactions, failed to add transaction to pool";
     }
   }
 }

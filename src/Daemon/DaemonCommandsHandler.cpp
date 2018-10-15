@@ -316,7 +316,7 @@ bool DaemonCommandsHandler::print_pool_count(const std::vector<std::string>& arg
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::start_mining(const std::vector<std::string> &args) {
   if (!args.size()) {
-    std::cout << "Please, specify wallet address to mine for: start_mining <addr> [threads=1]" << std::endl;
+    std::cout << "Please specify a wallet address to mine for: start_mining <addr> [threads=1]" << std::endl;
     return true;
   }
 

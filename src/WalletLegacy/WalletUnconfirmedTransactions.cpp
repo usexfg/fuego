@@ -1,4 +1,10 @@
+// {DRGL} Kills White Walkers
+//
+// 2018 {DRÆGONGLASS}
+// <https://www.ZirtysPerzys.org>
+//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2018, Karbo developers
 //
 // This file is part of Bytecoin.
 //
@@ -64,7 +70,7 @@ void WalletUnconfirmedTransactions::erase(const Hash& hash) {
 }
 
 void WalletUnconfirmedTransactions::add(const Transaction& tx, TransactionId transactionId, 
-  uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs) {
+  uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs, Crypto::SecretKey& tx_key) {
 
   UnconfirmedTransferDetails& utd = m_unconfirmedTxs[getObjectHash(tx)];
 
@@ -72,6 +78,7 @@ void WalletUnconfirmedTransactions::add(const Transaction& tx, TransactionId tra
   utd.sentTime = time(nullptr);
   utd.tx = tx;
   utd.transactionId = transactionId;
+  utd.secretKey = tx_key;
 
   uint64_t outsAmount = 0;
   // process used outputs

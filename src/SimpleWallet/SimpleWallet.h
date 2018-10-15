@@ -1,13 +1,12 @@
-
-
 // {DRGL} Kills White Walkers
-
+//
 // 2018 {DRÆGONGLASS}
-// <http://www.ZirtysPerzys.org>
-
+// <https://www.ZirtysPerzys.org>
+//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2016, XDN developers
-// Copyright (c) 2016-2018, Karbo developers
+// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2016-2018, The Karbo developers
 //
 // All rights reserved.
 // 
@@ -89,7 +88,7 @@ namespace CryptoNote
   private:
 
     Logging::LoggerMessage success_msg_writer(bool color = false) {
-      return logger(Logging::INFO, color ? Logging::GREEN : Logging::DEFAULT);
+      return logger(Logging::INFO, color ? Logging::BRIGHT_BLUE : Logging::DEFAULT);
     }
 
     Logging::LoggerMessage fail_msg_writer() const {
@@ -103,15 +102,15 @@ namespace CryptoNote
     bool run_console_handler();
 
     bool new_wallet(const std::string &wallet_file, const std::string& password);
-	bool new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
-	bool gen_wallet(const std::string &wallet_file, const std::string& password, const Crypto::SecretKey& recovery_key = Crypto::SecretKey(), bool recover = false, bool two_random = false);
+    bool new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
+    bool gen_wallet(const std::string &wallet_file, const std::string& password, const Crypto::SecretKey& recovery_key = Crypto::SecretKey(), bool recover = false, bool two_random = false);
     bool new_wallet(AccountKeys &private_key, const std::string &wallet_file, const std::string& password);
     bool new_tracking_wallet(AccountKeys &tracking_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
 
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
-	bool seed(const std::vector<std::string> &args = std::vector<std::string>());
+    bool seed(const std::vector<std::string> &args = std::vector<std::string>());
     bool exit(const std::vector<std::string> &args);
     bool start_mining(const std::vector<std::string> &args);
     bool stop_mining(const std::vector<std::string> &args);
@@ -128,9 +127,10 @@ namespace CryptoNote
     bool save(const std::vector<std::string> &args);
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
-	bool payment_id(const std::vector<std::string> &args);
-	bool change_password(const std::vector<std::string> &args);
-
+    bool payment_id(const std::vector<std::string> &args);
+    bool change_password(const std::vector<std::string> &args);
+    bool get_tx_key(const std::vector<std::string> &args);
+	  
 #ifndef __ANDROID__
 	std::string resolveAlias(const std::string& aliasUrl);
 	bool fetch_dns_txt(const std::string domain, std::string &record);
@@ -203,7 +203,7 @@ namespace CryptoNote
     std::string m_import_path;
     std::string m_daemon_address;
     std::string m_daemon_host;
-	std::string m_mnemonic_seed;
+    std::string m_mnemonic_seed;
     std::string m_wallet_file;
 	uint16_t m_daemon_port;
 	Crypto::SecretKey m_recovery_key;  // recovery key (used as random for wallet gen)
@@ -228,4 +228,3 @@ namespace CryptoNote
     std::condition_variable m_walletSynchronizedCV;
   };
 }
-

@@ -168,7 +168,7 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA& 
   } else {
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(get_current_blockchain_height());
 
-    logger(diff >= 0 ? (is_inital ? Logging::INFO : Logging::DEBUGGING) : Logging::TRACE, Logging::BRIGHT_YELLOW) << context <<
+    logger(diff >= 0 ? (is_inital ? Logging::INFO : Logging::DEBUGGING) : Logging::TRACE, Logging::BRIGHT_MAGENTA) << context <<
       "Sync data returned unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
       << " [" << std::abs(diff) << " blocks (" << std::abs(diff) / (24 * 60 * 60 / m_currency.difficultyTarget()) << " days) "
       << (diff >= 0 ? std::string("behind") : std::string("ahead")) << "] " << std::endl << "SYNCHRONIZATION started";
@@ -257,7 +257,7 @@ int CryptoNoteProtocolHandler::handle_notify_new_block(int command, NOTIFY_NEW_B
 
     m_core.handle_incoming_tx(transactionBinary, tvc, true);
     if (tvc.m_verifivation_failed) {
-      logger(Logging::INFO) << context << "Block verification failed: transaction verification failed, dropping connection";
+      logger(Logging::INFO, Logging::BRIGHT_MAGENTA) << context << "Block verification failed: transaction verification failed, dropping connection";
       m_p2p->drop_connection(context, true);
       return 1;
     }
@@ -324,7 +324,7 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
   logger(Logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
   NOTIFY_RESPONSE_GET_OBJECTS::request rsp;
   if (!m_core.handle_get_objects(arg, rsp)) {
-    logger(Logging::ERROR) << context << "failed to handle request NOTIFY_REQUEST_GET_OBJECTS, dropping connection";
+    logger(Logging::ERROR, Logging::BRIGHT_MAGENTA) << context << "failed to handle request NOTIFY_REQUEST_GET_OBJECTS, dropping connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
   }
   logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_GET_OBJECTS: blocks.size()=" << rsp.blocks.size() << ", txs.size()=" << rsp.txs.size()
@@ -409,7 +409,7 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
   uint32_t height;
   Crypto::Hash top;
   m_core.get_blockchain_top(height, top);
-  logger(DEBUGGING, BRIGHT_GREEN) << "Local blockchain updated, new height = " << height;
+  logger(DEBUGGING, BRIGHT_CYAN) << "Local blockchain updated, new height = " << height;
 
   if (!m_stop && context.m_state == CryptoNoteConnectionContext::state_synchronizing) {
     request_missing_objects(context, true);
@@ -434,7 +434,7 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
       tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
       m_core.handle_incoming_tx(transactionBinary, tvc, true);
       if (tvc.m_verifivation_failed) {
-        logger(Logging::ERROR) << context << "transaction verification failed on NOTIFY_RESPONSE_GET_OBJECTS, \r\ntx_id = "
+        logger(Logging::ERROR, Logging::BRIGHT_MAGENTA) << context << "transaction verification failed on NOTIFY_RESPONSE_GET_OBJECTS, \r\ntx_id = "
           << Common::podToHex(getBinaryArrayHash(asBinaryArray(tx_blob))) << ", dropping connection";
         context.m_state = CryptoNoteConnectionContext::state_shutdown;
         return 1;
@@ -537,7 +537,7 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     requestMissingPoolTransactions(context);
 
     context.m_state = CryptoNoteConnectionContext::state_normal;
-    logger(Logging::INFO, Logging::BRIGHT_GREEN) << context << "SYNCHRONIZED OK";
+    logger(Logging::INFO, Logging::BRIGHT_CYAN) << context << "SYNCHRONIZED OK";
     on_connection_synchronized();
   }
   return true;
@@ -546,13 +546,15 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
 bool CryptoNoteProtocolHandler::on_connection_synchronized() {
   bool val_expected = false;
   if (m_synchronized.compare_exchange_strong(val_expected, true)) {
-    logger(Logging::INFO) << ENDL << "**********************************************************************" << ENDL
-      << "You are now synchronized with the network. You may now start simplewallet." << ENDL
+    logger(Logging::INFO, Logging::BRIGHT_CYAN)
+      << "**********************************************************************" << ENDL
+      << "You are now synchronized with your network peers. You may start simplewallet now, My Lorde." << ENDL
       << ENDL
-      << "Please note, that the blockchain will be saved only after you quit the daemon with \"exit\" command or if you use \"save\" command." << ENDL
-      << "Otherwise, you will possibly need to synchronize the blockchain again." << ENDL
+      << "Type \"help\" for your list of available commands." << ENDL
       << ENDL
-      << "Use \"help\" command to see the list of available commands." << ENDL
+      << "Please note, the blockchain will only be saved after you quit the daemon with \"exit\" command OR if you use \"save\" command." << ENDL
+      << "Otherwise, it may be necessary to synchronize the blockchain again.";
+      logger(Logging::INFO, Logging::BRIGHT_CYAN)
       << "**********************************************************************";
     m_core.on_synchronized();
 
@@ -652,7 +654,7 @@ void CryptoNoteProtocolHandler::requestMissingPoolTransactions(const CryptoNoteC
 
   bool ok = post_notify<NOTIFY_REQUEST_TX_POOL>(*m_p2p, notification, context);
   if (!ok) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Failed to post notification NOTIFY_REQUEST_TX_POOL to " << context.m_connection_id;
+    logger(Logging::WARNING, Logging::BRIGHT_MAGENTA) << "Failed to post notification NOTIFY_REQUEST_TX_POOL to " << context.m_connection_id;
   }
 }
 

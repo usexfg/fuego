@@ -1,6 +1,13 @@
+// {DRGL} Kills White Walkers
+//
+// 2018 {DRÆGONGLASS}
+// <https://www.ZirtysPerzys.org>
+//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018, Karbo developers
+//
 // This file is part of Bytecoin.
+//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -83,10 +90,12 @@ using CryptoNote::ISerializer;
 		struct response
 		{
 			std::string tx_hash;
-
+			std::string tx_key;
+			
 			void serialize(ISerializer& s)
 			{
 				KV_MEMBER(tx_hash)
+				KV_MEMBER(tx_key)	
 			}
 		};
 	};
@@ -165,6 +174,7 @@ using CryptoNote::ISerializer;
 		uint64_t blockIndex;
 		uint64_t unlockTime;
 		uint64_t confirmations;
+		std::string txKey;
 
 		void serialize(ISerializer& s)
 		{
@@ -178,6 +188,7 @@ using CryptoNote::ISerializer;
 			KV_MEMBER(blockIndex)
 			KV_MEMBER(unlockTime)
 			KV_MEMBER(confirmations)
+			KV_MEMBER(txKey)
 		}
 	};
 
@@ -294,4 +305,25 @@ using CryptoNote::ISerializer;
 		};
 	};
 
+		/* Command: get_tx_key */
+	struct COMMAND_RPC_GET_TX_KEY
+	{
+		struct request
+		{
+			std::string tx_hash;
+			void serialize(ISerializer& s)
+			{
+				KV_MEMBER(tx_hash)
+			}
+		};
+		struct response
+		{
+			std::string tx_key;
+			void serialize(ISerializer& s)
+			{
+				KV_MEMBER(tx_key)
+			}
+		};
+	};
+	
 }} //Tools::wallet_rpc

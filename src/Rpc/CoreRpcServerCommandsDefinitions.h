@@ -1,12 +1,14 @@
-
 // {DRGL} Kills White Walkers
-
+//
 // ©2018 {DRÆGONGLASS}
-// <http://www.ZirtysPerzys.org>
+// <https://www.ZirtysPerzys.org>
+//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Forknote developers
 // Copyright (c) 2017-2018, The Karbo developers
+//
 // This file is part of Bytecoin.
+//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -789,5 +791,75 @@ struct COMMAND_RPC_GEN_PAYMENT_ID {
   };
 };
 
-}
+struct K_COMMAND_RPC_CHECK_TX_KEY {
+	struct request {
+		std::string txid;
+		std::string txkey;
+		std::string address;
+		void serialize(ISerializer &s) {
+			KV_MEMBER(txid)
+			KV_MEMBER(txkey)
+			KV_MEMBER(address)
+		}
+	};
+	struct response {
+		uint64_t amount;
+		std::vector<TransactionOutput> outputs;
+		std::string status;
+		void serialize(ISerializer &s) {
+			KV_MEMBER(amount)
+			KV_MEMBER(outputs)
+			KV_MEMBER(status)
+		}
+	};
+};
+//-----------------------------------------------
+struct K_COMMAND_RPC_CHECK_TX_WITH_PRIVATE_VIEW_KEY {
+	struct request {
+		std::string txid;
+		std::string view_key;
+		std::string address;
+		void serialize(ISerializer &s) {
+			KV_MEMBER(txid)
+				KV_MEMBER(view_key)
+				KV_MEMBER(address)
+		}
+	};
+	struct response {
+		uint64_t amount;
+		std::vector<TransactionOutput> outputs;
+		std::string status;
+		void serialize(ISerializer &s) {
+			KV_MEMBER(amount)
+				KV_MEMBER(outputs)
+				KV_MEMBER(status)
+		}
+	};
+};
 
+ struct COMMAND_RPC_VALIDATE_ADDRESS {
+  struct request {
+    std::string address;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(address)
+    }
+  };
+
+  struct response {
+    bool isvalid;
+    std::string address;
+    std::string spendPublicKey;
+    std::string viewPublicKey;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(isvalid)
+      KV_MEMBER(address)
+      KV_MEMBER(spendPublicKey)
+      KV_MEMBER(viewPublicKey)
+      KV_MEMBER(status)
+    }
+  };
+};
+}

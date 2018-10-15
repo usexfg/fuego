@@ -120,15 +120,15 @@ int main(int argc, char* argv[])
     command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
     command_line::add_arg(desc_cmd_only, arg_config_file);
 
-        command_line::add_arg(desc_cmd_sett, arg_log_file);
-        command_line::add_arg(desc_cmd_sett, arg_log_level);
-        command_line::add_arg(desc_cmd_sett, arg_console);
-	command_line::add_arg(desc_cmd_sett, arg_restricted_rpc);
-        command_line::add_arg(desc_cmd_sett, arg_testnet_on);
-	command_line::add_arg(desc_cmd_sett, arg_enable_cors);
-	command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
-	command_line::add_arg(desc_cmd_sett, arg_enable_blockchain_indexes);
-	command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
+    command_line::add_arg(desc_cmd_sett, arg_log_file);
+    command_line::add_arg(desc_cmd_sett, arg_log_level);
+    command_line::add_arg(desc_cmd_sett, arg_console);
+	  command_line::add_arg(desc_cmd_sett, arg_restricted_rpc);
+    command_line::add_arg(desc_cmd_sett, arg_testnet_on);
+	  command_line::add_arg(desc_cmd_sett, arg_enable_cors);
+	  command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
+	  command_line::add_arg(desc_cmd_sett, arg_enable_blockchain_indexes);
+	  command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
 
     
     RpcServerConfig::initOptions(desc_cmd_sett);
@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
-    logger(INFO) << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG;
+    logger(INFO, BRIGHT_WHITE) << "{{{{DRAGONGLASS}}}}" << " v" << PROJECT_VERSION_LONG;
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;

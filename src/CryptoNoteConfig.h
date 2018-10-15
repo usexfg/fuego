@@ -1,14 +1,15 @@
-
 // {DRGL} Kills White Walkers
-
+//
 // 2018 {DRÆGONGLASS}
-
-// <http://www.ZirtysPerzys.org>
+//
+// <https://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero project
 // Copyright (c) 2014-2018, The Forknote developers
 // Copyright (c) 2016-2018, The Karbowanec developers
+//
 // This file is part of Bytecoin.
+//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -135,7 +136,7 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 const char* const SEED_NODES[] = {
 "ice.zirtysperzys.info:10818",
 "fire.zirtysperzys.online:10818",
-"178.128.164.245:10818",
+"mine.drgl.online:10818",
 };
 
 struct CheckpointData {
@@ -153,7 +154,12 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 148000, "bd318f33b5f1804bc648ce847d4214cff8cfd7498483461db660a87e342eb0e9" },
 { 154322, "73232b04d18cdc9cc6430194298166c6e775a55ff0f48e2f819f8ed5fd873df7" },
 { 155433, "89be8af3d0a62454e95cf71cf7c17df9480ac337b4b5a294e0d75400b8989700" },
-{ 158000, "153b22f4912d1a6db9f235de40ae2be3a178eb44cbde8e2a4fe0c7727037ab34" }
+{ 158000, "153b22f4912d1a6db9f235de40ae2be3a178eb44cbde8e2a4fe0c7727037ab34" },
+{ 180018, "3c0c6fd2f6c2805280f2079f50f772433957fae495ad81e305835bdb935fd21e" },
+{ 200000, "4c4555f73e54b43f62fe26950d3c7f877e35c448a1e865b5ea07aa09d971e0e5" },
+{ 222222, "801d187ca11851d0379c0fa4a790d26aa24e76835d26bf7e54f4b858bfd7ad53" },
+{ 250000, "1a2cfc1c53a62038468feff7f22a150a95ba65090842d09fadd97f789e1e00fc" },
+{ 260000, "968fc54cd727b5d70c4ccc1f9fe144c58bd909acc97cd27c491c4f6fc1b97087" }
 };
 
 }

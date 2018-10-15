@@ -577,7 +577,7 @@ namespace CryptoNote
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
 
-    logger(INFO, BRIGHT_GREEN) << "Net service binded on " << m_bind_ip << ":" << m_listeningPort;
+    logger(INFO, BRIGHT_CYAN) << "Net service binded on " << m_bind_ip << ":" << m_listeningPort;
 
     if(m_external_port)
       logger(INFO) << "External port defined as " << m_external_port;
@@ -661,7 +661,7 @@ namespace CryptoNote
       m_payload_handler.stop();
     });
 
-    logger(INFO, BRIGHT_YELLOW) << "Stop signal sent";
+    logger(INFO, BRIGHT_MAGENTA) << "Stop signal sent";
     return true;
   }
 

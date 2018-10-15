@@ -1,12 +1,14 @@
 // {DRGL} Kills White Walkers
-
+//
 // 2018 {DRÆGONGLASS}
-// <http://www.ZirtysPerzys.org>
-
+// <https://www.ZirtysPerzys.org>
+//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, The Karbovanets developers
 // Copyright (c) 2014-2016, XDN developers
 // Copyright (c) 2014-2017, The Forknote developers
-// Copyright (c) 2016-2018, Karbo developers
+// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2016-2018, The Karbo developers
+// Copyright (c) 2017-2018, DRÆGONGLASS developers
 //
 // All rights reserved.
 // 
@@ -548,10 +550,10 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
 		auto pos2 = s.find(";", pos);
 		if (pos2 != std::string::npos)
 		{
-			// length of address == 95, we can at least validate that much here
-			if (pos2 - pos == 95)
+			// length of address == 98, we can at least validate that much here
+			if (pos2 - pos == 98)
 			{
-				address = s.substr(pos, 95);
+				address = s.substr(pos, 98);
 			} else {
 				return false;
 			}
@@ -673,6 +675,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("show_seed", boost::bind(&simple_wallet::seed, this, _1), "Get wallet recovery phrase (deterministic seed)");
   m_consoleHandler.setHandler("payment_id", boost::bind(&simple_wallet::payment_id, this, _1), "Generate random Payment ID");
   m_consoleHandler.setHandler("password", boost::bind(&simple_wallet::change_password, this, _1), "Change password");
+  m_consoleHandler.setHandler("get_tx_key", boost::bind(&simple_wallet::get_tx_key, this, _1), "Get secret transaction key for a given <txid>");
   m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, _1), "Show this help");
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, _1), "Close wallet");
 }
@@ -711,6 +714,30 @@ bool simple_wallet::payment_id(const std::vector<std::string> &args) {
 }
 
 //----------------------------------------------------------------------------------------------------
+bool simple_wallet::get_tx_key(const std::vector<std::string> &args) {
+  if (args.size() != 1)
+  {
+    fail_msg_writer() << "use: get_tx_key <txid>";
+    return true;
+  }
+  const std::string &str_hash = args[0];
+  Crypto::Hash txid;
+  if (!parse_hash256(str_hash, txid)) {
+    fail_msg_writer() << "Failed to parse txid";
+    return true;
+  }
+  Crypto::SecretKey tx_key = m_wallet->getTxKey(txid);
+  if (tx_key != NULL_SECRET_KEY) {
+    success_msg_writer() << "Tx key: " << Common::podToHex(tx_key);
+    return true;
+  }
+  else {
+    fail_msg_writer() << "No tx key found for this txid";
+    return true;
+  }
+}
+//----------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 
 bool simple_wallet::init(const boost::program_options::variables_map& vm)
 {
@@ -724,7 +751,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 
 	if (m_generate_new.empty() && m_wallet_file_arg.empty())
 	{
-		std::cout << "Nor 'generate-new-wallet' neither 'wallet-file' argument was specified.\nWhat do you want to do?\n";
+		std::cout << "Neither 'generate-new-wallet' nor 'wallet-file' argument was specified.\nWhat do you wish to do?\n";
 		std::cout << "O - open wallet\n";
 		std::cout << "G - generate new wallet\n";
 		std::cout << "I - import wallet from keys\n";
@@ -1006,7 +1033,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 			return false;
 
 		if (!Common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) 
-			|| size != sizeof(private_spend_key_hash))
+			|| size != sizeof(private_view_key_hash))
 			return false;
 		
 		Crypto::SecretKey private_spend_key = *(struct Crypto::SecretKey *) &private_spend_key_hash;
@@ -1406,8 +1433,8 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
     "Your wallet has been imported.\n" <<
     "Use \"help\" command to see the list of available commands.\n" <<
     "Always use \"exit\" command when closing simplewallet to save\n" <<
-    "current session's state. Otherwise, you will possibly need to synchronize \n" <<
-    "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
+    "current session's state. Otherwise, you may need to synchronize \n" <<
+    "your wallet again. Your wallet key is NOT under risk in that way.\n" <<
     "**********************************************************************";
   return true;
 }
@@ -1458,8 +1485,8 @@ bool simple_wallet::new_wallet(AccountKeys &private_key, const std::string &wall
         "Your wallet has been imported.\n" <<
         "Use \"help\" command to see the list of available commands.\n" <<
         "Always use \"exit\" command when closing simplewallet to save\n" <<
-        "current session's state. Otherwise, you will possibly need to synchronize \n" <<
-        "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
+        "current session's state. Otherwise, you may need to synchronize \n" <<
+        "your wallet again. Your wallet key is NOT under risk in that way.\n" <<
         "**********************************************************************";
     return true;
 }
@@ -1506,12 +1533,12 @@ bool simple_wallet::new_tracking_wallet(AccountKeys &tracking_key, const std::st
     success_msg_writer() <<
         "**********************************************************************\n" <<
         "Your tracking wallet has been imported. It doesn't allow spending funds.\n" <<
-        "It allows to view incoming transactions but not outgoing ones. \n" <<
-        "If there were spendings total balance will be inaccurate. \n" <<
+        "It allows you to view incoming transactions but not outgoing ones. \n" <<
+        "If there were spendings, total balance will be inaccurate. \n" <<
         "Use \"help\" command to see the list of available commands.\n" <<
         "Always use \"exit\" command when closing simplewallet to save\n" <<
-        "current session's state. Otherwise, you will possibly need to synchronize \n" <<
-        "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
+        "current session's state. Otherwise, you may need to synchronize \n" <<
+        "your wallet again. Your wallet key is NOT under risk in that way.\n" <<
         "**********************************************************************";
     return true;
 }
@@ -2047,7 +2074,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     CryptoNote::TransactionId tx = m_wallet->sendTransaction(cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
-      fail_msg_writer() << "Can't send money";
+      fail_msg_writer() << "Can't send DRGL";
       return true;
     }
 
@@ -2061,7 +2088,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     CryptoNote::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
-    success_msg_writer(true) << "Money successfully sent, transaction " << Common::podToHex(txInfo.hash);
+    success_msg_writer(true) << "DRGL successfully sent, transaction id: " << Common::podToHex(txInfo.hash) << ", key: " << Common::podToHex(txInfo.secretKey);
 
     try {
       CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
@@ -2339,5 +2366,3 @@ int main(int argc, char* argv[]) {
   return 1;
   //CATCH_ENTRY_L0("main", 1);
 }
-
-

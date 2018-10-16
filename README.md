@@ -1,7 +1,7 @@
 <p align="right"><a href="https://zirtysperzys.org">Website</a><p align="right">
-<p align="right"><a href="https://mine.drgl.online">Slush Pool</a><p align="right">
+<p align="right"><a href="https://mine.drgl.online">Official Pool</a><p align="right">
 <p align="right"><a href="https://mine.drgl.online">Mining Pool</a><p align="right">
-<p align="right"><a href="https://drgl.info">ChainXplorer</a><p align="right">
+<p align="right"><a href="https://drgl.info">ChainXplore</a><p align="right">
 <h1 align="center"><img title="The Long Night Is Coming" src="https://raw.githubusercontent.com/ZirtysPerzys/DRGL-X/master/DRGL750px.png" width="200" height="200" ><img/></h1>
 
 <h2 align="center">⟬⟬⟬⟬ DRAGONGLASS ⟭⟭⟭⟭<h2 align="center">

@@ -16,7 +16,7 @@
  
 ##### Master Build Status
 
-[![Build Status](https://travis-ci.org/ZirtysPerzys/DRGL.svg?branch=master)](https://travis-ci.org/ZirtysPerzys/DRGL)
+[![Build Status](https://travis-ci.org/ZirtysPerzys/Dragonglass.svg?branch=master)](https://travis-ci.org/ZirtysPerzys/Dragonglass)
 
 
 
@@ -39,11 +39,11 @@ executing the following command.
 
 2. Clone DRGL repository
 ```
-git clone https://github.com/ZirtysPerzys/DRGL
+git clone https://github.com/ZirtysPerzys/Dragonglass
 ```
 3. Open folder with copied repository
 
-`cd DRGL`
+`cd Dragonglass`
 
 4. Building (Compiling)
 
@@ -57,7 +57,7 @@ The resulting executables can be found in build/release/src.
 
 5. Starting DRGL daemon
 `
-cd DRGL/build/release/src 
+cd Dragonglass/build/release/src 
 `
 
 *** Start daemon, by typing the following command-
@@ -67,8 +67,8 @@ cd DRGL/build/release/src
 for a list of commands in daemon type  --help
 
 
-After you are have very success,
-also see {DRGL GUI Wallet} 
+
+alternatively or also see {DRGL GUI Wallet} 
 https://github.com/ZirtysPerzys/DRGL-wallet
 
 
@@ -120,10 +120,10 @@ sudo apt-get update
 sudo apt-get install build-essential git cmake libboost-all-dev
 
 3: Git clone
-git clone https://github.com/ZirtysPerzys/DRGL.git
+git clone https://github.com/ZirtysPerzys/Dragonglass.git
 
 4: Build the files
-cd DRGL
+cd Dragonglass
 make
 
 5: Sync blocks
@@ -133,9 +133,9 @@ cd build/release/src/
 !!keep this terminal running and open new terminal for next step!!
 
 6: Start simplewallet and create wallet (navigate to the folder where you created the wallet)
-~DRGL/build/release/src$ ./simplewallet
+~Dragonglass/build/release/src$ ./simplewallet
 or
-cd DRGL/build/release/src
+cd Dragonglass/build/release/src
 ./simplewallet
 
 set up wallet name & password

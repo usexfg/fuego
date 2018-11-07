@@ -1,11 +1,10 @@
-
 // {DRGL} Kills White Walkers
-
+//
 // 2018 {DRÆGONGLASS}
-// <http://www.ZirtysPerzys.org>
-
+//
+// <https://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016, The Karbowanec developers
+// Copyright (c) 2016-2018, The Karbowanec developers
 // This file is part of Bytecoin.
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -43,7 +42,26 @@ public:
   size_t minedMoneyUnlockWindow() const { return m_minedMoneyUnlockWindow; }
 
   size_t timestampCheckWindow() const { return m_timestampCheckWindow; }
+  size_t timestampCheckWindow(uint8_t blockMajorVersion) const {
+    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_4) {
+      return timestampCheckWindow_v1();
+    }
+    else {
+      return timestampCheckWindow();
+    }
+  }
+  size_t timestampCheckWindow_v1() const { return m_timestampCheckWindow_v1; }
+  
   uint64_t blockFutureTimeLimit() const { return m_blockFutureTimeLimit; }
+  uint64_t blockFutureTimeLimit(uint8_t blockMajorVersion) const {
+    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_4) {
+      return blockFutureTimeLimit_v1();
+    }
+    else {
+      return blockFutureTimeLimit();
+    }
+  }
+  uint64_t blockFutureTimeLimit_v1() const { return m_blockFutureTimeLimit_v1; }
 
   uint64_t moneySupply() const { return m_moneySupply; }
   unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
@@ -138,7 +156,8 @@ public:
   difficulty_type nextDifficultyV1(std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
   difficulty_type nextDifficultyV2(std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
   difficulty_type nextDifficultyV3(std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
-
+  difficulty_type nextDifficultyV4(uint8_t blockMajorVersion, std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
+  
   bool checkProofOfWorkV1(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
   bool checkProofOfWorkV2(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
   bool checkProofOfWork(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
@@ -161,7 +180,9 @@ private:
   size_t m_minedMoneyUnlockWindow;
 
   size_t m_timestampCheckWindow;
+  size_t m_timestampCheckWindow_v1;
   uint64_t m_blockFutureTimeLimit;
+  uint64_t m_blockFutureTimeLimit_v1; 
 
   uint64_t m_moneySupply;
   unsigned int m_emissionSpeedFactor;
@@ -199,6 +220,7 @@ private:
 
   uint32_t m_upgradeHeightV2;
   uint32_t m_upgradeHeightV3;
+  uint32_t m_upgradeHeightV4;
   unsigned int m_upgradeVotingThreshold;
   uint32_t m_upgradeVotingWindow;
   uint32_t m_upgradeWindow;
@@ -240,7 +262,10 @@ public:
   CurrencyBuilder& minedMoneyUnlockWindow(size_t val) { m_currency.m_minedMoneyUnlockWindow = val; return *this; }
 
   CurrencyBuilder& timestampCheckWindow(size_t val) { m_currency.m_timestampCheckWindow = val; return *this; }
+  CurrencyBuilder& timestampCheckWindow_v1(size_t val) { m_currency.m_timestampCheckWindow_v1 = val; return *this; }
+  
   CurrencyBuilder& blockFutureTimeLimit(uint64_t val) { m_currency.m_blockFutureTimeLimit = val; return *this; }
+  CurrencyBuilder& blockFutureTimeLimit_v1(uint64_t val) { m_currency.m_blockFutureTimeLimit_v1 = val; return *this; }
 
   CurrencyBuilder& moneySupply(uint64_t val) { m_currency.m_moneySupply = val; return *this; }
   CurrencyBuilder& emissionSpeedFactor(unsigned int val);
@@ -277,6 +302,7 @@ public:
 
   CurrencyBuilder& upgradeHeightV2(uint64_t val) { m_currency.m_upgradeHeightV2 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeHeightV3(uint64_t val) { m_currency.m_upgradeHeightV3 = static_cast<uint32_t>(val); return *this; }
+  CurrencyBuilder& upgradeHeightV4(uint64_t val) { m_currency.m_upgradeHeightV4 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
   CurrencyBuilder& upgradeVotingWindow(size_t val) { m_currency.m_upgradeVotingWindow = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeWindow(size_t val);

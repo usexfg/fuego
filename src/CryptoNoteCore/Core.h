@@ -195,3 +195,4 @@ namespace CryptoNote {
      Tools::ObserverManager<ICoreObserver> m_observerManager;
    };
 }
+

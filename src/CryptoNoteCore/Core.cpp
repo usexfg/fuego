@@ -1160,3 +1160,4 @@ bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
 }
 
 }
+

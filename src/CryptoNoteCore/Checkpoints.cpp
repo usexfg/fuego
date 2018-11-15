@@ -2,25 +2,23 @@
 //
 // 2018 {DRÆGONGLASS}
 // <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
+// Copyright (c) 2016-2018, The Karbowanec developers
+
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Bytecoin is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Checkpoints.h"
+#include "../CryptoNoteConfig.h"
 #include "Common/StringTools.h"
 
 using namespace Logging;
@@ -78,6 +76,14 @@ bool Checkpoints::is_alternative_block_allowed(uint32_t  blockchain_height,
                                                uint32_t  block_height) const {
   if (0 == block_height)
     return false;
+
+if (block_height < blockchain_height - CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
+  {
+    logger(Logging::WARNING, Logging::BRIGHT_MAGENTA)
+      << "An attempt of too deep reorganization: "
+      << blockchain_height - block_height << ", BLOCK REJECTED";
+    return false;
+  }
 
   auto it = m_points.upper_bound(blockchain_height);
   // Is blockchain_height before the first checkpoint?

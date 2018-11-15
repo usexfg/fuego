@@ -1,15 +1,16 @@
 // {DRGL} Kills White Walkers
 //
 // 2018 {DRÆGONGLASS}
-//
 // <https://www.ZirtysPerzys.org>
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2016, The CryptoNote developers, 
+// Copyright (c) 2012-2016, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero project
 // Copyright (c) 2014-2018, The Forknote developers
 // Copyright (c) 2016-2018, The Karbowanec developers
-//
+// Copyright (c) 2018-2018, The Ryo Currency developers
+// Copyright (c) 2017-2018, The Dragonglass developers
+
 // This file is part of Bytecoin.
-//
 // Bytecoin is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -147,7 +148,7 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 const char* const SEED_NODES[] = {
 "ice.zirtysperzys.info:10818",
 "fire.zirtysperzys.online:10818",
-"mine.drgl.online:10818",
+"mine.drgl.online:10818"
 };
 
 struct CheckpointData {
@@ -177,4 +178,4 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 }
 
 #define ALLOW_DEBUG_COMMANDS
-//The true enemy won't wait out the storm, he brings the storm.
+//Knowledge has made you powerful but there is still so much you don't know.

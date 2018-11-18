@@ -600,7 +600,7 @@ namespace CryptoNote {
 			   uint64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V3; // N=60, 90, and 120 for T=600, 120, 60.
 			   uint64_t  L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
 			   uint32_t Dracarys = CryptoNote::parameters::UPGRADE_HEIGHT_V4;
-	   		   uint64_t difficulty_plate = 1000000;
+	   		   uint64_t difficulty_plate = 10000000;
 	   		   
 			   assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 

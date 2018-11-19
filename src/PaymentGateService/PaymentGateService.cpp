@@ -162,7 +162,7 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
 
   CryptoNote::CryptoNoteProtocolHandler protocol(currency, *dispatcher, core, NULL, logger);
   CryptoNote::NodeServer p2pNode(*dispatcher, protocol, logger);
-  
+  //courtesy of Helder Garcia (Niobio Cash)
   CryptoNote::Checkpoints checkpoints(logger);
   for (const auto& cp : CryptoNote::CHECKPOINTS) {
     checkpoints.add_checkpoint(cp.height, cp.blockId);

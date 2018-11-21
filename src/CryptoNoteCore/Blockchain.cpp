@@ -1713,7 +1713,7 @@ uint64_t Blockchain::get_adjusted_time() {
 bool Blockchain::check_block_timestamp_main(const Block& b) {
    if (b.timestamp > get_adjusted_time() + m_currency.blockFutureTimeLimit(b.majorVersion)) { 
 	   logger(INFO, BRIGHT_WHITE) <<
-      "Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", bigger than adjusted time + 28 min.";
+      "Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", bigger than adjusted time + 4 min.";
     return false;
   }
 

@@ -447,9 +447,9 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     // legitimate pools by submitting fake timestamps to the network.
 
 
-    if(height >= m_currency.timestampCheckWindow(b.majorVersion)) {
+    if(height >= m_currency.timestampCheckWindow()) {
       std::vector<uint64_t> timestamps;
-      for(size_t offset = height - m_currency.timestampCheckWindow(b.majorVersion); offset < height; ++offset) {
+      for(size_t offset = height - m_currency.timestampCheckWindow(); offset < height; ++offset) {
 
         timestamps.push_back(m_blockchain.getBlockTimestamp(offset));
       }

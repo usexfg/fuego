@@ -37,9 +37,9 @@ const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 679385; // addresses start with "dRGL"
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 60;
   
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = DIFFICULTY_TARGET * 6;
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = DIFFICULTY_TARGET * 6;//def=*7
   
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 11;
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 11;//def=60
 
 
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(80000088000008);
@@ -89,7 +89,8 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
   
 const uint32_t UPGRADE_HEIGHT_V2                             = 147958; //{Hardhome}
 const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{Longclaw}
-const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}  
+const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
+const uint32_t UPGRADE_HEIGHT_V5                             = 324810; //{Ironborn} CNv7
   
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
@@ -114,6 +115,7 @@ const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_2                         =  2;
 const uint8_t  BLOCK_MAJOR_VERSION_3                         =  3;
 const uint8_t  BLOCK_MAJOR_VERSION_4                         =  4;
+const uint8_t  BLOCK_MAJOR_VERSION_5                         =  5;
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;
 
@@ -139,8 +141,8 @@ const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT                    = 60 * 2 * 1000; //
 const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          // 5 seconds
 const uint32_t P2P_FAILED_ADDR_FORGET_SECONDS                = (60 * 60);     // 1 hour
 const uint32_t P2P_IP_BLOCKTIME                              = (60 * 60 * 24);// 24 hour
-const uint32_t P2P_IP_FAILS_BEFORE_BLOCK                     = 10;
-const uint32_t P2P_IDLE_CONNECTION_KILL_INTERVAL             = (5 * 60);      // 5 minutes
+const uint32_t P2P_IP_FAILS_BEFORE_BLOCK                     =  90;
+const uint32_t P2P_IDLE_CONNECTION_KILL_INTERVAL             = (30 * 60);     // 30 minutes
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 
 const char* const SEED_NODES[] = {

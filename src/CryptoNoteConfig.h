@@ -37,9 +37,10 @@ const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 679385; // addresses start with "dRGL"
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 60;
   
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = DIFFICULTY_TARGET * 6;//def=*7
-  
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 11;//def=60
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2;
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1         = DIFFICULTY_TARGET * 6;
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; 
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1          = 11;
 
 
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(80000088000008);
@@ -174,8 +175,8 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 250000, "1a2cfc1c53a62038468feff7f22a150a95ba65090842d09fadd97f789e1e00fc" },
 { 260000, "968fc54cd727b5d70c4ccc1f9fe144c58bd909acc97cd27c491c4f6fc1b97087" },
 { 280000, "fa6016236d07c8a5ab660f5ddd788f2f002bd518146e2bc379dd66d1bc7f94a8" },
-{ 300001, "ba7e401c03a9f5b2111ef402d8715761990ff53e31069c413f5c78c7cd819de9" }
-
+{ 300001, "ba7e401c03a9f5b2111ef402d8715761990ff53e31069c413f5c78c7cd819de9" },
+{ 320000, "2c42f527960ce443ffa645b0af85d85bdf10cf9df8625d900b4edd0b29b68735" }
 };
 
 }

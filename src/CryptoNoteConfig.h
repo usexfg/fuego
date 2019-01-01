@@ -2,25 +2,25 @@
 //
 // 2018 {DRÆGONGLASS}
 // <https://www.ZirtysPerzys.org>
-// Copyright (c) 2012-2016, The CryptoNote developers, 
+// Copyright (c) 2012-2016, The CryptoNote developers 
 // Copyright (c) 2012-2016, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero project
 // Copyright (c) 2014-2018, The Forknote developers
 // Copyright (c) 2016-2018, The Karbowanec developers
 // Copyright (c) 2018-2018, The Ryo Currency developers
-// Copyright (c) 2017-2018, The Dragonglass developers
-
-// This file is part of Bytecoin.
-// Bytecoin is free software: you can redistribute it and/or modify
+// Copyright (c) 2017-2019, The DRAGONGLASS Developers
+//
+// This file is part of DRAGONGLASS.
+// DRAGONGLASS is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Bytecoin is distributed in the hope that it will be useful,
+// DRAGONGLASS is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with DRAGONGLASS.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -59,7 +59,7 @@ const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DIFFICULTY_TARGET;
 const size_t   DIFFICULTY_WINDOW                             = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks
-const size_t   DIFFICULTY_WINDOW_V3                          = 60; // blocks
+const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks
 
 const uint64_t MINIMUM_FEE                                   = UINT64_C(800000);
 const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(8000);
@@ -88,10 +88,11 @@ const size_t   FUSION_TX_MAX_SIZE                            = CRYPTONOTE_BLOCK_
 const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
   
-const uint32_t UPGRADE_HEIGHT_V2                             = 147958; //{Hardhome}
-const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{Longclaw}
-const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
-const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn} CNv7
+const uint32_t UPGRADE_HEIGHT_V2                             = 147958; //{HarDhome}
+const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{LonGclaw}
+const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{DraCarys}
+const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{IroNborn}
+const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire} CN8
   
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
@@ -117,6 +118,7 @@ const uint8_t  BLOCK_MAJOR_VERSION_2                         =  2;
 const uint8_t  BLOCK_MAJOR_VERSION_3                         =  3;
 const uint8_t  BLOCK_MAJOR_VERSION_4                         =  4;
 const uint8_t  BLOCK_MAJOR_VERSION_5                         =  5;
+const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;
 
@@ -176,7 +178,10 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 260000, "968fc54cd727b5d70c4ccc1f9fe144c58bd909acc97cd27c491c4f6fc1b97087" },
 { 280000, "fa6016236d07c8a5ab660f5ddd788f2f002bd518146e2bc379dd66d1bc7f94a8" },
 { 300001, "ba7e401c03a9f5b2111ef402d8715761990ff53e31069c413f5c78c7cd819de9" },
-{ 320000, "2c42f527960ce443ffa645b0af85d85bdf10cf9df8625d900b4edd0b29b68735" }
+{ 320000, "2c42f527960ce443ffa645b0af85d85bdf10cf9df8625d900b4edd0b29b68735" },
+{ 324820, "99fb6b6c81c9ceff7bcdef0667cf270a5300dec6393de21bd599d414eef38569" },
+{ 333333, "d58919713e37e4317a3e50c12639fe591958d2e43637cf8f99f596c6c8275241" }
+
 };
 
 }

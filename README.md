@@ -1,7 +1,8 @@
 <p align="right"><a href="https://zirtysperzys.org">Website</a><p align="right">
-<p align="right"><a href="https://mine.drgl.online">Official Pool</a><p align="right">
-<p align="right"><a href="https://mine.drgl.online">Mining Pool</a><p align="right">
 <p align="right"><a href="https://drgl.info">ChainXplore</a><p align="right">
+<p align="right"><a href="https://crypto9coin.cf/drgl">20dec Pool</a><p align="right">
+<p align="right"><a href="https://drgl.online">Dev Pool</a><p align="right">
+<p align="right"><a href="https://drgl.cool-pool.net">Cool Pool</a><p align="right">
 <h1 align="center"><img title="The Long Night Is Coming" src="https://raw.githubusercontent.com/ZirtysPerzys/DRGL-X/master/images/DRGL/DRGLdragonglass.png" width="200" height="200" ><img/></h1>
 
 <h2 align="center">⟬⟬⟬⟬ DRAGONGLASS ⟭⟭⟭⟭<h2 align="center">
@@ -16,7 +17,7 @@
  
 ##### Master Build Status
 
-[![Build Status](https://travis-ci.org/ZirtysPerzys/Dragonglass.svg?branch=master)](https://travis-ci.org/ZirtysPerzys/Dragonglass)
+[![Build Status](https://travis-ci.org/ZirtysPerzys/dragonglass.svg?branch=master)](https://travis-ci.org/ZirtysPerzys/dragonglass)
 
 
 
@@ -39,11 +40,11 @@ executing the following command.
 
 2. Clone DRGL repository
 ```
-git clone https://github.com/ZirtysPerzys/Dragonglass
+git clone https://github.com/ZirtysPerzys/dragonglass
 ```
 3. Open folder with copied repository
 
-`cd Dragonglass`
+`cd dragonglass`
 
 4. Building (Compiling)
 
@@ -55,9 +56,9 @@ make -j4
 The resulting executables can be found in build/release/src.
 
 
-5. Starting DRGL daemon
+5. Starting dragonglass daemon
 `
-cd Dragonglass/build/release/src 
+cd dragonglass/build/release/src 
 `
 
 *** Start daemon, by typing the following command-
@@ -69,7 +70,7 @@ for a list of commands in daemon type  --help
 
 
 alternatively or also see {DRGL GUI Wallet} 
-https://github.com/ZirtysPerzys/DRGL-wallet
+https://github.com/ZirtysPerzys/DRGL
 
 
 _________________________________________________________
@@ -99,7 +100,7 @@ And then do Build.
 ________________
 
 
-*courtesy of Sir {WindowSlayer} of Galapagos*
+*courtesy of Sir {WindowSlayer} Galapagos*
 
 
 On windows 10
@@ -120,10 +121,10 @@ sudo apt-get update
 sudo apt-get install build-essential git cmake libboost-all-dev
 
 3: Git clone
-git clone https://github.com/ZirtysPerzys/Dragonglass.git
+git clone https://github.com/ZirtysPerzys/dragonglass.git
 
 4: Build the files
-cd Dragonglass
+cd dragonglass
 make
 
 5: Sync blocks
@@ -133,9 +134,9 @@ cd build/release/src/
 !!keep this terminal running and open new terminal for next step!!
 
 6: Start simplewallet and create wallet (navigate to the folder where you created the wallet)
-~Dragonglass/build/release/src$ ./simplewallet
+~dragonglass/build/release/src$ ./simplewallet
 or
-cd Dragonglass/build/release/src
+cd dragonglass/build/release/src
 ./simplewallet
 
 set up wallet name & password

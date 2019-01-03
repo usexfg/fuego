@@ -1,12 +1,8 @@
-// {DRGL} Kills White Walkers
-
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018, zawy12
-// Copyright (c) 2016-2018, The Karbowanec developers
-// Copyright (c) 2018-2019  The DRAGONGLASS developers
-//
+// Copyright (c) 2016-2018 The Karbowanec developers
+// Copyright (c) 2017-2019 The Dragonglass developers
+// <https://www.ZirtysPerzys.org>
 // This file is part of DRAGONGLASS.
 // DRAGONGLASS is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -608,8 +604,8 @@ namespace CryptoNote {
 			   const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
 			   uint64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V3; // N=60, 90, and 120 for T=600, 120, 60.
 			   uint64_t  L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
-			   uint32_t Dracarys = CryptoNote::parameters::UPGRADE_HEIGHT_V4;
-	   		   uint64_t difficulty_plate = 10000000;
+			   uint32_t Dracarys = m_upgradeHeightV4;//CryptoNote::parameters::UPGRADE_HEIGHT_V4;
+	   		   uint64_t difficulty_plate = 100;//10000000;
 	   		   
 			   assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 
@@ -664,7 +660,7 @@ namespace CryptoNote {
 
 	bool Currency::checkProofOfWorkV1(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic,
 		Crypto::Hash& proofOfWork) const {
-		if (BLOCK_MAJOR_VERSION_1 != block.majorVersion) {
+		if (BLOCK_MAJOR_VERSION_2 == block.majorVersion || BLOCK_MAJOR_VERSION_3 == block.majorVersion || BLOCK_MAJOR_VERSION_4 == block.majorVersion || BLOCK_MAJOR_VERSION_5 == block.majorVersion) {
 			return false;
 		}
 
@@ -719,13 +715,13 @@ namespace CryptoNote {
 	bool Currency::checkProofOfWork(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const {
 		switch (block.majorVersion) {
 		case BLOCK_MAJOR_VERSION_1:
+		case BLOCK_MAJOR_VERSION_6:
 			return checkProofOfWorkV1(context, block, currentDiffic, proofOfWork);
 
 		case BLOCK_MAJOR_VERSION_2:
 		case BLOCK_MAJOR_VERSION_3:
 		case BLOCK_MAJOR_VERSION_4:
 		case BLOCK_MAJOR_VERSION_5:
-		case BLOCK_MAJOR_VERSION_6:
 			return checkProofOfWorkV2(context, block, currentDiffic, proofOfWork);
 		}
 

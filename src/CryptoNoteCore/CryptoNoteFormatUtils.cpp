@@ -1,10 +1,7 @@
-// {DRGL} Kills White Walkers
-// <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2019 The DRAGONGLASS developers
-//
+// Copyright (c) 2017-2019 The Dragonglass developers
+// <https://www.ZirtysPerzys.org>
 // This file is part of DRAGONGLASS.
 // DRAGONGLASS is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -470,7 +467,7 @@ bool get_block_hash(const Block& b, Hash& res) {
     return false;
   }
 
-  if (BLOCK_MAJOR_VERSION_2 <= b.majorVersion) {
+  if (BLOCK_MAJOR_VERSION_2 == b.majorVersion || BLOCK_MAJOR_VERSION_3 == b.majorVersion || BLOCK_MAJOR_VERSION_4 == b.majorVersion || BLOCK_MAJOR_VERSION_5 == b.majorVersion) {
     BinaryArray parent_blob;
     auto serializer = makeParentBlockSerializer(b, true, false);
     if (!toBinaryArray(serializer, parent_blob))
@@ -499,11 +496,11 @@ bool get_aux_block_header_hash(const Block& b, Hash& res) {
 
 bool get_block_longhash(cn_context &context, const Block& b, Hash& res) {
   BinaryArray bd;
-  if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
+  if (b.majorVersion == BLOCK_MAJOR_VERSION_1 || b.majorVersion >= BLOCK_MAJOR_VERSION_6) {
     if (!get_block_hashing_blob(b, bd)) {
       return false;
     }
-  } else if (b.majorVersion >= BLOCK_MAJOR_VERSION_2) {
+  } else if (b.majorVersion == BLOCK_MAJOR_VERSION_2 || b.majorVersion == BLOCK_MAJOR_VERSION_3 || b.majorVersion == BLOCK_MAJOR_VERSION_4 || b.majorVersion == BLOCK_MAJOR_VERSION_5) {
     if (!get_parent_block_hashing_blob(b, bd)) {
       return false;
     }

@@ -1,7 +1,10 @@
+// {DRGL} Kills White Walkers
+// <https://www.ZirtysPerzys.org>
+//
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2017-2019 The Dragonglass developers
-// <https://www.ZirtysPerzys.org>
+// Copyright (c) 2018-2019 The DRAGONGLASS developers
+//
 // This file is part of DRAGONGLASS.
 // DRAGONGLASS is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -382,14 +385,13 @@ void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
   }
 
   serializer(header.minorVersion, "minor_version");
-    if (header.majorVersion == BLOCK_MAJOR_VERSION_2 || header.majorVersion == BLOCK_MAJOR_VERSION_3 || header.majorVersion == BLOCK_MAJOR_VERSION_4 || header.majorVersion == BLOCK_MAJOR_VERSION_5) {
-    serializer(header.previousBlockHash, "prev_id");
-   } else if (header.majorVersion == BLOCK_MAJOR_VERSION_1 || header.majorVersion >= BLOCK_MAJOR_VERSION_6) {
+  if (header.majorVersion == BLOCK_MAJOR_VERSION_1) {
     serializer(header.timestamp, "timestamp");
     serializer(header.previousBlockHash, "prev_id");
     serializer.binary(&header.nonce, sizeof(header.nonce), "nonce");
-  } 
-    else {
+  } else if (header.majorVersion >= BLOCK_MAJOR_VERSION_2) {
+    serializer(header.previousBlockHash, "prev_id");
+  } else {
     throw std::runtime_error("Wrong major version");
   }
 }
@@ -401,7 +403,7 @@ void serialize(BlockHeader& header, ISerializer& serializer) {
 void serialize(Block& block, ISerializer& serializer) {
   serializeBlockHeader(block, serializer);
 
-  if (block.majorVersion == BLOCK_MAJOR_VERSION_2 || block.majorVersion == BLOCK_MAJOR_VERSION_3 || block.majorVersion == BLOCK_MAJOR_VERSION_4 || block.majorVersion == BLOCK_MAJOR_VERSION_5) {
+  if (block.majorVersion >= BLOCK_MAJOR_VERSION_2) {
     auto parentBlockSerializer = makeParentBlockSerializer(block, false, false);
     serializer(parentBlockSerializer, "parent_block");
   }

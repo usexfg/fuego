@@ -1,7 +1,10 @@
-// Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2017-2019 The Dragonglass developers
+// {DRGL} Kills White Walkers
 // <https://www.ZirtysPerzys.org>
+//
+// Copyright (c) 2012-2016 The CryptoNote developers
+// Copyright (c) 2016-2018 The Karbowanec developers
+// Copyright (c) 2018-2019 The DRAGONGLASS developers
+//
 // This file is part of DRAGONGLASS.
 // DRAGONGLASS is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -405,8 +408,10 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
 
         if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
       b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
-    } else if (b.majorVersion == BLOCK_MAJOR_VERSION_2 || b.majorVersion == BLOCK_MAJOR_VERSION_3 || b.majorVersion == BLOCK_MAJOR_VERSION_4 || b.majorVersion == BLOCK_MAJOR_VERSION_5) {
-      if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_5) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+    } else if (b.majorVersion >= BLOCK_MAJOR_VERSION_2) {
+      if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_6) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+        b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_5 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
+      } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_5) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_4 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
       } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_4) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_3 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
@@ -426,10 +431,6 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
         return false;
       }
     }
-
-    else if (b.majorVersion >= BLOCK_MAJOR_VERSION_6) {
-       b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_6) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
-     }
 
     b.previousBlockHash = get_tail_id();
     b.timestamp = time(NULL);

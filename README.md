@@ -5,7 +5,7 @@
 <p align="right"><a href="https://www.coinsforhash.com/dragonglass/#">Coinsforhash</a><p align="right">
 <h1 align="center"><img title="The Long Night Is Coming" src="https://raw.githubusercontent.com/ZirtysPerzys/DRGL-X/master/images/DRGL/DRGLdragonglass.png" width="200" height="200" ><img/></h1>
 
-<h2 align="center">⟬⟬⟬⟬ DRÆGONGLASS ⟭⟭⟭⟭<h2 align="center">
+<h2 align="center">⟬⟬⟬⟬ DRAGONGLASS ⟭⟭⟭⟭<h2 align="center">
 
 <p align="center">Anonymous Encrypted Currency <p align="center">
 ........that kills white walkers.

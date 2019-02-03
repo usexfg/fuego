@@ -2,12 +2,12 @@
 <p align="right"><a href="https://drgl.info">ChainXplore</a><p align="right">
 <p align="right"><a href="https://crypto9coin.cf/drgl">20dec Pool</a><p align="right">
 <p align="right"><a href="https://drgl.online">Dev Pool</a><p align="right">
-<p align="right"><a href="https://drgl.cool-pool.net">Cool Pool</a><p align="right">
+<p align="right"><a href="https://www.coinsforhash.com/dragonglass/#">Coinsforhash</a><p align="right">
 <h1 align="center"><img title="The Long Night Is Coming" src="https://raw.githubusercontent.com/ZirtysPerzys/DRGL-X/master/images/DRGL/DRGLdragonglass.png" width="200" height="200" ><img/></h1>
 
-<h2 align="center">⟬⟬⟬⟬ DRAGONGLASS ⟭⟭⟭⟭<h2 align="center">
+<h2 align="center">⟬⟬⟬⟬ DRÆGONGLASS ⟭⟭⟭⟭<h2 align="center">
 
-<p align="center">Anonymous Encrypted Digital Currency <p align="center">
+<p align="center">Anonymous Encrypted Currency <p align="center">
 ........that kills white walkers.
 
 

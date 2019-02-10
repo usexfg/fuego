@@ -5,18 +5,19 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018, zawy12
 // Copyright (c) 2016-2018, The Karbowanec developers
-// Copyright (c) 2017-2018, The Dragonglass developers
-// This file is part of Bytecoin.
-// Bytecoin is free software: you can redistribute it and/or modify
+// Copyright (c) 2018-2019  The DRAGONGLASS developers
+//
+// This file is part of DRAGONGLASS.
+// DRAGONGLASS is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Bytecoin is distributed in the hope that it will be useful,
+// DRAGONGLASS is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with DRAGONGLASS.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Currency.h"
 #include <cctype>
@@ -79,7 +80,8 @@ namespace CryptoNote {
 			m_upgradeHeightV2 = 0;
 			m_upgradeHeightV3 = 1;
 			m_upgradeHeightV4 = 2;	
-			m_upgradeHeightV5 = 80;	
+			m_upgradeHeightV5 = 8;
+			m_upgradeHeightV6 = 80;	
 			m_blocksFileName = "testnet_" + m_blocksFileName;
 			m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
 			m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
@@ -142,6 +144,9 @@ namespace CryptoNote {
 		}
 		else if (majorVersion == BLOCK_MAJOR_VERSION_5) {
 			return m_upgradeHeightV5;
+		}
+		else if (majorVersion == BLOCK_MAJOR_VERSION_6) {
+			return m_upgradeHeightV6;
 		}
 		else {
 			return static_cast<uint32_t>(-1);
@@ -520,7 +525,7 @@ namespace CryptoNote {
 		uint64_t nextDiffZ = low / timeSpan;
 
 		// minimum limit
-		if (nextDiffZ < 10000) {
+		if (!isTestnet() && nextDiffZ < 10000) {
 			nextDiffZ = 10000;
 		}
 
@@ -583,7 +588,7 @@ namespace CryptoNote {
 		next_difficulty = static_cast<uint64_t>(nextDifficulty);
 		
 		// minimum limit
-		if (next_difficulty < 10000) {
+		if (!isTestnet() && next_difficulty < 10000) {
 			next_difficulty = 10000;
 		} 
 
@@ -650,7 +655,7 @@ namespace CryptoNote {
 			     next_D = ((next_D+50)/100)*100 + est_HR;  
 			   }
 	         	   // mini-lim
-	   		   if (next_D < 10000) {
+	   		   if (!isTestnet() && next_D < 10000) {
 	  			next_D = 10000;
 			   }
 
@@ -720,6 +725,7 @@ namespace CryptoNote {
 		case BLOCK_MAJOR_VERSION_3:
 		case BLOCK_MAJOR_VERSION_4:
 		case BLOCK_MAJOR_VERSION_5:
+		case BLOCK_MAJOR_VERSION_6:
 			return checkProofOfWorkV2(context, block, currentDiffic, proofOfWork);
 		}
 
@@ -800,6 +806,8 @@ namespace CryptoNote {
 		upgradeHeightV3(parameters::UPGRADE_HEIGHT_V3);
 		upgradeHeightV4(parameters::UPGRADE_HEIGHT_V4);
 		upgradeHeightV5(parameters::UPGRADE_HEIGHT_V5);
+		upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
+
 		upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
 		upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
 		upgradeWindow(parameters::UPGRADE_WINDOW);

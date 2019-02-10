@@ -1,20 +1,21 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2018, Karbo developers
+// {DRGL} Kills White Walkers
+// <https://www.ZirtysPerzys.org>
 //
-// This file is part of Bytecoin.
+// Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2018 The Karbowanec developers
+// Copyright (c) 2018-2019 The DRAGONGLASS developers
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// This file is part of DRAGONGLASS.
+// DRAGONGLASS is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// DRAGONGLASS is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with DRAGONGLASS.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CryptoNoteFormatUtils.h"
 
@@ -509,7 +510,7 @@ bool get_block_longhash(cn_context &context, const Block& b, Hash& res) {
   } else {
     return false;
   }
-  const int cn_variant = b.majorVersion >= BLOCK_MAJOR_VERSION_5 ? b.majorVersion - 4 : 0;
+  const int cn_variant = b.majorVersion < 5 ? 0 : b.majorVersion >= BLOCK_MAJOR_VERSION_6 ? 2 : 1;
   cn_slow_hash(context, bd.data(), bd.size(), res, cn_variant);
   return true;
 }

@@ -837,18 +837,6 @@ struct K_COMMAND_RPC_CHECK_TX_WITH_PRIVATE_VIEW_KEY {
 	};
 };
 	
-struct COMMAND_RPC_GET_HEIGHT {
-  typedef EMPTY_STRUCT request;
-
-  struct response {
-    uint64_t height;
-
-    void serialize(ISerializer &s) {
-      KV_MEMBER(height)
-    }
-  };
-};
-	
  struct COMMAND_RPC_VALIDATE_ADDRESS {
   struct request {
     std::string address;

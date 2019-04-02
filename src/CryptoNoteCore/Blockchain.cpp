@@ -2,8 +2,8 @@
 // <https://www.ZirtysPerzys.org>
 //
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2017-2018 The Ryo Currency Developers
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2018-2019 The Ryo Currency Developers
 // Copyright (c) 2018-2019 The DRAGONGLASS Developers
 //
 // This file is part of DRAGONGLASS.
@@ -866,6 +866,29 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 		  logger(ERROR, BRIGHT_RED) << "Attempting to move to an alternate chain, but it failed Poisson check! " << failed_checks << " fails out of " << i << " alt_chain_size: " << alt_chain_size;
 		  return false;
 	  }
+	  }
+
+   // Compare transactions in proposed alt chain vs current main chain and reject if some transaction is missing in the alt chain
+  std::vector<Crypto::Hash> mainChainTxHashes, altChainTxHashes;
+  for (size_t i = m_blocks.size() - 1; i >= split_height; i--) {
+    Block b = m_blocks[i].bl;
+    std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(mainChainTxHashes, mainChainTxHashes.end()));
+  }
+  for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++) {
+    auto ch_ent = *alt_ch_iter;
+    Block b = ch_ent->second.bl;
+    std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(altChainTxHashes, altChainTxHashes.end()));
+  }
+  for (auto main_ch_it = mainChainTxHashes.begin(); main_ch_it != mainChainTxHashes.end(); main_ch_it++) {
+    auto tx_hash = *main_ch_it;
+    if (std::find(altChainTxHashes.begin(), altChainTxHashes.end(), tx_hash) == altChainTxHashes.end()) {
+      logger(ERROR, BRIGHT_RED) << "Attempting to switch to an alternate chain, but it lacks transaction " << Common::podToHex(tx_hash) << " from main chain, rejected";
+      mainChainTxHashes.clear();
+      mainChainTxHashes.shrink_to_fit();
+      altChainTxHashes.clear();
+      altChainTxHashes.shrink_to_fit();
+      return false;
+    }
   }
 	
   //disconnecting old chain

@@ -1638,7 +1638,7 @@ bool Blockchain::checkTransactionInputs(const Transaction& tx, const Crypto::Has
       }
 
       if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height)) {
-        logger(INFO, BRIGHT_WHITE) <<
+        logger(DEBUGGING, BRIGHT_WHITE) <<
           "Failed to check ring signature for tx " << transactionHash;
         return false;
       }
@@ -1651,7 +1651,7 @@ bool Blockchain::checkTransactionInputs(const Transaction& tx, const Crypto::Has
 
       ++inputIndex;
     } else {
-      logger(INFO, BRIGHT_WHITE) <<
+      logger(DEBUGGING, BRIGHT_WHITE) <<
         "Transaction << " << transactionHash << " contains input of unsupported type.";
       return false;
     }
@@ -1720,7 +1720,7 @@ bool Blockchain::check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_pre
   std::vector<const Crypto::PublicKey *> output_keys;
   outputs_visitor vi(output_keys, *this, logger.getLogger());
   if (!scanOutputKeysForIndexes(txin, vi, pmax_related_block_height)) {
-    logger(INFO, BRIGHT_WHITE) <<
+    logger(INFO, BRIGHT_YELLOW) <<
       "Failed to get output keys for tx with amount = " << m_currency.formatAmount(txin.amount) <<
       " and count indexes " << txin.outputIndexes.size();
     return false;
@@ -1739,7 +1739,7 @@ bool Blockchain::check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_pre
 
   bool check_tx_ring_signature = Crypto::check_ring_signature(tx_prefix_hash, txin.keyImage, output_keys, sig.data());
   if (!check_tx_ring_signature) {
-    logger(ERROR) << "Failed to check ring signature for keyImage: " << txin.keyImage;
+    logger(DEBUGGING) << "Failed to check ring signature for keyImage: " << txin.keyImage;
   }
   return check_tx_ring_signature;
 }

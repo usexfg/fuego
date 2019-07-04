@@ -836,7 +836,7 @@ struct K_COMMAND_RPC_CHECK_TX_WITH_PRIVATE_VIEW_KEY {
 		}
 	};
 };
-
+	
  struct COMMAND_RPC_VALIDATE_ADDRESS {
   struct request {
     std::string address;

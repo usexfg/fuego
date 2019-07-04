@@ -1,13 +1,16 @@
+##### Master Status
+
+[![Build Status](https://travis-ci.org/ZirtysPerzys/dragonglass.svg?branch=master)](https://travis-ci.org/ZirtysPerzys/dragonglass)
 <p align="right"><a href="https://zirtysperzys.org">Website</a><p align="right">
 <p align="right"><a href="https://drgl.info">ChainXplore</a><p align="right">
-<p align="right"><a href="https://crypto9coin.cf/drgl">20dec Pool</a><p align="right">
-<p align="right"><a href="https://drgl.online">Dev Pool</a><p align="right">
-<p align="right"><a href="https://www.coinsforhash.com/dragonglass/#">Coinsforhash</a><p align="right">
+<p align="right"><a href="https://drgl.online">ÆJTs Pool</a><p align="right">
+<p align="right"><a href="https://crypto9coin.cf/drgl">Pxckets Pool</a><p align="right">
+<p align="right"><a href="https://drgl.cool-pool.net/">CoolPool</a><p align="right">
 <h1 align="center"><img title="The Long Night Is Coming" src="https://raw.githubusercontent.com/ZirtysPerzys/DRGL-X/master/images/DRGL/DRGLdragonglass.png" width="200" height="200" ><img/></h1>
 
 <h2 align="center">⟬⟬⟬⟬ DRAGONGLASS ⟭⟭⟭⟭<h2 align="center">
 
-<p align="center">Anonymous Encrypted Currency <p align="center">
+<p align="center">Rare Private Cryptocurrency <p align="center">
 ........that kills white walkers.
 
 
@@ -15,9 +18,7 @@
 
  
  
-##### Master Build Status
 
-[![Build Status](https://travis-ci.org/ZirtysPerzys/dragonglass.svg?branch=master)](https://travis-ci.org/ZirtysPerzys/dragonglass)
 
 
 
@@ -35,7 +36,7 @@ You may download them from:
 *** Alternatively, it may be possible to install them using a package manager by
 executing the following command.
  ```
- sudo apt-get install build-essential git cmake libboost1.55-all-dev
+ sudo apt-get install build-essential git cmake libboost-all-dev
 ```
 
 2. Clone DRGL repository
@@ -65,12 +66,11 @@ cd dragonglass/build/release/src
 `
 ./dragonglassd 
 `
-for a list of commands in daemon type  --help
+for a list of commands in dæmon type  --help
 
 
 
-alternatively or also see {DRGL GUI Wallet} 
-https://github.com/ZirtysPerzys/DRGL
+alternatively, &/or also see the [{XDG} GUI Wallet](https://github.com/ZirtysPerzys/DRGL)
 
 
 _________________________________________________________
@@ -176,7 +176,7 @@ export PATH=/opt/android/tool32/arm-linux-androideabi/bin:/opt/android/tool32/bi
 ./b2 abi=aapcs architecture=arm binary-format=elf address-model=32 link=static runtime-link=static --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-system --with-thread --with-context --with-coroutine --with-atomic --build-dir=android32 --stagedir=android32 toolset=clang threading=multi threadapi=pthread target-os=android --reconfigure stage
 ```
 
-Build {DRGL} for 32 bit Android
+Build {XDG} for 32 bit Android
 ```
 mkdir -p build/release.android32
 cd build/release.android32

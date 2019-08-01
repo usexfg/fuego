@@ -70,7 +70,7 @@ for a list of commands in dæmon type  --help
 
 
 
-alternatively, &/or also see the [{XDG} GUI Wallet](https://github.com/ZirtysPerzys/DRGL)
+alternatively, &/or also see the [{DRGL} GUI Wallet](https://github.com/ZirtysPerzys/DRGL)
 
 
 _________________________________________________________

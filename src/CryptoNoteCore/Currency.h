@@ -1,22 +1,18 @@
-// {DRGL} Kills White Walkers
-// 2018 {DRÆGONGLASS}
-//
-// <https://www.ZirtysPerzys.org>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018, The Karbowanec developers
-// Copyright (c) 2018-2019, The DRAGONGLASS developers
+// Copyright (c) 2018-2019, The Fandom Gold developers
 //
-// This file is part of DRAGONGLASS.
-// DRAGONGLASS is free software: you can redistribute it and/or modify
+// This file is part of Fandom Gold.
+// Fandom Gold is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// DRAGONGLASS is distributed in the hope that it will be useful,
+// Fandom Gold is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with DRAGONGLASS.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fandom Gold.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -54,7 +50,10 @@ public:
   size_t timestampCheckWindow_v1() const { return m_timestampCheckWindow_v1; }
   uint64_t blockFutureTimeLimit() const { return m_blockFutureTimeLimit; }
   uint64_t blockFutureTimeLimit(uint8_t blockMajorVersion) const {
-    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_5) {
+    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_7) {
+      return blockFutureTimeLimit_v2();
+      }
+    else if (blockMajorVersion >= BLOCK_MAJOR_VERSION_5) {
       return blockFutureTimeLimit_v1();
       }
     else {
@@ -62,6 +61,8 @@ public:
       }
     }
   uint64_t blockFutureTimeLimit_v1() const { return m_blockFutureTimeLimit_v1; }
+  uint64_t blockFutureTimeLimit_v2() const { return m_blockFutureTimeLimit_v2; }
+
 
   uint64_t moneySupply() const { return m_moneySupply; }
   unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
@@ -72,6 +73,9 @@ public:
   size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
 
+  size_t minMixin() const { return m_minMixin; }
+  size_t maxMixin() const { return m_maxMixin; }
+
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   uint64_t coin() const { return m_coin; }
 
@@ -79,6 +83,16 @@ public:
   uint64_t defaultDustThreshold() const { return m_defaultDustThreshold; }
 
   uint64_t difficultyTarget() const { return m_difficultyTarget; }
+  uint64_t difficultyTarget(uint8_t blockMajorVersion) const {
+    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_7) { 
+      return difficultyTarget(); 
+    }
+    else {
+      return difficultyTarget_DRGL();
+    }
+  }
+  uint64_t difficultyTarget_DRGL() const { return m_difficultyTarget_DRGL; }
+
   size_t difficultyWindow() const { return m_difficultyWindow; }
   size_t difficultyLag() const { return m_difficultyLag; }
   size_t difficultyCut() const { return m_difficultyCut; }
@@ -92,7 +106,7 @@ public:
     else {
       return difficultyBlocksCount();
     }
-  };
+  }
   size_t difficultyBlocksCount() const { return m_difficultyWindow + m_difficultyLag; }
   size_t difficultyBlocksCount2() const { return CryptoNote::parameters::DIFFICULTY_WINDOW_V2; }
   size_t difficultyBlocksCount3() const { return CryptoNote::parameters::DIFFICULTY_WINDOW_V3; }
@@ -102,6 +116,15 @@ public:
   uint64_t maxBlockSizeGrowthSpeedDenominator() const { return m_maxBlockSizeGrowthSpeedDenominator; }
 
   uint64_t lockedTxAllowedDeltaSeconds() const { return m_lockedTxAllowedDeltaSeconds; }
+  uint64_t lockedTxAllowedDeltaSeconds(uint8_t blockMajorVersion) const {
+    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_7) { 
+      return lockedTxAllowedDeltaSeconds_v2(); 
+    }
+    else {
+      return lockedTxAllowedDeltaSeconds();
+    }
+  }
+  uint64_t lockedTxAllowedDeltaSeconds_v2() const { return m_lockedTxAllowedDeltaSeconds_v2; }
   size_t lockedTxAllowedDeltaBlocks() const { return m_lockedTxAllowedDeltaBlocks; }
 
   uint64_t mempoolTxLiveTime() const { return m_mempoolTxLiveTime; }
@@ -157,7 +180,8 @@ public:
   difficulty_type nextDifficultyV2(std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
   difficulty_type nextDifficultyV3(std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
   difficulty_type nextDifficultyV4(uint32_t height, uint8_t blockMajorVersion, std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
-  
+  difficulty_type nextDifficultyV5(uint32_t height, uint8_t blockMajorVersion, std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
+
   bool checkProofOfWorkV1(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
   bool checkProofOfWorkV2(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
   bool checkProofOfWork(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
@@ -183,6 +207,8 @@ private:
   size_t m_timestampCheckWindow_v1;
   uint64_t m_blockFutureTimeLimit;
   uint64_t m_blockFutureTimeLimit_v1;
+  uint64_t m_blockFutureTimeLimit_v2;
+
 
   uint64_t m_moneySupply;
   unsigned int m_emissionSpeedFactor;
@@ -195,10 +221,15 @@ private:
   size_t m_numberOfDecimalPlaces;
   uint64_t m_coin;
 
+  size_t m_minMixin;
+  size_t m_maxMixin;
+
   uint64_t m_mininumFee;
   uint64_t m_defaultDustThreshold;
 
   uint64_t m_difficultyTarget;
+  uint64_t m_difficultyTarget_DRGL;
+
   size_t m_difficultyWindow;
   size_t m_difficultyLag;
   size_t m_difficultyCut;
@@ -208,6 +239,8 @@ private:
   uint64_t m_maxBlockSizeGrowthSpeedDenominator;
 
   uint64_t m_lockedTxAllowedDeltaSeconds;
+  uint64_t m_lockedTxAllowedDeltaSeconds_v2;
+
   size_t m_lockedTxAllowedDeltaBlocks;
 
   uint64_t m_mempoolTxLiveTime;
@@ -223,6 +256,8 @@ private:
   uint32_t m_upgradeHeightV4;
   uint32_t m_upgradeHeightV5;
   uint32_t m_upgradeHeightV6;
+  uint32_t m_upgradeHeightV7;
+
   unsigned int m_upgradeVotingThreshold;
   uint32_t m_upgradeVotingWindow;
   uint32_t m_upgradeWindow;
@@ -268,6 +303,7 @@ public:
   
   CurrencyBuilder& blockFutureTimeLimit(uint64_t val) { m_currency.m_blockFutureTimeLimit = val; return *this; }
   CurrencyBuilder& blockFutureTimeLimit_v1(uint64_t val) { m_currency.m_blockFutureTimeLimit_v1 = val; return *this; }
+  CurrencyBuilder& blockFutureTimeLimit_v2(uint64_t val) { m_currency.m_blockFutureTimeLimit_v2 = val; return *this; }
 
   CurrencyBuilder& moneySupply(uint64_t val) { m_currency.m_moneySupply = val; return *this; }
   CurrencyBuilder& emissionSpeedFactor(unsigned int val);
@@ -276,6 +312,9 @@ public:
   CurrencyBuilder& rewardBlocksWindow(size_t val) { m_currency.m_rewardBlocksWindow = val; return *this; }
   CurrencyBuilder& blockGrantedFullRewardZone(size_t val) { m_currency.m_blockGrantedFullRewardZone = val; return *this; }
   CurrencyBuilder& minerTxBlobReservedSize(size_t val) { m_currency.m_minerTxBlobReservedSize = val; return *this; }
+  
+  CurrencyBuilder& minMixin(size_t val) { m_currency.m_minMixin = val; return *this; }
+  CurrencyBuilder& maxMixin(size_t val) { m_currency.m_maxMixin = val; return *this; }
 
   CurrencyBuilder& numberOfDecimalPlaces(size_t val);
 
@@ -283,6 +322,8 @@ public:
   CurrencyBuilder& defaultDustThreshold(uint64_t val) { m_currency.m_defaultDustThreshold = val; return *this; }
 
   CurrencyBuilder& difficultyTarget(uint64_t val) { m_currency.m_difficultyTarget = val; return *this; }
+  CurrencyBuilder& difficultyTarget_DRGL(uint64_t val) { m_currency.m_difficultyTarget_DRGL = val; return *this; }
+
   CurrencyBuilder& difficultyWindow(size_t val);
   CurrencyBuilder& difficultyLag(size_t val) { m_currency.m_difficultyLag = val; return *this; }
   CurrencyBuilder& difficultyCut(size_t val) { m_currency.m_difficultyCut = val; return *this; }
@@ -292,6 +333,7 @@ public:
   CurrencyBuilder& maxBlockSizeGrowthSpeedDenominator(uint64_t val) { m_currency.m_maxBlockSizeGrowthSpeedDenominator = val; return *this; }
 
   CurrencyBuilder& lockedTxAllowedDeltaSeconds(uint64_t val) { m_currency.m_lockedTxAllowedDeltaSeconds = val; return *this; }
+  CurrencyBuilder& lockedTxAllowedDeltaSeconds_v2(uint64_t val) { m_currency.m_lockedTxAllowedDeltaSeconds_v2 = val; return *this; }
   CurrencyBuilder& lockedTxAllowedDeltaBlocks(size_t val) { m_currency.m_lockedTxAllowedDeltaBlocks = val; return *this; }
 
   CurrencyBuilder& mempoolTxLiveTime(uint64_t val) { m_currency.m_mempoolTxLiveTime = val; return *this; }
@@ -307,6 +349,8 @@ public:
   CurrencyBuilder& upgradeHeightV4(uint64_t val) { m_currency.m_upgradeHeightV4 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeHeightV5(uint64_t val) { m_currency.m_upgradeHeightV5 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeHeightV6(uint64_t val) { m_currency.m_upgradeHeightV6 = static_cast<uint32_t>(val); return *this; }
+  CurrencyBuilder& upgradeHeightV7(uint64_t val) { m_currency.m_upgradeHeightV7 = static_cast<uint32_t>(val); return *this; }
+
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
   CurrencyBuilder& upgradeVotingWindow(size_t val) { m_currency.m_upgradeVotingWindow = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeWindow(size_t val);
@@ -324,4 +368,3 @@ private:
 };
 
 }
-

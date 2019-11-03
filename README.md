@@ -39,17 +39,17 @@ executing the following command.
 2. Clone Fandom Gold repository
 ```
 git clone https://github.com/FandomGold/fandomgold
+
 ```
 3. Open folder with copied repository
 ```
 cd fandomgold
 ```
-4. Building (Compiling) Execute the following command to compile
-
+4. Building (Compiling)
     (resulting programs will be found in build/release/src)
 
 ```
-make -j4  
+make -j4
 ```
 
 5. Starting Fandom Gold daemon

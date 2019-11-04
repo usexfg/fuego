@@ -5,7 +5,7 @@
 ### Private P2P Crypto Currency based on the CryptoNote protocol.
 
 * <p align="left"><a href="https://fandom.gold">Website</a><p align="left">
-* <p align="left"><a href="https://drgl.info">Explorer</a><p align="left">
+* <p align="left"><a href="http://explorer.fandom.gold">Explorer</a><p align="left">
  
  ______________________________
 
@@ -14,7 +14,7 @@
 
 [![Build Status](https://travis-ci.org/FandomGold/fandomgold.svg?branch=master)](https://travis-ci.org/FandomGold/fandomgold) 
 
-<sup>*"Working software is the primary measure of progress."* [‣]</sup>
+<sup>"Working software is the primary measure of progress." [‣]</sup>
 
 
 [‣]:http://agilemanifesto.org/

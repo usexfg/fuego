@@ -676,8 +676,8 @@ namespace CryptoNote {
 			   const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
 			   uint64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V4; // N=60, 90, and 120 for T=600, 120, 60.
 			   uint64_t  L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
-			   uint32_t Fang = CryptoNote::parameters::UPGRADE_HEIGHT_V7;
-	   		   uint64_t difficulty_plate = 10000;
+			   uint32_t FanG = CryptoNote::parameters::UPGRADE_HEIGHT_V7;
+	   		   uint64_t difficulty_plate = 100000;
 	   		   
 			   assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 
@@ -689,7 +689,7 @@ namespace CryptoNote {
 			   // This will also cover up a very common type of backwards-incompatible fork.
 			   // difficulty_guess = 10000; //  Dev may change.  Guess lower than anything expected.
 			  
-	  		   if ( height <= Fang + 1 + N ) { return difficulty_plate;  }
+	  		   if ( height <= FanG + 1 + N ) { return difficulty_plate;  }
  
 			   previous_timestamp = timestamps[0];
 			   for ( i = 1; i <= N; i++) {        

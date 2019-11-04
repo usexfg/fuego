@@ -1,4 +1,4 @@
-<h1><img title="Unlock the Power of Fandom" src="https://avatars2.githubusercontent.com/u/55260556?s=200&v=4"><img/></h1>
+<img height=400 width=420 title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/XGoldDragon/bounce/master/FanG.png"><img/>
 
 ## The FANDOM GOLD Project 
 

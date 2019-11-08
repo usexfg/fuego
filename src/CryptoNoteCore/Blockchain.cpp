@@ -859,7 +859,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 			  failed_checks++;
 			  continue;
 		  }
-		  double lam = double(high_timestamp - low_timestamp) / double(m_currency.difficultyTarget(blk.majorVersion));
+		  double lam = double(high_timestamp - low_timestamp) / double(CryptoNote::parameters::DIFFICULTY_TARGET);
 		  if (calc_poisson_ln(lam, alt_chain_size + i) < CryptoNote::parameters::POISSON_LOG_P_REJECT)
 		  {
 			  logger(INFO) << "Poisson check at depth " << i << " failed! delta_t: " << (high_timestamp - low_timestamp) << " size: " << alt_chain_size + i;

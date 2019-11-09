@@ -33,7 +33,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #include "Common/int-util.h"
 #include "hash-ops.h"

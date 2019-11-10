@@ -7,7 +7,7 @@
 // Copyright (c) 2017-2019, The Fandom GOLD project
 //
 // This file is part of Fandom GOLD.
-// FandomG OLD is free software: you can redistribute it and/or modify
+// Fandom GOLD is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
@@ -16,7 +16,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fandom GOLD. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -28,14 +28,14 @@ namespace parameters {
 
 
 
-const uint64_t DIFFICULTY_TARGET                             = 480; //Fandom Gold
-const uint64_t DIFFICULTY_TARGET_DRGL                        = 81; //Dragonglass
+const uint64_t DIFFICULTY_TARGET                             = 480;
 const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
+const uint64_t DIFFICULTY_TARGET_DRGL                        = 81;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 679385; // all public addresses begin w/ "dRGL" (if fg =7015)
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 60;
-  
+
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1         = DIFFICULTY_TARGET_DRGL * 6;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2         = DIFFICULTY_TARGET * 2;
@@ -134,8 +134,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;  //by def
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  128;    //by default, block count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
 
-const int      P2P_DEFAULT_PORT                              =  10818;
-const int      RPC_DEFAULT_PORT                              =  18180;
+const int      P2P_DEFAULT_PORT                              =  10808;
+const int      RPC_DEFAULT_PORT                              =  18180; 
 
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  5000;
@@ -157,11 +157,10 @@ const uint32_t P2P_IDLE_CONNECTION_KILL_INTERVAL             = (45 * 60);     //
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 
 const char* const SEED_NODES[] = {
-"188.226.177.187:10818",
-"104.236.0.16:10818",
-"178.128.164.245:10818",
+"104.236.0.16:10808",
+"188.226.177.187:10808",
+"178.128.164.245:10808"
 };
-
 
 }
 

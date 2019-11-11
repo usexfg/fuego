@@ -1,9 +1,8 @@
-
 // <https://fandom.gold>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Forknote developers
 // Copyright (c) 2016, The Karbowanec developers
-// Copyright (c) 2018-2019 The Fandom Gold developers
+// Copyright (c) 2018-2019 The Fandom Gold Project
 
 // This file is part of Fandom Gold.
 // Fandom Gold is free software: you can redistribute it and/or modify
@@ -190,17 +189,44 @@ int main(int argc, char* argv[])
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-
-    logger(INFO, BRIGHT_YELLOW) <<
-
-    "                                  \n"
-    "                                  \n"
-    "                                  \n"
-    " ╔═╗╔═╗╔╗╔╔╦╗╔═╗╔╦╗  ╔═╗╔═╗╦  ╔╦╗ \n"
-    " ╠╣ ╠═╣║║║ ║║║ ║║║║  ║ ╦║ ║║   ║║ \n"    
-    " ╚  ╩ ╩╝╚╝═╩╝╚═╝╩ ╩  ╚═╝╚═╝╩═╝═╩╝" << " v" << PROJECT_VERSION_LONG
-    "                                  \n"
-    "                                  \n";
+logger(INFO, BRIGHT_YELLOW) <<
+"                                               \n"
+"                                               \n"
+"                                               \n"
+"        ..,:cioodddddddddddddddddoooiic:,.     \n"        
+"   .,ix0$XXXXX$$$$$$$$$$$$$$$$$$$$$$$$0O$o:.   \n"      
+"  .o0XX$Odi0:::;;;;;;;;;;;;;;;;::id0$$0000O$:. \n"       
+" .o$XXOc.                       .i0X$c:i$0OO$: \n"       
+" :OXX$i.                       .dXNx'  .;$OOOd.\n"      
+".o$XXO;                       .iXW$'    .oOOOx,\n"       
+".d$XX$,                       :0W0:      .;;;,.\n"       
+".d$XX$'                      'xNXo.            \n"       
+".d$XX$'                     .i$N$'             \n"       
+".x$X$$'               .coooolO$$Odiiiiiiiiicc:.\n"       
+".x$X$$'               :O$$$$$$$$000000OOOO$$$x,\n"       
+".d$$$$'               .:ciix$XOo::::::::ix$xxx,\n"       
+".d$$$$'                   .dXXo.        .o$xxx,\n"       
+".o$$$O;                  .:0N$'         .o$xxd'\n"       
+" :O$$$i.                 'xN$c          ;x$dxi.\n"       
+" .o0$$Oi.              .,i$Nx.        .;d$xxd; \n"       
+"  .iO$$$Oxoicc:::::::::oxOX$d:;;::::cidxxxxo,  \n"       
+"   .'cd$O0$$$$$00000000OOOOOOOOO$$$$$$xdoc;.   \n"       
+"      ..',:cciiiiiiiidO$$$$oiiiiccc::;,..      \n"       
+"                    .;ONW$c.                   \n"       
+"                    .dNXd.                     \n"      
+"          .;.      .i$WOi,                     \n"       
+"         .o0c     .:0N0;.                      \n"       
+"        .$XFG.   .c0XO;                        \n"       
+"         .dXXd;';d0Oo.                         \n"       
+"          'ia$xddo:.                           \n"       
+"             ''                                \n"
+"                                       \n"
+"                                       \n"
+"      ╔═╗╔═╗╔╗╔╔╦╗╔═╗╔╦╗  ╔═╗╔═╗╦  ╔╦╗ \n"
+"      ╠╣ ╠═╣║║║ ║║║ ║║║║  ║ ╦║ ║║   ║║ \n"    
+"      ╚  ╩ ╩╝╚╝═╩╝╚═╝╩ ╩  ╚═╝╚═╝╩═╝═╩╝ \n"
+"     "<< " v" << PROJECT_VERSION_LONG "\n"
+"                                       \n";
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;

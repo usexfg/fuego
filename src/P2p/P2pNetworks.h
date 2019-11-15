@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers, The Karbowanec developers
-// Copyright (c) 2018-2019, Fandom GOLD Project
+// Copyright (c) 2018-2019, The Fandom GOLD Project
 //
 // This file is part of Fandom GOLD.
 // Fandom GOLD is free software: you can redistribute it and/or modify
@@ -21,6 +21,6 @@
 
 namespace CryptoNote
 {
-  const static boost::uuids::uuid BYTECOIN_NETWORK = { {  0x46, 0x41, 0x4e, 0x44, 0x4f, 0x4d, 0x20, 0x47, 0x4f, 0x4c, 0x44, 0x00, 0x12, 0x10, 0x11, 0x01, 0x10  } };
+  const static boost::uuids::uuid BYTECOIN_NETWORK = { {  0x46, 0x41, 0x4e, 0x44, 0x4f, 0x4d, 0x20, 0x47, 0x4f, 0x4c, 0x44  } };
 
 }

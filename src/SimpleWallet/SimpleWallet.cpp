@@ -3,7 +3,7 @@
 // Copyright (c) 2014-2017, The Forknote developers
 // Copyright (c) 2014-2017, The Monero Project
 // Copyright (c) 2016-2018, The Karbo developers
-// Copyright (c) 2017-2019, Fandom Gold developers
+// Copyright (c) 2017-2019, The Fandom Gold Project
 //
 // All rights reserved.
 // 
@@ -556,10 +556,10 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
 		auto pos2 = s.find(";", pos);
 		if (pos2 != std::string::npos)
 		{
-			// length of address == 98, we can at least validate that much here
-			if (pos2 - pos == 98)
+			// length of address == 97, we can at least validate that much here
+			if (pos2 - pos == 97)
 			{
-				address = s.substr(pos, 98);
+				address = s.substr(pos, 97);
 			} else {
 				return false;
 			}

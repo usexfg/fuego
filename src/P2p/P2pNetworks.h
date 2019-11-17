@@ -13,14 +13,10 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
 #pragma once
 
 namespace CryptoNote
 {
-  const static boost::uuids::uuid BYTECOIN_NETWORK = { {  0x46, 0x41, 0x4e, 0x44, 0x4f, 0x4d, 0x20, 0x47, 0x4f, 0x4c, 0x44  } };
+  const static boost::uuids::uuid BYTECOIN_NETWORK = { {  0x46, 0x41, 0x4e, 0x44, 0x4f, 0x4d, 0x47, 0x4f, 0x4c, 0x44, 0x00, 0x12, 0x10, 0x11, 0x01, 0x10  } };
 
 }

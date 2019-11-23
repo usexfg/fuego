@@ -1,6 +1,7 @@
 // Copyright (c) 2012-2013, The Cryptonote developers
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2017-2018, Karbo developers
+// Copyright (c) 2018-2019, Fandom GOLD Project
 // 
 // All rights reserved.
 // 
@@ -42,8 +43,9 @@
 #include "oaes_lib.h"
 #include "variant2_int_sqrt.h"
 
-#define MEMORY         (1 << 21) // 2MB scratchpad
-#define ITER           (1 << 20)
+#define MEMORY         (1 << 21) // 2MB scratchpad  ? reduce ?
+#define ITER           (1 << 20) // 524288
+#define ITER_GOLD       0x92888  // 600200
 #define AES_BLOCK_SIZE  16
 #define AES_KEY_SIZE    32
 #define INIT_SIZE_BLK   8
@@ -51,6 +53,13 @@
 
 extern void aesb_single_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
 extern void aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *expandedKey);
+
+#define VARIANT_GOLD() \
+   uint32_t glitters = ITER; \
+   do if (variant == 3) \
+   { \
+     glitters = ITER_GOLD << 1; \
+   } while(0)
 
 #define VARIANT1_1(p) \
   do if (variant == 1) \
@@ -70,7 +79,7 @@ extern void aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *ex
 #define VARIANT1_CHECK() \
   do if (length < 43) \
   { \
-    fprintf(stderr, "Cryptonight variant 1 needs at least 43 bytes of data"); \
+    fprintf(stderr, "CryptoNight variant 1 needs at least 43 bytes of data"); \
     _exit(1); \
   } while(0)
 
@@ -770,9 +779,10 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant)
     _b1 = _mm_load_si128(R128(b) + 1);
     // Two independent versions, one with AES, one without, to ensure that
     // the useAes test is only performed once, not every iteration.
+    VARIANT_GOLD();
     if(useAes)
     {
-        for(i = 0; i < ITER / 2; i++)
+        for(i = 0; i < glitters / 2; i++)
         {
             pre_aes();
             _c = _mm_aesenc_si128(_c, _a);
@@ -781,7 +791,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant)
     }
     else
     {
-        for(i = 0; i < ITER / 2; i++)
+        for(i = 0; i < glitters / 2; i++)
         {
             pre_aes();
             aesb_single_round((uint8_t *) &_c, (uint8_t *) &_c, (uint8_t *) &_a);
@@ -1120,7 +1130,8 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant)
     _b = vld1q_u8((const uint8_t *)b);
     _b1 = vld1q_u8(((const uint8_t *)b) + AES_BLOCK_SIZE);
 
-    for(i = 0; i < ITER / 2; i++)
+    VARIANT_GOLD();
+      for(i = 0; i < glitters / 2; i++)
     {
         pre_aes();
         _c = vaeseq_u8(_c, zero);
@@ -1323,7 +1334,9 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant)
     U64(b)[0] = U64(&state.k[16])[0] ^ U64(&state.k[48])[0];
     U64(b)[1] = U64(&state.k[16])[1] ^ U64(&state.k[48])[1];
 
-    for(i = 0; i < ITER / 2; i++)
+    VARIANT_GOLD();
+
+    for(i = 0; i < glitters / 2; i++)
     {
       #define MASK ((uint32_t)(((MEMORY / AES_BLOCK_SIZE) - 1) << 4))
       #define state_index(x) ((*(uint32_t *) x) & MASK)
@@ -1506,7 +1519,9 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant) {
     b[i] = state.k[AES_BLOCK_SIZE + i] ^ state.k[AES_BLOCK_SIZE * 3 + i];
   }
 
-  for (i = 0; i < ITER / 2; i++) {
+    VARIANT_GOLD();
+
+      for(i = 0; i < glitters / 2; i++) {
     /* Dependency chain: address -> read value ------+
      * written value <-+ hard function (AES or MUL) <+
      * next address  <-+

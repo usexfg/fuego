@@ -455,10 +455,19 @@ void InProcessNode::updateLastLocalBlockHeaderInfo() {
   Crypto::Hash hash;
   Block block;
   uint64_t difficulty;
+  /*
   do {
     core.get_blockchain_top(height, hash);
   } while (!core.getBlockByHash(hash, block) || !core.getBlockDifficulty(height, difficulty));
-
+  */
+  try {
+     core.get_blockchain_top(height, hash);
+     core.getBlockByHash(hash, block);
+     difficulty = core.getBlockDifficulty(height, difficulty);
+   } catch (const std::exception&) {
+     return;
+   }
+  
   lastLocalBlockHeaderInfo.index = height;
   lastLocalBlockHeaderInfo.majorVersion = block.majorVersion;
   lastLocalBlockHeaderInfo.minorVersion = block.minorVersion;

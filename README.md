@@ -2,7 +2,7 @@
 
 ## The FANDOM GOLD Project 
 
-### Private P2P Crypto Currency based on the CryptoNote protocol.
+### Fango is a Rare P2P Privacy Currency based upon the CryptoNote protocol and phylosophy.
 
 * <p align="left"><a href="https://fandom.gold">Website</a><p align="left">
 * <p align="left"><a href="http://explorer.fandom.gold">Explorer</a><p align="left">
@@ -93,9 +93,9 @@ ________________
 
 ****Quick step by step tutorial using a Bash terminal on Windows 10****
 
-https://www.windowscentral.com/how-install-bash-shell-command-line-windows-10
-
 *(courtesy of & gratitude to Sir WindowSlayer of Galapagos)*
+
+https://www.windowscentral.com/how-install-bash-shell-command-line-windows-10
 
 Start a Bash window and do as follows
 

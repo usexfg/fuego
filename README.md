@@ -1,4 +1,4 @@
-<img height=400 width=420 title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/XGoldDragon/bounce/master/FanG.png"><img/>
+<img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/fangobanner.png"><img/>
 
 ## The FANDOM GOLD Project 
 
@@ -55,10 +55,10 @@ make -j4
 5. Starting Fandom Gold daemon
 ```
 cd fandomgold/build/release/src `
-./fandomgold
+./fangod
 ````
 try --help from within dæmon for a full list of available commands
-or <code>./fandomgold --help</code> when outside of dæmon 
+or <code>./fangod --help</code> when outside of dæmon 
 _________________________________________________________
 For the most user-friendly graphical interface experience
 
@@ -120,7 +120,7 @@ make
 5: Start client and begin syncing blockchain
 ```
 cd build/release/src/
-./fandomgold
+./fangod
 ```
 *!!keep this terminal running and open new terminal for next step!!*
 
@@ -167,7 +167,7 @@ export PATH=/opt/android/tool32/arm-linux-androideabi/bin:/opt/android/tool32/bi
 ./b2 abi=aapcs architecture=arm binary-format=elf address-model=32 link=static runtime-link=static --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-system --with-thread --with-context --with-coroutine --with-atomic --build-dir=android32 --stagedir=android32 toolset=clang threading=multi threadapi=pthread target-os=android --reconfigure stage
 ```
 
-Build Fandom Gold for 32 bit Android
+Build fandomgold for 32 bit Android
 ```
 mkdir -p build/release.android32
 cd build/release.android32

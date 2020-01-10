@@ -2,7 +2,7 @@
 
 ## The FANDOM GOLD Project 
 
-### Fango is a Rare P2P Privacy Currency based upon the CryptoNote protocol and phylosophy.
+### Fango is a Rare P2P Privacy Currency based upon the CryptoNote protocol and philosophy.
 
 * <p align="left"><a href="https://fandom.gold">Website</a><p align="left">
 * <p align="left"><a href="http://explorer.fandom.gold">Explorer</a><p align="left">

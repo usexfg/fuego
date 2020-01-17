@@ -3,7 +3,7 @@
 // Copyright (c) 2014-2017, The Forknote developers
 // Copyright (c) 2014-2017, The Monero Project
 // Copyright (c) 2016-2018, The Karbo developers
-// Copyright (c) 2017-2019, The Fandom Gold Project
+// Copyright (c) 2017-2020, The Fandom Gold Project
 //
 // All rights reserved.
 // 
@@ -33,7 +33,6 @@
 
 #include "SimpleWallet.h"
 //#include "vld.h"
-
 #include <ctime>
 #include <fstream>
 #include <future>
@@ -68,6 +67,7 @@
 #include <Common/Base58.h>
 #include "Common/PathTools.h"
 #include "Common/Util.h"
+#include "Common/ColorMod.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
@@ -119,7 +119,7 @@ const command_line::arg_descriptor<std::string> arg_password = { "password", "Wa
 const command_line::arg_descriptor<std::string> arg_change_password = { "change-password", "Change wallet password and exit", "", true };
 const command_line::arg_descriptor<std::string> arg_mnemonic_seed = { "mnemonic-seed", "Specify mnemonic seed for wallet recovery/creation", "" };
 const command_line::arg_descriptor<bool> arg_restore_deterministic_wallet = { "restore-deterministic-wallet", "Recover wallet using electrum-style mnemonic", false };
-const command_line::arg_descriptor<bool> arg_non_deterministic = { "non-deterministic", "Creates non-deterministic (classic) view and spend keys", false };
+const command_line::arg_descriptor<bool> arg_non_deterministic = { "non-deterministic", "Creates a non-deterministic (classic) view and spend keys", false };
 const command_line::arg_descriptor<uint16_t> arg_daemon_port = { "daemon-port", "Use daemon instance at port <arg> instead of 18180", 0 };
 const command_line::arg_descriptor<std::string> arg_log_file = {"log-file", "Set the log file location", ""};
 const command_line::arg_descriptor<uint32_t> arg_log_level = { "log-level", "Set the log verbosity level", INFO, true };
@@ -127,6 +127,16 @@ const command_line::arg_descriptor<bool> arg_testnet = { "testnet", "Used to dep
 const command_line::arg_descriptor<bool> arg_reset = { "reset", "Discard locally saved txn data and re-synchronize from beginning of public blockchain ledger", false };
 const command_line::arg_descriptor< std::vector<std::string> > arg_command = { "command", "" };
 
+Color::Modifier gold(Color::FG_LIGHT_YELLOW);
+Color::Modifier lcyan(Color::FG_LIGHT_CYAN);
+Color::Modifier bgray(Color::BG_DARK_GRAY);
+Color::Modifier defb(Color::BG_DEFAULT);
+Color::Modifier def(Color::FG_DEFAULT);
+Color::Modifier black(Color::FG_BLACK);
+Color::Modifier odef(Color::DEFAULT);
+Color::Modifier bolden(Color::BOLD);
+Color::Modifier blink(Color::BLINK);
+Color::Modifier dim(Color::DIM);
 
 bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port) {
   auto pos = url.find("://");
@@ -633,9 +643,11 @@ bool simple_wallet::seed(const std::vector<std::string> &args/* = std::vector<st
   bool success = m_wallet->getSeed(electrum_words);
 
   if (success)
-  {
-    std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. Please write them down and store them somewhere safe & secure. Please do not store them in your email or on file storage services outside of YOUR immediate control.\n";
-    std::cout << electrum_words << std::endl;
+  { 
+  std::cout <<blink<<lcyan<<"\nPLEASE NOTE:"<<odef<<def<<" The following 25 words can be used to recover access to your wallet.\n" <<
+    "Write them down and store them somewhere safe and secure. Pen and paper are ideal.\n" 
+    "It is not recommended to store them in your email or any cloud storage services outside of YOUR immediate control.\n\n";
+  std::cout << gold<< electrum_words <<def<< std::endl;
   }
   else
   {
@@ -682,7 +694,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("payment_id", boost::bind(&simple_wallet::payment_id, this, _1), "Generate random Payment ID");
   m_consoleHandler.setHandler("password", boost::bind(&simple_wallet::change_password, this, _1), "Change password");
   m_consoleHandler.setHandler("get_tx_key", boost::bind(&simple_wallet::get_tx_key, this, _1), "Get transaction-private-key for a given <txid>");
-  m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, _1), "Show this help");
+  m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, _1), "You're looking at it :)");
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, _1), "Close wallet");
 }
 //----------------------------------------------------------------------------------------------------
@@ -756,14 +768,28 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 	}
 
 	if (m_generate_new.empty() && m_wallet_file_arg.empty())
-	{
-		std::cout << "Neither 'generate-new-wallet' nor 'wallet-file' argument was specified.\nWhat do you wish to do?\n";
-		std::cout << "O - open wallet\n";
-		std::cout << "G - generate new wallet\n";
-		std::cout << "I - import wallet from keys\n";
-		std::cout << "R - restore backup/paperwallet\n";
-		std::cout << "T - import tracking wallet\n";
-		std::cout << "E - exit\n";
+	{ 
+    std::cout <<"\n";
+    std::cout <<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F88888888  A8888 N88b    N8N  .d8888b.   .d88888b.        "<< def<< odef<< defb<<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F8        A88888 N888b   N8N d88P  Y88b d08P` `Y08b       "<< def<< odef<< defb<<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F8       A88P888 N8888b  N8N 8G8    8G8 800     008       "<< def<< odef<< defb<<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F88888  A88P 888 N88Y88b N8N 8G8        800     008       "<< def<< odef<< defb<<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F8     A88P  888 N8N Y88b88N 8G8  8888G 800     008       "<< def<< odef<< defb<<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F8    A88P   888 N8N  Y8888N 8G8    8G8 800     008       "<< def<< odef<< defb<<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F8   A8888888888 N8N   Y888N 8G8b  dGG8 Y80b. .d80P       "<< def<< odef<< defb<<"\n";
+    std::cout << gold << bgray<< bolden<<"       8F8  A88P     888 N8N    Y88N  `Y8888P`   `Y80008P'        "<< def<< odef<< defb<<"\n";
+    std::cout <<"\n";
+    std::cout <<"\n";
+    std::cout <<"\n";
+		std::cout << gold<< bolden <<  "Welcome to the FANDOM GOLD command-line wallet."<< def<< odef<<"\n";
+    std::cout << "Please choose from the following options what you would like to do:\n";
+		std::cout << lcyan << "O - Open wallet\n";
+		std::cout << lcyan << "G - Generate new wallet\n";
+    std::cout << lcyan << "R - Restore backup/paperwallet\n";
+		std::cout << lcyan << "I - Import wallet from keys\n";
+		std::cout << lcyan << "T - Import tracking wallet\n";
+		std::cout << lcyan << "E - Exit"<< def<<"\n";
 		
 		char c;
 		do
@@ -963,7 +989,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 			return false;
 		}
 
-		logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
+		logger(INFO, BRIGHT_YELLOW) << "Opened wallet: " << m_wallet->getAddress();
 
 		try
 		{
@@ -1194,7 +1220,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
 		m_wallet->addObserver(this);
 		m_node->addObserver(static_cast<INodeObserver*>(this));
 
-		logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
+		logger(INFO, BRIGHT_YELLOW) << "Opened wallet: " << m_wallet->getAddress();
 
 		AccountKeys keys;
 		m_wallet->getAccountKeys(keys);
@@ -1245,8 +1271,7 @@ void simple_wallet::handle_command_line(const boost::program_options::variables_
 
 bool simple_wallet::gen_wallet(const std::string &wallet_file, const std::string& password, 
 	const Crypto::SecretKey& recovery_key, bool recover, bool two_random)
-{
-	m_wallet_file = wallet_file;
+{ m_wallet_file = wallet_file;
 
 	m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), m_logManager));
 	m_node->addObserver(static_cast<INodeObserver*>(this));
@@ -1280,7 +1305,7 @@ bool simple_wallet::gen_wallet(const std::string &wallet_file, const std::string
 		AccountKeys keys;
 		m_wallet->getAccountKeys(keys);
 
-		logger(INFO, BRIGHT_WHITE) <<
+		logger(INFO, BRIGHT_YELLOW) <<
 			"Generated new wallet: " << m_wallet->getAddress() << std::endl <<
 			"view key: " << Common::podToHex(keys.viewSecretKey);
 	}
@@ -1295,32 +1320,31 @@ bool simple_wallet::gen_wallet(const std::string &wallet_file, const std::string
 	Crypto::ElectrumWords::bytes_to_words(recovery_val, electrum_words, "English");
 	std::string print_electrum = "";
 
-	success_msg_writer() <<
-		"**********************************************************************\n" <<
-		"Your Fandom GOLD wallet has been generated.\n" <<
-		"To start synchronizing with the daemon use \"refresh\" command.\n" <<
-		"Use \"help\" command to see the list of available commands.\n" <<
+	success_msg_writer() <<lcyan<<"\n"
+    "**********************************************************************\n" <<gold<<bolden<<
+    "Your Fandom GOLD wallet has been generated!\n" <<def<<odef<<lcyan<<
+		"Type \"help\" to see the list of available commands.\n" <<
 		"Always use \"exit\" command when closing simplewallet to save\n" <<
-		"current session's state. Otherwise, you will possibly need to synchronize \n" <<
-		"your wallet again - your wallet key is NOT under risk in any way.\n";
+		"current session's state. Otherwise, you may need to synchronize \n" <<
+		"your wallet. Your wallet key is NOT under risk in doing so. \n" <<
+    "Remember, you are your own bank. Protect your funds.\n";
 
 	if (!two_random)
 	{
-		std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. " <<
-			"Please write them down and store them somewhere safe & secure. Please do not store them in your email or " <<
-			"on file storage services outside of YOUR immediate control.\n\n";
-		std::cout << electrum_words << std::endl;
+  std::cout <<blink<<lcyan<<"\nPLEASE NOTE:"<<odef<<def<<" The following 25 words can be used to recover access to your wallet.\n" <<
+    "Write them down and store them somewhere safe and secure. Pen and paper are ideal.\n" 
+    "It is not recommended to store them in your email or any cloud storage services outside of YOUR immediate control.\n\n";
+  std::cout << gold<< electrum_words <<def<< std::endl;
 	}
-	success_msg_writer() << "**********************************************************************";
-
+	 success_msg_writer() <<lcyan<<"\n"
+    "**********************************************************************\n"<<def;
 	return true;
 }
 
 //----------------------------------------------------------------------------------------------------
 
 bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string& password)
-{
-	m_wallet_file = wallet_file;
+{ 	m_wallet_file = wallet_file;
 
 	m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), m_logManager));
 	m_node->addObserver(static_cast<INodeObserver*>(this));
@@ -1352,13 +1376,6 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 			fail_msg_writer() << "failed to save new wallet: " << e.what();
 			throw;
 		}
-
-		AccountKeys keys;
-		m_wallet->getAccountKeys(keys);
-
-		logger(INFO, BRIGHT_WHITE) <<
-			"Generated new wallet: " << m_wallet->getAddress() << std::endl <<
-			"view key: " << Common::podToHex(keys.viewSecretKey);
 	}
 	catch (const std::exception& e)
 	{
@@ -1369,30 +1386,35 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 	AccountKeys keys;
 	m_wallet->getAccountKeys(keys);
 	// convert rng value to electrum-style word list
-	std::string electrum_words;
+  std::string electrum_words;
 	Crypto::ElectrumWords::bytes_to_words(keys.spendSecretKey, electrum_words, "English");
 	std::string print_electrum = "";
 
-	success_msg_writer() <<
-		"**********************************************************************\n" <<
-		"Your Fandom GOLD wallet has been generated.\n" <<
+	success_msg_writer() <<lcyan<<"\n"
+		"**********************************************************************\n" <<gold<<bolden<<
+    "Your Fandom GOLD wallet has been generated!\n" <<def<<odef<<lcyan<<
 		"Use \"help\" command to see the list of available commands.\n" <<
 		"Always use \"exit\" command when closing simplewallet to save\n" <<
-		"current session's state. Otherwise, you will possibly need to synchronize \n" <<
-		"your wallet again. Your wallet key is NOT under risk anyway.\n" <<
-		"**********************************************************************";
-
-	std::cout << "\nPLEASE NOTE: the following 25 words can be used to recover access to your wallet. " <<
-		"Please write them down and store them somewhere safe and secure. Please do not store them in your email or " <<
-		"on file storage services outside of your immediate control.\n\n";
-	std::cout << electrum_words << std::endl;
-	success_msg_writer() << "**********************************************************************";
+		"current session's state. Otherwise, you may need to synchronize\n" <<
+		"your wallet again. Your wallet key is NOT under risk in doing so. \n" <<
+    "Remember, you are your own bank. Protect your funds.\n" <<
+		"**********************************************************************\n"<<def;
+    logger(INFO, BRIGHT_YELLOW) <<
+      "Generated new wallet: " << m_wallet->getAddress() << std::endl <<
+      "view key: " << Common::podToHex(keys.viewSecretKey);
+	std::cout <<blink<<lcyan<<"\nPLEASE NOTE:"<<odef<<def<<" The following 25 words can be used to recover access to your wallet.\n" <<
+		"Please write them down and store them somewhere safe and secure. Pen and paper is the ideal choice.\n" 
+    "It is not recommended to store them in your email or any cloud storage services outside of YOUR immediate control.\n\n";
+	std::cout << gold<< electrum_words <<def<< std::endl;
+	 success_msg_writer() <<lcyan<<"\n"
+    "**********************************************************************\n"<<def;
 	return true;
 }
 
 //----------------------------------------------------------------------------------------------------
 
 bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
+
   m_wallet_file = wallet_file;
 
   m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), m_logManager));
@@ -1426,7 +1448,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
     AccountKeys keys;
     m_wallet->getAccountKeys(keys);
 
-    logger(INFO, BRIGHT_WHITE) <<
+    logger(INFO, BRIGHT_YELLOW) <<
       "Imported wallet: " << m_wallet->getAddress() << std::endl;
   }
   catch (const std::exception& e) {
@@ -1434,14 +1456,15 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
     return false;
   }
 
-  success_msg_writer() <<
-    "**********************************************************************\n" <<
-    "Your Fandom GOLD wallet has been imported.\n" <<
+  success_msg_writer() <<lcyan<<"\n"
+    "**********************************************************************\n" <<gold<<bolden<<
+    "Your Fandom GOLD wallet has been imported.\n" <<def<<odef<<lcyan<<
     "Use \"help\" command to see the list of available commands.\n" <<
     "Always use \"exit\" command when closing simplewallet to save\n" <<
     "current session's state. Otherwise, you may need to synchronize \n" <<
-    "your wallet again. Your wallet key is NOT under risk in that way.\n" <<
-    "**********************************************************************";
+    "your wallet again. Your wallet key is NOT under risk in doing so. \n" <<
+    "Remember, you are your own bank. Protect your funds.\n" <<
+    "**********************************************************************"<<def;
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -1486,14 +1509,14 @@ bool simple_wallet::new_wallet(AccountKeys &private_key, const std::string &wall
         return false;
     }
 
-    success_msg_writer() <<
-        "**********************************************************************\n" <<
-        "Your Fandom GOLD wallet has been imported.\n" <<
+    success_msg_writer() <<lcyan<<"\n"
+        "**********************************************************************\n" <<gold<<bolden<<
+        "Your Fandom GOLD wallet has been imported.\n" <<def<<odef<<lcyan<<
         "Use \"help\" command to see the list of available commands.\n" <<
         "Always use \"exit\" command when closing simplewallet to save\n" <<
         "current session's state. Otherwise, you may need to synchronize \n" <<
         "your wallet again. Your wallet key is NOT under risk in that way.\n" <<
-        "**********************************************************************";
+        "**********************************************************************"<<def;
     return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -1769,9 +1792,9 @@ bool simple_wallet::export_tracking_key(const std::vector<std::string>& args/* =
 }
 //---------------------------------------------------------------------------------------------------- 
 bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
-  success_msg_writer() << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
-    ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance()) <<
-	", total balance: " << m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance());
+  success_msg_writer() << "available balance: " << gold<< m_currency.formatAmount(m_wallet->actualBalance()) <<def<<
+    ", locked amount: " <<lcyan<<dim<< m_currency.formatAmount(m_wallet->pendingBalance()) <<def<<odef<<
+	", total balance: " <<gold<<dim<< m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance())<<def<<odef;
 
   return true;
 }
@@ -2094,7 +2117,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     CryptoNote::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
-    success_msg_writer(true) << "XFG successfully sent, transaction id: " << Common::podToHex(txInfo.hash) << ", key: " << Common::podToHex(txInfo.secretKey);
+    success_msg_writer(true) << gold <<"XFG successfully sent,"<< def<< "transaction id: " << Common::podToHex(txInfo.hash) << ", key: " << Common::podToHex(txInfo.secretKey);
 
     try {
       CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
@@ -2250,7 +2273,7 @@ int main(int argc, char* argv[]) {
 
   logManager.configure(buildLoggerConfiguration(logLevel, cfgLogFile));
 
-  logger(INFO, BRIGHT_WHITE) << CRYPTONOTE_NAME << " wallet v" << PROJECT_VERSION_LONG;
+  logger(INFO, BRIGHT_WHITE) << CRYPTONOTE_NAME << " cli-wallet v" << PROJECT_VERSION_LONG;
 
   CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
@@ -2312,7 +2335,7 @@ int main(int argc, char* argv[]) {
     try  {
       walletFileName = ::tryToOpenWalletOrLoadKeysOrThrow(logger, wallet, wallet_file, wallet_password);
 
-      logger(INFO) << "available balance: " << currency.formatAmount(wallet->actualBalance()) <<
+      logger(INFO) << "available balance: "<< gold << currency.formatAmount(wallet->actualBalance()) <<def<<
       ", locked amount: " << currency.formatAmount(wallet->pendingBalance());
 
       logger(INFO, BRIGHT_GREEN) << "Loaded ok";

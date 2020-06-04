@@ -3,8 +3,8 @@
 
 ### Fango is a Rare P2P Privacy Currency based upon the CryptoNote protocol and philosophy.
 
-* <p align="left"><a href="https://fandom.gold">Website</a><p align="left">
-* <p align="left"><a href="http://explorer.fandom.gold">Explorer</a><p align="left">
+* <p align="left"><a href="https://fandom.money">Website</a><p align="left">
+* <p align="left"><a href="http://explorer.fango.money">Explorer</a><p align="left">
  
  ______________________________
 
@@ -37,12 +37,12 @@ executing the following command.
 
 2. Clone Fandom Gold repository
 ```
-git clone https://github.com/FandomGold/fandomgold
+git clone https://github.com/FandomGold/fango
 
 ```
 3. Open folder with copied repository
 ```
-cd fandomgold
+cd fango
 ```
 4. Building (Compiling)
     (resulting programs will be found in build/release/src)
@@ -53,7 +53,7 @@ make -j4
 
 5. Starting Fandom Gold daemon
 ```
-cd fandomgold/build/release/src `
+cd fango/build/release/src `
 ./fangod
 ````
 try --help from within dæmon for a full list of available commands
@@ -61,7 +61,7 @@ or <code>./fangod --help</code> when outside of dæmon
 _________________________________________________________
 For the most user-friendly graphical interface experience
 
-the [Gold Wallet](https://github.com/fandomgold/goldwallet) is recommended. 
+the [Fango Desktop Wallet](https://github.com/fandomgold/fango-wallet). 
 _________________________________________________________
 
 _________________________________________________________
@@ -109,11 +109,11 @@ sudo apt-get install build-essential git cmake libboost-all-dev
 ```
 3: Grab the Fandom Gold files from Github repository
 ```
-git clone https://github.com/FandomGold/fandomgold.git
+git clone https://github.com/FandomGold/fango.git
 ```
 4: Build the files
 ```
-cd fandomgold
+cd fango
 make
 ```
 5: Start client and begin syncing blockchain
@@ -125,11 +125,11 @@ cd build/release/src/
 
 6: Start simplewallet and create your new wallet (navigate to the folder where you created the wallet)
 ```
-~fandomgold/build/release/src$ ./simplewallet
+~fango/build/release/src$ ./simplewallet
 ```
 or
 ```
-cd fandomgold/build/release/src
+cd fango/build/release/src
 ./simplewallet
 ```
 set up your wallet name & password
@@ -166,7 +166,7 @@ export PATH=/opt/android/tool32/arm-linux-androideabi/bin:/opt/android/tool32/bi
 ./b2 abi=aapcs architecture=arm binary-format=elf address-model=32 link=static runtime-link=static --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-system --with-thread --with-context --with-coroutine --with-atomic --build-dir=android32 --stagedir=android32 toolset=clang threading=multi threadapi=pthread target-os=android --reconfigure stage
 ```
 
-Build fandomgold for 32 bit Android
+Build fango for 32 bit Android
 ```
 mkdir -p build/release.android32
 cd build/release.android32

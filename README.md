@@ -1,7 +1,7 @@
 <img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/Fango_gif01.GIF"><img/>
-## The FANDOM GOLD Project 
+## The Fandom Gold Project 
 
-### Fango is a Rare P2P Privacy Currency based upon the CryptoNote protocol and philosophy.
+### Fango is P2P Privacy Cryptocurrency based upon the CryptoNote protocol and philosophy.
 
 * <p align="left"><a href="https://fandom.money">Website</a><p align="left">
 * <p align="left"><a href="http://explorer.fango.money">Explorer</a><p align="left">

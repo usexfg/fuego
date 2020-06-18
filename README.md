@@ -4,9 +4,12 @@
 ### Fango is P2P Privacy Cryptocurrency based upon the CryptoNote protocol and philosophy.
 
 * <p align="left"><a href="https://fandom.money">Website</a><p align="left">
-* <p align="left"><a href="http://explorer.fango.money">Explorer</a><p align="left">
+* <p align="left"><a href="http://explorer.fango.money">Explorer I</a><p align="left">
+* <p align="left"><a href="http://xfg.dedaloproduction.ch/#">Explorer II</a><p align="left">
  
+
  ______________________________
+ 
 
 
 ##### Master Status   

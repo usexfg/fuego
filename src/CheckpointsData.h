@@ -1,21 +1,20 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018, The Karbowanec developers
-// Copyright (c) 2018-2019, The Fandom Gold developers
+// Copyright (c) 2018-2020, The Fandom Gold developers
 //
-// This file is part of Fandom Gold.
+// This file is part of Fango.
 //
-// Fandom Gold is free software: you can redistribute it and/or modify
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Fandom Gold is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom Gold.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -66,7 +65,8 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 { 657001, "68cc01388e1e4a1b4a8fc885e911f0c09dbea594183111047d926fad41669a09" },
 { 657002, "29952d93e156602008c03070089d6ba6375e770dda5d31603d7493eec23e8618" },
 { 657025, "b654644cc363120a88f15e044cbe04935f7a0e347a72901a46d1db88348a7392" },
-{ 690000, "294f9c92ec345d23543ce7dfb7d2487cb6d3b3c64e6d0158b165bf9f530aef30" }
+{ 690000, "294f9c92ec345d23543ce7dfb7d2487cb6d3b3c64e6d0158b165bf9f530aef30" },
+{ 696969, "da78f75378ca0d84108f636119cb228ba7185f953f36511c4c80812d77664050" }
 };
 
 }

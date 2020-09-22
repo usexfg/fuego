@@ -5,20 +5,19 @@
 // Copyright (c) 2016-2019, The Karbowanec developers
 // Copyright (c) 2018-2019, The Ryo Currency developers
 // Copyright (c) 2018-2019, The Cash2 developers
+// Copyright (c) 2017-2020, The Fandom Gold Project
 //
-// Copyright (c) 2017-2019, The Fandom GOLD project
-//
-// This file is part of Fandom GOLD.
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom GOLD is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD. If not, see <http://www.gnu.org/licenses/>.
+// along with Fango. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -62,7 +61,7 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DI
 const size_t   DIFFICULTY_WINDOW                             = 1067; // blocks  Original CryptoNote
 const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks  Zawy v1.0
 const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
-const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fandom GOLD
+const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fango
 
 
 const uint64_t MINIMUM_FEE                                   = UINT64_C(800000);
@@ -162,7 +161,8 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 const char* const SEED_NODES[] = {
 "104.236.0.16:10808",
 "188.226.177.187:10808",
-"178.128.164.245:10808"
+"178.128.164.245:10808",
+"176.223.134.27:10808"
 };
 
 }

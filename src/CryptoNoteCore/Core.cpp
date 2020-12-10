@@ -1,18 +1,18 @@
 // Copyright (c) 2012-2016 The CryptoNote developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2019 The Fandom GOLD developers
+// Copyright (c) 2018-2020 The Fandom Gold developers
 //
-// This file is part of Fandom GOLD.
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom GOLD is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "Core.h"
@@ -268,7 +268,7 @@ bool core::check_tx_fee(const Transaction& tx, size_t blobSize, tx_verification_
 	uint64_t outputs_amount = get_outs_money_amount(tx);
 
 	if (outputs_amount > inputs_amount) {
-		logger(DEBUGGING) << "transaction use more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
+		logger(DEBUGGING) << "transaction uses more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
 			", have " << m_currency.formatAmount(inputs_amount);
 		tvc.m_verifivation_failed = true;
 		return false;
@@ -773,7 +773,9 @@ bool core::on_idle() {
   if (!m_starter_message_showed) {
     logger(INFO, BRIGHT_YELLOW)
       << "**********************************************************************" << ENDL
-      << "The daemon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
+      << "The dæmon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
+      << "Fango blockchain can also be downloaded at https://github.com/FandomGold/XFG-data/releases ."<< ENDL
+      << "Or listen to some music while your daemon is syncing... https://soundcloud.com/headphone-son"<< ENDL
       << "You can use the \"set_log <level>\" command for a more detailed view of the process."<< ENDL
       << "Using <level> option from 0 (no details) up to 4 (very verbose)." << ENDL
       << "Use \"help\" command to see a list of available commands." << ENDL

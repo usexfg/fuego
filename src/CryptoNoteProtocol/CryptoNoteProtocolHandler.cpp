@@ -2,22 +2,19 @@
 // Copyright (c) 2014-2018, The Forknote project
 // Copyright (c) 2016-2018, The Karbowanec developers
 // Copyright (c) 2018-2019, The Cash2 developers
-// Copyright (c) 2018-2019, The Fandom Gold Project
+// Copyright (c) 2018-2020, Fango Developers
 //
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "CryptoNoteProtocolHandler.h"
 
@@ -558,12 +555,14 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
   if (m_synchronized.compare_exchange_strong(val_expected, true)) {
     logger(Logging::INFO, Logging::BRIGHT_CYAN)
       << "**********************************************************************" << ENDL
-      << "You are now synchronized with your network peers. You may start simplewallet now, My Lorde." << ENDL
+      << "You are synchronized with your network peers." << ENDL
+      << "Simplewallet is now at your service, My Lorde." << ENDL
+      << "Type \"help\" to see Fango daemon commands." << ENDL
       << ENDL
-      << "Type \"help\" for your list of available commands." << ENDL
-      << ENDL
-      << "Please note, the blockchain will only be saved after you quit the daemon with \"exit\" command OR if you use \"save\" command." << ENDL
-      << "Otherwise, it may be necessary to synchronize the blockchain again.";
+      << "Please note, the blockchain will only be saved after" << ENDL
+      << "you quit the daemon with \"exit\" command" << ENDL
+      << "OR better yet use the \"save\" command." << ENDL
+      << "Otherwise, it may be necessary to re-synchronize.";
       logger(Logging::INFO, Logging::BRIGHT_CYAN)
       << "**********************************************************************";
     m_core.on_synchronized();

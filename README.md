@@ -1,7 +1,5 @@
 <img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/Fango_gif01.GIF"><img/>
-## The Fandom Gold Project 
-
-### Fango is P2P Privacy Cryptocurrency based upon the CryptoNote protocol and philosophy.
+### Fango is P2P Fandom Money based upon the CryptoNote protocol and philosophy.
 
 * <p align="left"><a href="https://fandom.money">Website</a><p align="left">
 * <p align="left"><a href="http://explorer.fandom.gold">Explorer I</a><p align="left">
@@ -38,7 +36,7 @@ executing the following command.
  sudo apt-get install build-essential git cmake libboost-all-dev
 ```
 
-2. Clone Fandom Gold repository
+2. Clone Fango repository
 ```
 git clone https://github.com/FandomGold/fango
 
@@ -54,7 +52,7 @@ cd fango
 make -j4
 ```
 
-5. Starting Fandom Gold daemon
+5. Starting Fango daemon
 ```
 cd fango/build/release/src `
 ./fangod
@@ -110,7 +108,7 @@ cd
 sudo apt-get update
 sudo apt-get install build-essential git cmake libboost-all-dev
 ```
-3: Grab the Fandom Gold files from Github repository
+3: Grab the Fango files from Github repository
 ```
 git clone https://github.com/FandomGold/fango.git
 ```

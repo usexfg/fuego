@@ -3,21 +3,22 @@
 // Copyright (c) 2014-2018, The Forknote developers
 // Copyright (c) 2018, The TurtleCoin developers
 // Copyright (c) 2016-2018, The Karbowanec developers
+// Copyright (c) 2017-2021, Fandom Gold Society
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Bytecoin is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DaemonCommandsHandler.h"
 #include <ctime>
@@ -64,6 +65,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
   m_consoleHandler.setHandler("print_ban", boost::bind(&DaemonCommandsHandler::print_ban, this, _1), "Print banned nodes");
   m_consoleHandler.setHandler("ban", boost::bind(&DaemonCommandsHandler::ban, this, _1), "Ban a given <IP> for a given amount of <seconds>, ban <IP> [<seconds>]");
   m_consoleHandler.setHandler("unban", boost::bind(&DaemonCommandsHandler::unban, this, _1), "Unban a given <IP>, unban <IP>");
+  m_consoleHandler.setHandler("save", boost::bind(&DaemonCommandsHandler::save, this, boost::arg<1>()), "Save blockchain to file");
   m_consoleHandler.setHandler("status", boost::bind(&DaemonCommandsHandler::status, this, _1), "Show daemon status");
 }
 //--------------------------------------------------------------------------------
@@ -131,7 +133,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   std::cout << std::endl
     << (synced ? "Synced " : "Syncing ") << height << "/" << last_known_block_index 
     << " (" << get_sync_percentage(height, last_known_block_index) << "%) "
-    << "on " << (m_core.currency().isTestnet() ? "testnet, " : "mainnet, ")
+    << "on " << (m_core.currency().isTestnet() ? "testnet, " : "Fango Mainnet, ")
     << "network hashrate: " << get_mining_speed(hashrate) << ", difficulty: " << difficulty << ", "
     << "block v. " << (int)majorVersion << ", "
     << outgoing_connections_count << " out. + " << incoming_connections_count << " inc. connections, "
@@ -231,7 +233,7 @@ bool DaemonCommandsHandler::print_bci(const std::vector<std::string>& args)
   m_core.print_blockchain_index();
   return true;
 }
-
+//--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::set_log(const std::vector<std::string>& args)
 {
   if (args.size() != 1) {
@@ -403,6 +405,7 @@ bool DaemonCommandsHandler::print_ban(const std::vector<std::string>& args) {
   m_srv.log_banlist();
   return true;
 }
+//--------------------------------------------------------------------------------
 
 bool DaemonCommandsHandler::ban(const std::vector<std::string>& args)
 {
@@ -427,6 +430,7 @@ bool DaemonCommandsHandler::ban(const std::vector<std::string>& args)
   }
   return m_srv.ban_host(ip, seconds);
 }
+//--------------------------------------------------------------------------------
 
 bool DaemonCommandsHandler::unban(const std::vector<std::string>& args)
 {
@@ -439,4 +443,9 @@ bool DaemonCommandsHandler::unban(const std::vector<std::string>& args)
     return false;
   }
   return m_srv.unban_host(ip);
+}
+//--------------------------------------------------------------------------------
+
+bool DaemonCommandsHandler::save(const std::vector<std::string>& args) {
+  return m_core.saveBlockchain();
 }

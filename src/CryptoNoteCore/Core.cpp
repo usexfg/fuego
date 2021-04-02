@@ -1,8 +1,9 @@
 // Copyright (c) 2012-2016 The CryptoNote developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2020 The Fandom Gold developers
+// Copyright (c) 2018-2021 Fandom Gold Society
 //
 // This file is part of Fango.
+//
 // Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -1193,6 +1194,10 @@ bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
 
 bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
+}
+	
+bool Core::saveBlockchain() {
+  return m_blockchain.storeCache();
 }
 
 }

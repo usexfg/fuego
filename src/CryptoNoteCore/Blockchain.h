@@ -1,18 +1,18 @@
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2019 The Fandom GOLD developers
+// Copyright (c) 2018-2021 Fandom Gold Society
 //
-// This file is part of Fandom GOLD.
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom GOLD is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -188,6 +188,9 @@ namespace CryptoNote {
       }
     };
 
+   void rebuildCache();
+   bool storeCache();
+	  
   private:
 
     struct MultisignatureOutputUsage {
@@ -280,8 +283,6 @@ namespace CryptoNote {
 
     Logging::LoggerRef logger;
 
-    void rebuildCache();
-    bool storeCache();
     bool switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator>& alt_chain, bool discard_disconnected_chain);
     bool handle_alternative_block(const Block& b, const Crypto::Hash& id, block_verification_context& bvc, bool sendNewAlternativeBlockMessage = true);
     difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, BlockEntry& bei);

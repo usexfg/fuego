@@ -1196,7 +1196,7 @@ bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
 }
 	
-bool Core::saveBlockchain() {
+bool core::saveBlockchain() {
   return m_blockchain.storeCache();
 }
 

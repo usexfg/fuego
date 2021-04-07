@@ -1,20 +1,19 @@
-// <https://fandom.gold>
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Forknote developers
 // Copyright (c) 2016, The Karbowanec developers
-// Copyright (c) 2018-2019 The Fandom Gold Project
+// Copyright (c) 2018-2021 Fandom Gold Society
 
-// This file is part of Fandom Gold.
-// Fandom Gold is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom Gold is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom Gold.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "version.h"
 
@@ -190,41 +189,11 @@ int main(int argc, char* argv[])
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 logger(INFO, BRIGHT_YELLOW) <<
-"                                               \n"
-"                                               \n"
-"                                               \n"
-"        ..,:cioodddddddddddddddddoooiic:,.     \n"        
-"   .,ix0$XXXXX$$$$$$$$$$$$$$$$$$$$$$$$0O$o:.   \n"      
-"  .o0XX$Odi0:::;;;;;;;;;;;;;;;;::id0$$0000O$:. \n"       
-" .o$XXOc.                       .i0X$c:i$0OO$: \n"       
-" :OXX$i.                       .dXNx'  .;$OOOd.\n"      
-".o$XXO;                       .iXW$'    .oOOOx,\n"       
-".d$XX$,                       :0W0:      .;;;,.\n"       
-".d$XX$'                      'xNXo.            \n"       
-".d$XX$'                     .i$N$'             \n"       
-".x$X$$'               .coooolO$$Odiiiiiiiiicc:.\n"       
-".x$X$$'               :O$$$$$$$$000000OOOO$$$x,\n"       
-".d$$$$'               .:ciix$XOo::::::::ix$xxx,\n"       
-".d$$$$'                   .dXXo.        .o$xxx,\n"       
-".o$$$O;                  .:0N$'         .o$xxd'\n"       
-" :O$$$i.                 'xN$c          ;x$dxi.\n"       
-" .o0$$Oi.              .,i$Nx.        .;d$xxd; \n"       
-"  .iO$$$Oxoicc:::::::::oxOX$d:;;::::cidxxxxo,  \n"       
-"   .'cd$O0$$$$$00000000OOOOOOOOO$$$$$$xdoc;.   \n"       
-"      ..',:cciiiiiiiidO$$$$oiiiiccc::;,..      \n"       
-"                    .;ONW$c.                   \n"       
-"                    .dNXd.                     \n"      
-"          .;.      .i$WOi,                     \n"       
-"         .o0c     .:0N0;.                      \n"       
-"        .$XFG.   .c0XO;                        \n"       
-"         .dXXd;';d0Oo.                         \n"       
-"          'ia$xddo:.                           \n"       
-"             ''                                \n"
-"                                       \n"
-"                                       \n"
-"      ╔═╗╔═╗╔╗╔╔╦╗╔═╗╔╦╗  ╔═╗╔═╗╦  ╔╦╗ \n"
-"      ╠╣ ╠═╣║║║ ║║║ ║║║║  ║ ╦║ ║║   ║║ \n"    
-"      ╚  ╩ ╩╝╚╝═╩╝╚═╝╩ ╩  ╚═╝╚═╝╩═╝═╩╝ \n"
+" \n"
+" _______ _______ __   _  ______  _____  \n"
+" |______ |_____| | \  | |  ____ |     | \n"
+" |       |     | |  \_| |_____| |_____| \n"
+" \n" 
 "     "<< " v" << PROJECT_VERSION_LONG "\n"
 "                                       \n";
 

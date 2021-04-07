@@ -1,5 +1,5 @@
 <img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/Fango_gif01.GIF"><img/>
-### Fango is P2P Decentralized Money based upon the CryptoNote protocol and philosophy.
+### Fango is open-source decentralized P2P anonymous money based upon the CryptoNote protocol & philosophy.
 
 * <p align="left"><a href="https://fandomgold.org">Website</a><p align="left">
 * <p align="left"><a href="http://explorer.fandom.gold">Explorer I</a><p align="left">

@@ -1,25 +1,21 @@
-// {DRGL} Kills White Walkers
+// Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2016-2018 Karbo developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
+// This file is part of Fango.
 //
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018, Karbo developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -68,6 +64,12 @@ struct UnconfirmedTransferDetails {
   Crypto::SecretKey secretKey;
 };
 
+struct UnconfirmedSpentDepositDetails {
+  TransactionId transactionId;
+  uint64_t depositsSum;
+  uint64_t fee;
+};
+
 class WalletUnconfirmedTransactions
 {
 public:
@@ -82,8 +84,18 @@ public:
     uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs, Crypto::SecretKey& tx_key);
   void updateTransactionId(const Crypto::Hash& hash, TransactionId id);
 
+  void addCreatedDeposit(DepositId id, uint64_t totalAmount);
+  void addDepositSpendingTransaction(const Crypto::Hash& transactionHash, const UnconfirmedSpentDepositDetails& details);
+
+  void eraseCreatedDeposit(DepositId id);
+
+  uint64_t countCreatedDepositsSum() const;
+  uint64_t countSpentDepositsProfit() const;
+  uint64_t countSpentDepositsTotalAmount() const;
+
   uint64_t countUnconfirmedOutsAmount() const;
   uint64_t countUnconfirmedTransactionsAmount() const;
+
   bool isUsed(const TransactionOutputInformation& out) const;
   void reset();
 
@@ -94,12 +106,20 @@ private:
   void collectUsedOutputs();
   void deleteUsedOutputs(const std::vector<TransactionOutputId>& usedOutputs);
 
+  bool eraseDepositSpendingTransaction(const Crypto::Hash& hash);
+
+/*  bool findUnconfirmedTransactionId(const Crypto::Hash& hash, TransactionId& id);*/
+  bool findUnconfirmedDepositSpendingTransactionId(const Crypto::Hash& hash, TransactionId& id);
+
   typedef std::unordered_map<Crypto::Hash, UnconfirmedTransferDetails, boost::hash<Crypto::Hash>> UnconfirmedTxsContainer;
   typedef std::unordered_set<TransactionOutputId> UsedOutputsContainer;
 
   UnconfirmedTxsContainer m_unconfirmedTxs;
   UsedOutputsContainer m_usedOutputs;
   uint64_t m_uncofirmedTransactionsLiveTime;
+
+  std::unordered_map<DepositId, uint64_t> m_createdDeposits;
+  std::unordered_map<Crypto::Hash, UnconfirmedSpentDepositDetails> m_spentDeposits;
 };
 
 } // namespace CryptoNote

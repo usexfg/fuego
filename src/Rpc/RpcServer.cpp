@@ -1,22 +1,21 @@
-// {DRGL} Kills White Walkers
-//
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016, The Forknote developers
 // Copyright (c) 2016-2018, The Karbowanec developers
-// This file is part of Bytecoin.
-// Bytecoin is free software: you can redistribute it and/or modify
+// Copyright (c) 2018-2021, The Conceal developers
+// Copyright (c) 2017-2021 Fandom Gold Society
+//
+// This file is part of Fango.
+//
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Bytecoin is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RpcServer.h"
 #include "version.h"
@@ -25,15 +24,16 @@
 #include <unordered_map>
 
 // CryptoNote
+#include "BlockchainExplorerData.h"
 #include "Common/StringTools.h"
 #include "Common/Base58.h"
+#include "CryptoNoteCore/TransactionUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/IBlock.h"
 #include "CryptoNoteCore/Miner.h"
 #include "CryptoNoteCore/TransactionExtra.h"
-
 #include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
 
 #include "P2p/NetNode.h"
@@ -377,6 +377,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.grey_peerlist_size = m_p2p.getPeerlistManager().get_gray_peers_count();
   res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocolQuery.getObservedHeight()) - 1;
   res.top_block_hash = Common::podToHex(m_core.getBlockIdByHeight(m_core.get_current_blockchain_height() - 1));
+  res.full_deposit_amount = m_core.fullDepositAmount();
   res.version = PROJECT_VERSION_LONG;
   res.fee_address = m_fee_address.empty() ? std::string() : m_fee_address;
     // that large uint64_t number is unsafe in JavaScript environment and therefore as a JSON value so we display it as a formatted string
@@ -1039,6 +1040,7 @@ void RpcServer::fill_block_header_response(const Block& blk, bool orphan_status,
   responce.nonce = blk.nonce;
   responce.orphan_status = orphan_status;
   responce.height = height;
+  responce.deposits = m_core.depositAmountAtHeight(height);
   responce.depth = m_core.get_current_blockchain_height() - height - 1;
   responce.hash = Common::podToHex(hash);
   m_core.getBlockDifficulty(static_cast<uint32_t>(height), responce.difficulty);

@@ -1,31 +1,30 @@
-// {DRGL} Kills White Walkers
-//
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, Karbo developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include "crypto/hash.h"
 #include "IWalletLegacy.h"
 #include "ITransfersContainer.h"
+
+#include "CryptoNoteCore/Currency.h"
+#include "WalletLegacy/WalletDepositInfo.h"
 
 #include "WalletLegacy/WalletLegacyEvent.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
@@ -34,7 +33,22 @@ namespace CryptoNote {
 class ISerializer;
 }
 
+/*
+namespace std {
+  template<>
+  struct hash<std::tuple<Crypto::Hash, uint32_t>> {
+    size_t operator()(const std::tuple<Crypto::Hash, uint32_t>& item) const {
+      size_t hash = 0;
+      boost::hash_combine(hash, std::get<0>(item));
+      boost::hash_combine(hash, std::get<1>(item));
+      return hash;
+    }
+  };
+}
+*/
 namespace CryptoNote {
+
+typedef std::vector<DepositInfo> UserDeposits;
 
 class WalletUserTransactionsCache
 {
@@ -45,16 +59,31 @@ public:
 
   uint64_t unconfirmedTransactionsAmount() const;
   uint64_t unconfrimedOutsAmount() const;
+  uint64_t countUnconfirmedCreatedDepositsSum() const;
+  uint64_t countUnconfirmedSpentDepositsProfit() const;
+  uint64_t countUnconfirmedSpentDepositsTotalAmount() const;
+
   size_t getTransactionCount() const;
   size_t getTransferCount() const;
+  size_t getDepositCount() const;
 
   TransactionId addNewTransaction(uint64_t amount, uint64_t fee, const std::string& extra, const std::vector<WalletLegacyTransfer>& transfers, uint64_t unlockTime);
   void updateTransaction(TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs, Crypto::SecretKey& tx_key);
+
+  void addCreatedDeposit(DepositId id, uint64_t totalAmount);
+  void addDepositSpendingTransaction(const Crypto::Hash& transactionHash, const UnconfirmedSpentDepositDetails& details);
   void updateTransactionSendingState(TransactionId transactionId, std::error_code ec);
 
-  std::shared_ptr<WalletLegacyEvent> onTransactionUpdated(const TransactionInformation& txInfo, int64_t txBalance);
+  std::shared_ptr<WalletLegacyEvent> onTransactionUpdated(const TransactionInformation& txInfo, 
+                                                          int64_t txBalance
+                                                          const std::vector<TransactionOutputInformation>& newDeposits,
+                                                          const std::vector<TransactionOutputInformation>& spentDeposits,
+                                                          const Currency& currency);
+
   std::shared_ptr<WalletLegacyEvent> onTransactionDeleted(const Crypto::Hash& transactionHash);
 
+  std::vector<DepositId> unlockDeposits(const std::vector<TransactionOutputInformation>& transfers);
+  std::vector<DepositId> lockDeposits(const std::vector<TransactionOutputInformation>& transfers);
   TransactionId findTransactionByTransferId(TransferId transferId) const;
 
   bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) const;
@@ -62,11 +91,19 @@ public:
   TransactionId findTransactionByHash(const Crypto::Hash& hash);
   bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) const;
   WalletLegacyTransfer& getTransfer(TransferId transferId);
+  bool getDeposit(DepositId depositId, Deposit& deposit) const;
+  Deposit& getDeposit(DepositId depositId);
+
+
+  DepositId insertDeposit(const Deposit& deposit, size_t depositIndexInTransaction, const Crypto::Hash& transactionHash);
+  bool getDepositInTransactionInfo(DepositId depositId, Crypto::Hash& transactionHash, uint32_t& outputInTransaction);
 
   bool isUsed(const TransactionOutputInformation& out) const;
   void reset();
 
   std::vector<TransactionId> deleteOutdatedTransactions();
+  std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const;
+  TransactionId findTransactionByHash(const Crypto::Hash& hash);
 
 private:
 
@@ -75,17 +112,45 @@ private:
   TransferId insertTransfers(const std::vector<WalletLegacyTransfer>& transfers);
   void updateUnconfirmedTransactions();
 
+  void restoreTransactionOutputToDepositIndex();
+  std::vector<DepositId> createNewDeposits(TransactionId creatingTransactionId,
+                                           const std::vector<TransactionOutputInformation>& depositOutputs,
+                                           const Currency& currency,
+                       uint32_t height);
+  DepositId insertNewDeposit(const TransactionOutputInformation& depositOutput,
+                             TransactionId creatingTransactionId,
+                             const Currency& currency, uint32_t height);
+  std::vector<DepositId> processSpentDeposits(TransactionId spendingTransactionId, const std::vector<TransactionOutputInformation>& spentDepositOutputs);
+  DepositId getDepositId(const Crypto::Hash& creatingTransactionHash, uint32_t outputInTransaction);
+
+  std::vector<DepositId> getDepositIdsBySpendingTransaction(TransactionId transactionId);
+
+  void eraseCreatedDeposit(DepositId id);
+
   typedef std::vector<WalletLegacyTransfer> UserTransfers;
   typedef std::vector<WalletLegacyTransaction> UserTransactions;
+  typedef std::vector<DepositInfo> UserDeposits;
+  
+  using Offset = UserTransactions::size_type;
+  using UserPaymentIndex = std::unordered_map<PaymentId, std::vector<Offset>, boost::hash<PaymentId>>;
+
+  void rebuildPaymentsIndex();
+  void pushToPaymentsIndex(const PaymentId& paymentId, Offset distance);
+  void pushToPaymentsIndexInternal(Offset distance, const WalletLegacyTransaction& info, std::vector<uint8_t>& extra);
+  void popFromPaymentsIndex(const PaymentId& paymentId, Offset distance);
+
 
   void getGoodItems(UserTransactions& transactions, UserTransfers& transfers);
   void getGoodTransaction(TransactionId txId, size_t offset, UserTransactions& transactions, UserTransfers& transfers);
-
   void getTransfersByTx(TransactionId id, UserTransfers& transfers);
 
   UserTransactions m_transactions;
   UserTransfers m_transfers;
+  UserDeposits m_deposits;
   WalletUnconfirmedTransactions m_unconfirmedTransactions;
+    //tuple<Creating transaction hash, outputIndexInTransaction> -> depositId
+  std::unordered_map<std::tuple<Crypto::Hash, uint32_t>, DepositId> m_transactionOutputToDepositIndex;
+  UserPaymentIndex m_paymentsIndex;
 };
 
 } //namespace CryptoNote

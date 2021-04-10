@@ -1,21 +1,22 @@
-// {DRGL} Kills White Walkers
-// <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2019 The DRAGONGLASS developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of DRAGONGLASS.
-// DRAGONGLASS is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+//
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// DRAGONGLASS is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with DRAGONGLASS.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
+
 
 #include "CryptoNoteFormatUtils.h"
 
@@ -31,6 +32,7 @@
 #include "CryptoNoteSerialization.h"
 #include "TransactionExtra.h"
 #include "CryptoNoteTools.h"
+#include "Currency.h"
 
 #include "CryptoNoteConfig.h"
 
@@ -552,6 +554,14 @@ Hash get_tx_tree_hash(const Block& b) {
     txs_ids.push_back(th);
   }
   return get_tx_tree_hash(txs_ids);
+}
+
+bool is_valid_decomposed_amount(uint64_t amount) {
+  auto it = std::lower_bound(Currency::PRETTY_AMOUNTS.begin(), Currency::PRETTY_AMOUNTS.end(), amount);
+  if (it == Currency::PRETTY_AMOUNTS.end() || amount != *it) {
+	  return false;
+  }
+  return true;
 }
 
 }

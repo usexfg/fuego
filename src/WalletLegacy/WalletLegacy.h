@@ -1,36 +1,21 @@
-// {DRGL} Kills White Walkers
-//
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2017-2018, Karbo developers
-// 
-// All rights reserved.
-// 
-// Redistribution and use in source and binary forms, with or without modification, are
-// permitted provided that the following conditions are met:
-// 
-// 1. Redistributions of source code must retain the above copyright notice, this list of
-//    conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list
-//    of conditions and the following disclaimer in the documentation and/or other
-//    materials provided with the distribution.
-// 
-// 3. Neither the name of the copyright holder nor the names of its contributors may be
-//    used to endorse or promote products derived from this software without specific
-//    prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-// THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-// THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
+//
+// This file is part of Fango.
+//
+// FANGO is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// FANGO is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public License
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -91,17 +76,24 @@ public:
 
   virtual uint64_t actualBalance() override;
   virtual uint64_t pendingBalance() override;
+  virtual uint64_t actualDepositBalance() override;
+  virtual uint64_t pendingDepositBalance() override;
 
   virtual size_t getTransactionCount() override;
   virtual size_t getTransferCount() override;
+  virtual size_t getDepositCount() override;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) override;
 
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) override;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) override;
+  virtual bool getDeposit(DepositId depositId, Deposit& deposit) override;
+
 
   virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) override;
   virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) override;
+  virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 0) override;
+  virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) override;
   virtual std::error_code cancelTransaction(size_t transactionId) override;
 
   virtual void getAccountKeys(AccountKeys& keys) override;
@@ -129,7 +121,24 @@ private:
   void sendTransactionCallback(WalletRequest::Callback callback, std::error_code ec);
   void notifyClients(std::deque<std::shared_ptr<WalletLegacyEvent> >& events);
   void notifyIfBalanceChanged();
+  void notifyIfDepositBalanceChanged();
 
+  std::unique_ptr<WalletLegacyEvent> getActualDepositBalanceChangedEvent();
+  std::unique_ptr<WalletLegacyEvent> getPendingDepositBalanceChangedEvent();
+
+  std::unique_ptr<WalletLegacyEvent> getActualBalanceChangedEvent();/* check .cpp*/
+  std::unique_ptr<WalletLegacyEvent> getPendingBalanceChangedEvent();/* check .cpp*/
+
+  uint64_t calculateActualDepositBalance();
+  uint64_t calculatePendingDepositBalance();
+  uint64_t dustBalance();
+
+  uint64_t calculateActualBalance();/* check .cpp*/
+  uint64_t calculatePendingBalance();/* check .cpp*/
+
+  void pushBalanceUpdatedEvents(std::deque<std::unique_ptr<WalletLegacyEvent>>& eventsQueue); /* check .cpp*/
+
+  std::vector<uint32_t> getTransactionHeights(std::vector<TransactionOutputInformation> transfers);/* check .cpp*/
   std::vector<TransactionId> deleteOutdatedUnconfirmedTransactions();
 
   enum WalletState
@@ -156,6 +165,9 @@ private:
   TransfersSyncronizer m_transfersSync;
   ITransfersContainer* m_transferDetails;
 
+  std::atomic<uint64_t> m_lastNotifiedActualDepositBalance;
+  std::atomic<uint64_t> m_lastNotifiedPendingDepositBalance;
+  
   WalletUserTransactionsCache m_transactionsCache;
   std::unique_ptr<WalletTransactionSender> m_sender;
 

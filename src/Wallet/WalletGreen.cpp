@@ -1,21 +1,21 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The BBSCoin Developers 
 // Copyright (c) 2017-2018, Karbo developers
+// Copyright (c) 2018-2021, Conceal Developers
+// Copyright (c) 2017-2021, Fandom Gold Society
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "WalletGreen.h"
 
@@ -61,6 +61,17 @@ using namespace CryptoNote;
 using namespace Logging;
 
 namespace {
+
+    uint64_t calculateDepositsAmount(
+      const std::vector<CryptoNote::TransactionOutputInformation> &transfers,
+      const CryptoNote::Currency &currency,
+      const std::vector<uint32_t> heights)
+  {
+    int index = 0;
+    return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights](uint64_t sum, const CryptoNote::TransactionOutputInformation &deposit) {
+      return sum + deposit.amount;
+    });
+  }
 
 void asyncRequestCompletion(System::Event& requestFinished) {
   requestFinished.set();
@@ -146,6 +157,8 @@ WalletGreen::WalletGreen(System::Dispatcher& dispatcher, const Currency& currenc
   m_state(WalletState::NOT_INITIALIZED),
   m_actualBalance(0),
   m_pendingBalance(0),
+  m_lockedDepositBalance(0),
+  m_unlockedDepositBalance(0),
   m_transactionSoftLockTime(transactionSoftLockTime)
 {
   m_upperTransactionSizeLimit = parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT / 4 - m_currency.minerTxBlobReservedSize();
@@ -168,6 +181,296 @@ void WalletGreen::initialize(const std::string& path, const std::string& passwor
   initWithKeys(path, password, viewPublicKey, viewSecretKey);
   m_logger(INFO, BRIGHT_WHITE) << "New container initialized, public view key " << viewPublicKey;
 }
+
+/*--------------------------------------------------DEPOSITS-------------------------------------------------------------------------------*/
+
+  void WalletGreen::withdrawDeposit(
+      DepositId depositId,
+      std::string &transactionHash)
+  {
+
+    throwIfNotInitialized();
+    throwIfTrackingMode();
+    throwIfStopped();
+
+    /* Check for the existance of the deposit */
+    if (m_deposits.size() <= depositId)
+    {
+      throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_DOESNOT_EXIST));
+    }
+
+    /* Get the details of the deposit, and the address */
+    Deposit deposit = getDeposit(depositId);
+    WalletTransfer firstTransfer = getTransactionTransfer(deposit.creatingTransactionId, 0);
+    std::string address = firstTransfer.address;
+
+    uint64_t blockCount = getBlockCount();
+
+    /* Is the deposit unlocked */
+    if (deposit.unlockHeight > blockCount)
+    {
+      throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_LOCKED));
+    }
+
+    /* Create the transaction */
+    std::unique_ptr<ITransaction> transaction = createTransaction();
+
+    std::vector<TransactionOutputInformation> selectedTransfers;
+
+    const auto &wallet = getWalletRecord(address);
+    ITransfersContainer *container = wallet.container;
+    AccountKeys account = makeAccountKeys(wallet);
+    ITransfersContainer::TransferState state;
+    TransactionOutputInformation transfer;
+
+    uint64_t foundMoney = 0;
+    foundMoney += deposit.amount;
+    m_logger(DEBUGGING, WHITE) << "found money " << foundMoney;
+
+    container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state);
+
+    if (state != ITransfersContainer::TransferState::TransferAvailable) 
+    {
+      throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_LOCKED));
+    }
+
+    selectedTransfers.push_back(std::move(transfer));
+    m_logger(DEBUGGING, BRIGHT_WHITE) << "Withdraw deposit, id " << depositId << " found transfer for " << transfer.amount << " with a global output index of " << transfer.globalOutputIndex;
+
+    std::vector<MultisignatureInput> inputs = prepareMultisignatureInputs(selectedTransfers);
+
+    for (const auto &input : inputs)
+    {
+      transaction->addInput(input);
+    }
+
+    std::vector<uint64_t> outputAmounts = split(foundMoney - 10, parameters::DEFAULT_DUST_THRESHOLD);
+
+    for (auto amount : outputAmounts)
+    {
+      transaction->addOutput(amount, account.address);
+    }
+
+    transaction->setUnlockTime(0);
+    Crypto::SecretKey txSecretKey;
+    transaction->getTransactionSecretKey(txSecretKey);
+
+    /* Add the transaction extra 
+    std::vector<WalletMessage> messages;
+    Crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
+    CryptoNote::KeyPair kp = {publicKey, txSecretKey};
+    for (size_t i = 0; i < messages.size(); ++i)
+    {
+      CryptoNote::AccountPublicAddress addressBin;
+      if (!m_currency.parseAccountAddressString(messages[i].address, addressBin))
+        continue;
+      CryptoNote::tx_extra_message tag;
+      if (!tag.encrypt(i, messages[i].message, &addressBin, kp))
+        continue;
+      BinaryArray ba;
+      toBinaryArray(tag, ba);
+      ba.insert(ba.begin(), TX_EXTRA_MESSAGE_TAG);
+      transaction->appendExtra(ba);
+    }
+    */
+
+    assert(inputs.size() == selectedTransfers.size());
+    for (size_t i = 0; i < inputs.size(); ++i)
+    {
+      transaction->signInputMultisignature(i, selectedTransfers[i].transactionPublicKey, selectedTransfers[i].outputInTransaction, account);
+    }
+
+    transactionHash = Common::podToHex(transaction->getTransactionHash());
+    size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
+  }
+
+    std::vector<MultisignatureInput> WalletGreen::prepareMultisignatureInputs(const std::vector<TransactionOutputInformation> &selectedTransfers)
+  {
+    std::vector<MultisignatureInput> inputs;
+    inputs.reserve(selectedTransfers.size());
+
+    for (const auto &output : selectedTransfers)
+    {
+      assert(output.type == TransactionTypes::OutputType::Multisignature);
+      assert(output.requiredSignatures == 1); //Other types are currently unsupported
+
+      MultisignatureInput input;
+      input.amount = output.amount;
+      input.signatureCount = output.requiredSignatures;
+      input.outputIndex = output.globalOutputIndex;
+      input.term = output.term;
+
+      inputs.emplace_back(std::move(input));
+    }
+
+    return inputs;
+  }
+
+  void WalletGreen::createDeposit(
+      uint64_t amount,
+      uint64_t term,
+      std::string sourceAddress,
+      std::string destinationAddress,
+      std::string &transactionHash)
+  {
+
+    throwIfNotInitialized();
+    throwIfTrackingMode();
+    throwIfStopped();
+
+    /* If a source address is not specified, use the primary (first) wallet
+       address for the creation of the deposit */
+    if (sourceAddress.empty())
+    {
+      sourceAddress = getAddress(0);
+    }
+
+    if (destinationAddress.empty())
+    {
+      destinationAddress = sourceAddress;
+    }
+
+    /* Ensure that the address is valid and a part of this container */
+    validateSourceAddresses({sourceAddress});
+
+    CryptoNote::AccountPublicAddress sourceAddr = parseAddress(sourceAddress);
+    CryptoNote::AccountPublicAddress destAddr = parseAddress(destinationAddress);
+
+    /* Create the transaction */
+    std::unique_ptr<ITransaction> transaction = createTransaction();
+
+    /* Select the wallet - If no source address was specified then it will pick funds from anywhere
+     and the change will go to the primary address of the wallet container */
+    std::vector<WalletOuts> wallets;
+    wallets = pickWallets({sourceAddress});
+
+    /* Select the transfers */
+    uint64_t fee = 1000;
+    uint64_t neededMoney = amount + fee;
+    std::vector<OutputToTransfer> selectedTransfers;
+    uint64_t foundMoney = selectTransfers(neededMoney,
+                                          0 == 0,
+                                          m_currency.defaultDustThreshold(),
+                                          std::move(wallets),
+                                          selectedTransfers);
+
+    /* Do we have enough funds */
+    if (foundMoney < neededMoney)
+    {
+      throw std::system_error(make_error_code(error::WRONG_AMOUNT));
+    }
+
+    /* Now we add the outputs to the transaction, starting with the deposits output
+     which includes the term, and then after that the change outputs */
+
+    /* Add the deposit outputs to the transaction */
+    auto depositIndex = transaction->addOutput(
+        neededMoney - fee,
+        {destAddr},
+        1,
+        term);
+
+    /* Let's add the change outputs to the transaction */
+
+    std::vector<uint64_t> amounts;
+
+    /* Breakdown the change into specific amounts */
+    decompose_amount_into_digits(
+        foundMoney - neededMoney,
+        m_currency.defaultDustThreshold(),
+        [&](uint64_t chunk) { amounts.push_back(chunk); },
+        [&](uint64_t dust) { amounts.push_back(dust); });
+    std::vector<uint64_t> decomposedChange = amounts;
+
+    /* Now pair each of those amounts to the change address
+     which in the case of a deposit is the source address */
+    typedef std::pair<const AccountPublicAddress *, uint64_t> AmountToAddress;
+    std::vector<AmountToAddress> amountsToAddresses;
+    for (const auto &output : decomposedChange)
+    {
+      amountsToAddresses.emplace_back(AmountToAddress{&sourceAddr, output});
+    }
+
+    /* For the sake of privacy, we shuffle the output order randomly */
+    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{Crypto::rand<std::default_random_engine::result_type>()});
+    std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
+      return left.second < right.second;
+    });
+
+    /* Add the change outputs to the transaction */
+    try
+    {
+      for (const auto &amountToAddress : amountsToAddresses)
+      {
+        transaction->addOutput(amountToAddress.second,
+                               *amountToAddress.first);
+      }
+    }
+
+    catch (const std::exception &e)
+    {
+      std::cerr << e.what() << '\n';
+    }
+
+    /* Now add the other components of the transaction such as the transaction secret key, unlocktime
+     since this is a deposit, we don't need to add messages or added extras beyond the transaction public key */
+    Crypto::SecretKey txSecretKey;
+    transaction->getTransactionSecretKey(txSecretKey);
+    transaction->setUnlockTime(0);
+
+    /* Add the transaction extra
+    std::vector<WalletMessage> messages;
+    Crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
+    CryptoNote::KeyPair kp = {publicKey, txSecretKey};
+    for (size_t i = 0; i < messages.size(); ++i)
+    {
+      CryptoNote::AccountPublicAddress addressBin;
+      if (!m_currency.parseAccountAddressString(messages[i].address, addressBin))
+        continue;
+      CryptoNote::tx_extra_message tag;
+      if (!tag.encrypt(i, messages[i].message, &addressBin, kp))
+        continue;
+      BinaryArray ba;
+      toBinaryArray(tag, ba);
+      ba.insert(ba.begin(), TX_EXTRA_MESSAGE_TAG);
+      transaction->appendExtra(ba);
+    } */
+
+    /* Prepare the inputs */
+
+    /* Get additional inputs for the mixin */
+    typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
+    std::vector<outs_for_amount> mixinResult;
+    std::vector<InputInfo> keysInfo;
+    prepareInputs(selectedTransfers, mixinResult, 4, keysInfo);
+
+    /* Add the inputs to the transaction */
+    std::vector<KeyPair> ephKeys;
+    for (auto &input : keysInfo)
+    {
+      transaction->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
+    }
+
+    /* Now sign the inputs so we can proceed with the transaction */
+    size_t i = 0;
+    for (auto &input : keysInfo)
+    {
+      transaction->signInputKey(i++, input.keyInfo, input.ephKeys);
+    }
+
+    /* Return the transaction hash */
+    transactionHash = Common::podToHex(transaction->getTransactionHash());
+    size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
+  }
+
+
+
+
+/*------------------------------------------------------------------------------DEPOSITS------------------------------------------------------------------------------------------*/
+
+
+
+
 
 void WalletGreen::initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) {
   Crypto::PublicKey viewPublicKey;
@@ -222,6 +525,7 @@ void WalletGreen::clearCaches(bool clearTransactions, bool clearCachedData) {
   if (clearTransactions) {
     m_transactions.clear();
     m_transfers.clear();
+    m_deposits.clear();
   }
 
   if (clearCachedData) {
@@ -230,6 +534,8 @@ void WalletGreen::clearCaches(bool clearTransactions, bool clearCachedData) {
       m_walletsContainer.modify(it, [&walletIndex](WalletRecord& wallet) {
         wallet.actualBalance = 0;
         wallet.pendingBalance = 0;
+        wallet.lockedDepositBalance = 0;
+        wallet.unlockedDepositBalance = 0;
         wallet.container = reinterpret_cast<CryptoNote::ITransfersContainer*>(walletIndex++); //dirty hack. container field must be unique
       });
     }
@@ -251,6 +557,8 @@ void WalletGreen::clearCaches(bool clearTransactions, bool clearCachedData) {
     m_unlockTransactionsJob.clear();
     m_actualBalance = 0;
     m_pendingBalance = 0;
+    m_lockedDepositBalance = 0;
+    m_unlockedDepositBalance = 0;
     m_fusionTxsCache.clear();
     m_blockchain.clear();
   }
@@ -614,11 +922,14 @@ void WalletGreen::loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKe
     m_viewSecretKey,
     m_actualBalance,
     m_pendingBalance,
+    m_lockedDepositBalance,
+    m_unlockedDepositBalance,
     m_walletsContainer,
     m_synchronizer,
     m_unlockTransactionsJob,
     m_transactions,
     m_transfers,
+    m_deposits,
     m_uncommitedTransactions,
     extra,
     m_transactionSoftLockTime
@@ -662,11 +973,14 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
     m_viewSecretKey,
     m_actualBalance,
     m_pendingBalance,
+    m_lockedDepositBalance,
+    m_unlockedDepositBalance,
     m_walletsContainer,
     m_synchronizer,
     m_unlockTransactionsJob,
     transactions,
     transfers,
+    m_deposits,
     m_uncommitedTransactions,
     const_cast<std::string&>(extra),
     m_transactionSoftLockTime
@@ -792,6 +1106,8 @@ void WalletGreen::loadSpendKeys() {
 
     wallet.actualBalance = 0;
     wallet.pendingBalance = 0;
+    wallet.lockedDepositBalance = 0;
+    wallet.unlockedDepositBalance = 0;
     wallet.container = reinterpret_cast<CryptoNote::ITransfersContainer*>(i); //dirty hack. container field must be unique
 
     m_walletsContainer.emplace_back(std::move(wallet));
@@ -935,6 +1251,14 @@ size_t WalletGreen::getAddressCount() const {
 
   return m_walletsContainer.get<RandomAccessIndex>().size();
 }
+
+size_t WalletGreen::getWalletDepositCount() const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    return m_deposits.get<RandomAccessIndex>().size();
+  }
 
 std::string WalletGreen::getAddress(size_t index) const {
   throwIfNotInitialized();
@@ -1200,6 +1524,40 @@ uint64_t WalletGreen::getPendingBalance() const {
   return m_pendingBalance;
 }
 
+uint64_t WalletGreen::getLockedDepositBalance(const std::string &address) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    const auto &wallet = getWalletRecord(address);
+    return wallet.lockedDepositBalance;
+  }
+
+uint64_t WalletGreen::getUnlockedDepositBalance(const std::string &address) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    const auto &wallet = getWalletRecord(address);
+    return wallet.unlockedDepositBalance;
+  }
+
+uint64_t WalletGreen::getLockedDepositBalance() const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    return m_lockedDepositBalance;
+  }
+
+uint64_t WalletGreen::getUnlockedDepositBalance() const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    return m_unlockedDepositBalance;
+  }
+
 uint64_t WalletGreen::getPendingBalance(const std::string& address) const {
   throwIfNotInitialized();
   throwIfStopped();
@@ -1226,6 +1584,19 @@ WalletTransaction WalletGreen::getTransaction(size_t transactionIndex) const {
 
   return m_transactions.get<RandomAccessIndex>()[transactionIndex];
 }
+
+Deposit WalletGreen::getDeposit(size_t depositIndex) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    if (m_deposits.size() <= depositIndex)
+    {
+      throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_DOESNOT_EXIST));
+    }
+
+    return m_deposits.get<RandomAccessIndex>()[depositIndex];
+  }
 
 size_t WalletGreen::getTransactionTransferCount(size_t transactionIndex) const {
   throwIfNotInitialized();
@@ -1696,9 +2067,11 @@ size_t WalletGreen::insertOutgoingTransactionAndPushEvent(const Hash& transactio
   insertTx.state = WalletTransactionState::CREATED;
   insertTx.creationTime = static_cast<uint64_t>(time(nullptr));
   insertTx.unlockTime = unlockTimestamp;
+  insertTx.firstDepositId = CryptoNote::WALLET_INVALID_DEPOSIT_ID;
   insertTx.blockHeight = CryptoNote::WALLET_UNCONFIRMED_TRANSACTION_HEIGHT;
   insertTx.extra.assign(reinterpret_cast<const char*>(extra.data()), extra.size());
   insertTx.fee = fee;
+  insertTx.depositCount = 77; //noahJ
   insertTx.hash = transactionHash;
   insertTx.totalAmount = 0; // 0 until transactionHandlingEnd() is called
   insertTx.timestamp = 0; //0 until included in a block
@@ -1726,6 +2099,26 @@ void WalletGreen::updateTransactionStateAndPushEvent(size_t transactionId, Walle
   }
 }
 
+bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::Deposit &info)
+  {
+    auto &txIdIndex = m_deposits.get<RandomAccessIndex>();
+    assert(depositId < txIdIndex.size());
+    auto it = std::next(txIdIndex.begin(), depositId);
+
+    bool updated = false;
+    bool r = txIdIndex.modify(it, [&info, &updated](Deposit &deposit) {
+      if (deposit.spendingTransactionId != info.spendingTransactionId)
+      {
+        deposit.spendingTransactionId = info.spendingTransactionId;
+        updated = true;
+      }
+    });
+
+    assert(r);
+
+    return updated;
+  }
+
 bool WalletGreen::updateWalletTransactionInfo(size_t transactionId, const CryptoNote::TransactionInformation& info, int64_t totalAmount) {
   auto& txIdIndex = m_transactions.get<RandomAccessIndex>();
   assert(transactionId < txIdIndex.size());
@@ -1733,6 +2126,13 @@ bool WalletGreen::updateWalletTransactionInfo(size_t transactionId, const Crypto
 
   bool updated = false;
   bool r = txIdIndex.modify(it, [this, transactionId, &info, totalAmount, &updated](WalletTransaction& transaction) {
+    if (transaction.firstDepositId != info.firstDepositId)
+      {
+        transaction.firstDepositId = info.firstDepositId;
+        updated = true;
+        transaction.depositCount = 1;
+      }
+
     if (transaction.blockHeight != info.blockHeight) {
       transaction.blockHeight = info.blockHeight;
       updated = true;
@@ -1791,6 +2191,8 @@ size_t WalletGreen::insertBlockchainTransaction(const TransactionInformation& in
   tx.timestamp = info.timestamp;
   tx.blockHeight = info.blockHeight;
   tx.hash = info.transactionHash;
+  tx.depositCount = 0;
+  tx.firstDepositId = WALLET_INVALID_DEPOSIT_ID;
   tx.isBase = info.totalAmountIn == 0;
   if (tx.isBase) {
     tx.fee = 0;
@@ -2364,6 +2766,24 @@ WalletTransactionWithTransfers WalletGreen::getTransaction(const Crypto::Hash& t
   return walletTransaction;
 }
 
+std::vector<DepositsInBlockInfo> WalletGreen::getDeposits(const Crypto::Hash &blockHash, size_t count) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    auto &hashIndex = m_blockchain.get<BlockHashIndex>();
+    auto it = hashIndex.find(blockHash);
+    if (it == hashIndex.end())
+    {
+      return std::vector<DepositsInBlockInfo>();
+    }
+
+    auto heightIt = m_blockchain.project<BlockHeightIndex>(it);
+
+    uint32_t blockIndex = static_cast<uint32_t>(std::distance(m_blockchain.get<BlockHeightIndex>().begin(), heightIt));
+    return getDepositsInBlocks(blockIndex, count);
+  }
+
 std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(const Crypto::Hash& blockHash, size_t count) const {
   throwIfNotInitialized();
   throwIfStopped();
@@ -2386,6 +2806,14 @@ std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(uint32_t block
 
   return getTransactionsInBlocks(blockIndex, count);
 }
+
+std::vector<DepositsInBlockInfo> WalletGreen::getDeposits(uint32_t blockIndex, size_t count) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    return getDepositsInBlocks(blockIndex, count);
+  }
 
 std::vector<Crypto::Hash> WalletGreen::getBlockHashes(uint32_t blockIndex, size_t count) const {
   throwIfNotInitialized();
@@ -2624,6 +3052,62 @@ void WalletGreen::onTransactionUpdated(const Crypto::PublicKey&, const Crypto::H
     this->transactionUpdated(info, containerAmountsList);
   });
 }
+  /* Insert a new deposit into the deposit index */
+  DepositId WalletGreen::insertNewDeposit(
+      const TransactionOutputInformation &depositOutput,
+      TransactionId creatingTransactionId,
+      const Currency &currency,
+      uint32_t height)
+  {
+    assert(depositOutput.type == TransactionTypes::OutputType::Multisignature);
+    assert(depositOutput.term != 0);
+
+    Deposit deposit;
+    deposit.amount = depositOutput.amount;
+    deposit.creatingTransactionId = creatingTransactionId;
+    deposit.term = depositOutput.term;
+    deposit.spendingTransactionId = WALLET_INVALID_TRANSACTION_ID;
+   /* deposit.interest = currency.calculateInterest(deposit.amount, deposit.term, height);*/
+    deposit.height = height;
+    deposit.unlockHeight = height + depositOutput.term;
+    deposit.locked = true;
+
+    return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
+  }
+
+  DepositId WalletGreen::insertDeposit(
+      const Deposit &deposit,
+      size_t depositIndexInTransaction,
+      const Hash &transactionHash)
+  {
+
+    Deposit info = deposit;
+
+    info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
+    info.transactionHash = transactionHash;
+
+    auto &hashIndex = m_transactions.get<TransactionIndex>();
+    auto it = hashIndex.find(transactionHash);
+    if (it == hashIndex.end())
+    {
+      throw std::system_error(make_error_code(error::OBJECT_NOT_FOUND), "Transaction not found");
+    }
+
+    WalletTransactionWithTransfers walletTransaction;
+    walletTransaction.transaction = *it;
+    walletTransaction.transfers = getTransactionTransfers(*it);
+
+    DepositId id = m_deposits.size();
+    m_deposits.push_back(std::move(info));
+
+    m_logger(DEBUGGING, BRIGHT_GREEN) << "New deposit created, id "
+                                      << id << ", locking "
+                                      << m_currency.formatAmount(deposit.amount) << " ,for a term of "
+                                      << deposit.term << " blocks, at block "
+                                      << deposit.height;
+
+    return id;
+  }
 
 void WalletGreen::transactionUpdated(const TransactionInformation& transactionInfo, const std::vector<ContainerAmounts>& containerAmountsList) {
   System::EventLock lk(m_readyEvent);
@@ -2637,6 +3121,9 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
   if (m_state == WalletState::NOT_INITIALIZED) {
     return;
   }
+
+  size_t firstDepositId = std::numeric_limits<DepositId>::max();
+  size_t depositCount = 0;
 
   bool updated = false;
   bool isNew = false;
@@ -2655,6 +3142,53 @@ void WalletGreen::transactionUpdated(const TransactionInformation& transactionIn
     transactionId = insertBlockchainTransaction(transactionInfo, totalAmount);
     m_fusionTxsCache.emplace(transactionId, isFusionTransaction(*it));
   }
+
+  for (auto containerAmounts : containerAmountsList)
+    {
+      auto newDepositOuts = containerAmounts.container->getTransactionOutputs(transactionInfo.transactionHash, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateAll);
+      auto spentDepositOutputs = containerAmounts.container->getTransactionInputs(transactionInfo.transactionHash, ITransfersContainer::IncludeTypeDeposit);
+
+      std::vector<DepositId> updatedDepositIds;
+
+      /* Check for new deposits in this transaction, and create them */
+      for (size_t i = 0; i < newDepositOuts.size(); i++)
+      {
+        /* We only add confirmed deposit entries, so this condition prevents the same deposit
+        in the deposit index during creation and during confirmation */
+        if (transactionInfo.blockHeight == WALLET_UNCONFIRMED_TRANSACTION_HEIGHT)
+        {
+          continue;
+        }
+        auto id = insertNewDeposit(newDepositOuts[i], transactionId, m_currency, transactionInfo.blockHeight);
+        updatedDepositIds.push_back(id);
+      }
+
+      /* Now check for any deposit withdrawals in the transactions */
+      for (size_t i = 0; i < spentDepositOutputs.size(); i++)
+      {
+        auto depositId = getDepositId(spentDepositOutputs[i].transactionHash);
+        assert(depositId != WALLET_INVALID_DEPOSIT_ID);
+        if (depositId == WALLET_INVALID_DEPOSIT_ID)
+        {
+          throw std::invalid_argument("processSpentDeposits error: requested deposit doesn't exist");
+        }
+
+        auto info = m_deposits[depositId];
+        info.spendingTransactionId = transactionId;
+        updated |= updateWalletDepositInfo(depositId, info);
+      }
+
+      /* If there are new deposits, update the transaction information with the 
+         firstDepositId and the depositCount */
+      if (!updatedDepositIds.empty())
+      {
+        firstDepositId = updatedDepositIds[0];
+        depositCount = updatedDepositIds.size();
+        transactionInfo.depositCount = depositCount;
+        transactionInfo.firstDepositId = firstDepositId;
+        updated |= updateWalletTransactionInfo(transactionId, transactionInfo, totalAmount);
+      }
+    }
 
   if (transactionInfo.blockHeight != CryptoNote::WALLET_UNCONFIRMED_TRANSACTION_HEIGHT) {
     // In some cases a transaction can be included to a block but not removed from m_uncommitedTransactions. Fix it
@@ -2713,6 +3247,21 @@ size_t WalletGreen::getTransactionId(const Hash& transactionHash) const {
 
   return txId;
 }
+
+  size_t WalletGreen::getDepositId(const Hash &transactionHash) const
+  {
+    auto it = m_deposits.get<TransactionIndex>().find(transactionHash);
+
+    if (it == m_deposits.get<TransactionIndex>().end())
+    {
+      return WALLET_INVALID_DEPOSIT_ID;
+    }
+
+    auto rndIt = m_deposits.project<RandomAccessIndex>(it);
+    auto depositId = std::distance(m_deposits.get<RandomAccessIndex>().begin(), rndIt);
+
+    return depositId;
+  }
 
 void WalletGreen::onTransactionDeleted(ITransfersSubscription* object, const Hash& transactionHash) {
   m_dispatcher.remoteSpawn([object, transactionHash, this] () {
@@ -2824,35 +3373,109 @@ void WalletGreen::updateBalance(CryptoNote::ITransfersContainer* container) {
 
   bool updated = false;
 
-  if (it->actualBalance < actual) {
-    m_actualBalance += actual - it->actualBalance;
-    updated = true;
-  } else if (it->actualBalance > actual) {
-    m_actualBalance -= it->actualBalance - actual;
-    updated = true;
-  }
+    /* Now update the overall balance (getBalance without parameters) */
+    if (it->actualBalance < actual)
+    {
+      m_actualBalance += actual - it->actualBalance;
+      updated = true;
+    }
+    else
+    {
+      m_actualBalance -= it->actualBalance - actual;
+      updated = true;
+    }
 
-  if (it->pendingBalance < pending) {
-    m_pendingBalance += pending - it->pendingBalance;
-    updated = true;
-  } else if (it->pendingBalance > pending) {
-    m_pendingBalance -= it->pendingBalance - pending;
-    updated = true;
-  }
+    if (it->pendingBalance < pending)
+    {
+      m_pendingBalance += pending - it->pendingBalance;
+      updated = true;
+    }
+    else
+    {
+      m_pendingBalance -= it->pendingBalance - pending;
+      updated = true;
+    }
 
-  if (updated) {
-    m_walletsContainer.get<TransfersContainerIndex>().modify(it, [actual, pending](WalletRecord& wallet) {
-      wallet.actualBalance = actual;
-      wallet.pendingBalance = pending;
-    });
+    /* Update locked deposit balance, this will cover deposits, as well 
+       as investments since they are all deposits with different parameters */
+    std::vector<TransactionOutputInformation> transfers2;
+    container->getOutputs(transfers2, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateLocked | ITransfersContainer::IncludeStateSoftLocked);
 
-    m_logger(INFO, BRIGHT_WHITE) << "Wallet balance updated, address " << m_currency.accountAddressAsString({ it->spendPublicKey, m_viewPublicKey }) <<
-      ", actual " << m_currency.formatAmount(it->actualBalance) <<
-      ", pending " << m_currency.formatAmount(it->pendingBalance);
-    m_logger(INFO, BRIGHT_WHITE) << "Container balance updated, actual " << m_currency.formatAmount(m_actualBalance) <<
-      ", pending " << m_currency.formatAmount(m_pendingBalance);
+    std::vector<uint32_t> heights2;
+    for (auto transfer2 : transfers2)
+    {
+      Crypto::Hash hash2 = transfer2.transactionHash;
+      TransactionInformation info2;
+      bool ok2 = container->getTransactionInformation(hash2, info2, NULL, NULL);
+      if (ok2)
+      {
+        heights2.push_back(info2.blockHeight);
+        updated = true;
+      }
+    }
+    uint64_t locked = calculateDepositsAmount(transfers2, m_currency, heights2);
+
+    /* This updates the unlocked deposit balance, these are the deposits that have matured
+       and can be withdrawn */
+    std::vector<TransactionOutputInformation> transfers;
+    container->getOutputs(transfers, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateUnlocked);
+
+    std::vector<uint32_t> heights;
+    for (auto transfer : transfers)
+    {
+      Crypto::Hash hash = transfer.transactionHash;
+      TransactionInformation info;
+      bool ok = container->getTransactionInformation(hash, info, NULL, NULL);
+      assert(ok);
+      heights.push_back(info.blockHeight);
+    }
+    uint64_t unlocked = calculateDepositsAmount(transfers, m_currency, heights);
+
+    /* Now do the same thing for overall deposit balances */
+    if (it->lockedDepositBalance < locked)
+    {
+      m_lockedDepositBalance += locked - it->lockedDepositBalance;
+      updated = true;
+    }
+    else
+    {
+      m_lockedDepositBalance -= it->lockedDepositBalance - locked;
+      updated = true;
+    }
+
+    if (it->unlockedDepositBalance < unlocked)
+    {
+      m_unlockedDepositBalance += unlocked - it->unlockedDepositBalance;
+      updated = true;
+    }
+    else
+    {
+      m_unlockedDepositBalance -= it->unlockedDepositBalance - unlocked;
+      updated = true;
+    }
+
+    /* Write any changes to the wallet balances to the container */
+    if (updated)
+    {
+      m_walletsContainer.get<TransfersContainerIndex>().modify(it, [actual, pending, locked, unlocked](WalletRecord &wallet) {
+        wallet.actualBalance = actual;
+        wallet.pendingBalance = pending;
+        wallet.lockedDepositBalance = locked;
+        wallet.unlockedDepositBalance = unlocked;
+      });
+
+      /* Keep the logging to debugging */
+      m_logger(DEBUGGING, BRIGHT_WHITE) << "Wallet balance updated, address "
+                                        << m_currency.accountAddressAsString({it->spendPublicKey, m_viewPublicKey})
+                                        << ", actual " << m_currency.formatAmount(it->actualBalance) << ", pending "
+                                        << m_currency.formatAmount(it->pendingBalance);
+      m_logger(DEBUGGING, BRIGHT_WHITE) << "Container balance updated, actual "
+                                        << m_currency.formatAmount(m_actualBalance) << ", pending "
+                                        << m_currency.formatAmount(m_pendingBalance) << ", locked deposits "
+                                        << m_currency.formatAmount(m_lockedDepositBalance) << ",unlocked deposits "
+                                        << m_currency.formatAmount(m_unlockedDepositBalance);
+    }
   }
-}
 
 const WalletRecord& WalletGreen::getWalletRecord(const PublicKey& key) const {
   auto it = m_walletsContainer.get<KeysIndex>().find(key);
@@ -3193,6 +3816,42 @@ std::vector<WalletGreen::OutputToTransfer> WalletGreen::pickRandomFusionInputs(c
   std::sort(trimmedSelectedOuts.begin(), trimmedSelectedOuts.end(), outputsSortingFunction);
   return trimmedSelectedOuts;  
 }
+
+ std::vector<DepositsInBlockInfo> WalletGreen::getDepositsInBlocks(uint32_t blockIndex, size_t count) const
+  {
+    if (count == 0)
+    {
+      throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "blocks count must be greater than zero");
+    }
+
+    std::vector<DepositsInBlockInfo> result;
+
+    if (blockIndex >= m_blockchain.size())
+    {
+      return result;
+  }
+
+ auto &blockHeightIndex = m_deposits.get<BlockHeightIndex>();
+    uint32_t stopIndex = static_cast<uint32_t>(std::min(m_blockchain.size(), blockIndex + count));
+
+    for (uint32_t height = blockIndex; height < stopIndex; ++height)
+    {
+      DepositsInBlockInfo info;
+      info.blockHash = m_blockchain[height];
+
+      auto lowerBound = blockHeightIndex.lower_bound(height);
+      auto upperBound = blockHeightIndex.upper_bound(height);
+      for (auto it = lowerBound; it != upperBound; ++it)
+      {
+        Deposit deposit;
+        deposit = *it;
+        info.deposits.emplace_back(std::move(deposit));
+      }
+      result.emplace_back(std::move(info));
+    }
+
+    return result;
+  }
 
 std::vector<TransactionsInBlockInfo> WalletGreen::getTransactionsInBlocks(uint32_t blockIndex, size_t count) const {
   if (count == 0) {

@@ -1,20 +1,21 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2018-2019, The Fandom GOLD developers
+// Copyright (c) 2016-2018 The Karbowanec developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Fandom GOLD.
+// This file is part of Fango.
 //
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Fandom GOLD is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -156,10 +157,13 @@ namespace CryptoNote {
 
      uint64_t getNextBlockDifficulty();
      uint64_t getTotalGeneratedAmount();
+     uint64_t fullDepositAmount() const;
+     uint64_t depositAmountAtHeight(size_t height) const;
 
      uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
      bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
 
+/*   bool is_key_image_spent(const Crypto::KeyImage &key_im); */
 
    private:
      bool add_new_tx(const Transaction& tx, const Crypto::Hash& tx_hash, size_t blob_size, tx_verification_context& tvc, bool keeped_by_block);

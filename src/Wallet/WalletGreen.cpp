@@ -1,21 +1,22 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, The BBSCoin Developers 
 // Copyright (c) 2017-2018, Karbo developers
-// Copyright (c) 2018-2021, Conceal Developers
-// Copyright (c) 2017-2021, Fandom Gold Society
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
 // This file is part of Fango.
 //
-// Fango is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fango is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "WalletGreen.h"
 
@@ -28,7 +29,6 @@
 #include <set>
 #include <tuple>
 #include <utility>
-
 #include <System/EventLock.h>
 #include <System/RemoteContext.h>
 
@@ -345,7 +345,7 @@ void WalletGreen::initialize(const std::string& path, const std::string& passwor
     wallets = pickWallets({sourceAddress});
 
     /* Select the transfers */
-    uint64_t fee = 1000;
+    uint64_t fee = 800000;
     uint64_t neededMoney = amount + fee;
     std::vector<OutputToTransfer> selectedTransfers;
     uint64_t foundMoney = selectTransfers(neededMoney,
@@ -442,7 +442,7 @@ void WalletGreen::initialize(const std::string& path, const std::string& passwor
     typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
     std::vector<outs_for_amount> mixinResult;
     std::vector<InputInfo> keysInfo;
-    prepareInputs(selectedTransfers, mixinResult, 4, keysInfo);
+    prepareInputs(selectedTransfers, mixinResult, 2, keysInfo);
 
     /* Add the inputs to the transaction */
     std::vector<KeyPair> ephKeys;

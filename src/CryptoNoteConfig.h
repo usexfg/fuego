@@ -5,20 +5,22 @@
 // Copyright (c) 2016-2019, The Karbowanec developers
 // Copyright (c) 2018-2019, The Ryo Currency developers
 // Copyright (c) 2018-2019, The Cash2 developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// Copyright (c) 2017-2019, The Fandom GOLD project
+// This file is part of Fango.
 //
-// This file is part of Fandom GOLD.
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom GOLD is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD. If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -27,7 +29,6 @@
 
 namespace CryptoNote {
 namespace parameters {
-
 
 
 const uint64_t DIFFICULTY_TARGET                             = 480;
@@ -64,22 +65,32 @@ const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks  Z
 const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
 const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fandom GOLD
 
+const uint64_t COIN                                          = UINT64_C(10000000);  // (10^7)
+const uint64_t MINIMUM_FEE                                     = UINT64_C(800000);  // REDUCE to 8000 v2
+const uint64_t DEFAULT_DUST_THRESHOLD                            = UINT64_C(8000);  // REDUCE to  100 v2
+/*const uint64_t DEFAULT_DUST_THRESHOLD_V2                         = UINT64_C(100); */
+/* const uint64_t MINIMUM_FEE_V2                                = UINT64_C(8000);*/
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(800000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(8000);
+const uint64_t DEPOSIT_MIN_AMOUNT                            = 8 * COIN; // minimum XFG amount for deposit
+const uint32_t DEPOSIT_MIN_TERM                              = 5480; // ~1 month in blocks
+const uint32_t DEPOSIT_MAX_TERM                              = 1 * 12 * 5480; // ~1 year
+/*const uint32_t COLD_IGNITION_HEIGHT                        = 800000; ?  */
 
-const uint64_t MIN_TX_MIXIN_SIZE                             =  2;
-const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
+static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
+static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
 
 const size_t   DIFFICULTY_CUT                                = 60;  // v0
 const size_t   DIFFICULTY_LAG                                = 15;  // v0
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
+const uint64_t MIN_TX_MIXIN_SIZE                             =  2;
+const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
+
 static constexpr uint64_t POISSON_CHECK_TRIGGER = 10; // Reorg size that triggers poisson timestamp check
 static constexpr uint64_t POISSON_CHECK_DEPTH = 60;   // Main-chain depth of poisson check. The attacker will have to tamper 50% of those blocks
 static constexpr double POISSON_LOG_P_REJECT = -75.0; // Reject reorg if probability of timestamps being genuine is less than e^x, -75 = 10^-33
 
-const size_t   MAX_BLOCK_SIZE_INITIAL                        = 800000;
+const size_t   MAX_BLOCK_SIZE_INITIAL                        = 800000;  //update to 2MB
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 100 * 1024;
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
 
@@ -101,6 +112,8 @@ const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracar
 const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
 const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
 const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //FandomGold
+const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //COLD DEFI 
+
   
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
@@ -121,6 +134,7 @@ const char     CRYPTONOTE_NAME[]                             = "fandomgold";
 const char     GENESIS_COINBASE_TX_HEX[]                     = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
 
 const uint8_t  CURRENT_TRANSACTION_VERSION                   =  1;
+const uint8_t  TRANSACTION_VERSION_1                         =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_2                         =  2;
 const uint8_t  BLOCK_MAJOR_VERSION_3                         =  3;
@@ -128,6 +142,8 @@ const uint8_t  BLOCK_MAJOR_VERSION_4                         =  4;
 const uint8_t  BLOCK_MAJOR_VERSION_5                         =  5;
 const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
+const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8;
+
 
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;

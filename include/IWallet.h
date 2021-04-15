@@ -1,22 +1,21 @@
-// {DRGL} Kills White Walkers
-//
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, Karbo developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Bytecoin. 
-// Bytecoin is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+//
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Bytecoin is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -25,11 +24,15 @@
 #include <vector>
 #include <boost/optional.hpp>
 #include "CryptoNote.h"
+#include "CryptoNoteConfig.h"
 
 namespace CryptoNote {
 
+typedef size_t DepositId;
+
 const size_t WALLET_INVALID_TRANSACTION_ID = std::numeric_limits<size_t>::max();
 const size_t WALLET_INVALID_TRANSFER_ID = std::numeric_limits<size_t>::max();
+const size_t WALLET_INVALID_DEPOSIT_ID = std::numeric_limits<size_t>::max();
 const uint32_t WALLET_UNCONFIRMED_TRANSACTION_HEIGHT = std::numeric_limits<uint32_t>::max();
 
 enum class WalletTransactionState : uint8_t {
@@ -56,6 +59,21 @@ enum class WalletSaveLevel : uint8_t {
 
 struct WalletTransactionCreatedData {
   size_t transactionIndex;
+};
+
+struct Deposit
+{
+  size_t creatingTransactionId;
+  size_t spendingTransactionId;
+  uint32_t term;
+  uint64_t amount;
+/*uint64_t interest;*/
+  uint64_t height;
+  uint64_t unlockHeight;
+  bool locked;
+  uint32_t outputInTransaction;
+  Crypto::Hash transactionHash;
+  std::string address;
 };
 
 struct WalletTransactionUpdatedData {
@@ -87,6 +105,8 @@ struct WalletTransaction {
   uint64_t creationTime;
   uint64_t unlockTime;
   std::string extra;
+  size_t firstDepositId = std::numeric_limits<DepositId>::max();
+  size_t depositCount = 0;
   bool isBase;
 };
 
@@ -118,6 +138,8 @@ struct TransactionParameters {
   uint64_t fee = 0;
   uint64_t mixIn = 0;
   std::string extra;
+  DepositId firstDepositId = WALLET_INVALID_DEPOSIT_ID;
+  size_t depositCount = 0;
   uint64_t unlockTimestamp = 0;
   DonationSettings donation;
   std::string changeDestination;
@@ -133,11 +155,20 @@ struct TransactionsInBlockInfo {
   std::vector<WalletTransactionWithTransfers> transactions;
 };
 
+struct DepositsInBlockInfo
+{
+  Crypto::Hash blockHash;
+  std::vector<Deposit> deposits;
+};
+
 class IWallet {
 public:
   virtual ~IWallet() {}
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
+  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
+  virtual void withdrawDeposit(DepositId depositId, std::string &transactionHash) = 0;
+  virtual Deposit getDeposit(size_t depositIndex) const = 0;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) = 0;
   virtual void initializeWithViewKeyAndTimestamp(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey, const uint64_t& creationTimestamp) = 0;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
@@ -150,6 +181,11 @@ public:
 
   virtual size_t getAddressCount() const = 0;
   virtual std::string getAddress(size_t index) const = 0;
+
+  virtual size_t getWalletDepositCount() const = 0;  
+  virtual std::vector<DepositsInBlockInfo> getDeposits(const Crypto::Hash &blockHash, size_t count) const = 0;
+  virtual std::vector<DepositsInBlockInfo> getDeposits(uint32_t blockIndex, size_t count) const = 0;
+
   virtual KeyPair getAddressSpendKey(size_t index) const = 0;
   virtual KeyPair getAddressSpendKey(const std::string& address) const = 0;
   virtual KeyPair getViewKey() const = 0;
@@ -163,6 +199,11 @@ public:
   virtual uint64_t getActualBalance(const std::string& address) const = 0;
   virtual uint64_t getPendingBalance() const = 0;
   virtual uint64_t getPendingBalance(const std::string& address) const = 0;
+
+  virtual uint64_t getLockedDepositBalance() const = 0;
+  virtual uint64_t getLockedDepositBalance(const std::string &address) const = 0;
+  virtual uint64_t getUnlockedDepositBalance() const = 0;
+  virtual uint64_t getUnlockedDepositBalance(const std::string &address) const = 0;
 
   virtual size_t getTransactionCount() const = 0;
   virtual WalletTransaction getTransaction(size_t transactionIndex) const = 0;

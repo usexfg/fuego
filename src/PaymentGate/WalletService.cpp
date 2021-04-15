@@ -1,22 +1,20 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018-2019 Karbo developers
-// Copyright (c) 2018-2019 Fandom Gold developers
-
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Fandom Gold.
+// This file is part of Fango.
 //
-// Fandom Gold is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Fandom Gold is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom Gold.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "WalletService.h"
 
@@ -31,13 +29,17 @@
 #include <System/Timer.h>
 #include <System/InterruptedException.h>
 #include "Common/Util.h"
-
+#include "CryptoNoteCore/Account.h"
 #include "crypto/crypto.h"
 #include "CryptoNote.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/TransactionExtra.h"
-
+#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
+#include "CryptoNoteCore/Account.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/Currency.h"
 #include <System/EventLock.h>
 
 #include "PaymentServiceJsonRpcMessages.h"
@@ -48,7 +50,22 @@
 #include "Wallet/WalletErrors.h"
 #include "Wallet/WalletUtils.h"
 #include "WalletServiceErrorCategory.h"
-#include "ITransfersContainer.h"
+#include "CryptoNoteCore/CryptoNoteTools.h"
+
+#include "Common/CommandLine.h"
+#include "Common/StringTools.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/Account.h"
+#include "crypto/hash.h"
+#include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
+#include "WalletLegacy/WalletHelper.h"
+#include "Common/Base58.h"
+#include "Common/CommandLine.h"
+#include "Common/SignalHandler.h"
+#include "Common/StringTools.h"
+#include "Common/PathTools.h"
+#include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 
 using namespace CryptoNote;
 
@@ -215,6 +232,8 @@ PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionR
   transactionInfo.isBase = transactionWithTransfers.transaction.isBase;
   transactionInfo.unlockTime = transactionWithTransfers.transaction.unlockTime;
   transactionInfo.amount = transactionWithTransfers.transaction.totalAmount;
+  transactionInfo.depositCount = transactionWithTransfers.transaction.depositCount;
+  transactionInfo.firstDepositId = transactionWithTransfers.transaction.firstDepositId;
   transactionInfo.fee = transactionWithTransfers.transaction.fee;
   transactionInfo.extra = Common::toHex(transactionWithTransfers.transaction.extra.data(), transactionWithTransfers.transaction.extra.size());
   transactionInfo.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
@@ -565,13 +584,15 @@ std::error_code WalletService::getSpendkeys(const std::string& address, std::str
   return std::error_code();
 }
 
-std::error_code WalletService::getBalance(const std::string& address, uint64_t& availableBalance, uint64_t& lockedAmount) {
+std::error_code WalletService::getBalance(const std::string& address, uint64_t& availableBalance, uint64_t& lockedAmount, uint64_t &lockedDepositBalance, uint64_t &unlockedDepositBalance) {
   try {
     System::EventLock lk(readyEvent);
     logger(Logging::DEBUGGING) << "Getting balance for address " << address;
 
     availableBalance = wallet.getActualBalance(address);
     lockedAmount = wallet.getPendingBalance(address);
+    lockedDepositBalance = wallet.getLockedDepositBalance();
+    unlockedDepositBalance = wallet.getUnlockedDepositBalance();
   } catch (std::system_error& x) {
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while getting balance: " << x.what();
     return x.code();
@@ -581,13 +602,15 @@ std::error_code WalletService::getBalance(const std::string& address, uint64_t& 
   return std::error_code();
 }
 
-std::error_code WalletService::getBalance(uint64_t& availableBalance, uint64_t& lockedAmount) {
+std::error_code WalletService::getBalance(uint64_t& availableBalance, uint64_t& lockedAmount, uint64_t &lockedDepositBalance, uint64_t &unlockedDepositBalance) {
   try {
     System::EventLock lk(readyEvent);
     logger(Logging::DEBUGGING) << "Getting wallet balance";
 
     availableBalance = wallet.getActualBalance();
     lockedAmount = wallet.getPendingBalance();
+    lockedDepositBalance = wallet.getLockedDepositBalance();
+    unlockedDepositBalance = wallet.getUnlockedDepositBalance();
   } catch (std::system_error& x) {
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while getting balance: " << x.what();
     return x.code();
@@ -676,6 +699,47 @@ std::error_code WalletService::getTransactionHashes(const std::vector<std::strin
   return std::error_code();
 }
 
+std::error_code WalletService::getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, /*uint64_t &interest,*/ std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address)
+  {
+    try
+    {
+      System::EventLock lk(readyEvent);
+      Deposit deposit = wallet.getDeposit(depositId);
+      amount = deposit.amount;
+      term = deposit.term;
+    /*interest = deposit.interest;*/
+      height = deposit.height;
+      unlockHeight = deposit.unlockHeight;
+
+      WalletTransaction wallettx = wallet.getTransaction(deposit.creatingTransactionId);
+      creatingTransactionHash = Common::podToHex(wallettx.hash);
+
+      WalletTransfer transfer = wallet.getTransactionTransfer(deposit.creatingTransactionId, 0);
+
+      address = transfer.address;
+
+      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID)
+      {
+        WalletTransaction walletstx = wallet.getTransaction(deposit.spendingTransactionId);
+        spendingTransactionHash = Common::podToHex(walletstx.hash);
+      }
+
+      bool state = true;
+      uint32_t knownBlockCount = node.getKnownBlockCount();
+      if (knownBlockCount > unlockHeight)
+      {
+        locked = false;
+      }
+    }
+    catch (std::exception &x)
+    {
+      logger(Logging::WARNING) << "Error while getting deposit: " << x.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    }
+
+    return std::error_code();
+  }
+
 std::error_code WalletService::getTransactions(const std::vector<std::string>& addresses, const std::string& blockHashString,
   uint32_t blockCount, const std::string& paymentId, std::vector<TransactionsInBlockRpcInfo>& transactions) {
   try {
@@ -750,9 +814,57 @@ std::error_code WalletService::getTransaction(const std::string& transactionHash
       return make_error_code(CryptoNote::error::OBJECT_NOT_FOUND);
     }
 
-	TransactionRpcInfo tempTrans = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
+	/*TransactionRpcInfo tempTrans = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
 	tempTrans.confirmations = (transactionWithTransfers.transaction.blockHeight != UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX ? wallet.getBlockCount() - transactionWithTransfers.transaction.blockHeight : 0);
-	transaction = tempTrans;
+	transaction = tempTrans;*/
+
+/* Pull all the transaction information and add it to the transaction reponse */
+      transaction.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
+      transaction.transactionHash = Common::podToHex(transactionWithTransfers.transaction.hash);
+      transaction.blockIndex = transactionWithTransfers.transaction.blockHeight;
+      transaction.timestamp = transactionWithTransfers.transaction.timestamp;
+      transaction.isBase = transactionWithTransfers.transaction.isBase;
+      transaction.unlockTime = transactionWithTransfers.transaction.unlockTime;
+      transaction.amount = transactionWithTransfers.transaction.totalAmount;
+      transaction.fee = transactionWithTransfers.transaction.fee;
+      transaction.firstDepositId = transactionWithTransfers.transaction.firstDepositId;
+      transaction.depositCount = transactionWithTransfers.transaction.depositCount;
+      transaction.extra = Common::toHex(transactionWithTransfers.transaction.extra.data(), transactionWithTransfers.transaction.extra.size());
+      transaction.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
+
+      /* Calculate the number of confirmations for the transaction */
+      uint32_t knownBlockCount = node.getKnownBlockCount();
+      transaction.confirmations = knownBlockCount - transaction.blockIndex;
+
+      /* Cycle through all the transfers in the transaction and extract the address, 
+       amount, and pull any messages from Extra */
+     /* std::vector<std::string> messages;*/ 
+      /*std::vector<uint8_t> extraBin = Common::fromHex(transaction.extra);
+      Crypto::PublicKey publicKey = CryptoNote::getTransactionPublicKeyFromExtra(extraBin);
+      messages.clear();*/
+
+      for (const CryptoNote::WalletTransfer &transfer : transactionWithTransfers.transfers)
+      {
+        PaymentService::TransferRpcInfo rpcTransfer;
+        rpcTransfer.address = transfer.address;
+        rpcTransfer.amount = transfer.amount;
+        rpcTransfer.type = static_cast<uint8_t>(transfer.type);
+
+        for (size_t i = 0; i < wallet.getAddressCount(); ++i)
+        {
+          if (wallet.getAddress(i) == rpcTransfer.address)
+          {
+            Crypto::SecretKey secretKey = wallet.getAddressSpendKey(wallet.getAddress(i)).secretKey;
+            /*std::vector<std::string> m = CryptoNote::get_messages_from_extra(extraBin, publicKey, &secretKey);*/
+            if (!m.empty())
+            {
+              rpcTransfer.message = m[0];
+            }
+          }
+        }
+        transaction.transfers.push_back(std::move(rpcTransfer));
+      }
+    }
 
   } catch (std::system_error& x) {
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while getting transaction: " << x.what();
@@ -965,13 +1077,16 @@ std::error_code WalletService::getUnconfirmedTransactionHashes(const std::vector
   return std::error_code();
 }
 
-std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBlockCount, std::string& lastBlockHash, uint32_t& peerCount) {
+std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBlockCount, std::string& lastBlockHash, uint32_t& peerCount, uint32_t &depositCount,)
+ {
   try {
     System::EventLock lk(readyEvent);
 
     knownBlockCount = node.getKnownBlockCount();
     peerCount = static_cast<uint32_t>(node.getPeerCount());
     blockCount = wallet.getBlockCount();
+    depositCount = static_cast<uint32_t>(wallet.getWalletDepositCount());
+
 
     auto lastHashes = wallet.getBlockHashes(blockCount - 1, 1);
     lastBlockHash = Common::podToHex(lastHashes.back());
@@ -985,6 +1100,148 @@ std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBl
 
   return std::error_code();
 }
+
+    /* Create a new deposit for the wallet address specified. */
+    std::error_code WalletService::createDeposit(
+        uint64_t amount,
+        uint64_t term,
+        std::string sourceAddress,
+        std::string & transactionHash)
+    {
+    
+      try
+      {
+
+        uint64_t knownBlockCount = node.getKnownBlockCount();
+        uint64_t localBlockCount = node.getLocalBlockCount();
+        uint64_t diff = knownBlockCount - localBlockCount;
+        if ((localBlockCount == 0) || (diff > 2))
+        {
+          logger(Logging::WARNING) << "Daemon is not synchronized";
+          return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
+        }
+        
+        System::EventLock lk(readyEvent);
+
+        /* Validate the source addresse if it is are not empty */
+        if (!sourceAddress.empty())
+        {
+          validateAddresses({sourceAddress}, currency, logger);
+        }
+
+        /* Now validate the deposit term and the amount */
+
+        /* Deposits should be multiples of 21,900 blocks */
+        if (term % CryptoNote::parameters::DEPOSIT_MIN_TERM_V3 != 0)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_WRONG_TERM);
+        }
+
+        /* The minimum term should be 21,900 */
+        if (term < CryptoNote::parameters::DEPOSIT_MIN_TERM_V3)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_BIG);
+        }
+
+        /* Current deposit rates are for a maximum term of one year, 262800 */
+        if (term > CryptoNote::parameters::DEPOSIT_MAX_TERM_V3)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_BIG);
+        }
+
+        /* The minimum deposit amount is 1 CCX */
+        if (amount < CryptoNote::parameters::DEPOSIT_MIN_AMOUNT)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_AMOUNT_TOO_SMALL);
+        }
+
+        /* Create or send the deposit */
+        wallet.createDeposit(amount, term, sourceAddress, sourceAddress, transactionHash);
+      }
+
+      catch (std::system_error &x)
+      {
+        logger(Logging::WARNING) << "Error: " << x.what();
+        return x.code();
+      }
+      catch (std::exception &x)
+      {
+        logger(Logging::WARNING) << "Error : " << x.what();
+        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+      }
+
+      return std::error_code();
+    }
+
+    std::error_code WalletService::withdrawDeposit(
+        uint64_t depositId,
+        std::string & transactionHash)
+
+    {
+      // TODO try and catch
+      wallet.withdrawDeposit(depositId, transactionHash);
+      return std::error_code();
+    }
+
+    /* Create and send a deposit to another wallet address, the deposit then will appear in their
+   wallet upon confirmation. */
+    std::error_code WalletService::sendDeposit(
+        uint64_t amount,
+        uint64_t term,
+        std::string sourceAddress,
+        std::string destinationAddress,
+        std::string & transactionHash)
+    {
+      try
+      {
+        System::EventLock lk(readyEvent);
+
+        /* Validate both the source and destination addresses
+       if they are not empty */
+
+        if (!sourceAddress.empty())
+        {
+          validateAddresses({sourceAddress}, currency, logger);
+        }
+
+        if (!destinationAddress.empty())
+        {
+          validateAddresses({destinationAddress}, currency, logger);
+        }
+
+        /* Now validate the deposit term and the amount */
+
+        if (term < CryptoNote::parameters::DEPOSIT_MIN_TERM_V3)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_SMALL);
+        }
+
+        if (term > CryptoNote::parameters::DEPOSIT_MAX_TERM_V3)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_BIG);
+        }
+
+        if (amount < CryptoNote::parameters::DEPOSIT_MIN_AMOUNT)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_AMOUNT_TOO_SMALL);
+        }
+
+        /* Create and send the deposit */
+        wallet.createDeposit(amount, term, sourceAddress, destinationAddress, transactionHash);
+      }
+
+      catch (std::system_error &x)
+      {
+        logger(Logging::WARNING) << "Error: " << x.what();
+        return x.code();
+      }
+      catch (std::exception &x)
+      {
+        logger(Logging::WARNING) << "Error : " << x.what();
+        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+      }
+      return std::error_code();
+    }
 
 std::error_code WalletService::validateAddress(const std::string& address, bool& isvalid, std::string& _address, std::string& spendPublicKey, std::string& viewPublicKey) {
   try {
@@ -1132,6 +1389,28 @@ std::vector<CryptoNote::TransactionsInBlockInfo> WalletService::getTransactions(
 
   return result;
 }
+
+std::vector<CryptoNote::DepositsInBlockInfo> WalletService::getDeposits(const Crypto::Hash &blockHash, size_t blockCount) const
+    {
+      std::vector<CryptoNote::DepositsInBlockInfo> result = wallet.getDeposits(blockHash, blockCount);
+      if (result.empty())
+      {
+        throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::OBJECT_NOT_FOUND));
+      }
+
+      return result;
+    }
+
+    std::vector<CryptoNote::DepositsInBlockInfo> WalletService::getDeposits(uint32_t firstBlockIndex, size_t blockCount) const
+    {
+      std::vector<CryptoNote::DepositsInBlockInfo> result = wallet.getDeposits(firstBlockIndex, blockCount);
+      if (result.empty())
+      {
+        throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::OBJECT_NOT_FOUND));
+      }
+
+      return result;
+    }
 
 std::vector<TransactionHashesInBlockRpcInfo> WalletService::getRpcTransactionHashes(const Crypto::Hash& blockHash, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const {
   std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(blockHash, blockCount);

@@ -1,29 +1,31 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2014-2018, The Monero project
-// Copyright (c) 2014-2018, The Forknote developers
-// Copyright (c) 2018, The TurtleCoin developers
-// Copyright (c) 2016-2018, The Karbowanec developers
+// Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2014-2018 The Monero project
+// Copyright (c) 2014-2018 The Forknote developers
+// Copyright (c) 2018 The TurtleCoin developers
+// Copyright (c) 2016-2018 The Karbowanec developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DaemonCommandsHandler.h"
 #include <ctime>
 #include "P2p/NetNode.h"
 #include "CryptoNoteCore/Miner.h"
 #include "CryptoNoteCore/Core.h"
+#include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "Serialization/SerializationTools.h"
 #include "version.h"
@@ -127,16 +129,23 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   std::time_t uptime = std::time(nullptr) - m_core.getStartTime();
   uint8_t majorVersion = m_core.getBlockMajorVersionForHeight(height);
   bool synced = ((uint32_t)height == (uint32_t)last_known_block_index);
+  uint64_t totalCoinsInNetwork = m_core.coinsEmittedAtHeight(height);
+  uint64_t totalCoinsOnDeposits = m_core.depositAmountAtHeight(height);
+  uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
+
 
   std::cout << std::endl
     << (synced ? "Synced " : "Syncing ") << height << "/" << last_known_block_index 
     << " (" << get_sync_percentage(height, last_known_block_index) << "%) "
-    << "on " << (m_core.currency().isTestnet() ? "testnet, " : "mainnet, ")
-    << "network hashrate: " << get_mining_speed(hashrate) << ", difficulty: " << difficulty << ", "
-    << "block v. " << (int)majorVersion << ", "
-    << outgoing_connections_count << " out. + " << incoming_connections_count << " inc. connections, "
-    << rpc_conn <<  " rpc connections, "
-    << "uptime: " << (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0) << "d " << (unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0)) << "h "
+    << "on FANGO" << (m_core.currency().isTestnet() ? " ====TESTNET====, " : " MainNet, ")
+    << "Network hashrate: " << get_mining_speed(hashrate) << ", Difficulty: " << difficulty << ", "
+    << "Total XFG on deposit: " << currency.formatAmount(totalCoinsOnDeposits) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" <<
+    << "Amount of XFG circulating:  " << currency.formatAmount(amountOfActiveCoins) << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" <<
+    << "Current XFG emission:  " << currency.formatAmount(totalCoinsInNetwork) <<
+    << "Block Major version " << (int)majorVersion << ", "
+    << outgoing_connections_count << " out. + " << incoming_connections_count << " Incoming connections, "
+    << rpc_conn <<  " RPC connections, "
+    << "Node uptime: " << (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0) << "d " << (unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0)) << "h "
     << (unsigned int)floor(fmod((uptime / 60.0), 60.0)) << "m " << (unsigned int)fmod(uptime, 60.0) << "s"
     << std::endl;
 

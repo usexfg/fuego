@@ -1,18 +1,21 @@
 // Copyright (c) 2012-2016 The CryptoNote developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2019 The Fandom GOLD developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Fandom GOLD.
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+//
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom GOLD is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "Core.h"
@@ -82,10 +85,11 @@ m_starter_message_showed(false) {
 }
 
 void core::set_cryptonote_protocol(i_cryptonote_protocol* pprotocol) {
-  if (pprotocol)
+  if (pprotocol) {
     m_pprotocol = pprotocol;
-  else
+  } else {
     m_pprotocol = &m_protocol_stub;
+  }
 }
 //-----------------------------------------------------------------------------------
 void core::set_checkpoints(Checkpoints&& chk_pts) {
@@ -121,6 +125,24 @@ bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& b
 }  
 void core::getTransactions(const std::vector<Crypto::Hash>& txs_ids, std::list<Transaction>& txs, std::list<Crypto::Hash>& missed_txs, bool checkTxPool) {
   m_blockchain.getTransactions(txs_ids, txs, missed_txs, checkTxPool);
+}
+
+bool core::getTransaction(const Crypto::Hash &id, Transaction &tx, bool checkTxPool)
+{
+  std::vector<Crypto::Hash> txs_ids;
+  std::list<Transaction> txs;
+  std::list<Crypto::Hash> missed_txs;
+
+  txs_ids.push_back(id);
+  m_blockchain.getTransactions(txs_ids, txs, missed_txs, checkTxPool);
+
+  if (missed_txs.empty() && !txs.empty() && txs.size() == 1)
+  {
+    tx = txs.front();
+    return true;
+  }
+
+  return false;
 }
 
 bool core::get_alternative_blocks(std::list<Block>& blocks) {
@@ -227,6 +249,10 @@ bool core::handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_contex
   }
   //std::cout << "!"<< tx.inputs.size() << std::endl;
 
+  Crypto::Hash blockId;
+  uint32_t blockHeight;
+  bool ok = getBlockContainingTx(tx_hash, blockId, blockHeight);
+  if (!ok) blockHeight = this->get_current_blockchain_height(); //this assumption fails for withdrawals
   return handleIncomingTransaction(tx, tx_hash, tx_blob.size(), tvc, keeped_by_block);
 }
 
@@ -756,6 +782,14 @@ bool core::getBlockHeight(const Crypto::Hash& blockId, uint32_t& blockHeight) {
   return m_blockchain.getBlockHeight(blockId, blockHeight);
 }
 
+uint64_t core::coinsEmittedAtHeight(uint64_t height) {
+  return m_blockchain.coinsEmittedAtHeight(height);
+}
+
+uint64_t core::difficultyAtHeight(uint64_t height) {
+  return m_blockchain.difficultyAtHeight(height);
+}
+
 //void core::get_all_known_block_ids(std::list<Crypto::Hash> &main, std::list<Crypto::Hash> &alt, std::list<Crypto::Hash> &invalid) {
 //  m_blockchain.get_all_known_block_ids(main, alt, invalid);
 //}
@@ -1097,6 +1131,13 @@ uint64_t core::getNextBlockDifficulty() {
 uint64_t core::getTotalGeneratedAmount() {
   return m_blockchain.getCoinsInCirculation();
 }
+
+uint64_t core::fullDepositAmount() const {
+  return m_blockchain.fullDepositAmount();
+}
+
+uint64_t core::depositAmountAtHeight(size_t height) const {
+  return m_blockchain.depositAmountAtHeight(height);
 
 uint8_t core::getBlockMajorVersionForHeight(uint32_t height) const {
   return m_blockchain.getBlockMajorVersionForHeight(height);

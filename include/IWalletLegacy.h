@@ -19,23 +19,31 @@
 
 #pragma once
 
+#include <array>
 #include <istream>
 #include <ostream>
 #include <limits>
 #include <string>
 #include <list>
 #include <system_error>
+#include <type_traits>
+#include <vector>
 #include <boost/optional.hpp>
 #include "CryptoNote.h"
 #include "CryptoTypes.h"
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "ITransfersContainer.h"
+#include "IWallet.h"
+
 
 namespace CryptoNote {
 
 typedef size_t TransactionId;
 typedef size_t TransferId;
+typedef size_t DepositId;
+
 
 struct WalletLegacyTransfer {
   std::string address;
@@ -44,6 +52,7 @@ struct WalletLegacyTransfer {
 
 const TransactionId WALLET_LEGACY_INVALID_TRANSACTION_ID    = std::numeric_limits<TransactionId>::max();
 const TransferId WALLET_LEGACY_INVALID_TRANSFER_ID          = std::numeric_limits<TransferId>::max();
+const DepositId WALLET_LEGACY_INVALID_DEPOSIT_ID            = std::numeric_limits<DepositId>::max();
 const uint32_t WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT = std::numeric_limits<uint32_t>::max();
 
 enum class WalletLegacyTransactionState : uint8_t {
@@ -57,6 +66,8 @@ enum class WalletLegacyTransactionState : uint8_t {
 
 struct WalletLegacyTransaction {
   TransferId       firstTransferId;
+  DepositId        firstDepositId;
+  size_t           depositCount;
   size_t           transferCount;
   int64_t          totalAmount;
   uint64_t         fee;
@@ -82,9 +93,14 @@ public:
   virtual void synchronizationCompleted(std::error_code result) {}
   virtual void actualBalanceUpdated(uint64_t actualBalance) {}
   virtual void pendingBalanceUpdated(uint64_t pendingBalance) {}
+  virtual void actualDepositBalanceUpdated(uint64_t actualDepositBalance) {}
+  virtual void pendingDepositBalanceUpdated(uint64_t pendingDepositBalance) {}
+/*virtual void actualInvestmentBalanceUpdated(uint64_t actualInvestmentBalance) {}
+  virtual void pendingInvestmentBalanceUpdated(uint64_t pendingInvestmentBalance) {}  */
   virtual void externalTransactionCreated(TransactionId transactionId) {}
   virtual void sendTransactionCompleted(TransactionId transactionId, std::error_code result) {}
   virtual void transactionUpdated(TransactionId transactionId) {}
+  virtual void depositsUpdated(const std::vector<DepositId>& depositIds) {}
 };
 
 class IWalletLegacy {
@@ -110,19 +126,28 @@ public:
   virtual uint64_t actualBalance() = 0;
   virtual uint64_t dustBalance() = 0;
   virtual uint64_t pendingBalance() = 0;
+  virtual uint64_t actualDepositBalance() = 0;
+  virtual uint64_t pendingDepositBalance() = 0;
+/*virtual uint64_t actualInvestmentBalance() = 0; */ 
+/*virtual uint64_t pendingInvestmentBalance() = 0; */ 
+  virtual size_t getDepositCount() = 0;
 
   virtual size_t getTransactionCount() = 0;
   virtual size_t getTransferCount() = 0;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
-  
+/*  virtual void getAccountKeys(AccountKeys& keys) = 0; */
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
+  virtual bool getDeposit(DepositId depositId, Deposit& deposit) = 0;
+
 
   virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
   virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
   virtual TransactionId sendDustTransaction(const std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
+  virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 0) = 0;
+  virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) = 0;
   virtual std::error_code cancelTransaction(size_t transferId) = 0;
 
   virtual size_t estimateFusion(const uint64_t& threshold) = 0;

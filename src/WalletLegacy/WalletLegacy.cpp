@@ -1,42 +1,28 @@
-// {DRGL} Kills White Walkers
-//
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2017, The Monero Project 
 // Copyright (c) 2017-2018, Karbo developers
-// 
-// All rights reserved.
-// 
-// Redistribution and use in source and binary forms, with or without modification, are
-// permitted provided that the following conditions are met:
-// 
-// 1. Redistributions of source code must retain the above copyright notice, this list of
-//    conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list
-//    of conditions and the following disclaimer in the documentation and/or other
-//    materials provided with the distribution.
-// 
-// 3. Neither the name of the copyright holder nor the names of its contributors may be
-//    used to endorse or promote products derived from this software without specific
-//    prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-// THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-// THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
+//
+// This file is part of Fango.
+//
+// FANGO is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// FANGO is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public License
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "WalletLegacy.h"
 
 #include <string.h>
 #include <time.h>
+#include <numeric>
 
 #include <Common/Base58.h>
 #include "Logging/ConsoleLogger.h"
@@ -46,6 +32,8 @@
 #include "WalletLegacy/WalletUtils.h"
 #include "Common/StringTools.h"
 #include "mnemonics/electrum-words.h"
+
+#include "CryptoNoteConfig.h"
 
 extern "C"
 {
@@ -113,6 +101,13 @@ private:
   std::future<std::error_code> future;
 };
 
+uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
+  int index = 0;
+  return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
+    return sum + deposit.amount /*+ currency.calculateInterest*/(deposit.amount, deposit.term, heights[index++]);
+  });
+}
+
 } //namespace
 using namespace Logging; 
 
@@ -140,6 +135,8 @@ WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node, Lo
   m_isStopping(false),
   m_lastNotifiedActualBalance(0),
   m_lastNotifiedPendingBalance(0),
+  m_lastNotifiedActualDepositBalance(0),
+  m_lastNotifiedPendingDepositBalance(0),
   m_blockchainSync(node, m_loggerGroup, currency.genesisBlockHash()),
   m_transfersSync(currency, m_loggerGroup, m_blockchainSync, node),
   m_transferDetails(nullptr),
@@ -484,6 +481,20 @@ uint64_t WalletLegacy::pendingBalance() {
   return m_transferDetails->balance(ITransfersContainer::IncludeKeyNotUnlocked) + change;
 }
 
+uint64_t WalletLegacy::actualDepositBalance() {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  throwIfNotInitialised();
+
+  return calculateActualDepositBalance();
+}
+
+uint64_t WalletLegacy::pendingDepositBalance() {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  throwIfNotInitialised();
+
+  return calculatePendingDepositBalance();
+}
+
 size_t WalletLegacy::getTransactionCount() {
   std::unique_lock<std::mutex> lock(m_cacheMutex);
   throwIfNotInitialised();
@@ -496,6 +507,13 @@ size_t WalletLegacy::getTransferCount() {
   throwIfNotInitialised();
 
   return m_transactionsCache.getTransferCount();
+}
+
+size_t WalletLegacy::getDepositCount() {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  throwIfNotInitialised();
+
+  return m_transactionsCache.getDepositCount();
 }
 
 TransactionId WalletLegacy::findTransactionByTransferId(TransferId transferId) {
@@ -517,6 +535,13 @@ bool WalletLegacy::getTransfer(TransferId transferId, WalletLegacyTransfer& tran
   throwIfNotInitialised();
 
   return m_transactionsCache.getTransfer(transferId, transfer);
+}
+
+bool WalletLegacy::getDeposit(DepositId depositId, Deposit& deposit) {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  throwIfNotInitialised();
+
+  return m_transactionsCache.getDeposit(depositId, deposit);
 }
 
 TransactionId WalletLegacy::sendTransaction(const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra, uint64_t mixIn, uint64_t unlockTimestamp) {
@@ -548,14 +573,95 @@ TransactionId WalletLegacy::sendTransaction(const std::vector<WalletLegacyTransf
   return txId;
 }
 
+/* SHOW DUST - go through all unlocked outputs and return a total of 
+  everything below the dust threshold */
+uint64_t WalletLegacy::dustBalance() {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  throwIfNotInitialised();
+  std::vector<TransactionOutputInformation> outputs;
+  m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
+  uint64_t money = 0;
+  for (size_t i = 0; i < outputs.size(); ++i) {
+    const auto& out = outputs[i];
+    if (!m_transactionsCache.isUsed(out)) {
+      if (out.amount < m_currency.defaultDustThreshold()) {
+        money += out.amount;
+      }
+    }
+  }
+  return money;
+}
+
+TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn) {
+  throwIfNotInitialised();
+
+  TransactionId txId = 0;
+  std::unique_ptr<WalletRequest> request;
+  std::deque<std::unique_ptr<WalletLegacyEvent>> events;
+
+  {
+    std::unique_lock<std::mutex> lock(m_cacheMutex);
+    request = m_sender->makeDepositRequest(txId, events, term, amount, fee, mixIn);
+
+    if (request != nullptr) {
+      pushBalanceUpdatedEvents(events);
+    }
+  }
+
+  notifyClients(events);
+
+  if (request) {
+    m_asyncContextCounter.addAsyncContext();
+    request->perform(m_node, std::bind(&WalletLegacy::sendTransactionCallback, this, std::placeholders::_1, std::placeholders::_2));
+  }
+
+  return txId;
+}
+
+TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) {
+  throwIfNotInitialised();
+
+  TransactionId txId = 0;
+  std::unique_ptr<WalletRequest> request;
+  std::deque<std::unique_ptr<WalletLegacyEvent>> events;
+
+  {
+    std::unique_lock<std::mutex> lock(m_cacheMutex);
+    request = m_sender->makeWithdrawDepositRequest(txId, events, depositIds, fee);
+
+    if (request != nullptr) {
+      pushBalanceUpdatedEvents(events);
+    }
+  }
+
+  notifyClients(events);
+
+  if (request != nullptr) {
+    m_asyncContextCounter.addAsyncContext();
+    request->perform(m_node, std::bind(&WalletLegacy::sendTransactionCallback, this, std::placeholders::_1, std::placeholders::_2));
+  }
+
+  return txId;
+}
+
 void WalletLegacy::sendTransactionCallback(WalletRequest::Callback callback, std::error_code ec) {
   ContextCounterHolder counterHolder(m_asyncContextCounter);
-  std::deque<std::shared_ptr<WalletLegacyEvent> > events;
+  std::deque<std::unique_ptr<WalletLegacyEvent> > events;
 
-  boost::optional<std::shared_ptr<WalletRequest> > nextRequest;
+  std::unique_ptr<WalletRequest> nextRequest;
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
     callback(events, nextRequest, ec);
+
+    auto actualDepositBalanceUpdated = getActualDepositBalanceChangedEvent();
+    if (actualDepositBalanceUpdated) {
+      events.push_back(std::move(actualDepositBalanceUpdated));
+    }
+
+    auto pendingDepositBalanceUpdated = getPendingDepositBalanceChangedEvent();
+    if (pendingDepositBalanceUpdated) {
+      events.push_back(std::move(pendingDepositBalanceUpdated));
+    }
   }
 
   notifyClients(events);
@@ -620,31 +726,76 @@ void WalletLegacy::synchronizationCompleted(std::error_code result) {
 }
 
 void WalletLegacy::onTransactionUpdated(ITransfersSubscription* object, const Hash& transactionHash) {
-  std::shared_ptr<WalletLegacyEvent> event;
+  std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
   TransactionInformation txInfo;
   uint64_t amountIn;
   uint64_t amountOut;
   if (m_transferDetails->getTransactionInformation(transactionHash, txInfo, &amountIn, &amountOut)) {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    event = m_transactionsCache.onTransactionUpdated(txInfo, static_cast<int64_t>(amountOut) - static_cast<int64_t>(amountIn));
+
+    auto newDepositOuts = m_transferDetails->getTransactionOutputs(transactionHash, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateAll);
+    auto spentDeposits = m_transferDetails->getTransactionInputs(transactionHash, ITransfersContainer::IncludeTypeDeposit);
+
+    events = m_transactionsCache.onTransactionUpdated(txInfo, static_cast<int64_t>(amountOut)-static_cast<int64_t>(amountIn), newDepositOuts, spentDeposits, m_currency);
+
+    auto actualDepositBalanceChangedEvent = getActualDepositBalanceChangedEvent();
+    auto pendingDepositBalanceChangedEvent = getPendingDepositBalanceChangedEvent();
+
+    if (actualDepositBalanceChangedEvent) {
+      events.push_back(std::move(actualDepositBalanceChangedEvent));
+    }
+
+    if (pendingDepositBalanceChangedEvent) {
+      events.push_back(std::move(pendingDepositBalanceChangedEvent));
+    }
   }
 
-  if (event.get()) {
-    event->notify(m_observerManager);
-  }
+  notifyClients(events);
 }
 
 void WalletLegacy::onTransactionDeleted(ITransfersSubscription* object, const Hash& transactionHash) {
-  std::shared_ptr<WalletLegacyEvent> event;
+  std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
   {
-  std::unique_lock<std::mutex> lock(m_cacheMutex);
-    event = m_transactionsCache.onTransactionDeleted(transactionHash);
+    std::unique_lock<std::mutex> lock(m_cacheMutex);
+    events = m_transactionsCache.onTransactionDeleted(transactionHash);
+
+    std::unique_ptr<WalletLegacyEvent> actualDepositBalanceUpdated = getActualDepositBalanceChangedEvent();
+    if (actualDepositBalanceUpdated) {
+      events.push_back(std::move(actualDepositBalanceUpdated));
+    }
+
+    std::unique_ptr<WalletLegacyEvent> pendingDepositBalanceUpdated = getPendingDepositBalanceChangedEvent();
+    if (pendingDepositBalanceUpdated) {
+      events.push_back(std::move(pendingDepositBalanceUpdated));
+    }
   }
 
-  if (event.get()) {
-    event->notify(m_observerManager);
+  notifyClients(events);
+}
+
+void WalletLegacy::onTransfersUnlocked(ITransfersSubscription* object, const std::vector<TransactionOutputInformation>& unlockedTransfers) {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  auto unlockedDeposits = m_transactionsCache.unlockDeposits(unlockedTransfers);
+  lock.unlock();
+
+  if (!unlockedDeposits.empty()) {
+    m_observerManager.notify(&IWalletLegacyObserver::depositsUpdated, unlockedDeposits);
+
+    notifyIfDepositBalanceChanged();
+  }
+}
+
+void WalletLegacy::onTransfersLocked(ITransfersSubscription* object, const std::vector<TransactionOutputInformation>& lockedTransfers) {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  auto lockedDeposits = m_transactionsCache.lockDeposits(lockedTransfers);
+  lock.unlock();
+
+  if (!lockedDeposits.empty()) {
+    m_observerManager.notify(&IWalletLegacyObserver::depositsUpdated, lockedDeposits);
+
+    notifyIfDepositBalanceChanged();
   }
 }
 
@@ -680,6 +831,71 @@ void WalletLegacy::notifyIfBalanceChanged() {
 
 }
 
+void WalletLegacy::notifyIfDepositBalanceChanged() {
+  std::unique_ptr<WalletLegacyEvent> actualEvent = getActualDepositBalanceChangedEvent();
+  std::unique_ptr<WalletLegacyEvent> pendingEvent = getPendingDepositBalanceChangedEvent();
+
+  if (actualEvent) {
+    actualEvent->notify(m_observerManager);
+  }
+
+  if (pendingEvent) {
+    pendingEvent->notify(m_observerManager);
+  }
+}
+
+std::unique_ptr<WalletLegacyEvent> WalletLegacy::getActualDepositBalanceChangedEvent() {
+  auto actual = calculateActualDepositBalance();
+  auto prevActual = m_lastNotifiedActualDepositBalance.exchange(actual);
+
+  std::unique_ptr<WalletLegacyEvent> event;
+
+  if (actual != prevActual) {
+    event = std::unique_ptr<WalletLegacyEvent>(new WalletActualDepositBalanceUpdatedEvent(actual));
+  }
+
+  return event;
+}
+
+std::unique_ptr<WalletLegacyEvent> WalletLegacy::getPendingDepositBalanceChangedEvent() {
+  auto pending = calculatePendingDepositBalance();
+  auto prevPending = m_lastNotifiedPendingDepositBalance.exchange(pending);
+
+  std::unique_ptr<WalletLegacyEvent> event;
+
+  if (pending != prevPending) {
+    event = std::unique_ptr<WalletLegacyEvent>(new WalletPendingDepositBalanceUpdatedEvent(pending));
+  }
+
+  return event;
+}
+
+std::unique_ptr<WalletLegacyEvent> WalletLegacy::getActualBalanceChangedEvent() {
+  auto actual = calculateActualBalance();
+  auto prevActual = m_lastNotifiedActualBalance.exchange(actual);
+
+  std::unique_ptr<WalletLegacyEvent> event;
+
+  if (actual != prevActual) {
+    event = std::unique_ptr<WalletLegacyEvent>(new WalletActualBalanceUpdatedEvent(actual));
+  }
+
+  return event;
+}
+
+std::unique_ptr<WalletLegacyEvent> WalletLegacy::getPendingBalanceChangedEvent() {
+  auto pending = calculatePendingBalance();
+  auto prevPending = m_lastNotifiedPendingBalance.exchange(pending);
+
+  std::unique_ptr<WalletLegacyEvent> event;
+
+  if (pending != prevPending) {
+    event = std::unique_ptr<WalletLegacyEvent>(new WalletPendingBalanceUpdatedEvent(pending));
+  }
+
+  return event;
+}
+
 void WalletLegacy::getAccountKeys(AccountKeys& keys) {
   if (m_state == NOT_INITIALIZED) {
     throw std::system_error(make_error_code(CryptoNote::error::NOT_INITIALIZED));
@@ -691,6 +907,69 @@ void WalletLegacy::getAccountKeys(AccountKeys& keys) {
 std::vector<TransactionId> WalletLegacy::deleteOutdatedUnconfirmedTransactions() {
   std::lock_guard<std::mutex> lock(m_cacheMutex);
   return m_transactionsCache.deleteOutdatedTransactions();
+}
+
+uint64_t WalletLegacy::calculateActualDepositBalance() {
+  std::vector<TransactionOutputInformation> transfers;
+  m_transferDetails->getOutputs(transfers, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateUnlocked);
+  std::vector<uint32_t> heights = getTransactionHeights(transfers);
+  return calculateDepositsAmount(transfers, m_currency, heights) - m_transactionsCache.countUnconfirmedSpentDepositsTotalAmount();
+}
+
+std::vector<uint32_t> WalletLegacy::getTransactionHeights(const std::vector<TransactionOutputInformation> transfers){
+  std::vector<uint32_t> heights;
+  for (auto transfer : transfers){
+    Crypto::Hash hash = transfer.transactionHash;
+    TransactionInformation info;
+    bool ok = m_transferDetails->getTransactionInformation(hash, info, NULL, NULL);
+    assert(ok);
+    heights.push_back(info.blockHeight);
+  }
+  return heights;
+}
+
+uint64_t WalletLegacy::calculatePendingDepositBalance() {
+  std::vector<TransactionOutputInformation> transfers;
+  m_transferDetails->getOutputs(transfers, ITransfersContainer::IncludeTypeDeposit
+                                | ITransfersContainer::IncludeStateLocked
+                                | ITransfersContainer::IncludeStateSoftLocked);
+  std::vector<uint32_t> heights = getTransactionHeights(transfers);
+  return calculateDepositsAmount(transfers, m_currency, heights) + m_transactionsCache.countUnconfirmedCreatedDepositsSum();
+}
+
+uint64_t WalletLegacy::calculateActualBalance() {
+  return m_transferDetails->balance(ITransfersContainer::IncludeKeyUnlocked) -
+    m_transactionsCache.unconfrimedOutsAmount();
+}
+
+uint64_t WalletLegacy::calculatePendingBalance() {
+  uint64_t change = m_transactionsCache.unconfrimedOutsAmount() - m_transactionsCache.unconfirmedTransactionsAmount();
+  uint64_t spentDeposits = m_transactionsCache.countUnconfirmedSpentDepositsProfit();
+  uint64_t container = m_transferDetails->balance(ITransfersContainer::IncludeKeyNotUnlocked);
+
+  return container + change + spentDeposits;
+}
+
+void WalletLegacy::pushBalanceUpdatedEvents(std::deque<std::unique_ptr<WalletLegacyEvent>>& eventsQueue) {
+  auto actualDepositBalanceUpdated = getActualDepositBalanceChangedEvent();
+  if (actualDepositBalanceUpdated != nullptr) {
+    eventsQueue.push_back(std::move(actualDepositBalanceUpdated));
+  }
+
+  auto pendingDepositBalanceUpdated = getPendingDepositBalanceChangedEvent();
+  if (pendingDepositBalanceUpdated != nullptr) {
+    eventsQueue.push_back(std::move(pendingDepositBalanceUpdated));
+  }
+
+  auto actualBalanceUpdated = getActualBalanceChangedEvent();
+  if (actualBalanceUpdated != nullptr) {
+    eventsQueue.push_back(std::move(actualBalanceUpdated));
+  }
+
+  auto pendingBalanceUpdated = getPendingBalanceChangedEvent();
+  if (pendingBalanceUpdated != nullptr) {
+    eventsQueue.push_back(std::move(pendingBalanceUpdated));
+  }
 }
 
 Crypto::SecretKey WalletLegacy::getTxKey(Crypto::Hash& txid) {

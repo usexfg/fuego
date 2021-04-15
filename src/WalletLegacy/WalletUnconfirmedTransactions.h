@@ -29,6 +29,7 @@
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "crypto/crypto.h"
+/*#include "WalletLegacy/WalletUnconfirmedTransactions.h"*/
 
 namespace CryptoNote {
 class ISerializer;
@@ -105,10 +106,10 @@ private:
 
   void collectUsedOutputs();
   void deleteUsedOutputs(const std::vector<TransactionOutputId>& usedOutputs);
-
+  bool eraseUnconfirmedTransaction(const Crypto::Hash& hash);
   bool eraseDepositSpendingTransaction(const Crypto::Hash& hash);
 
-/*  bool findUnconfirmedTransactionId(const Crypto::Hash& hash, TransactionId& id);*/
+  bool findUnconfirmedTransactionId(const Crypto::Hash& hash, TransactionId& id);
   bool findUnconfirmedDepositSpendingTransactionId(const Crypto::Hash& hash, TransactionId& id);
 
   typedef std::unordered_map<Crypto::Hash, UnconfirmedTransferDetails, boost::hash<Crypto::Hash>> UnconfirmedTxsContainer;

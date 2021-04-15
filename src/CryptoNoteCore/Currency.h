@@ -116,6 +116,13 @@ public:
   size_t difficultyBlocksCount2() const { return CryptoNote::parameters::DIFFICULTY_WINDOW_V2; }
   size_t difficultyBlocksCount3() const { return CryptoNote::parameters::DIFFICULTY_WINDOW_V3; }
 
+  uint64_t depositMinAmount() const { return m_depositMinAmount; }
+  uint32_t depositMinTerm() const { return m_depositMinTerm; }
+  uint32_t depositMaxTerm() const { return m_depositMaxTerm; }
+/*uint32_t depositMaxTermV1() const { return m_depositMaxTermV1; }
+  uint64_t depositMinTotalRateFactor() const { return m_depositMinTotalRateFactor; }
+  uint64_t depositMaxTotalRate() const { return m_depositMaxTotalRate; }*/
+
   size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
   uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }
   uint64_t maxBlockSizeGrowthSpeedDenominator() const { return m_maxBlockSizeGrowthSpeedDenominator; }
@@ -239,6 +246,13 @@ private:
   size_t m_difficultyLag;
   size_t m_difficultyCut;
 
+  uint64_t m_depositMinAmount;
+  uint32_t m_depositMinTerm;
+  uint32_t m_depositMaxTerm;
+  uint32_t m_depositMaxTermV1;
+  uint64_t m_depositMinTotalRateFactor;
+  uint64_t m_depositMaxTotalRate;
+
   size_t m_maxBlockSizeInitial;
   uint64_t m_maxBlockSizeGrowthSpeedNumerator;
   uint64_t m_maxBlockSizeGrowthSpeedDenominator;
@@ -330,6 +344,13 @@ public:
   CurrencyBuilder& difficultyWindow(size_t val);
   CurrencyBuilder& difficultyLag(size_t val) { m_currency.m_difficultyLag = val; return *this; }
   CurrencyBuilder& difficultyCut(size_t val) { m_currency.m_difficultyCut = val; return *this; }
+
+  CurrencyBuilder &depositMinAmount(uint64_t val) { m_currency.m_depositMinAmount = val; return *this; }
+  CurrencyBuilder &depositMinTerm(uint32_t val) { m_currency.m_depositMinTerm = val; return *this; }
+  CurrencyBuilder &depositMaxTerm(uint32_t val) { m_currency.m_depositMaxTerm = val; return *this; }
+/*CurrencyBuilder &depositMaxTermV1(uint32_t val) { m_currency.m_depositMaxTermV1 = val; return *this; }
+  CurrencyBuilder &depositMinTotalRateFactor(uint64_t val) { m_currency.m_depositMinTotalRateFactor = val; return *this; }
+  CurrencyBuilder &depositMaxTotalRate(uint64_t val) { m_currency.m_depositMaxTotalRate = val; return *this; }*/
 
   CurrencyBuilder& maxBlockSizeInitial(size_t val) { m_currency.m_maxBlockSizeInitial = val; return *this; }
   CurrencyBuilder& maxBlockSizeGrowthSpeedNumerator(uint64_t val) { m_currency.m_maxBlockSizeGrowthSpeedNumerator = val; return *this; }

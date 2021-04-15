@@ -1,32 +1,32 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, Karbo developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <exception>
 #include <limits>
 #include <vector>
-
+#include "IWallet.h"
 #include "Serialization/ISerializer.h"
 
 namespace PaymentService {
 
-const uint32_t DEFAULT_ANONYMITY_LEVEL = 6;
+const uint32_t DEFAULT_ANONYMITY_LEVEL = 4;
 
 class RequestSerializationError: public std::exception {
 public:
@@ -76,9 +76,94 @@ struct GetStatus {
     uint32_t blockCount;
     uint32_t knownBlockCount;
     std::string lastBlockHash;
+    uint32_t depositCount;
     uint32_t peerCount;
 
     void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct CreateDeposit
+{
+  struct Request
+  {
+
+    uint64_t amount;
+    uint64_t term;
+    std::string sourceAddress;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct WithdrawDeposit
+{
+  struct Request
+  {
+
+    uint64_t depositId;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct SendDeposit
+{
+  struct Request
+  {
+
+    uint64_t amount;
+    uint64_t term;
+    std::string sourceAddress;
+    std::string destinationAddress;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GetDeposit
+{
+  struct Request
+  {
+    size_t depositId;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t amount;
+    uint64_t term;
+  /*uint64_t interest;*/
+    uint64_t height;
+    uint64_t unlockHeight;
+    std::string creatingTransactionHash;
+    std::string spendingTransactionHash;
+    bool locked;
+    std::string address;
+
+    void serialize(CryptoNote::ISerializer &serializer);
   };
 };
 
@@ -162,6 +247,8 @@ struct GetBalance {
   struct Response {
     uint64_t availableBalance;
     uint64_t lockedAmount;
+    uint64_t lockedDepositBalance;
+    uint64_t unlockedDepositBalance;
 
     void serialize(CryptoNote::ISerializer& serializer);
   };
@@ -228,6 +315,8 @@ struct TransactionRpcInfo {
   std::vector<TransferRpcInfo> transfers;
   std::string extra;
   std::string paymentId;
+  size_t firstDepositId = CryptoNote::WALLET_INVALID_DEPOSIT_ID;
+  size_t depositCount = 0;
 
   void serialize(CryptoNote::ISerializer& serializer);
 };

@@ -1,20 +1,20 @@
 // Copyright (c) 2012-2018, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, Karbo developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "PaymentServiceJsonRpcMessages.h"
 #include "Serialization/SerializationOverloads.h"
@@ -49,8 +49,62 @@ void GetStatus::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(knownBlockCount, "knownBlockCount");
   serializer(lastBlockHash, "lastBlockHash");
   serializer(peerCount, "peerCount");
+  serializer(depositCount, "depositCount");
 }
 
+void CreateDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(amount, "amount");
+  serializer(term, "term");
+  serializer(sourceAddress, "sourceAddress");
+}
+
+void CreateDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+}
+
+void WithdrawDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(depositId, "depositId");
+}
+
+void WithdrawDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+}
+
+void SendDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(amount, "amount");
+  serializer(term, "term");
+  serializer(sourceAddress, "sourceAddress");
+  serializer(destinationAddress, "destinationAddress");
+}
+
+void SendDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+}
+
+
+void GetDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(depositId, "depositId");
+}
+
+void GetDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(amount, "amount");
+  serializer(term, "term");
+/*serializer(interest, "interest");*/
+  serializer(creatingTransactionHash, "creatingTransactionHash");
+  serializer(spendingTransactionHash, "spendingTransactionHash");
+  serializer(height, "height");
+  serializer(unlockHeight, "unlockHeight");
+  serializer(locked, "locked");
+  serializer(address, "address");
+}
 void ValidateAddress::Request::serialize(CryptoNote::ISerializer& serializer) {
   serializer(address, "address");
 }
@@ -111,6 +165,8 @@ void GetBalance::Request::serialize(CryptoNote::ISerializer& serializer) {
 void GetBalance::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(availableBalance, "availableBalance");
   serializer(lockedAmount, "lockedAmount");
+  serializer(lockedDepositBalance, "lockedDepositBalance");
+  serializer(unlockedDepositBalance, "unlockedDepositBalance");
 }
 
 void GetBlockHashes::Request::serialize(CryptoNote::ISerializer& serializer) {
@@ -166,6 +222,8 @@ void TransactionRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   serializer(amount, "amount");
   serializer(fee, "fee");
   serializer(transfers, "transfers");
+  serializer(firstDepositId, "firstDepositId");
+  serializer(depositCount, "depositCount");
   serializer(extra, "extra");
   serializer(paymentId, "paymentId");
 }

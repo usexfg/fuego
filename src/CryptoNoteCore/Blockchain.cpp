@@ -1,33 +1,40 @@
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers, The Monero developers
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2018-2019 The Ryo Currency Developers
-// Copyright (c) 2018-2019 The Fandom GOLD Developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Fandom GOLD.
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+//
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom GOLD is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Blockchain.h"
 
 #include <algorithm>
+#include <numeric>
 #include <cstdio>
 #include <cmath>
 #include <boost/foreach.hpp>
 #include "Common/Math.h"
+#include "Common/int-util.h"
 #include "Common/ShuffleGenerator.h"
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Serialization/BinarySerializationTools.h"
 #include "CryptoNoteTools.h"
+#include "TransactionExtra.h"
+#include "CryptoNoteConfig.h"
 
 using namespace Logging;
 using namespace Common;
@@ -202,6 +209,9 @@ public:
 
     logger(INFO) << operation << "multi-signature outputs...";
     s(m_bs.m_multisignatureOutputs, "multisig_outputs");
+
+    logger(INFO) << operation << "deposit index";
+      s(m_bs.m_depositIndex, "deposit_index");
 
     auto dur = std::chrono::steady_clock::now() - start;
 
@@ -579,6 +589,7 @@ void Blockchain::rebuildCache() {
         }
       }
     }
+      pushToDepositIndex(block/*, interest*/);
   }
 
   std::chrono::duration<double> duration = std::chrono::steady_clock::now() - timePoint;
@@ -1773,6 +1784,32 @@ uint64_t Blockchain::get_adjusted_time() {
   return time(NULL);
 }
 
+/* change TRANSACTION VERSION to different conditional */
+bool Blockchain::check_tx_outputs(const Transaction& tx) const {
+  for (TransactionOutput out : tx.outputs) {
+    if (out.target.type() == typeid(MultisignatureOutput)) {
+      if (tx.version < TRANSACTION_VERSION_1) {
+        logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " contains multisignature output but has version " << tx.version;
+        return false;
+      } else {
+        const auto& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
+        if (multisignatureOutput.term != 0) {
+          if (multisignatureOutput.term < m_currency.depositMinTerm() || multisignatureOutput.term > m_currency.depositMaxTerm()) {
+            logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output has invalid term: " << multisignatureOutput.term;
+            return false;
+          } else if (out.amount < m_currency.depositMinAmount()) {
+            logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output is a deposit output, but it has too small amount: " << out.amount;
+            return false;
+          }
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+
 bool Blockchain::check_block_timestamp_main(const Block& b) {
    if (b.timestamp > get_adjusted_time() + m_currency.blockFutureTimeLimit(b.majorVersion)) { 
 	   logger(INFO, BRIGHT_WHITE) <<
@@ -2096,6 +2133,7 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   }
 
   pushBlock(block);
+  pushToDepositIndex(block/*, interestSummary*/);
 
   auto block_processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - blockProcessingStart).count();
 
@@ -2118,6 +2156,49 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   update_next_comulative_size_limit();
 
   return true;
+}
+
+uint64_t Blockchain::fullDepositAmount() const {
+  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+  return m_depositIndex.fullDepositAmount();
+}
+
+uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
+  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+  return m_depositIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
+}
+/*
+uint64_t Blockchain::fullDepositInterest() const {
+  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+  return m_depositIndex.fullInterestAmount();
+}
+
+uint64_t Blockchain::depositInterestAtHeight(size_t height) const {
+  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+  return m_depositIndex.depositInterestAtHeight(static_cast<DepositIndex::DepositHeight>(height));
+}*/
+
+void Blockchain::pushToDepositIndex(const BlockEntry& block/*, uint64_t interest*/) {
+  int64_t deposit = 0;
+  for (const auto& tx : block.transactions) {
+    for (const auto& in : tx.tx.inputs) {
+      if (in.type() == typeid(MultisignatureInput)) {
+        auto& multisign = boost::get<MultisignatureInput>(in);
+        if (multisign.term > 0) {
+          deposit -= multisign.amount;
+        }
+      }
+    }
+    for (const auto& out : tx.tx.outputs) {
+      if (out.target.type() == typeid(MultisignatureOutput)) {
+        auto& multisign = boost::get<MultisignatureOutput>(out.target);
+        if (multisign.term > 0) {
+          deposit += out.amount;
+        }
+      }
+    }
+  }
+  m_depositIndex.pushBlock(deposit/*, interest*/);
 }
 
 bool Blockchain::pushBlock(BlockEntry& block) {
@@ -2145,7 +2226,21 @@ void Blockchain::popBlock() {
   for (size_t i = 0; i < m_blocks.back().transactions.size() - 1; ++i) {
     transactions[i] = m_blocks.back().transactions[1 + i].tx;
   }
+/*-------------------------------------------------------------------------------------------------------*/
+  uint32_t height = m_blocks.size(); //height of popped block should be same as number of blocks
+  saveTransactions(transactions, height);
 
+  popTransactions(m_blocks.back(), getObjectHash(m_blocks.back().bl.baseTransaction));
+
+  m_timestampIndex.remove(m_blocks.back().bl.timestamp, blockHash);
+  m_generatedTransactionsIndex.remove(m_blocks.back().bl);
+
+  m_depositIndex.popBlock();
+  m_blocks.pop_back();
+  m_blockIndex.pop();
+
+  assert(m_blockIndex.size() == m_blocks.size());
+/*--------------------------------------------------------------------------------------------------------------*/
   saveTransactions(transactions);
   removeLastBlock();
 
@@ -2362,6 +2457,16 @@ bool Blockchain::validateInput(const MultisignatureInput& input, const Crypto::H
   if (input.signatureCount != output.requiredSignatureCount) {
     logger(DEBUGGING) <<
       "Transaction << " << transactionHash << " contains multisignature input with invalid signature count.";
+    return false;
+  }
+
+  if (input.term != output.term) {
+    logger(DEBUGGING) << "Transaction << " << transactionHash << " contains multisignature input with invalid term.";
+    return false;
+  }
+
+  if (output.term != 0 && outputIndex.transactionIndex.block + output.term > getCurrentBlockchainHeight()) {
+    logger(DEBUGGING) << "Transaction << " << transactionHash << " contains multisignature input that spends locked deposit output";
     return false;
   }
 

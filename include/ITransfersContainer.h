@@ -1,22 +1,20 @@
-// {DRGL} Kills White Walkers
-//
-// 2018 {DRÆGONGLASS}
-// <http://www.ZirtysPerzys.org>
-//
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2021 Fandom Gold Society
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Bytecoin is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -38,6 +36,8 @@ struct TransactionInformation {
   Crypto::PublicKey publicKey;
   uint32_t blockHeight;
   uint64_t timestamp;
+  size_t firstDepositId;
+  size_t depositCount = 0;
   uint64_t unlockTime;
   uint64_t totalAmountIn;
   uint64_t totalAmountOut;
@@ -82,6 +82,7 @@ public:
     // output type
     IncludeTypeKey = 0x100,
     IncludeTypeMultisignature = 0x200,
+    IncludeTypeDeposit = 0x400,
     // combinations
     IncludeStateAll = 0xff,
     IncludeTypeAll = 0xff00,

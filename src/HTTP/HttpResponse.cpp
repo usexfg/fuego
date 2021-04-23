@@ -1,19 +1,20 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2016 XDN developers
 // Copyright (c) 2016-2018 Karbowanec
-// Copyright (c) 2018-2019 Fandom Gold Project
-
-// This file is part of Fandom Gold.
-// Fandom Gold is free software: you can redistribute it and/or modify
+// Copyright (c) 2017-2021 Fandom Gold Society
+//
+// This file is part of Fango.
+//
+// FANGO is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom Gold is distributed in the hope that it will be useful,
+// FANGO is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom Gold.  If not, see <http://www.gnu.org/licenses/>.
+// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "HttpResponse.h"
 
@@ -59,7 +60,7 @@ namespace CryptoNote {
 
 HttpResponse::HttpResponse() {
   status = STATUS_200;
-  headers["Server"] = " {{{{ FANDOM GOLD }}}} |HTTP";
+  headers["Server"] = " {{{{ FANGO }}}} |HTTP";
   headers["Access-Control-Allow-Origin"] = "*";
 }
 
@@ -100,4 +101,3 @@ std::ostream& HttpResponse::printHttpResponse(std::ostream& os) const {
 }
 
 } //namespace CryptoNote
-

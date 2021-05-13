@@ -1,18 +1,18 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018, The Karbowanec developers
-// Copyright (c) 2018-2019, The Fandom Gold developers
+// Copyright (c) 2018-2021, The Fango developers
 //
-// This file is part of Fandom Gold.
-// Fandom Gold is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom Gold is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom Gold.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -63,15 +63,24 @@ public:
   uint64_t blockFutureTimeLimit_v1() const { return m_blockFutureTimeLimit_v1; }
   uint64_t blockFutureTimeLimit_v2() const { return m_blockFutureTimeLimit_v2; }
 
-
-  uint64_t moneySupply() const { return m_moneySupply; }
   unsigned int emissionSpeedFactor() const { return m_emissionSpeedFactor; }
+  unsigned int emissionSpeedFactor_FANGO() const { return m_emissionSpeedFactor_FANGO; }
+  unsigned int emissionSpeedFactor(uint8_t blockMajorVersion) const {
+    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_8) {
+      return emissionSpeedFactor_FANGO();
+      }
+    else { 
+      return emissionSpeedFactor();
+    }
+  }
+  uint64_t moneySupply() const { return m_moneySupply; }
   size_t cryptonoteCoinVersion() const { return m_cryptonoteCoinVersion; }
 
   size_t rewardBlocksWindow() const { return m_rewardBlocksWindow; }
   size_t blockGrantedFullRewardZone() const { return m_blockGrantedFullRewardZone; }
   size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
+  uint64_t maxTransactionSizeLimit() const { return m_maxTransactionSizeLimit; }
 
   size_t minMixin() const { return m_minMixin; }
   size_t maxMixin() const { return m_maxMixin; }
@@ -212,11 +221,13 @@ private:
 
   uint64_t m_moneySupply;
   unsigned int m_emissionSpeedFactor;
+  unsigned int m_emissionSpeedFactor_FANGO;
   size_t m_cryptonoteCoinVersion;
 
   size_t m_rewardBlocksWindow;
   size_t m_blockGrantedFullRewardZone;
   size_t m_minerTxBlobReservedSize;
+  uint64_t m_maxTransactionSizeLimit;
 
   size_t m_numberOfDecimalPlaces;
   uint64_t m_coin;
@@ -257,6 +268,7 @@ private:
   uint32_t m_upgradeHeightV5;
   uint32_t m_upgradeHeightV6;
   uint32_t m_upgradeHeightV7;
+  uint32_t m_upgradeHeightV8;
 
   unsigned int m_upgradeVotingThreshold;
   uint32_t m_upgradeVotingWindow;
@@ -307,11 +319,13 @@ public:
 
   CurrencyBuilder& moneySupply(uint64_t val) { m_currency.m_moneySupply = val; return *this; }
   CurrencyBuilder& emissionSpeedFactor(unsigned int val);
+  CurrencyBuilder& emissionSpeedFactor_FANGO(unsigned int val);
   CurrencyBuilder& cryptonoteCoinVersion(size_t val) { m_currency.m_cryptonoteCoinVersion = val; return *this; }
 
   CurrencyBuilder& rewardBlocksWindow(size_t val) { m_currency.m_rewardBlocksWindow = val; return *this; }
   CurrencyBuilder& blockGrantedFullRewardZone(size_t val) { m_currency.m_blockGrantedFullRewardZone = val; return *this; }
   CurrencyBuilder& minerTxBlobReservedSize(size_t val) { m_currency.m_minerTxBlobReservedSize = val; return *this; }
+  CurrencyBuilder& maxTransactionSizeLimit(uint64_t val) { m_currency.m_maxTransactionSizeLimit = val; return *this; }
   
   CurrencyBuilder& minMixin(size_t val) { m_currency.m_minMixin = val; return *this; }
   CurrencyBuilder& maxMixin(size_t val) { m_currency.m_maxMixin = val; return *this; }
@@ -350,6 +364,7 @@ public:
   CurrencyBuilder& upgradeHeightV5(uint64_t val) { m_currency.m_upgradeHeightV5 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeHeightV6(uint64_t val) { m_currency.m_upgradeHeightV6 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeHeightV7(uint64_t val) { m_currency.m_upgradeHeightV7 = static_cast<uint32_t>(val); return *this; }
+  CurrencyBuilder& upgradeHeightV8(uint64_t val) { m_currency.m_upgradeHeightV8 = static_cast<uint32_t>(val); return *this; }
 
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
   CurrencyBuilder& upgradeVotingWindow(size_t val) { m_currency.m_upgradeVotingWindow = static_cast<uint32_t>(val); return *this; }

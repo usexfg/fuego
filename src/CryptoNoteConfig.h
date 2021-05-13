@@ -5,7 +5,7 @@
 // Copyright (c) 2016-2019, The Karbowanec developers
 // Copyright (c) 2018-2019, The Ryo Currency developers
 // Copyright (c) 2018-2019, The Cash2 developers
-// Copyright (c) 2017-2020, The Fandom Gold Project
+// Copyright (c) 2017-2020, The Fango developers
 //
 // This file is part of Fango.
 // Fango is free software: you can redistribute it and/or modify
@@ -28,7 +28,6 @@ namespace CryptoNote {
 namespace parameters {
 
 
-
 const uint64_t DIFFICULTY_TARGET                             = 480;
 const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
@@ -43,12 +42,13 @@ const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2         = DIFFICULTY_TARGET
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 60; 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1          = 11;
 
-
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(80000088000008);
+const uint64_t COIN                                          = UINT64_C(10000000);
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 7;
 const size_t   CRYPTONOTE_COIN_VERSION                       = 1;
+
 const unsigned EMISSION_SPEED_FACTOR                         = 18;
-static_assert(EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "Bad EMISSION_SPEED_FACTOR");
+const unsigned EMISSION_SPEED_FACTOR_FANGO                   = 19;
 
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 800000; //size of block (bytes) after reward for block is calculated in block-size
@@ -63,12 +63,15 @@ const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks  Z
 const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
 const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fango
 
+const uint64_t MINIMUM_FEE_V1                                = UINT64_C(800000);
+const uint64_t MINIMUM_FEE_V2                                = UINT64_C(80000);
+const uint64_t MINIMUM_FEE                                   = MINIMUM_FEE_V2;
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(1000);
 
-const uint64_t MINIMUM_FEE                                   = UINT64_C(800000);
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(8000);
-
-const uint64_t MIN_TX_MIXIN_SIZE                             =  2;
+const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
+const uint64_t MIN_TX_MIXIN_SIZE_V2                          = 4;
 const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
+const uint64_t MAX_TRANSACTION_SIZE_LIMIT                    = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
 
 const size_t   DIFFICULTY_CUT                                = 60;  // v0
 const size_t   DIFFICULTY_LAG                                = 15;  // v0
@@ -78,7 +81,7 @@ static constexpr uint64_t POISSON_CHECK_TRIGGER = 10; // Reorg size that trigger
 static constexpr uint64_t POISSON_CHECK_DEPTH = 60;   // Main-chain depth of poisson check. The attacker will have to tamper 50% of those blocks
 static constexpr double POISSON_LOG_P_REJECT = -75.0; // Reject reorg if probability of timestamps being genuine is less than e^x, -75 = 10^-33
 
-const size_t   MAX_BLOCK_SIZE_INITIAL                        = 800000;
+const size_t   MAX_BLOCK_SIZE_INITIAL                        = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE * 10;
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 100 * 1024;
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
 
@@ -93,13 +96,14 @@ const uint64_t CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL = 7; 
 const size_t   FUSION_TX_MAX_SIZE                            = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1 * 30 / 100;
 const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
-  
+
 const uint32_t UPGRADE_HEIGHT_V2                             = 147958; //{Hardhome}
 const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{Longclaw}
 const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
 const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
 const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //FandomGold
+const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandomgold
+const uint32_t UPGRADE_HEIGHT_V8                             = 750000; //Fango Emission
   
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
@@ -116,7 +120,7 @@ const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      = "blockchainindice
 const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json";
 } // parameters
 
-const char     CRYPTONOTE_NAME[]                             = "fandomgold"; 
+const char     CRYPTONOTE_NAME[]                             = "fango"; 
 const char     GENESIS_COINBASE_TX_HEX[]                     = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
 
 const uint8_t  CURRENT_TRANSACTION_VERSION                   =  1;
@@ -127,6 +131,7 @@ const uint8_t  BLOCK_MAJOR_VERSION_4                         =  4;
 const uint8_t  BLOCK_MAJOR_VERSION_5                         =  5;
 const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
+const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8;
 
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;

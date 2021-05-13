@@ -1,8 +1,9 @@
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2021 The Fango Developers
 //
 // This file is part of Fango.
+//
 // Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -271,6 +272,7 @@ namespace CryptoNote {
     UpgradeDetector m_upgradeDetectorV5;
     UpgradeDetector m_upgradeDetectorV6;
     UpgradeDetector m_upgradeDetectorV7;
+    UpgradeDetector m_upgradeDetectorV8;
 
 
     PaymentIdIndex m_paymentIdIndex;

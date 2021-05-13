@@ -3,7 +3,7 @@
 // Copyright (c) 2014-2018, The Forknote developers
 // Copyright (c) 2018, The TurtleCoin developers
 // Copyright (c) 2016-2018, The Karbowanec developers
-// Copyright (c) 2017-2021, Fandom Gold Society
+// Copyright (c) 2018-2021, The Fango Developers
 //
 // This file is part of Fango.
 //
@@ -11,12 +11,10 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
 // Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
 // along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -27,6 +25,7 @@
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "Serialization/SerializationTools.h"
+#include "Common/ColorMod.h"
 #include "version.h"
 #include <boost/format.hpp>
 #include "math.h"
@@ -39,7 +38,6 @@ namespace {
     return true;
   }
 }
-
 
 DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, const CryptoNote::ICryptoNoteProtocolQuery& protocol, CryptoNote::RpcServer* prpc_server) :
   m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), protocolQuery(protocol), m_prpc_server(prpc_server) {
@@ -112,6 +110,20 @@ bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
   return true;
 }
 
+Color::Modifier gold(Color::FG_LIGHT_YELLOW);
+Color::Modifier lcyan(Color::FG_LIGHT_CYAN);
+Color::Modifier lmag(Color::FG_LIGHT_MAGENTA);
+Color::Modifier bgray(Color::BG_DARK_GRAY);
+Color::Modifier bgold(Color::BG_LIGHT_YELLOW);
+Color::Modifier defb(Color::BG_DEFAULT);
+Color::Modifier def(Color::FG_DEFAULT);
+Color::Modifier black(Color::FG_BLACK);
+Color::Modifier odef(Color::DEFAULT);
+Color::Modifier uld(Color::UNDERLINED);
+Color::Modifier bolden(Color::BOLD);
+Color::Modifier blink(Color::BLINK);
+Color::Modifier dim(Color::DIM);
+
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   uint32_t height = m_core.get_current_blockchain_height() - 1;
@@ -131,16 +143,15 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   bool synced = ((uint32_t)height == (uint32_t)last_known_block_index);
 
   std::cout << std::endl
-    << (synced ? "Synced " : "Syncing ") << height << "/" << last_known_block_index 
-    << " (" << get_sync_percentage(height, last_known_block_index) << "%) "
-    << "on " << (m_core.currency().isTestnet() ? "testnet, " : "Fango Mainnet, ")
-    << "network hashrate: " << get_mining_speed(hashrate) << ", difficulty: " << difficulty << ", "
-    << "block v. " << (int)majorVersion << ", "
-    << outgoing_connections_count << " out. + " << incoming_connections_count << " inc. connections, "
-    << rpc_conn <<  " rpc connections, "
-    << "uptime: " << (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0) << "d " << (unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0)) << "h "
-    << (unsigned int)floor(fmod((uptime / 60.0), 60.0)) << "m " << (unsigned int)fmod(uptime, 60.0) << "s"
-    << std::endl;
+    <<(synced ? "Synced " : "Syncing ")<< bolden << height << "/" << last_known_block_index
+    << " (" << get_sync_percentage(height, last_known_block_index) << "%) "<< odef
+    << gold << "on " << bolden  << "FANGO " << odef<< gold << (m_core.currency().isTestnet() ? "TESTNET, " : "Mainnet ") << odef << std::endl;
+  std::cout << gold << uld << "Network Hashrate: " << odef << bolden << get_mining_speed(hashrate) << odef << gold << uld <<", Difficulty: "<< odef << bolden << difficulty << odef
+    << gold << uld << ", Block Major Version: " << odef << bolden << (int)majorVersion << odef <<","<< std::endl;
+  std::cout << gold << uld << "Outgoing Connections: " << odef << bolden << outgoing_connections_count << odef << gold << uld <<", Incoming connections: " << odef << bolden << incoming_connections_count << odef  
+    << gold << uld << ", RPC Connections: " << odef << bolden << rpc_conn << odef << gold << uld
+    << ", Node Uptime: " << odef << bolden<< (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0) << "d " << (unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0)) << "h "
+    << (unsigned int)floor(fmod((uptime / 60.0), 60.0)) << "m " << (unsigned int)fmod(uptime, 60.0) << "s"<< odef << def<< std::endl;
 
   return true;
 }

@@ -2,7 +2,7 @@
 // Copyright (c) 2014-2018, The Forknote project
 // Copyright (c) 2016-2018, The Karbowanec developers
 // Copyright (c) 2018-2019, The Cash2 developers
-// Copyright (c) 2018-2020, Fango Developers
+// Copyright (c) 2018-2021, The Fango Developers
 //
 // This file is part of Fango.
 // Fango is free software: you can redistribute it and/or modify
@@ -556,7 +556,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized() {
     logger(Logging::INFO, Logging::BRIGHT_CYAN)
       << "**********************************************************************" << ENDL
       << "You are synchronized with your network peers." << ENDL
-      << "Simplewallet is now at your service, My Lorde." << ENDL
+      << "Simplewallet is now at your service, m'Lorde." << ENDL
       << "Type \"help\" to see Fango daemon commands." << ENDL
       << ENDL
       << "Please note, the blockchain will only be saved after" << ENDL

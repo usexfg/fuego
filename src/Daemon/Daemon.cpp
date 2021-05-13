@@ -199,7 +199,7 @@ logger(INFO, BRIGHT_YELLOW) <<
 " █████       █████   █████ █████  ░░█████ ░░█████████  ░░░███████░   \n"
 " ░░░░░       ░░░░░   ░░░░░ ░░░░░    ░░░░░   ░░░░░░░░░     ░░░░░░░    \n"
 "\n" 
-<< " v" << PROJECT_VERSION_LONG "\n"
+<<"             "  PROJECT_VERSION_LONG "\n"
 "\n";
 
     if (command_line_preprocessor(vm, logger)) {

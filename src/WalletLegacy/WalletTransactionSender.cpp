@@ -1,20 +1,19 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018, Karbo developers
+// Copyright (c) 2018-2021 The Fango Developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "crypto/crypto.h" //for rand()
 #include "CryptoNoteCore/Account.h"
@@ -84,7 +83,7 @@ WalletTransactionSender::WalletTransactionSender(const Currency& currency, Walle
   m_isStoping(false),
   m_keys(keys),
   m_transferDetails(transfersContainer),
-  m_upperTransactionSizeLimit(parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT / 4 - m_currency.minerTxBlobReservedSize()) {
+  m_upperTransactionSizeLimit(m_currency.maxTransactionSizeLimit()) {
 }
 
 void WalletTransactionSender::stop() {

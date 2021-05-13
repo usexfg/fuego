@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2016 The CryptoNote developers
 // Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2021 The Fango Developers
 //
 // This file is part of Fango.
 //
@@ -421,7 +421,9 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
         if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
       b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
     } else if (b.majorVersion >= BLOCK_MAJOR_VERSION_2) {
-      if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_7) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+      if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_8) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+        b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_7 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
+      } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_7) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_6 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
       } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_6) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_5 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
@@ -774,9 +776,9 @@ bool core::on_idle() {
   if (!m_starter_message_showed) {
     logger(INFO, BRIGHT_YELLOW)
       << "**********************************************************************" << ENDL
-      << "The dæmon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
-      << "Fango blockchain can also be downloaded at https://github.com/FandomGold/XFG-data/releases ."<< ENDL
-      << "Or listen to some music while your daemon is syncing... https://soundcloud.com/headphone-son"<< ENDL
+      << "The daemon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
+      << "Fango blockchain can also be downloaded at https://github.com/FandomGold/XFG-data/releases "<< ENDL
+      << "Listen to some music while your daemon is syncing... https://soundcloud.com/headphone-son"<< ENDL
       << "You can use the \"set_log <level>\" command for a more detailed view of the process."<< ENDL
       << "Using <level> option from 0 (no details) up to 4 (very verbose)." << ENDL
       << "Use \"help\" command to see a list of available commands." << ENDL

@@ -1,19 +1,20 @@
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers, The Monero developers
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2018-2019 The Ryo Currency Developers
-// Copyright (c) 2018-2019 The Fandom GOLD Developers
+// Copyright (c) 2018-2021 The Fango developers
 //
-// This file is part of Fandom GOLD.
-// Fandom GOLD is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+//
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom GOLD is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom GOLD.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Blockchain.h"
 
@@ -326,6 +327,7 @@ m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
 m_upgradeDetectorV5(currency, m_blocks, BLOCK_MAJOR_VERSION_5, logger),
 m_upgradeDetectorV6(currency, m_blocks, BLOCK_MAJOR_VERSION_6, logger), 
 m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger),
+m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger),
 m_checkpoints(logger),
 m_paymentIdIndex(blockchainIndexesEnabled),
 m_timestampIndex(blockchainIndexesEnabled),
@@ -476,7 +478,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     rollbackBlockchainTo(lastValidCheckpointHeight);
   }
 
-if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init()) {
+if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init()) {
     logger(ERROR, BRIGHT_RED) << "Failed to initialize upgrade detector. Trying self-healing procedure.";
 }
 
@@ -518,8 +520,14 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
     " expected=" << static_cast<int>(m_upgradeDetectorV7.targetVersion()) << ". Rollback blockchain to height=" << upgradeHeight;
     rollbackBlockchainTo(upgradeHeight);
     reinitUpgradeDetectors = true;
+  } else if (!checkUpgradeHeight(m_upgradeDetectorV8)) {
+    uint32_t upgradeHeight = m_upgradeDetectorV8.upgradeHeight();
+    logger(WARNING, BRIGHT_MAGENTA) << "Invalid block version at " << upgradeHeight + 1 << ": real=" << static_cast<int>(m_blocks[upgradeHeight + 1].bl.majorVersion) <<
+    " expected=" << static_cast<int>(m_upgradeDetectorV8.targetVersion()) << ". Rollback blockchain to height=" << upgradeHeight;
+    rollbackBlockchainTo(upgradeHeight);
+    reinitUpgradeDetectors = true;
   }
-  if (reinitUpgradeDetectors && (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init())) {
+  if (reinitUpgradeDetectors && (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init())) {
     logger(ERROR, BRIGHT_RED) << "Failed again to initialize upgrade detector";
     return false;
   }
@@ -747,7 +755,9 @@ uint64_t Blockchain::getCoinsInCirculation() {
 }
 
 uint8_t Blockchain::getBlockMajorVersionForHeight(uint32_t height) const {
-         if (height > m_upgradeDetectorV7.upgradeHeight()) {
+         if (height > m_upgradeDetectorV8.upgradeHeight()) {
+    return m_upgradeDetectorV8.targetVersion();
+  } else if (height > m_upgradeDetectorV7.upgradeHeight()) {
     return m_upgradeDetectorV7.targetVersion();
   } else if (height > m_upgradeDetectorV6.upgradeHeight()) {
     return m_upgradeDetectorV6.targetVersion();
@@ -2115,6 +2125,8 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   m_upgradeDetectorV5.blockPushed();
   m_upgradeDetectorV6.blockPushed();
   m_upgradeDetectorV7.blockPushed();
+  m_upgradeDetectorV8.blockPushed();
+
   update_next_comulative_size_limit();
 
   return true;
@@ -2155,6 +2167,8 @@ void Blockchain::popBlock() {
   m_upgradeDetectorV5.blockPopped();
   m_upgradeDetectorV6.blockPopped();
   m_upgradeDetectorV7.blockPopped();
+  m_upgradeDetectorV8.blockPopped();
+
 
 }
 

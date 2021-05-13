@@ -1,19 +1,20 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2016-2018, zawy12
 // Copyright (c) 2016-2018, The Karbowanec developers
-// Copyright (c) 2018-2019  The Fandom Gold Project
+// Copyright (c) 2018-2021, The Fango Developers
 //
-// This file is part of Fandom Gold.
-// Fandom Gold is free software: you can redistribute it and/or modify
+// This file is part of Fango.
+//
+// Fango is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// Fandom Gold is distributed in the hope that it will be useful,
+// Fango is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public License
-// along with Fandom Gold.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fango.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Currency.h"
 #include <cctype>
@@ -73,12 +74,13 @@ namespace CryptoNote {
 		}
 
 		if (isTestnet()) {
-			m_upgradeHeightV2 = 0;
-			m_upgradeHeightV3 = 1;
-			m_upgradeHeightV4 = 2;	
-			m_upgradeHeightV5 = 8;
-			m_upgradeHeightV6 = 10;	
-			m_upgradeHeightV7 = 18;	
+			m_upgradeHeightV2 = 2;
+			m_upgradeHeightV3 = 3;
+			m_upgradeHeightV4 = 4;	
+			m_upgradeHeightV5 = 5;
+			m_upgradeHeightV6 = 6;	
+			m_upgradeHeightV7 = 7;	
+			m_upgradeHeightV8 = 8;
 			m_blocksFileName = "testnet_" + m_blocksFileName;
 			m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
 			m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
@@ -148,17 +150,24 @@ namespace CryptoNote {
 		else if (majorVersion == BLOCK_MAJOR_VERSION_7) {
 			return m_upgradeHeightV7;
 		}
+		else if (majorVersion == BLOCK_MAJOR_VERSION_8) {
+			return m_upgradeHeightV8;
+		}
 		else {
 			return static_cast<uint32_t>(-1);
 		}
 	}
 
+	
 	bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
 		uint64_t fee, uint64_t& reward, int64_t& emissionChange) const {
+		unsigned int m_emissionSpeedFactor = emissionSpeedFactor(blockMajorVersion);
+
 		assert(alreadyGeneratedCoins <= m_moneySupply);
 		assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));
 
 		uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
+		  
 		
 		size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
 		medianSize = std::max(medianSize, blockGrantedFullRewardZone);
@@ -796,6 +805,7 @@ namespace CryptoNote {
 		case BLOCK_MAJOR_VERSION_5:
 		case BLOCK_MAJOR_VERSION_6:
 		case BLOCK_MAJOR_VERSION_7:
+		case BLOCK_MAJOR_VERSION_8:
 
 			return checkProofOfWorkV2(context, block, currentDiffic, proofOfWork);
 		}
@@ -843,12 +853,15 @@ namespace CryptoNote {
 
 		moneySupply(parameters::MONEY_SUPPLY);
 		emissionSpeedFactor(parameters::EMISSION_SPEED_FACTOR);
+		emissionSpeedFactor_FANGO(parameters::EMISSION_SPEED_FACTOR_FANGO);
+
 		cryptonoteCoinVersion(parameters::CRYPTONOTE_COIN_VERSION);
 
 		rewardBlocksWindow(parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW);
 		blockGrantedFullRewardZone(parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
 		minerTxBlobReservedSize(parameters::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE);
-
+		maxTransactionSizeLimit(parameters::MAX_TRANSACTION_SIZE_LIMIT);
+		
 		minMixin(parameters::MIN_TX_MIXIN_SIZE);
 		maxMixin(parameters::MAX_TX_MIXIN_SIZE);
 
@@ -886,7 +899,7 @@ namespace CryptoNote {
 		upgradeHeightV5(parameters::UPGRADE_HEIGHT_V5);
 		upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
 		upgradeHeightV7(parameters::UPGRADE_HEIGHT_V7);
-
+		upgradeHeightV8(parameters::UPGRADE_HEIGHT_V8);
 
 		upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
 		upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
@@ -913,6 +926,14 @@ namespace CryptoNote {
 		}
 
 		m_currency.m_emissionSpeedFactor = val;
+		return *this;
+	}
+        CurrencyBuilder& CurrencyBuilder::emissionSpeedFactor_FANGO(unsigned int val) {
+		if (val <= 0 || val > 8 * sizeof(uint64_t)) {
+			throw std::invalid_argument("val at emissionSpeedFactor_FANGO()");
+		}
+
+		m_currency.m_emissionSpeedFactor_FANGO = val;
 		return *this;
 	}
 

@@ -103,7 +103,7 @@ const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracar
 const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
 const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
 const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandomgold
-const uint32_t UPGRADE_HEIGHT_V8                             = 750000; //Fango Emission
+const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Fango Emission
   
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks

@@ -66,7 +66,7 @@ const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Z
 const uint64_t MINIMUM_FEE_V1                                = UINT64_C(800000);
 const uint64_t MINIMUM_FEE_V2                                = UINT64_C(80000);
 const uint64_t MINIMUM_FEE                                   = MINIMUM_FEE_V2;
-const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(1000);
+const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(20000);
 
 const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
 const uint64_t MIN_TX_MIXIN_SIZE_V2                          = 4;
@@ -172,5 +172,8 @@ const char* const SEED_NODES[] = {
 
 }
 
+
 #define ALLOW_DEBUG_COMMANDS
+
+
 //Knowledge has made you powerful but there is still so much you don't know.

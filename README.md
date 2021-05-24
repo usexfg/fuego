@@ -1,5 +1,5 @@
 <img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/Fango_gif01.GIF"><img/>
-### Fango is open-source decentralized P2P privacy cryptocurrency built by & for sound money advocates and fandom enthusiasts.
+### Fango is open-source decentralized P2P privacy cryptocurrency built by sound money advocates and fandom enthusiasts.
 
 Based on the CryptoNote protocol & philosophy.
 

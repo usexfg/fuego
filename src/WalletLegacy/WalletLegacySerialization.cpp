@@ -1,30 +1,27 @@
-// {DRGL} Kills White Walkers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
+// This file is part of Fango.
 //
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018, Karbo developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "WalletLegacySerialization.h"
+
+#include "WalletLegacy/WalletDepositInfo.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
 #include "IWalletLegacy.h"
-#include "WalletLegacy/WalletLegacySerializer.h"
+
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
@@ -41,8 +38,15 @@ void serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& seriali
   uint64_t txId = static_cast<uint64_t>(utd.transactionId);
   serializer(txId, "transaction_id");
   utd.transactionId = static_cast<size_t>(txId);
-  if (CryptoNote::WALLET_LEGACY_SERIALIZATION_VERSION >= 2)
-  serializer(utd.secretKey, "secret_key");
+}
+
+void serialize(UnconfirmedSpentDepositDetails& details, ISerializer& serializer) {
+  uint64_t txId = details.transactionId;
+  serializer(txId, "spendingTransactionId");
+  details.transactionId = txId;
+
+  serializer(details.depositsSum, "depositsSum");
+  serializer(details.fee, "fee");
 }
 
 void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer) {
@@ -53,6 +57,14 @@ void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer
   uint64_t trCount = static_cast<uint64_t>(txi.transferCount);
   serializer(trCount, "transfer_count");
   txi.transferCount = static_cast<size_t>(trCount);
+
+  uint64_t dtId = static_cast<uint64_t>(txi.firstDepositId);
+  serializer(dtId, "first_deposit_id");
+  txi.firstDepositId = static_cast<size_t>(dtId);
+
+  uint64_t dtCount = static_cast<uint64_t>(txi.depositCount);
+  serializer(dtCount, "deposit_count");
+  txi.depositCount = static_cast<size_t>(dtCount);
 
   serializer(txi.totalAmount, "total_amount");
 
@@ -65,13 +77,13 @@ void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer
   serializer(txi.timestamp, "timestamp");
   serializer(txi.unlockTime, "unlock_time");
   serializer(txi.extra, "extra");
-	
-  if (CryptoNote::WALLET_LEGACY_SERIALIZATION_VERSION >= 2) {
-  Crypto::SecretKey secretKey = reinterpret_cast<const Crypto::SecretKey&>(txi.secretKey.get());
-    serializer(secretKey, "secret_key");
-    txi.secretKey = secretKey;
-  }
-  
+
+  uint8_t state = static_cast<uint8_t>(txi.state);
+  serializer(state, "state");
+  txi.state = static_cast<WalletLegacyTransactionState>(state);
+
+  serializer(txi.messages, "messages");
+
   //this field has been added later in the structure.
   //in order to not break backward binary compatibility
   // we just set it to zero
@@ -81,6 +93,25 @@ void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer
 void serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
   serializer(tr.address, "address");
   serializer(tr.amount, "amount");
+}
+
+void serialize(Deposit& deposit, CryptoNote::ISerializer& serializer) {
+  uint64_t creatingTxId = static_cast<uint64_t>(deposit.creatingTransactionId);
+  serializer(creatingTxId, "creating_transaction_id");
+  deposit.creatingTransactionId = static_cast<size_t>(creatingTxId);
+
+  uint64_t spendingTxIx = static_cast<uint64_t>(deposit.spendingTransactionId);
+  serializer(spendingTxIx, "spending_transaction_id");
+  deposit.spendingTransactionId = static_cast<size_t>(spendingTxIx);
+
+  serializer(deposit.term, "term");
+  serializer(deposit.amount, "amount");
+  serializer(deposit.locked, "locked");
+}
+
+void serialize(DepositInfo& depositInfo, CryptoNote::ISerializer& serializer) {
+  serializer(depositInfo.deposit, "deposit");
+  serializer(depositInfo.outputInTransaction, "output_in_transaction");
 }
 
 } //namespace CryptoNote

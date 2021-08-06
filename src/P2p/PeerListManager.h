@@ -1,19 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -48,6 +49,15 @@ class PeerlistManager {
     >
   > peers_indexed;
 
+  typedef boost::multi_index_container<
+      AnchorPeerlistEntry,
+      boost::multi_index::indexed_by<
+          // access by anchor_peerlist_entry::net_adress
+          boost::multi_index::ordered_unique<boost::multi_index::tag<by_addr>, boost::multi_index::member<AnchorPeerlistEntry, NetworkAddress, &AnchorPeerlistEntry::adr>>,
+          // sort by anchor_peerlist_entry::first_seen
+          boost::multi_index::ordered_non_unique<boost::multi_index::tag<by_time>, boost::multi_index::member<AnchorPeerlistEntry, int64_t, &AnchorPeerlistEntry::first_seen>>>>
+      anchor_peers_indexed;
+
 public:
 
   class Peerlist {
@@ -72,6 +82,8 @@ public:
   bool get_peerlist_full(std::list<PeerlistEntry>& pl_gray, std::list<PeerlistEntry>& pl_white) const;
   bool get_white_peer_by_index(PeerlistEntry& p, size_t i) const;
   bool get_gray_peer_by_index(PeerlistEntry& p, size_t i) const;
+  bool append_with_peer_anchor(const AnchorPeerlistEntry &pr);
+
   bool append_with_peer_white(const PeerlistEntry& pr);
   bool append_with_peer_gray(const PeerlistEntry& pr);
   bool set_peer_just_seen(PeerIdType peer, uint32_t ip, uint32_t port);
@@ -85,12 +97,15 @@ public:
 
   Peerlist& getWhite();
   Peerlist& getGray();
+  bool get_and_empty_anchor_peerlist(std::vector<AnchorPeerlistEntry> &apl);
+  bool remove_from_peer_anchor(const NetworkAddress &addr);
 
 private:
   std::string m_config_folder;
   bool m_allow_local_ip;
   peers_indexed m_peers_gray;
   peers_indexed m_peers_white;
+  anchor_peers_indexed m_peers_anchor;
   Peerlist m_whitePeerlist;
   Peerlist m_grayPeerlist;
 };

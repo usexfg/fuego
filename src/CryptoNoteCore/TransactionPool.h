@@ -1,19 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -87,8 +88,7 @@ namespace CryptoNote {
       const CryptoNote::Currency& currency, 
       CryptoNote::ITransactionValidator& validator,
       CryptoNote::ITimeProvider& timeProvider,
-      Logging::ILogger& log,
-      bool blockchainIndexesEnabled);
+      Logging::ILogger& log);
 
     bool addObserver(ITxPoolObserver* observer);
     bool removeObserver(ITxPoolObserver* observer);
@@ -98,8 +98,8 @@ namespace CryptoNote {
     bool deinit();
 
     bool have_tx(const Crypto::Hash &id) const;
-    bool add_tx(const Transaction &tx, const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keeped_by_block);
-    bool add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block);
+    bool add_tx(const Transaction &tx, const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
+    bool add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
     //gets tx and remove it from pool
     bool take_tx(const Crypto::Hash &id, Transaction &tx, size_t& blobSize, uint64_t& fee);
 
@@ -110,18 +110,18 @@ namespace CryptoNote {
     void unlock() const;
     std::unique_lock<std::recursive_mutex> obtainGuard() const;
 
-    bool fill_block_template(Block &bl, size_t median_size, size_t maxCumulativeSize, uint64_t already_generated_coins, size_t &total_size, uint64_t &fee);
+    bool fill_block_template(Block &bl, size_t median_size, size_t maxCumulativeSize, uint64_t already_generated_coins, size_t &total_size, uint64_t &fee, uint32_t& height);
 
     void get_transactions(std::list<Transaction>& txs) const;
     void get_difference(const std::vector<Crypto::Hash>& known_tx_ids, std::vector<Crypto::Hash>& new_tx_ids, std::vector<Crypto::Hash>& deleted_tx_ids) const;
     size_t get_transactions_count() const;
     std::string print_pool(bool short_format) const;
-	
     void on_idle();
 
     bool getTransactionIdsByPaymentId(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionIds);
     bool getTransactionIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<Crypto::Hash>& hashes, uint64_t& transactionsNumberWithinTimestamps);
-
+    bool getTransaction(const Crypto::Hash &id, Transaction &tx);
+    
     template<class t_ids_container, class t_tx_container, class t_missed_container>
     void getTransactions(const t_ids_container& txsIds, t_tx_container& txs, t_missed_container& missedTxs) {
       std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
@@ -151,9 +151,6 @@ namespace CryptoNote {
       bool keptByBlock;
       time_t receiveTime;
     };
-
-	void getMemoryPool(std::list<CryptoNote::tx_memory_pool::TransactionDetails> txs) const;
-	std::list<CryptoNote::tx_memory_pool::TransactionDetails> getMemoryPool() const;
 
   private:
 
@@ -198,7 +195,6 @@ namespace CryptoNote {
     tx_container_t::iterator removeTransaction(tx_container_t::iterator i);
     bool removeExpiredTransactions();
     bool is_transaction_ready_to_go(const Transaction& tx, TransactionCheckInfo& txd) const;
-
     void buildIndices();
 
     Tools::ObserverManager<ITxPoolObserver> m_observerManager;
@@ -220,7 +216,6 @@ namespace CryptoNote {
 
     PaymentIdIndex m_paymentIdIndex;
     TimestampTransactionsIndex m_timestampIndex;
+    std::unordered_map<Crypto::Hash, uint64_t> m_ttlIndex;
   };
 }
-
-

@@ -1,22 +1,24 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <string>
 #include <vector>
 #include <boost/variant.hpp>
 
@@ -29,10 +31,14 @@
 #define TX_EXTRA_TAG_PUBKEY                 0x01
 #define TX_EXTRA_NONCE                      0x02
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
+#define TX_EXTRA_MESSAGE_TAG                0x04
+#define TX_EXTRA_TTL                        0x05
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
 namespace CryptoNote {
+
+class ISerializer;
 
 struct TransactionExtraPadding {
   size_t size;
@@ -51,11 +57,24 @@ struct TransactionExtraMergeMiningTag {
   Crypto::Hash merkleRoot;
 };
 
+struct tx_extra_message {
+  std::string data;
+
+  bool encrypt(std::size_t index, const std::string &message, const AccountPublicAddress* recipient, const KeyPair &txkey);
+  bool decrypt(std::size_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const;
+
+  bool serialize(ISerializer& serializer);
+};
+
+struct TransactionExtraTTL {
+  uint64_t ttl;
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL> TransactionExtraField;
 
 
 
@@ -80,6 +99,9 @@ bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const Binar
 void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const Crypto::Hash& payment_id);
 bool getPaymentIdFromTransactionExtraNonce(const BinaryArray& extra_nonce, Crypto::Hash& payment_id);
 bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraMergeMiningTag& mm_tag);
+bool append_message_to_extra(std::vector<uint8_t>& tx_extra, const tx_extra_message& message);
+std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t>& extra, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key);
+void appendTTLToExtra(std::vector<uint8_t>& tx_extra, uint64_t ttl);
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);

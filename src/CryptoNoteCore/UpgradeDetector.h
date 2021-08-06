@@ -1,19 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -46,7 +47,8 @@ namespace CryptoNote {
       m_blockchain(blockchain),
       m_targetVersion(targetVersion),
       m_votingCompleteHeight(UNDEF_HEIGHT),
-      logger(log, "upgrade") { }
+      logger(log, "upgrade") {
+    }
 
     bool init() {
       uint32_t upgradeHeight = m_currency.upgradeHeight(m_targetVersion);
@@ -85,10 +87,6 @@ namespace CryptoNote {
         } else {
           int blockVersionAtUpgradeHeight = m_blockchain[upgradeHeight].bl.majorVersion;
           if (blockVersionAtUpgradeHeight != m_targetVersion - 1) {
-            logger(Logging::ERROR, Logging::BRIGHT_RED) << "Internal error: block at height " << upgradeHeight <<
-              " has invalid version " << blockVersionAtUpgradeHeight <<
-              ", expected " << static_cast<int>(m_targetVersion - 1);
-            return false;
           }
 
           int blockVersionAfterUpgradeHeight = m_blockchain[upgradeHeight + 1].bl.majorVersion;
@@ -104,8 +102,12 @@ namespace CryptoNote {
       return true;
     }
 
-    uint8_t targetVersion() const { return m_targetVersion; }
-    uint32_t votingCompleteHeight() const { return m_votingCompleteHeight; }
+    uint8_t targetVersion() const {
+      return m_targetVersion;
+    }
+    uint32_t votingCompleteHeight() const {
+      return m_votingCompleteHeight;
+    }
 
     uint32_t upgradeHeight() const {
       if (m_currency.upgradeHeight(m_targetVersion) == UNDEF_HEIGHT) {
@@ -194,8 +196,8 @@ namespace CryptoNote {
 
       uint32_t probableVotingCompleteHeight = probableUpgradeHeight > m_currency.maxUpgradeDistance() ? probableUpgradeHeight - m_currency.maxUpgradeDistance() : 0;
       for (size_t i = probableVotingCompleteHeight; i <= probableUpgradeHeight; ++i) {
-        if (isVotingComplete(i)) {
-          return i;
+        if (isVotingComplete(static_cast<uint32_t>(i))) {
+          return static_cast<uint32_t>(i);
         }
       }
 

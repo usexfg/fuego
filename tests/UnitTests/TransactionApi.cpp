@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 
@@ -372,4 +360,47 @@ TEST_F(TransactionApi, unableToModifySignedTransaction) {
   tx->signInputMultisignature(index, srcTxKey, 0, generateAccountKeys());
 
   EXPECT_NO_FATAL_FAILURE(checkHashChanged());
+}
+
+TEST_F(TransactionApi, deserializeTransactionInputMultisignature) {
+  MultisignatureInput inputMsig;
+
+  inputMsig.amount = 1000;
+  inputMsig.outputIndex = 3;
+  inputMsig.signatureCount = 1;
+  inputMsig.term = 4235;
+
+  auto index = tx->addInput(inputMsig);
+
+  auto srcTxKey = CryptoNote::generateKeyPair().publicKey;
+  tx->signInputMultisignature(index, srcTxKey, 0, sender);
+
+  auto restoredTransaction = reloadedTx(tx);
+
+  MultisignatureInput restoredMsig;
+  restoredTransaction->getInput(index, restoredMsig);
+
+  EXPECT_EQ(restoredMsig.amount, inputMsig.amount);
+  EXPECT_EQ(restoredMsig.outputIndex, inputMsig.outputIndex);
+  EXPECT_EQ(restoredMsig.signatureCount, inputMsig.signatureCount);
+  EXPECT_EQ(restoredMsig.term, inputMsig.term);
+}
+
+TEST_F(TransactionApi, deserializeTransactionOutputMultisignature) {
+  std::vector<AccountPublicAddress> destinations = {generateAccountKeys().address, generateAccountKeys().address, generateAccountKeys().address};
+
+  const uint32_t REQUIRED_SIGNATURES = static_cast<uint32_t>(destinations.size());
+  const uint64_t AMOUNT = 82435;
+  const uint32_t TERM = 82835;
+
+  auto index = tx->addOutput(AMOUNT, destinations, REQUIRED_SIGNATURES, TERM);
+  auto restoredTransaction = reloadedTx(tx);
+
+  MultisignatureOutput msigOutput;
+  uint64_t outAmount;
+  restoredTransaction->getOutput(index, msigOutput, outAmount);
+
+  EXPECT_EQ(msigOutput.requiredSignatureCount, REQUIRED_SIGNATURES);
+  EXPECT_EQ(outAmount, AMOUNT);
+  EXPECT_EQ(msigOutput.term, TERM);
 }

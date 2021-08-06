@@ -1,20 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2017 The Karbowanec developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -64,7 +64,6 @@ public:
   virtual uint32_t getLocalBlockCount() const override;
   virtual uint32_t getKnownBlockCount() const override;
   virtual uint64_t getLastLocalBlockTimestamp() const override;
-  virtual BlockHeaderInfo getLastLocalBlockHeaderInfo() const override;
 
   virtual void relayTransaction(const CryptoNote::Transaction& transaction, const Callback& callback) override;
   virtual void getRandomOutsByAmounts(std::vector<uint64_t>&& amounts, uint64_t outsCount, std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result, const Callback& callback) override;
@@ -84,9 +83,6 @@ public:
 
   unsigned int rpcTimeout() const { return m_rpcTimeout; }
   void rpcTimeout(unsigned int val) { m_rpcTimeout = val; }
-
-  const std::string m_nodeHost;
-  const unsigned short m_nodePort;
 
 private:
   void resetInternalState();
@@ -111,9 +107,11 @@ private:
     std::vector<CryptoNote::BlockShortEntry>& newBlocks, uint32_t& startHeight);
   std::error_code doGetPoolSymmetricDifference(std::vector<Crypto::Hash>&& knownPoolTxIds, Crypto::Hash knownBlockId, bool& isBcActual,
           std::vector<std::unique_ptr<ITransactionReader>>& newTxs, std::vector<Crypto::Hash>& deletedTxIds);
+  virtual void getTransaction(const Crypto::Hash &transactionHash, CryptoNote::Transaction &transaction, const Callback &callback) override;
+  std::error_code doGetTransaction(const Crypto::Hash &transactionHash, CryptoNote::Transaction &transaction);
 
   void scheduleRequest(std::function<std::error_code()>&& procedure, const Callback& callback);
-  template <typename Request, typename Response>
+template <typename Request, typename Response>
   std::error_code binaryCommand(const std::string& url, const Request& req, Response& res);
   template <typename Request, typename Response>
   std::error_code jsonCommand(const std::string& url, const Request& req, Response& res);
@@ -128,7 +126,7 @@ private:
 
 private:
   State m_state = STATE_NOT_INITIALIZED;
-  mutable std::mutex m_mutex;
+  std::mutex m_mutex;
   std::condition_variable m_cv_initialized;
   std::thread m_workerThread;
   System::Dispatcher* m_dispatcher = nullptr;
@@ -136,6 +134,8 @@ private:
   Tools::ObserverManager<CryptoNote::INodeObserver> m_observerManager;
   Tools::ObserverManager<CryptoNote::INodeRpcProxyObserver> m_rpcProxyObserverManager;
 
+  const std::string m_nodeHost;
+  const unsigned short m_nodePort;
   unsigned int m_rpcTimeout;
   HttpClient* m_httpClient = nullptr;
   System::Event* m_httpEvent = nullptr;
@@ -145,10 +145,12 @@ private:
   // Internal state
   bool m_stop = false;
   std::atomic<size_t> m_peerCount;
+  std::atomic<uint32_t> m_nodeHeight;
   std::atomic<uint32_t> m_networkHeight;
 
-  BlockHeaderInfo lastLocalBlockHeaderInfo;
   //protect it with mutex if decided to add worker threads
+  Crypto::Hash m_lastKnowHash;
+  std::atomic<uint64_t> m_lastLocalBlockTimestamp;
   std::unordered_set<Crypto::Hash> m_knownTxs;
 
   bool m_connected;

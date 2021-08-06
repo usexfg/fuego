@@ -59,7 +59,7 @@
 # include <windows.h>  // NOLINT
 #endif  // GTEST_OS_WINDOWS
 
-#include "gtest/gtest.h"
+#include "gtest/gtest.h"  // NOLINT
 #include "gtest/gtest-spi.h"
 
 namespace testing {
@@ -446,16 +446,6 @@ class OsStackTraceGetter : public OsStackTraceGetterInterface {
   virtual void UponLeavingGTest();
 
  private:
-#if GTEST_HAS_ABSL
-  Mutex mutex_;  // Protects all internal state.
-
-  // We save the stack frame below the frame that calls user code.
-  // We do this because the address of the frame immediately below
-  // the user code changes between the call to UponLeavingGTest()
-  // and any calls to the stack trace code from within the user code.
-  void* caller_frame_ = nullptr;
-#endif  // GTEST_HAS_ABSL
-
   GTEST_DISALLOW_COPY_AND_ASSIGN_(OsStackTraceGetter);
 };
 
@@ -1034,7 +1024,7 @@ class TestResultAccessor {
 #if GTEST_CAN_STREAM_RESULTS_
 
 // Streams test results to the given port on the given host machine.
-class StreamingListener : public EmptyTestEventListener {
+class GTEST_API_ StreamingListener : public EmptyTestEventListener {
  public:
   // Abstract base class for writing strings to a socket.
   class AbstractSocketWriter {

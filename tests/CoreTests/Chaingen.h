@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
@@ -216,7 +204,7 @@ template<class t_test_class>
 bool do_check_tx_verification_context(const CryptoNote::tx_verification_context& tvc, bool tx_added, size_t /*event_index*/, const CryptoNote::Transaction& /*tx*/, t_test_class&, long)
 {
   // Default block verification context check
-  if (tvc.m_verifivation_failed)
+  if (tvc.m_verification_failed)
     throw std::runtime_error("Transaction verification failed");
   return true;
 }
@@ -239,7 +227,7 @@ template<class t_test_class>
 bool do_check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t /*event_index*/, const CryptoNote::Block& /*blk*/, t_test_class&, long)
 {
   // Default block verification context check
-  if (bvc.m_verifivation_failed)
+  if (bvc.m_verification_failed)
     throw std::runtime_error("Block verification failed");
   return true;
 }
@@ -415,7 +403,7 @@ inline bool do_replay_events(std::vector<test_event_entry>& events, t_test_class
   coreConfig.init(vm);
   CryptoNote::MinerConfig emptyMinerConfig;
   CryptoNote::cryptonote_protocol_stub pr; //TODO: stub only for this kind of test, make real validation of relayed objects
-  CryptoNote::core c(validator.currency(), &pr, logger, false);
+  CryptoNote::core c(validator.currency(), &pr, logger);
   if (!c.init(coreConfig, emptyMinerConfig, false))
   {
     std::cout << concolor::magenta << "Failed to init core" << concolor::normal << std::endl;
@@ -521,10 +509,10 @@ inline bool do_replay_file(const std::string& filename)
     std::list<CryptoNote::Transaction> SET_NAME; \
     MAKE_TX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD);
 
-#define MAKE_MINER_TX_AND_KEY_MANUALLY(TX, BLK, KEY)                                                                                    \
-  Transaction TX;                                                                                                                       \
-  if (!constructMinerTxManually(this->m_currency, BLK.majorVersion, get_block_height(BLK) + 1, generator.getAlreadyGeneratedCoins(BLK), \
-    miner_account.getAccountKeys().address, TX, 0, KEY))                                                                                \
+#define MAKE_MINER_TX_AND_KEY_MANUALLY(TX, BLK, KEY)                                                                  \
+  Transaction TX;                                                                                                     \
+  if (!constructMinerTxManually(this->m_currency, get_block_height(BLK) + 1, generator.getAlreadyGeneratedCoins(BLK), \
+    miner_account.getAccountKeys().address, TX, 0, KEY))                                                          \
     return false;
 
 #define MAKE_MINER_TX_MANUALLY(TX, BLK) MAKE_MINER_TX_AND_KEY_MANUALLY(TX, BLK, 0)

@@ -29,7 +29,7 @@
 //
 // Author: wan@google.com (Zhanyong Wan)
 
-// Google Test - The Google C++ Testing and Mocking Framework
+// Google Test - The Google C++ Testing Framework
 //
 // This file implements a universal value printer that can print a
 // value of any type T:
@@ -124,7 +124,7 @@ namespace internal {
 // Depending on the value of a char (or wchar_t), we print it in one
 // of three formats:
 //   - as is if it's a printable ASCII (e.g. 'a', '2', ' '),
-//   - as a hexadecimal escape sequence (e.g. '\x7F'), or
+//   - as a hexidecimal escape sequence (e.g. '\x7F'), or
 //   - as a special escape sequence (e.g. '\r', '\n').
 enum CharFormat {
   kAsIs,
@@ -231,7 +231,7 @@ void PrintCharAndCodeTo(Char c, ostream* os) {
     return;
   *os << " (" << static_cast<int>(c);
 
-  // For more convenience, we print c's code again in hexadecimal,
+  // For more convenience, we print c's code again in hexidecimal,
   // unless c was already printed in the form '\x##' or the code is in
   // [1, 9].
   if (format == kHexEscape || (1 <= c && c <= 9)) {
@@ -357,10 +357,8 @@ void PrintTo(const wchar_t* s, ostream* os) {
 namespace {
 
 bool ContainsUnprintableControlCodes(const char* str, size_t length) {
-  const unsigned char *s = reinterpret_cast<const unsigned char *>(str);
-
   for (size_t i = 0; i < length; i++) {
-    unsigned char ch = *s++;
+    char ch = *str++;
     if (std::iscntrl(ch)) {
         switch (ch) {
         case '\t':

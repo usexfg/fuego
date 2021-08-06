@@ -1,19 +1,8 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "BaseTests.h"
 
@@ -24,24 +13,24 @@
 using namespace Tests;
 using namespace CryptoNote;
 
-class WalletLegacyTests : public BaseTest {
-
+class WalletLegacyTests : public BaseTest
+{
 };
 
-
-TEST_F(WalletLegacyTests, checkNetworkShutdown) {
-  auto networkCfg = TestNetworkBuilder(3, Topology::Star).
-    setBlockchain("testnet_300").build();
+TEST_F(WalletLegacyTests, checkNetworkShutdown)
+{
+  auto networkCfg = TestNetworkBuilder(3, Topology::Star).setBlockchain("testnet_300").build();
 
   networkCfg[0].nodeType = NodeType::InProcess;
   network.addNodes(networkCfg);
   network.waitNodesReady();
 
-  auto& daemon = network.getNode(0);
+  auto &daemon = network.getNode(0);
 
   {
+    Logging::ConsoleLogger m_logger;
     auto node = daemon.makeINode();
-    WalletLegacy wallet(currency, *node);
+    WalletLegacy wallet(currency, *node, m_logger);
     wallet.initAndGenerate("pass");
 
     WalletLegacyObserver observer;
@@ -60,6 +49,6 @@ TEST_F(WalletLegacyTests, checkNetworkShutdown) {
     System::Timer(dispatcher).sleep(std::chrono::seconds(10));
 
     // check that sync progress was not updated
-    ASSERT_EQ(syncProgress, observer.getSyncProgress()); 
+    ASSERT_EQ(syncProgress, observer.getSyncProgress());
   }
 }

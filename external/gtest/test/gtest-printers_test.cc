@@ -29,7 +29,7 @@
 //
 // Author: wan@google.com (Zhanyong Wan)
 
-// Google Test - The Google C++ Testing and Mocking Framework
+// Google Test - The Google C++ Testing Framework
 //
 // This file tests the universal value printer.
 
@@ -50,13 +50,18 @@
 
 #include "gtest/gtest.h"
 
+// hash_map and hash_set are available under Visual C++, or on Linux.
 #if GTEST_HAS_UNORDERED_MAP_
 # include <unordered_map>  // NOLINT
-#endif  // GTEST_HAS_UNORDERED_MAP_
+#elif GTEST_HAS_HASH_MAP_
+# include <hash_map>            // NOLINT
+#endif  // GTEST_HAS_HASH_MAP_
 
 #if GTEST_HAS_UNORDERED_SET_
 # include <unordered_set>  // NOLINT
-#endif  // GTEST_HAS_UNORDERED_SET_
+#elif GTEST_HAS_HASH_SET_
+# include <hash_set>            // NOLINT
+#endif  // GTEST_HAS_HASH_SET_
 
 #if GTEST_HAS_STD_FORWARD_LIST_
 # include <forward_list> // NOLINT
@@ -195,6 +200,7 @@ class PathLike {
   struct iterator {
     typedef PathLike value_type;
   };
+  typedef iterator const_iterator;
 
   PathLike() {}
 
@@ -232,6 +238,50 @@ using ::testing::internal::UniversalPrinter;
 using ::testing::internal::UniversalTersePrint;
 #if GTEST_HAS_TR1_TUPLE || GTEST_HAS_STD_TUPLE_
 using ::testing::internal::UniversalTersePrintTupleFieldsToStrings;
+#endif
+using ::testing::internal::string;
+
+// The hash_* classes are not part of the C++ standard.  STLport
+// defines them in namespace std.  MSVC defines them in ::stdext.  GCC
+// defines them in ::.
+#if GTEST_HAS_UNORDERED_MAP_
+
+#define GTEST_HAS_HASH_MAP_ 1
+template <class Key, class T>
+using hash_map = ::std::unordered_map<Key, T>;
+template <class Key, class T>
+using hash_multimap = ::std::unordered_multimap<Key, T>;
+
+#elif GTEST_HAS_HASH_MAP_
+
+#ifdef _STLP_HASH_MAP  // We got <hash_map> from STLport.
+using ::std::hash_map;
+using ::std::hash_multimap;
+#elif _MSC_VER
+using ::stdext::hash_map;
+using ::stdext::hash_multimap;
+#endif
+
+#endif
+
+#if GTEST_HAS_UNORDERED_SET_
+
+#define GTEST_HAS_HASH_SET_ 1
+template <class Key>
+using hash_set = ::std::unordered_set<Key>;
+template <class Key>
+using hash_multiset = ::std::unordered_multiset<Key>;
+
+#elif GTEST_HAS_HASH_SET_
+
+#ifdef _STLP_HASH_MAP  // We got <hash_map> from STLport.
+using ::std::hash_map;
+using ::std::hash_multimap;
+#elif _MSC_VER
+using ::stdext::hash_map;
+using ::stdext::hash_multimap;
+#endif
+
 #endif
 
 // Prints a value to a string using the universal value printer.  This
@@ -818,16 +868,16 @@ TEST(PrintStlContainerTest, NonEmptyDeque) {
   EXPECT_EQ("{ 1, 3 }", Print(non_empty));
 }
 
-#if GTEST_HAS_UNORDERED_MAP_
+#if GTEST_HAS_HASH_MAP_
 
 TEST(PrintStlContainerTest, OneElementHashMap) {
-  ::std::unordered_map<int, char> map1;
+  hash_map<int, char> map1;
   map1[1] = 'a';
   EXPECT_EQ("{ (1, 'a' (97, 0x61)) }", Print(map1));
 }
 
 TEST(PrintStlContainerTest, HashMultiMap) {
-  ::std::unordered_multimap<int, bool> map1;
+  hash_multimap<int, bool> map1;
   map1.insert(make_pair(5, true));
   map1.insert(make_pair(5, false));
 
@@ -838,12 +888,12 @@ TEST(PrintStlContainerTest, HashMultiMap) {
                   << " where Print(map1) returns \"" << result << "\".";
 }
 
-#endif  // GTEST_HAS_UNORDERED_MAP_
+#endif  // GTEST_HAS_HASH_MAP_
 
-#if GTEST_HAS_UNORDERED_SET_
+#if GTEST_HAS_HASH_SET_
 
 TEST(PrintStlContainerTest, HashSet) {
-  ::std::unordered_set<int> set1;
+  hash_set<int> set1;
   set1.insert(1);
   EXPECT_EQ("{ 1 }", Print(set1));
 }
@@ -851,7 +901,7 @@ TEST(PrintStlContainerTest, HashSet) {
 TEST(PrintStlContainerTest, HashMultiSet) {
   const int kSize = 5;
   int a[kSize] = { 1, 1, 2, 5, 1 };
-  ::std::unordered_multiset<int> set1(a, a + kSize);
+  hash_multiset<int> set1(a, a + kSize);
 
   // Elements of hash_multiset can be printed in any order.
   const std::string result = Print(set1);
@@ -877,7 +927,7 @@ TEST(PrintStlContainerTest, HashMultiSet) {
   EXPECT_TRUE(std::equal(a, a + kSize, numbers.begin()));
 }
 
-#endif  //  GTEST_HAS_UNORDERED_SET_
+#endif  // GTEST_HAS_HASH_SET_
 
 TEST(PrintStlContainerTest, List) {
   const std::string a[] = {"hello", "world"};
@@ -1115,12 +1165,6 @@ TEST(PrintStdTupleTest, NestedTuple) {
 
 #endif  // GTEST_LANG_CXX11
 
-#if GTEST_LANG_CXX11
-TEST(PrintNullptrT, Basic) {
-  EXPECT_EQ("(nullptr)", Print(nullptr));
-}
-#endif  // GTEST_LANG_CXX11
-
 // Tests printing user-defined unprintable types.
 
 // Unprintable types in the global namespace.
@@ -1283,7 +1327,7 @@ TEST(FormatForComparisonFailureMessageTest, FormatsNonCharArrayAsPointer) {
 }
 
 // Tests formatting a char pointer when it's compared with another pointer.
-// In this case we want to print it as a raw pointer, as the comparison is by
+// In this case we want to print it as a raw pointer, as the comparision is by
 // pointer.
 
 // char pointer vs pointer

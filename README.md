@@ -3,7 +3,7 @@
 
 Based on the CryptoNote protocol & philosophy.
 
-* <p align="left"><a href="https://fandomgold.org">Website</a><p align="left">
+* <p align="left"><a href="https://fandom.gold">Website</a><p align="left">
 * <p align="left"><a href="http://explorer.fandom.gold">Explorer</a><p align="left">
 * <p align="left"><a href="http://xfg.dedaloproduction.ch/#">Explorer</a><p align="left">
  

@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "Chaingen.h"
 
@@ -31,6 +19,7 @@
 #include "TransactionValidation.h"
 #include "Upgrade.h"
 #include "RandomOuts.h"
+#include "Deposit.h"
 
 namespace po = boost::program_options;
 
@@ -88,6 +77,40 @@ int main(int argc, char* argv[])
   GENERATE_AND_PLAY_EX(TestCase(CryptoNote::BLOCK_MAJOR_VERSION_1)) \
   GENERATE_AND_PLAY_EX(TestCase(CryptoNote::BLOCK_MAJOR_VERSION_2))
 
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositUnrolesPartOfAmountAfterSwitchToAlternativeChain);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositExtendsTotalDeposit);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithMultipleDepositOutsExtendsTotalDeposit);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositUpdatesInterestAfterDepositUnlock);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositUnrolesInterestAfterSwitchToAlternativeChain);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositUnrolesAmountAfterSwitchToAlternativeChain);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositIsClearedAfterInputSpend);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositUpdatesInterestAfterDepositUnlockMultiple);
+
+    GENERATE_AND_PLAY(DepositTests::BlocksOfFirstTypeCantHaveTransactionsOfTypeTwo);
+    GENERATE_AND_PLAY(DepositTests::BlocksOfSecondTypeCanHaveTransactionsOfTypeOne);
+    GENERATE_AND_PLAY(DepositTests::BlocksOfSecondTypeCanHaveTransactionsOfTypeTwo);
+    GENERATE_AND_PLAY(DepositTests::TransactionOfTypeOneWithDepositInputIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionOfTypeOneWithDepositOutputIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithAmountLowerThenMinIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithMinAmountIsAccepted);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithTermLowerThenMinIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithMinTermIsAccepted);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithTermGreaterThenMaxIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithMaxTermIsAccepted);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithoutSignaturesIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithZeroRequiredSignaturesIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithNumberOfRequiredSignaturesGreaterThanKeysIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithInvalidKeyIsRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithOutputToSpentInputWillBeRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithMultipleInputsThatSpendOneOutputWillBeRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithInputWithAmountThatIsDoesntHaveOutputWithSameAmountWillBeRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithInputWithIndexLargerThanNumberOfOutputsWithThisSumWillBeRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithInputThatPointsToTheOutputButHasAnotherTermWillBeRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionThatTriesToSpendOutputWhosTermHasntFinishedWillBeRejected);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithAmountThatHasAlreadyFinishedWillBeAccepted);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositExtendsEmission);
+    GENERATE_AND_PLAY(DepositTests::TransactionWithDepositRestorsEmissionOnAlternativeChain);
+
     GENERATE_AND_PLAY(gen_simple_chain_001);
     GENERATE_AND_PLAY(gen_simple_chain_split_1);
     GENERATE_AND_PLAY(one_block);
@@ -125,13 +148,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY_EX_2VER(gen_block_has_invalid_tx);
     GENERATE_AND_PLAY_EX_2VER(gen_block_is_too_big);
     GENERATE_AND_PLAY_EX_2VER(TestBlockCumulativeSizeExceedsLimit);
-    //GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_binary_format); // Takes up to 30 minutes, if CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW == 10
-
-    GENERATE_AND_PLAY(TestMaxSizeOfParentBlock);
-    GENERATE_AND_PLAY(TestBigParentBlock);
-    GENERATE_AND_PLAY(TestBlock2ExtraEmpty);
-    GENERATE_AND_PLAY(TestBlock2ExtraWithoutMMTag);
-    GENERATE_AND_PLAY(TestBlock2ExtraWithGarbage);
+    GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_binary_format); // Takes up to 30 minutes, if CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW == 10
 
     // Transaction verification tests
     GENERATE_AND_PLAY(gen_tx_big_version);

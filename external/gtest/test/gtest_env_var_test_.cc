@@ -35,7 +35,6 @@
 #include "gtest/gtest.h"
 
 #include <iostream>
-
 #include "src/gtest-internal-inl.h"
 
 using ::std::cout;

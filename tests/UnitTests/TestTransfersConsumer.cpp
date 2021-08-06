@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 
@@ -96,7 +84,7 @@ TransfersConsumerTest::TransfersConsumerTest() :
   m_generator(m_currency),
   m_node(m_generator, true),
   m_accountKeys(generateAccountKeys()),
-  m_consumer(m_currency, m_node, m_logger, m_accountKeys.viewSecretKey)
+  m_consumer(m_currency, m_node, m_accountKeys.viewSecretKey)
 {
 }
 
@@ -423,7 +411,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesError) 
 
   INodeGlobalIndicesStub node;
 
-  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
 
   auto subscription = getAccountSubscriptionWithSyncStart(m_accountKeys, 1234, 10);
 
@@ -542,7 +530,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsPrope
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -580,7 +568,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsNotCa
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -650,7 +638,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformation) {
   const uint64_t index = 2;
 
   INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
 
   node.globalIndex = index;
 
@@ -683,7 +671,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformationMulti
   const uint64_t index = 2;
 
   INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
 
   node.globalIndex = index;
 
@@ -752,6 +740,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionInformation) {
   ASSERT_EQ(10000, info.totalAmountIn);
   ASSERT_EQ(1000, info.totalAmountOut);
   ASSERT_EQ(paymentId, info.paymentId);
+  ASSERT_TRUE(info.messages.empty());
 }
 
 TEST_F(TransfersConsumerTest, onNewBlocks_manyBlocks) {
@@ -960,6 +949,33 @@ TEST_F(TransfersConsumerTest, getKnownPoolTxIds_returnsUnconfirmed) {
     auto txhash = txs[i]->getTransactionHash();
     ASSERT_EQ(1, ids.count(txhash));
   }
+}
+
+TEST_F(TransfersConsumerTest, onNewBlocks_getsDepositOutputCorrectly) {
+  auto& container = addSubscription().getContainer();
+
+  const uint64_t AMOUNT = 84756;
+  const uint32_t REQUIRED_SIGNATURES = 2;
+  const uint32_t TERM = 444021;
+
+  std::shared_ptr<ITransaction> tx = createTransaction();
+  tx->addOutput(AMOUNT, std::vector<AccountPublicAddress> {m_accountKeys.address}, REQUIRED_SIGNATURES, TERM);
+
+  CompleteBlock block;
+  block.block = CryptoNote::Block();
+  block.block->timestamp = 1235;
+  block.transactions.push_back(tx);
+
+  m_consumer.onNewBlocks(&block, 0, 1);
+
+  std::vector<TransactionOutputInformation> transfers;
+  container.getOutputs(transfers, ITransfersContainer::IncludeAll);
+
+  ASSERT_EQ(1, transfers.size());
+  EXPECT_EQ(TransactionTypes::OutputType::Multisignature, transfers[0].type);
+  EXPECT_EQ(AMOUNT, transfers[0].amount);
+  EXPECT_EQ(REQUIRED_SIGNATURES, transfers[0].requiredSignatures);
+  EXPECT_EQ(TERM, transfers[0].term);
 }
 
 

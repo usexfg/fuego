@@ -1,19 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "PeerListManager.h"
 
@@ -48,6 +49,12 @@ namespace CryptoNote {
     s(pe.last_seen, "last_seen");
   }
 
+  void serialize(AnchorPeerlistEntry &pe, ISerializer &s)
+  {
+    s(pe.adr, "adr");
+    s(pe.id, "id");
+    s(pe.first_seen, "first_seen");
+  }
 }
 
 PeerlistManager::Peerlist::Peerlist(peers_indexed& peers, size_t maxSize) :
@@ -55,7 +62,7 @@ PeerlistManager::Peerlist::Peerlist(peers_indexed& peers, size_t maxSize) :
 }
 
 void PeerlistManager::serialize(ISerializer& s) {
-  const uint8_t currentVersion = 1;
+  const uint8_t currentVersion = 2;
   uint8_t version = currentVersion;
 
   s(version, "version");
@@ -66,6 +73,7 @@ void PeerlistManager::serialize(ISerializer& s) {
 
   s(m_peers_white, "whitelist");
   s(m_peers_gray, "graylist");
+  s(m_peers_anchor, "anchorlist");
 }
 
 size_t PeerlistManager::Peerlist::count() const {
@@ -194,19 +202,44 @@ bool PeerlistManager::set_peer_just_seen(PeerIdType peer, uint32_t ip, uint32_t 
 
 bool PeerlistManager::set_peer_just_seen(PeerIdType peer, const NetworkAddress& addr)
 {
-  try {
+  try 
+  {
     //find in white list
     PeerlistEntry ple;
     ple.adr = addr;
     ple.id = peer;
     ple.last_seen = time(NULL);
     return append_with_peer_white(ple);
-  } catch (std::exception&) {
+  } 
+  catch (std::exception&) 
+  {
+    return false;
   }
-
   return false;
 }
 //--------------------------------------------------------------------------------------------------
+
+bool PeerlistManager::append_with_peer_anchor(const AnchorPeerlistEntry &ple)
+{
+  try
+  {
+    if (!is_ip_allowed(ple.adr.ip))
+      return true;
+
+    auto by_addr_it_anchor = m_peers_anchor.get<by_addr>().find(ple.adr);
+    if (by_addr_it_anchor == m_peers_anchor.get<by_addr>().end())
+    {
+      //put new record into white list
+      m_peers_anchor.insert(ple);
+    }
+
+    return true;
+  }
+  catch (std::exception &)
+  {
+  }
+  return false;
+}
 
 bool PeerlistManager::append_with_peer_white(const PeerlistEntry& ple)
 {
@@ -231,6 +264,7 @@ bool PeerlistManager::append_with_peer_white(const PeerlistEntry& ple)
     }
     return true;
   } catch (std::exception&) {
+      return false;
   }
   return false;
 }
@@ -261,10 +295,49 @@ bool PeerlistManager::append_with_peer_gray(const PeerlistEntry& ple)
     }
     return true;
   } catch (std::exception&) {
+      return false;
   }
   return false;
 }
 //--------------------------------------------------------------------------------------------------
+bool PeerlistManager::get_and_empty_anchor_peerlist(std::vector<AnchorPeerlistEntry> &apl)
+{
+  try
+  {
+    auto begin = m_peers_anchor.get<by_time>().begin();
+    auto end = m_peers_anchor.get<by_time>().end();
+
+    std::for_each(begin, end, [&apl](const AnchorPeerlistEntry &a) {
+      apl.push_back(a);
+    });
+
+    m_peers_anchor.get<by_time>().clear();
+    return true;
+  }
+  catch (std::exception &)
+  {
+  }
+  return false;
+}
+//--------------------------------------------------------------------------------------------------
+
+bool PeerlistManager::remove_from_peer_anchor(const NetworkAddress &addr)
+{
+  try
+  {
+    anchor_peers_indexed::index_iterator<by_addr>::type iterator = m_peers_anchor.get<by_addr>().find(addr);
+
+    if (iterator != m_peers_anchor.get<by_addr>().end())
+    {
+      m_peers_anchor.erase(iterator);
+    }
+    return true;
+  }
+  catch (std::exception &)
+  {
+  }
+  return false;
+}
 
 PeerlistManager::Peerlist& PeerlistManager::getWhite() { 
   return m_whitePeerlist; 

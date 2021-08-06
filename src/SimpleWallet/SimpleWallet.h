@@ -1,38 +1,20 @@
-// {DRGL} Kills White Walkers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
+// This file is part of Fango.
 //
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2014-2016, XDN developers
-// Copyright (c) 2014-2017, The Monero Project
-// Copyright (c) 2016-2018, The Karbo developers
-//
-// All rights reserved.
-// 
-// Redistribution and use in source and binary forms, with or without modification, are
-// permitted provided that the following conditions are met:
-// 
-// 1. Redistributions of source code must retain the above copyright notice, this list of
-//    conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list
-//    of conditions and the following disclaimer in the documentation and/or other
-//    materials provided with the distribution.
-// 
-// 3. Neither the name of the copyright holder nor the names of its contributors may be
-//    used to endorse or promote products derived from this software without specific
-//    prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-// THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-// THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -43,7 +25,6 @@
 
 #include <boost/program_options/variables_map.hpp>
 
-#include "android.h"
 #include "IWalletLegacy.h"
 #include "PasswordContainer.h"
 
@@ -52,7 +33,6 @@
 #include "CryptoNoteCore/Currency.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
 #include "WalletLegacy/WalletHelper.h"
-#include "WalletLegacy/WalletLegacy.h"
 
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
@@ -61,14 +41,10 @@
 #include <System/Ipv4Address.h>
 
 std::string remote_fee_address;
-namespace{
-	Tools::PasswordContainer pwd_container;
-}
-
 namespace CryptoNote
 {
   /************************************************************************/
-  /*                                 DRGL                                 */
+  /*                                                                      */
   /************************************************************************/
   class simple_wallet : public CryptoNote::INodeObserver, public CryptoNote::IWalletLegacyObserver, public CryptoNote::INodeRpcProxyObserver {
   public:
@@ -88,7 +64,7 @@ namespace CryptoNote
   private:
 
     Logging::LoggerMessage success_msg_writer(bool color = false) {
-      return logger(Logging::INFO, color ? Logging::BRIGHT_BLUE : Logging::DEFAULT);
+      return logger(Logging::INFO, color ? Logging::GREEN : Logging::DEFAULT);
     }
 
     Logging::LoggerMessage fail_msg_writer() const {
@@ -103,42 +79,42 @@ namespace CryptoNote
 
     bool new_wallet(const std::string &wallet_file, const std::string& password);
     bool new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
-    bool gen_wallet(const std::string &wallet_file, const std::string& password, const Crypto::SecretKey& recovery_key = Crypto::SecretKey(), bool recover = false, bool two_random = false);
-    bool new_wallet(AccountKeys &private_key, const std::string &wallet_file, const std::string& password);
-    bool new_tracking_wallet(AccountKeys &tracking_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
 
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
-    bool seed(const std::vector<std::string> &args = std::vector<std::string>());
     bool exit(const std::vector<std::string> &args);
     bool start_mining(const std::vector<std::string> &args);
+    bool show_dust(const std::vector<std::string> &args);
     bool stop_mining(const std::vector<std::string> &args);
     bool show_balance(const std::vector<std::string> &args = std::vector<std::string>());
+    bool sign_message(const std::vector<std::string> &args);
+    bool verify_signature(const std::vector<std::string> &args);
     bool export_keys(const std::vector<std::string> &args = std::vector<std::string>());
-    bool export_tracking_key(const std::vector<std::string> &args = std::vector<std::string>());
+    bool create_integrated(const std::vector<std::string> &args = std::vector<std::string>());
     bool show_incoming_transfers(const std::vector<std::string> &args);
-    bool show_outgoing_transfers(const std::vector<std::string> &args);
     bool show_payments(const std::vector<std::string> &args);
     bool show_blockchain_height(const std::vector<std::string> &args);
+    bool show_num_unlocked_outputs(const std::vector<std::string> &args);
+    bool optimize_outputs(const std::vector<std::string> &args);
+	  bool get_reserve_proof(const std::vector<std::string> &args);    
+    bool get_tx_proof(const std::vector<std::string> &args);    
+    bool optimize_all_outputs(const std::vector<std::string> &args);
     bool listTransfers(const std::vector<std::string> &args);
     bool transfer(const std::vector<std::string> &args);
     bool print_address(const std::vector<std::string> &args = std::vector<std::string>());
     bool save(const std::vector<std::string> &args);
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
-    bool payment_id(const std::vector<std::string> &args);
-    bool change_password(const std::vector<std::string> &args);
-    bool get_tx_key(const std::vector<std::string> &args);
-	  
-#ifndef __ANDROID__
-	std::string resolveAlias(const std::string& aliasUrl);
-	bool fetch_dns_txt(const std::string domain, std::string &record);
-#endif
 
     bool ask_wallet_create_if_needed();
-
+    std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
+
+    std::string generate_mnemonic(Crypto::SecretKey &);
+    void log_incorrect_words(std::vector<std::string>);
+    bool is_valid_mnemonic(std::string &, Crypto::SecretKey &);
+
 
     //---------------- IWalletLegacyObserver -------------------------
     virtual void initCompleted(std::error_code result) override;
@@ -198,23 +174,19 @@ namespace CryptoNote
     std::string m_wallet_file_arg;
     std::string m_generate_new;
     std::string m_import_new;
-    std::string m_restore_new;
-    std::string m_track_new;
     std::string m_import_path;
+
     std::string m_daemon_address;
     std::string m_daemon_host;
-    std::string m_mnemonic_seed;
+    uint16_t m_daemon_port;
+
     std::string m_wallet_file;
-	uint16_t m_daemon_port;
-	Crypto::SecretKey m_recovery_key;  // recovery key (used as random for wallet gen)
-	bool m_restore_deterministic_wallet;  // recover flag
-	bool m_non_deterministic;  // old 2-random generation
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 
     Common::ConsoleHandler m_consoleHandler;
     const CryptoNote::Currency& m_currency;
-    Logging::LoggerManager& m_logManager;
+    Logging::LoggerManager& logManager;
     System::Dispatcher& m_dispatcher;
     Logging::LoggerRef logger;
 
@@ -223,7 +195,6 @@ namespace CryptoNote
     refresh_progress_reporter_t m_refresh_progress_reporter;
 
     bool m_walletSynchronized;
-    bool m_trackingWallet;
     std::mutex m_walletSynchronizedMutex;
     std::condition_variable m_walletSynchronizedCV;
   };

@@ -34,48 +34,35 @@
 
 licenses(["notice"])
 
-config_setting(
-    name = "windows",
-    values = {"cpu": "x64_windows"},
-)
-
-config_setting(
-    name = "windows_msvc",
-    values = {"cpu": "x64_windows_msvc"},
-)
-
-config_setting(
-    name = "has_absl",
-    values = {"define": "absl=1"},
-)
+""" gtest own tests """
 
 #on windows exclude gtest-tuple.h and gtest-tuple_test.cc
 cc_test(
     name = "gtest_all_test",
     size = "small",
-    srcs = glob(
-        include = [
-            "gtest-*.cc",
-            "*.h",
-            "googletest/include/gtest/**/*.h",
-        ],
-        exclude = [
-            "gtest-unittest-api_test.cc",
-            "gtest-tuple_test.cc",
-            "googletest/src/gtest-all.cc",
-            "gtest_all_test.cc",
-            "gtest-death-test_ex_test.cc",
-            "gtest-listener_test.cc",
-            "gtest-unittest-api_test.cc",
-            "gtest-param-test_test.cc",
-        ],
-    ) + select({
+    srcs =  glob(
+                    include = [
+                        "gtest-*.cc",
+                        "*.h",
+                        "googletest/include/gtest/**/*.h",
+                    ],
+                    exclude = [
+                        "gtest-unittest-api_test.cc",
+                        "gtest-tuple_test.cc",
+                        "googletest/src/gtest-all.cc",
+                        "gtest_all_test.cc",
+                        "gtest-death-test_ex_test.cc",
+                        "gtest-listener_test.cc",
+                        "gtest-unittest-api_test.cc",
+                        "gtest-param-test_test.cc",
+                    ],
+                ) + select({
         "//:windows": [],
         "//:windows_msvc": [],
         "//conditions:default": [
             "gtest-tuple_test.cc",
         ],
-    }),
+        }),
     copts = select({
         "//:windows": ["-DGTEST_USE_OWN_TR1_TUPLE=0"],
         "//:windows_msvc": ["-DGTEST_USE_OWN_TR1_TUPLE=0"],
@@ -132,22 +119,13 @@ cc_test(
         "//:gtest",
     ],
 )
-
-cc_test(
-    name = "gtest_unittest",
-    size = "small",
-    srcs = ["gtest_unittest.cc"],
-    args = ["--heap_check=strict"],
-    shard_count = 2,
-    deps = ["//:gtest_main"],
-)
-
 #  Py tests
 
 py_library(
     name = "gtest_test_utils",
     testonly = 1,
     srcs = ["gtest_test_utils.py"],
+
 )
 
 cc_binary(
@@ -156,7 +134,6 @@ cc_binary(
     srcs = ["gtest_help_test_.cc"],
     deps = ["//:gtest_main"],
 )
-
 py_test(
     name = "gtest_help_test",
     size = "small",
@@ -176,10 +153,6 @@ py_test(
     name = "gtest_output_test",
     size = "small",
     srcs = ["gtest_output_test.py"],
-    args = select({
-        ":has_absl": [],
-        "//conditions:default": ["--no_stacktrace_support"],
-    }),
     data = [
         "gtest_output_test_golden_lin.txt",
         ":gtest_output_test_",
@@ -193,7 +166,6 @@ cc_binary(
     srcs = ["gtest_color_test_.cc"],
     deps = ["//:gtest"],
 )
-
 py_test(
     name = "gtest_color_test",
     size = "small",
@@ -245,13 +217,6 @@ py_test(
     srcs = ["gtest_break_on_failure_unittest.py"],
     data = [":gtest_break_on_failure_unittest_"],
     deps = [":gtest_test_utils"],
-)
-
-cc_test(
-    name = "gtest_assert_by_exception_test",
-    size = "small",
-    srcs = ["gtest_assert_by_exception_test.cc"],
-    deps = ["//:gtest"],
 )
 
 cc_binary(
@@ -345,10 +310,6 @@ py_test(
         "gtest_xml_output_unittest.py",
         "gtest_xml_test_utils.py",
     ],
-    args = select({
-        ":has_absl": [],
-        "//conditions:default": ["--no_stacktrace_support"],
-    }),
     data = [
         # We invoke gtest_no_test_unittest to verify the XML output
         # when the test program contains no test definition.
@@ -398,21 +359,5 @@ py_test(
     size = "medium",
     srcs = ["gtest_uninitialized_test.py"],
     data = [":gtest_uninitialized_test_"],
-    deps = [":gtest_test_utils"],
-)
-
-cc_binary(
-    name = "gtest_testbridge_test_",
-    testonly = 1,
-    srcs = ["gtest_testbridge_test_.cc"],
-    deps = ["//:gtest_main"],
-)
-
-# Tests that filtering via testbridge works
-py_test(
-    name = "gtest_testbridge_test",
-    size = "small",
-    srcs = ["gtest_testbridge_test.py"],
-    data = [":gtest_testbridge_test_"],
     deps = [":gtest_test_utils"],
 )

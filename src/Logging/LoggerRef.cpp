@@ -1,49 +1,34 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2017-2018, Karbo developers
-// 
-// All rights reserved.
-// 
-// Redistribution and use in source and binary forms, with or without modification, are
-// permitted provided that the following conditions are met:
-// 
-// 1. Redistributions of source code must retain the above copyright notice, this list of
-//    conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list
-//    of conditions and the following disclaimer in the documentation and/or other
-//    materials provided with the distribution.
-// 
-// 3. Neither the name of the copyright holder nor the names of its contributors may be
-//    used to endorse or promote products derived from this software without specific
-//    prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-// THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-// THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
+//
+// This file is part of Fango.
+//
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "LoggerRef.h"
 
 namespace Logging {
 
-LoggerRef::LoggerRef(ILogger& logger, const std::string& category) 
-	: m_logger(&logger)
-	, m_sCategory(category)
-{}
-
-LoggerMessage LoggerRef::operator()(Level level, const std::string& color) const
-{
-	return LoggerMessage(*m_logger, m_sCategory, level, color);
+LoggerRef::LoggerRef(ILogger& logger, const std::string& category) : logger(&logger), category(category) {
 }
 
-ILogger& LoggerRef::getLogger() const
-{
-	return *m_logger;
+LoggerMessage LoggerRef::operator()(Level level, const std::string& color) const {
+  return LoggerMessage(*logger, category, level, color);
 }
 
-} //Logging
+ILogger& LoggerRef::getLogger() const {
+  return *logger;
+}
+
+}

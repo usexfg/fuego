@@ -1,19 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "ConfigurationManager.h"
 
@@ -22,7 +23,6 @@
 
 #include "Common/CommandLine.h"
 #include "Common/Util.h"
-#include "version.h"
 
 namespace PaymentService {
 
@@ -46,8 +46,7 @@ bool ConfigurationManager::init(int argc, char** argv) {
   cmdGeneralOptions.add_options()
       ("help,h", "produce this help message and exit")
       ("local", po::bool_switch(), "start with local node (remote is default)")
-      ("testnet", po::bool_switch(), "testnet mode")
-      ("version", "Output version information");
+      ("testnet", po::bool_switch(), "testnet mode");
 
   command_line::add_arg(cmdGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
   command_line::add_arg(confGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
@@ -59,7 +58,7 @@ bool ConfigurationManager::init(int argc, char** argv) {
   CryptoNote::NetNodeConfig::initOptions(netNodeOptions);
   CryptoNote::CoreConfig::initOptions(netNodeOptions);
 
-  po::options_description remoteNodeOptions("Remote Node Options");
+  po::options_description remoteNodeOptions("Daemon Options");
   RpcNodeConfiguration::initOptions(remoteNodeOptions);
 
   po::options_description cmdOptionsDesc;
@@ -74,11 +73,6 @@ bool ConfigurationManager::init(int argc, char** argv) {
 
   if (cmdOptions.count("help")) {
     std::cout << cmdOptionsDesc << std::endl;
-    return false;
-  }
-
-  if (cmdOptions.count("version") > 0) {
-    std::cout << "walletd v" << PROJECT_VERSION_LONG;
     return false;
   }
 

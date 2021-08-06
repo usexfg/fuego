@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 
@@ -684,8 +672,8 @@ TEST_F(BlockchainExplorerTests, getRewardBlocksWindowNotInited) {
 }
 
 TEST_F(BlockchainExplorerTests, getFullRewardMaxBlockSize) {
-  ASSERT_EQ(blockchainExplorer.getFullRewardMaxBlockSize(1), parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1);
-  ASSERT_EQ(blockchainExplorer.getFullRewardMaxBlockSize(2), parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2);
+  ASSERT_EQ(blockchainExplorer.getFullRewardMaxBlockSize(1), parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
+  ASSERT_EQ(blockchainExplorer.getFullRewardMaxBlockSize(2), parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
 }
 
 TEST_F(BlockchainExplorerTests, getFullRewardMaxBlockSizeNotInited) {
@@ -1039,13 +1027,13 @@ TEST_F(BlockchainExplorerTests, getBlocksByTimestampGenesis) {
 
   uint32_t totalBlocksNumber;
 
-  ASSERT_TRUE(blockchainExplorer.getBlocks(0, 0, 1, blocks, totalBlocksNumber));
+  ASSERT_TRUE(blockchainExplorer.getBlocks(GENESIS_TIMESTAMP, GENESIS_TIMESTAMP, 1, blocks, totalBlocksNumber));
   ASSERT_EQ(blocks.size(), 1);
   EXPECT_EQ(totalBlocksNumber, 1);
 
   Hash expectedHash = genesisHash;
   EXPECT_EQ(blocks.front().hash, expectedHash);
-  EXPECT_EQ(blocks.front().timestamp, 0);
+  EXPECT_EQ(blocks.front().timestamp, GENESIS_TIMESTAMP);
   EXPECT_FALSE(blocks.front().isOrphaned);
 }
 

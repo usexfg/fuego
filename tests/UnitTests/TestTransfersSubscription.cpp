@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 #include <tuple>
@@ -46,7 +34,7 @@ public:
     currency(CurrencyBuilder(m_logger).currency()),
     account(generateAccountKeys()),
     syncStart(SynchronizationStart{ 0, 0 }),
-    sub(currency, m_logger, AccountSubscription{ account, syncStart, 10 }) {
+    sub(currency, AccountSubscription{ account, syncStart, 10 }) {
     sub.addObserver(&observer);
   }
 
@@ -58,7 +46,7 @@ public:
     auto tx = std::shared_ptr<ITransactionReader>(b1.build().release());
 
     std::vector<TransactionOutputInformationIn> outputs = { outInfo };
-    sub.addTransaction(TransactionBlockInfo{ height, 100000 }, *tx, outputs);
+    sub.addTransaction(TransactionBlockInfo{ height, 100000 }, *tx, outputs, {});
     return tx;
   }
 
@@ -87,7 +75,7 @@ TEST_F(TransfersSubscriptionTest, addTransaction) {
   // this transaction should not be added, so no notification
   auto tx = createTransaction();
   addTestInput(*tx, 20000);
-  sub.addTransaction(TransactionBlockInfo{ 2, 100000 }, *tx, {});
+  sub.addTransaction(TransactionBlockInfo{ 2, 100000 }, *tx, {}, {});
 
   ASSERT_EQ(2, sub.getContainer().transactionsCount());
   ASSERT_EQ(2, observer.updated.size());
@@ -133,7 +121,7 @@ TEST_F(TransfersSubscriptionTest, onError) {
 
 TEST_F(TransfersSubscriptionTest, advanceHeight) {
   ASSERT_TRUE(sub.advanceHeight(10));
-  ASSERT_FALSE(sub.advanceHeight(9)); // can't go backwards
+  ASSERT_ANY_THROW(sub.advanceHeight(9)); // can't go backwards
 }
 
 

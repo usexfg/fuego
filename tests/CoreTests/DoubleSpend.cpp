@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "DoubleSpend.h"
 #include "TestGenerator.h"
@@ -91,6 +79,7 @@ DoubleSpendBase::DoubleSpendBase() :
   send_amount(MK_COINS(17)),
   has_invalid_tx(false)
 {
+  m_currency = CurrencyBuilder(m_logger).upgradeHeightV2(0).currency();
   m_outputTxKey = generateKeyPair();
   m_bob_account.generate();
   m_alice_account.generate();
@@ -104,17 +93,17 @@ DoubleSpendBase::DoubleSpendBase() :
 bool DoubleSpendBase::check_tx_verification_context(const CryptoNote::tx_verification_context& tvc, bool tx_added, size_t event_idx, const CryptoNote::Transaction& /*tx*/)
 {
   if (m_invalid_tx_index == event_idx)
-    return tvc.m_verifivation_failed;
+    return tvc.m_verification_failed;
   else
-    return !tvc.m_verifivation_failed && tx_added;
+    return !tvc.m_verification_failed && tx_added;
 }
 
 bool DoubleSpendBase::check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t event_idx, const CryptoNote::Block& /*block*/)
 {
   if (m_invalid_block_index == event_idx)
-    return bvc.m_verifivation_failed;
+    return bvc.m_verification_failed;
   else
-    return !bvc.m_verifivation_failed;
+    return !bvc.m_verification_failed;
 }
 
 bool DoubleSpendBase::mark_last_valid_block(CryptoNote::core& c, size_t /*ev_index*/, const std::vector<test_event_entry>& /*events*/)
@@ -145,9 +134,10 @@ bool DoubleSpendBase::check_double_spend(CryptoNote::core& c, size_t /*ev_index*
 TestGenerator DoubleSpendBase::prepare(std::vector<test_event_entry>& events) const {
 
   TestGenerator generator(m_currency, events);
+  generator.generator.defaultMajorVersion = BLOCK_MAJOR_VERSION_2;
 
   // unlock
-  generator.generateBlocks();
+  generator.generateBlocks(m_currency.minedMoneyUnlockWindow(), BLOCK_MAJOR_VERSION_2);
 
   auto builder = generator.createTxBuilder(generator.minerAccount, m_bob_account, send_amount, m_currency.minimumFee());
 
@@ -156,17 +146,17 @@ TestGenerator DoubleSpendBase::prepare(std::vector<test_event_entry>& events) co
 
   TransactionBuilder::KeysVector kv;
   kv.push_back(m_bob_account.getAccountKeys());
-  
+
   builder.addMultisignatureOut(send_amount, kv, 1);
 
   // move money
   auto tx = builder.build();
-    
+
   generator.addEvent(tx);
   generator.makeNextBlock(tx);
 
   // unlock
-  generator.generateBlocks(); 
+  generator.generateBlocks(m_currency.minedMoneyUnlockWindow(), BLOCK_MAJOR_VERSION_2);
 
   return generator;
 }
@@ -179,6 +169,7 @@ TransactionBuilder::MultisignatureSource DoubleSpendBase::createSource() const {
   src.input.amount = send_amount;
   src.input.outputIndex = 0;
   src.input.signatureCount = 1;
+  src.input.term = 0;
 
   src.keys.push_back(m_bob_account.getAccountKeys());
   src.srcTxPubKey = m_outputTxKey.publicKey;
@@ -201,7 +192,7 @@ TransactionBuilder DoubleSpendBase::createBobToAliceTx() const {
 // MultiSigTx_DoubleSpendInTx
 //======================================================================================================================
 
-MultiSigTx_DoubleSpendInTx::MultiSigTx_DoubleSpendInTx(bool txsKeepedByBlock) 
+MultiSigTx_DoubleSpendInTx::MultiSigTx_DoubleSpendInTx(bool txsKeepedByBlock)
   : m_txsKeepedByBlock(txsKeepedByBlock)
 {
   has_invalid_tx = true;
@@ -234,7 +225,7 @@ bool MultiSigTx_DoubleSpendInTx::generate(std::vector<test_event_entry>& events)
 //======================================================================================================================
 // MultiSigTx_DoubleSpendSameBlock
 //======================================================================================================================
-MultiSigTx_DoubleSpendSameBlock::MultiSigTx_DoubleSpendSameBlock(bool txsKeepedByBlock) 
+MultiSigTx_DoubleSpendSameBlock::MultiSigTx_DoubleSpendSameBlock(bool txsKeepedByBlock)
   : m_txsKeepedByBlock(txsKeepedByBlock) {
   has_invalid_tx = !txsKeepedByBlock;
 }
@@ -259,7 +250,7 @@ bool MultiSigTx_DoubleSpendSameBlock::generate(std::vector<test_event_entry>& ev
   }
 
   generator.addEvent(tx2);
-  
+
   txs.push_back(tx1);
   txs.push_back(tx2);
 
@@ -274,7 +265,7 @@ bool MultiSigTx_DoubleSpendSameBlock::generate(std::vector<test_event_entry>& ev
 // MultiSigTx_DoubleSpendDifferentBlocks
 //======================================================================================================================
 MultiSigTx_DoubleSpendDifferentBlocks::MultiSigTx_DoubleSpendDifferentBlocks(bool txsKeepedByBlock)
-  : m_txsKeepedByBlock(txsKeepedByBlock) { 
+  : m_txsKeepedByBlock(txsKeepedByBlock) {
   has_invalid_tx = !txsKeepedByBlock;
 }
 

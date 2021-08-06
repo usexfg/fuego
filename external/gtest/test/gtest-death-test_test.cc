@@ -200,7 +200,7 @@ int DieInDebugElse12(int* sideeffect) {
   return 12;
 }
 
-# if GTEST_OS_WINDOWS || GTEST_OS_FUCHSIA
+# if GTEST_OS_WINDOWS
 
 // Tests the ExitedWithCode predicate.
 TEST(ExitStatusPredicateTest, ExitedWithCode) {
@@ -272,7 +272,7 @@ TEST(ExitStatusPredicateTest, KilledBySignal) {
   EXPECT_FALSE(pred_kill(status_segv));
 }
 
-# endif  // GTEST_OS_WINDOWS || GTEST_OS_FUCHSIA
+# endif  // GTEST_OS_WINDOWS
 
 // Tests that the death test macros expand to code which may or may not
 // be followed by operator<<, and that in either case the complete text
@@ -617,11 +617,7 @@ TEST_F(TestForDeathTest, ReturnIsFailure) {
 TEST_F(TestForDeathTest, TestExpectDebugDeath) {
   int sideeffect = 0;
 
-  // Put the regex in a local variable to make sure we don't get an "unused"
-  // warning in opt mode.
-  const char* regex = "death.*DieInDebugElse12";
-
-  EXPECT_DEBUG_DEATH(DieInDebugElse12(&sideeffect), regex)
+  EXPECT_DEBUG_DEATH(DieInDebugElse12(&sideeffect), "death.*DieInDebugElse12")
       << "Must accept a streamed message";
 
 # ifdef NDEBUG
@@ -787,9 +783,8 @@ static void TestExitMacros() {
   // See http://msdn.microsoft.com/en-us/library/dwwzkt4c(VS.71).aspx.
   EXPECT_EXIT(raise(SIGABRT), testing::ExitedWithCode(3), "") << "b_ar";
 
-# elif !GTEST_OS_FUCHSIA
+# else
 
-  // Fuchsia has no unix signals.
   EXPECT_EXIT(raise(SIGKILL), testing::KilledBySignal(SIGKILL), "") << "foo";
   ASSERT_EXIT(raise(SIGUSR2), testing::KilledBySignal(SIGUSR2), "") << "bar";
 

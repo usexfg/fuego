@@ -1,19 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free & open source software distributed in the hope 
+// it will be useful, but WITHOUT ANY WARRANTY; without even an
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You may redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -22,10 +23,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/param.h>
-
-#if defined(__ANDROID__)
-#include <byteswap.h>
-#endif
 
 #if defined(_MSC_VER)
 #include <stdlib.h>
@@ -130,25 +127,15 @@ static inline uint32_t div128_32(uint64_t dividend_hi, uint64_t dividend_lo, uin
 static inline uint32_t ident32(uint32_t x) { return x; }
 static inline uint64_t ident64(uint64_t x) { return x; }
 
-#ifndef __OpenBSD__
-#  if defined(__ANDROID__) && defined(__swap32) && !defined(swap32)
-#      define swap32 __swap32
-#  elif !defined(swap32)
 static inline uint32_t swap32(uint32_t x) {
-	x = ((x & 0x00ff00ff) << 8) | ((x & 0xff00ff00) >> 8);
-	return (x << 16) | (x >> 16);
+  x = ((x & 0x00ff00ff) << 8) | ((x & 0xff00ff00) >> 8);
+  return (x << 16) | (x >> 16);
 }
-#  endif
-#  if defined(__ANDROID__) && defined(__swap64) && !defined(swap64)
-#      define swap64 __swap64
-#  elif !defined(swap64)
 static inline uint64_t swap64(uint64_t x) {
-	x = ((x & 0x00ff00ff00ff00ff) << 8) | ((x & 0xff00ff00ff00ff00) >> 8);
-	x = ((x & 0x0000ffff0000ffff) << 16) | ((x & 0xffff0000ffff0000) >> 16);
-	return (x << 32) | (x >> 32);
+  x = ((x & 0x00ff00ff00ff00ff) <<  8) | ((x & 0xff00ff00ff00ff00) >>  8);
+  x = ((x & 0x0000ffff0000ffff) << 16) | ((x & 0xffff0000ffff0000) >> 16);
+  return (x << 32) | (x >> 32);
 }
-#  endif
-#endif /* __OpenBSD__ */
 
 #if defined(__GNUC__)
 #define UNUSED __attribute__((unused))
@@ -190,6 +177,8 @@ static inline void memcpy_swap64(void *dst, const void *src, size_t n) {
     ((uint64_t *) dst)[i] = swap64(((const uint64_t *) src)[i]);
   }
 }
+
+
 
 #if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN) || !defined(BIG_ENDIAN)
 static_assert(false, "BYTE_ORDER is undefined. Perhaps, GNU extensions are not enabled");

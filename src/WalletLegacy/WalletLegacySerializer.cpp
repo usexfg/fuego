@@ -1,25 +1,20 @@
-// {DRGL} Kills White Walkers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
+// This file is part of Fango.
 //
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018, Karbo developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "WalletLegacySerializer.h"
 
@@ -34,25 +29,38 @@
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "WalletLegacy/WalletUserTransactionsCache.h"
 #include "Wallet/WalletErrors.h"
-#include "Wallet/WalletUtils.h"
 #include "WalletLegacy/KeysStorage.h"
+#include "crypto/chacha8.h"
 
 using namespace Common;
 
+namespace {
+
+const uint32_t WALLET_SERIALIZATION_VERSION = 2;
+
+bool verifyKeys(const Crypto::SecretKey& sec, const Crypto::PublicKey& expected_pub) {
+  Crypto::PublicKey pub;
+  bool r = Crypto::secret_key_to_public_key(sec, pub);
+  return r && expected_pub == pub;
+}
+
+void throwIfKeysMissmatch(const Crypto::SecretKey& sec, const Crypto::PublicKey& expected_pub) {
+  if (!verifyKeys(sec, expected_pub))
+    throw std::system_error(make_error_code(CryptoNote::error::WRONG_PASSWORD));
+}
+
+}
+
 namespace CryptoNote {
 
-uint32_t WALLET_LEGACY_SERIALIZATION_VERSION = 2;
-  
 WalletLegacySerializer::WalletLegacySerializer(CryptoNote::AccountBase& account, WalletUserTransactionsCache& transactionsCache) :
   account(account),
   transactionsCache(transactionsCache),
-  walletSerializationVersion(2)
+  walletSerializationVersion(WALLET_SERIALIZATION_VERSION)
 {
 }
 
 void WalletLegacySerializer::serialize(std::ostream& stream, const std::string& password, bool saveDetailed, const std::string& cache) {
-   // set serialization version global variable
-  CryptoNote::WALLET_LEGACY_SERIALIZATION_VERSION = walletSerializationVersion;
   std::stringstream plainArchive;
   StdOutputStream plainStream(plainArchive);
   CryptoNote::BinaryOutputStreamSerializer serializer(plainStream);
@@ -118,8 +126,6 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
 
   uint32_t version;
   serializerEncrypted(version, "version");
-  // set serialization version global variable
-  CryptoNote::WALLET_LEGACY_SERIALIZATION_VERSION = version;
 
   Crypto::chacha8_iv iv;
   serializerEncrypted(iv, "iv");
@@ -151,11 +157,84 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
   serializer(detailsSaved, "has_details");
 
   if (detailsSaved) {
-    serializer(transactionsCache, "details");
+    if (version == 1) {
+      transactionsCache.deserializeLegacyV1(serializer);
+    } else {
+      serializer(transactionsCache, "details");
+    }
   }
 
   serializer.binary(cache, "cache");
 }
+
+bool WalletLegacySerializer::deserialize(std::istream& stream, const std::string& password) {
+  try {
+    StdInputStream stdStream(stream);
+    CryptoNote::BinaryInputStreamSerializer serializerEncrypted(stdStream);
+
+    serializerEncrypted.beginObject("wallet");
+
+    uint32_t version;
+    serializerEncrypted(version, "version");
+
+    Crypto::chacha8_iv iv;
+    serializerEncrypted(iv, "iv");
+
+    std::string cipher;
+    serializerEncrypted(cipher, "data");
+
+    serializerEncrypted.endObject();
+
+    std::string plain;
+    decrypt(cipher, plain, iv, password);
+
+    MemoryInputStream decryptedStream(plain.data(), plain.size());
+    CryptoNote::BinaryInputStreamSerializer serializer(decryptedStream);
+
+    CryptoNote::KeysStorage keys;
+    try {
+      keys.serialize(serializer, "keys");
+    }
+    catch (const std::runtime_error&) {
+      return false;
+    }
+    CryptoNote::AccountKeys acc;
+    acc.address.spendPublicKey = keys.spendPublicKey;
+    acc.spendSecretKey = keys.spendSecretKey;
+    acc.address.viewPublicKey = keys.viewPublicKey;
+    acc.viewSecretKey = keys.viewSecretKey;
+
+    Crypto::PublicKey pub;
+    bool r = Crypto::secret_key_to_public_key(acc.viewSecretKey, pub);
+    if (!r || acc.address.viewPublicKey != pub) {
+      return false;
+    }
+
+    if (acc.spendSecretKey != NULL_SECRET_KEY) {
+      Crypto::PublicKey pub;
+      bool r = Crypto::secret_key_to_public_key(acc.spendSecretKey, pub);
+      if (!r || acc.address.spendPublicKey != pub) {
+        return false;
+      }
+    }
+    else {
+      if (!Crypto::check_key(acc.address.spendPublicKey)) {
+        return false;
+      }
+    }
+  }
+  catch (std::system_error&) {
+    return false;
+  }
+  catch (std::exception&) {
+    return false;
+  }
+
+  return true;
+}
+
+
+
 
 void WalletLegacySerializer::decrypt(const std::string& cipher, std::string& plain, Crypto::chacha8_iv iv, const std::string& password) {
   Crypto::chacha8_key key;

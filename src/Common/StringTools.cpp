@@ -1,24 +1,23 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018, The Karbowanec developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free & open source software distributed in the hope 
+// that it will be useful, but WITHOUT ANY WARRANTY; without even
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You may redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "StringTools.h"
 #include <fstream>
-#include <iomanip>
 
 namespace Common {
 
@@ -309,24 +308,9 @@ std::string ipAddressToString(uint32_t ip) {
   bytes[3] = (ip >> 24) & 0xFF;
 
   char buf[16];
-  sprintf(buf, "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
+  snprintf(buf, sizeof(buf), "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
 
   return std::string(buf);
-}
-
-uint32_t stringToIpAddress(std::string addr) {
-  uint32_t v[4];
-  if (sscanf(addr.c_str(), "%d.%d.%d.%d", &v[0], &v[1], &v[2], &v[3]) != 4) {
-	  return false;
-  }
-
-  for (int i = 0; i < 4; ++i) {
-    if (v[i] > 0xff) {
-      return false;
-    }
-  }
-
-  return ((v[3] << 24) | (v[2] << 16) | (v[1] << 8) | v[0]);
 }
 
 bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr) {
@@ -359,14 +343,12 @@ std::string timeIntervalToString(uint64_t intervalInSeconds) {
   tail = tail % (60);
   auto seconds = tail;
 
-  std::stringstream ss;
-  ss << "d" << days <<
-    std::setfill('0') <<
-    ".h" << std::setw(2) << hours <<
-    ".m" << std::setw(2) << minutes <<
-    ".s" << std::setw(2) << seconds;
-
-  return ss.str();
+  return 
+    "d" + std::to_string(days) + 
+    ".h" + std::to_string(hours) + 
+    ".m" + std::to_string(minutes) +
+    ".s" + std::to_string(seconds);
 }
+
 
 }

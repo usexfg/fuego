@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "Globals.h"
 #include "CryptoNoteCore/Account.h"
@@ -313,11 +301,11 @@ TEST_F(TransfersTest, base) {
 
   CryptoNote::AccountBase dstAcc;
   dstAcc.generate();
-
+  Logging::ConsoleLogger m_logger; 
   AccountKeys dstKeys = reinterpret_cast<const AccountKeys&>(dstAcc.getAccountKeys());
 
-  BlockchainSynchronizer blockSync(*node2.get(), logger, currency.genesisBlockHash());
-  TransfersSyncronizer transferSync(currency, logger, blockSync, *node2.get());
+  BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
+  TransfersSyncronizer transferSync(currency, m_logger, blockSync, *node2.get());
   TransfersObserver transferObserver;
   WalletLegacyObserver walletObserver;
 
@@ -482,9 +470,9 @@ TEST_F(MultisignatureTest, createMulitisignatureTransaction) {
 
   nodeDaemons[0]->makeINode(node1);
   nodeDaemons[1]->makeINode(node2);
-
-  BlockchainSynchronizer blockSync(*node2.get(), logger, currency.genesisBlockHash());
-  TransfersSyncronizer transferSync(currency, logger, blockSync, *node2.get());
+  Logging::ConsoleLogger m_logger; 
+  BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
+  TransfersSyncronizer transferSync(currency, m_logger, blockSync, *node2.get());
   
   // add transaction collector
   TransactionConsumer txConsumer;

@@ -91,7 +91,7 @@ macro(config_compiler_and_linker)
     set(cxx_base_flags "${cxx_base_flags} -D_UNICODE -DUNICODE -DWIN32 -D_WIN32")
     set(cxx_base_flags "${cxx_base_flags} -DSTRICT -DWIN32_LEAN_AND_MEAN")
     set(cxx_exception_flags "-EHsc -D_HAS_EXCEPTIONS=1")
-    set(cxx_no_exception_flags "-EHs-c- -D_HAS_EXCEPTIONS=0")
+    set(cxx_no_exception_flags "-D_HAS_EXCEPTIONS=0")
     set(cxx_no_rtti_flags "-GR-")
   elseif (CMAKE_COMPILER_IS_GNUCXX)
     set(cxx_base_flags "-Wall -Wshadow -Werror")
@@ -158,10 +158,6 @@ function(cxx_library_with_type name type cxx_flags)
   set_target_properties(${name}
     PROPERTIES
     COMPILE_FLAGS "${cxx_flags}")
-  # Generate debug library name with a postfix.
-  set_target_properties(${name}
-    PROPERTIES
-    DEBUG_POSTFIX "d")
   if (BUILD_SHARED_LIBS OR type STREQUAL "SHARED")
     set_target_properties(${name}
       PROPERTIES
@@ -257,14 +253,14 @@ function(py_test name)
         add_test(
           NAME ${name}
           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/${name}.py
-              --build_dir=${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG> ${ARGN})
+              --build_dir=${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>)
       else (CMAKE_CONFIGURATION_TYPES)
 	# Single-configuration build generators like Makefile generators
 	# don't have subdirs below CMAKE_CURRENT_BINARY_DIR.
         add_test(
           NAME ${name}
           COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/${name}.py
-              --build_dir=${CMAKE_CURRENT_BINARY_DIR} ${ARGN})
+              --build_dir=${CMAKE_CURRENT_BINARY_DIR})
       endif (CMAKE_CONFIGURATION_TYPES)
     else (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.1)
       # ${CMAKE_CURRENT_BINARY_DIR} is known at configuration time, so we can
@@ -274,7 +270,7 @@ function(py_test name)
       add_test(
         ${name}
         ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/${name}.py
-          --build_dir=${CMAKE_CURRENT_BINARY_DIR}/\${CTEST_CONFIGURATION_TYPE} ${ARGN})
+          --build_dir=${CMAKE_CURRENT_BINARY_DIR}/\${CTEST_CONFIGURATION_TYPE})
     endif (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.1)
   endif(PYTHONINTERP_FOUND)
 endfunction()

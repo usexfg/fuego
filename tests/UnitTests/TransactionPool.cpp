@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 
@@ -71,10 +59,10 @@ public:
   TestTransactionGenerator(const CryptoNote::Currency& currency, size_t ringSize) :
     m_currency(currency),
     m_ringSize(ringSize),
-    m_miners(ringSize), 
-    m_miner_txs(ringSize), 
-    m_public_keys(ringSize), 
-    m_public_key_ptrs(ringSize) 
+    m_miners(ringSize),
+    m_miner_txs(ringSize),
+    m_public_keys(ringSize),
+    m_public_key_ptrs(ringSize)
   {
     rv_acc.generate();
   }
@@ -88,7 +76,7 @@ public:
     {
       m_miners[i].generate();
 
-      if (!m_currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 2, 0, m_miners[i].getAccountKeys().address, m_miner_txs[i])) {
+      if (!m_currency.constructMinerTx(0, 0, 0, 2, 0, m_miners[i].getAccountKeys().address, m_miner_txs[i])) {
         return false;
       }
 
@@ -143,7 +131,7 @@ public:
 class tx_pool : public ::testing::Test {
 public:
 
-  tx_pool() : 
+  tx_pool() :
     currency(CryptoNote::CurrencyBuilder(logger).currency()) {}
 
 protected:
@@ -171,7 +159,7 @@ namespace
     txGenerator.createSources();
     txGenerator.construct(txGenerator.m_source_amount, fee, outputs, tx);
   }
-  
+
   template <typename Validator, typename TimeProvider>
   class TestPool : public tx_memory_pool {
   public:
@@ -180,7 +168,7 @@ namespace
     TimeProvider timeProvider;
 
     TestPool(const CryptoNote::Currency& currency, Logging::ILogger& logger) :
-      tx_memory_pool(currency, validator, timeProvider, logger, false) {}
+      tx_memory_pool(currency, validator, timeProvider, logger) {}
   };
 
   class TxTestBase {
@@ -188,7 +176,7 @@ namespace
     TxTestBase(size_t ringSize) :
       m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
       txGenerator(m_currency, ringSize),
-      pool(m_currency, validator, m_time, m_logger, false)
+      pool(m_currency, validator, m_time, m_logger)
     {
       txGenerator.createSources();
     }
@@ -223,9 +211,9 @@ TEST_F(tx_pool, add_one_tx)
   test.construct(test.m_currency.minimumFee(), 1, tx);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  
-  ASSERT_TRUE(test.pool.add_tx(tx, tvc, false));
-  ASSERT_FALSE(tvc.m_verifivation_failed);
+
+  ASSERT_TRUE(test.pool.add_tx(tx, tvc, false, 0));
+  ASSERT_FALSE(tvc.m_verification_failed);
 };
 
 TEST_F(tx_pool, take_tx)
@@ -239,8 +227,8 @@ TEST_F(tx_pool, take_tx)
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
 
-  ASSERT_TRUE(test.pool.add_tx(tx, tvc, false));
-  ASSERT_FALSE(tvc.m_verifivation_failed);
+  ASSERT_TRUE(test.pool.add_tx(tx, tvc, false, 0));
+  ASSERT_FALSE(tvc.m_verification_failed);
 
   Transaction txOut;
   size_t blobSize;
@@ -261,14 +249,14 @@ TEST_F(tx_pool, double_spend_tx)
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
 
-  ASSERT_TRUE(test.pool.add_tx(tx, tvc, false));
-  ASSERT_FALSE(tvc.m_verifivation_failed);
+  ASSERT_TRUE(test.pool.add_tx(tx, tvc, false, 0));
+  ASSERT_FALSE(tvc.m_verification_failed);
 
   test.txGenerator.rv_acc.generate(); // generate new receiver address
   test.construct(test.m_currency.minimumFee(), 1, tx_double);
 
-  ASSERT_FALSE(test.pool.add_tx(tx_double, tvc, false));
-  ASSERT_TRUE(tvc.m_verifivation_failed);
+  ASSERT_FALSE(test.pool.add_tx(tx_double, tvc, false, 0));
+  ASSERT_TRUE(tvc.m_verification_failed);
 }
 
 
@@ -283,14 +271,14 @@ TEST_F(tx_pool, fillblock_same_fee)
   for (int i = 1; i <= 50; ++i) {
     TestTransactionGenerator txGenerator(currency, 1);
     txGenerator.createSources();
-    
+
     std::unique_ptr<Transaction> txptr(new Transaction);
     Transaction& tx = *txptr;
 
     txGenerator.construct(txGenerator.m_source_amount, fee, i, tx);
 
     tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-    ASSERT_TRUE(pool.add_tx(tx, tvc, false));
+    ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0));
     ASSERT_TRUE(tvc.m_added_to_pool);
 
     transactions[getObjectHash(tx)] = std::move(txptr);
@@ -305,7 +293,7 @@ TEST_F(tx_pool, fillblock_same_fee)
   uint64_t median = 5000;
 
   ASSERT_TRUE(pool.fill_block_template(bl, median, textMaxCumulativeSize, 0, totalSize, txFee));
-  ASSERT_TRUE(totalSize*100 < median*125);
+  ASSERT_TRUE(totalSize * 100 < median * 125);
 
   // now, check that the block is opimally filled
   // if fee is fixed, transactions with smaller number of outputs should be included
@@ -349,7 +337,7 @@ TEST_F(tx_pool, fillblock_same_size)
     txGenerator.construct(txGenerator.m_source_amount, fee + (fee * (i&1)), 1, tx);
 
     tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-    ASSERT_TRUE(pool.add_tx(tx, tvc, false));
+    ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0));
     ASSERT_TRUE(tvc.m_added_to_pool);
 
     transactions[getObjectHash(tx)] = std::move(txptr);
@@ -376,7 +364,7 @@ TEST_F(tx_pool, fillblock_same_size)
     auto iter = transactions.find(th);
     ASSERT_TRUE(iter != transactions.end());
 
-    if (get_tx_fee(*iter->second) > fee)
+    if (currency.getTransactionFee(*iter->second, 0) > fee)
       ++doubleFee;
   }
 
@@ -397,7 +385,7 @@ TEST_F(tx_pool, cleanup_stale_tx)
     GenerateTransaction(currency, tx, fee, 1);
 
     tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-    ASSERT_TRUE(pool.add_tx(tx, tvc, false)); // main chain
+    ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0)); // main chain
     ASSERT_TRUE(tvc.m_added_to_pool);
 
     pool.timeProvider.timeNow += 60 * 60 * 2; // add 2 hours
@@ -408,7 +396,7 @@ TEST_F(tx_pool, cleanup_stale_tx)
     GenerateTransaction(currency, tx, fee, 1);
 
     tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-    ASSERT_TRUE(pool.add_tx(tx, tvc, true)); // alternative chain
+    ASSERT_TRUE(pool.add_tx(tx, tvc, true, 0)); // alternative chain
     ASSERT_TRUE(tvc.m_added_to_pool);
 
     pool.timeProvider.timeNow += 60 * 60 * 2; // add 2 hours
@@ -417,7 +405,7 @@ TEST_F(tx_pool, cleanup_stale_tx)
 
   ASSERT_EQ(8, pool.get_transactions_count());
 
-  pool.timeProvider.timeNow = startTime + currency.mempoolTxLiveTime() + 3*60*60; 
+  pool.timeProvider.timeNow = startTime + currency.mempoolTxLiveTime() + 3*60*60;
   pool.on_idle(); // 2 transactions should be removed
 
   ASSERT_EQ(6, pool.get_transactions_count());
@@ -439,7 +427,7 @@ TEST_F(tx_pool, add_tx_after_cleanup)
   GenerateTransaction(currency, tx, fee, 1);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  ASSERT_TRUE(pool.add_tx(tx, tvc, false)); // main chain
+  ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0)); // main chain
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   uint64_t cleanupTime = startTime + currency.mempoolTxLiveTime() + 1;
@@ -452,7 +440,7 @@ TEST_F(tx_pool, add_tx_after_cleanup)
   ASSERT_EQ(0, pool.get_transactions_count());
 
   // add again
-  ASSERT_TRUE(pool.add_tx(tx, tvc, false)); // main chain
+  ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0)); // main chain
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   ASSERT_EQ(1, pool.get_transactions_count());
@@ -468,7 +456,7 @@ TEST_F(tx_pool, RecentlyDeletedTransactionCannotBeAddedToTxPoolAgain) {
   GenerateTransaction(currency, tx, currency.minimumFee(), 1);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  ASSERT_TRUE(pool.add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   uint64_t deleteTime = startTime + currency.mempoolTxLiveTime() + 1;
@@ -477,11 +465,11 @@ TEST_F(tx_pool, RecentlyDeletedTransactionCannotBeAddedToTxPoolAgain) {
   ASSERT_EQ(0, pool.get_transactions_count());
 
   // Try to add tx again
-  ASSERT_TRUE(pool.add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0));
   ASSERT_FALSE(tvc.m_added_to_pool);
   ASSERT_FALSE(tvc.m_should_be_relayed);
-  ASSERT_FALSE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_FALSE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 
   ASSERT_EQ(0, pool.get_transactions_count());
 }
@@ -495,7 +483,7 @@ TEST_F(tx_pool, RecentlyDeletedTransactionCanBeAddedAgainAfterSomeTime) {
   GenerateTransaction(currency, tx, currency.minimumFee(), 1);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  ASSERT_TRUE(pool.add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   uint64_t deleteTime = startTime + currency.mempoolTxLiveTime() + 1;
@@ -508,11 +496,11 @@ TEST_F(tx_pool, RecentlyDeletedTransactionCanBeAddedAgainAfterSomeTime) {
   pool.on_idle();
 
   // Try to add tx again
-  ASSERT_TRUE(pool.add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
   ASSERT_TRUE(tvc.m_should_be_relayed);
-  ASSERT_FALSE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_FALSE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 
   ASSERT_EQ(1, pool.get_transactions_count());
 }
@@ -526,7 +514,7 @@ TEST_F(tx_pool, RecentlyDeletedTransactionCanBeAddedToTxPoolIfItIsReceivedInBloc
   GenerateTransaction(currency, tx, currency.minimumFee(), 1);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  ASSERT_TRUE(pool.add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool.add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   uint64_t deleteTime = startTime + currency.mempoolTxLiveTime() + 1;
@@ -535,11 +523,11 @@ TEST_F(tx_pool, RecentlyDeletedTransactionCanBeAddedToTxPoolIfItIsReceivedInBloc
   ASSERT_EQ(0, pool.get_transactions_count());
 
   // Try to add tx again
-  ASSERT_TRUE(pool.add_tx(tx, tvc, true));
+  ASSERT_TRUE(pool.add_tx(tx, tvc, true, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
   ASSERT_TRUE(tvc.m_should_be_relayed);
-  ASSERT_FALSE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_FALSE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 
   ASSERT_EQ(1, pool.get_transactions_count());
 }
@@ -547,7 +535,7 @@ TEST_F(tx_pool, RecentlyDeletedTransactionCanBeAddedToTxPoolIfItIsReceivedInBloc
 TEST_F(tx_pool, OldTransactionIsDeletedDuringTxPoolInitialization) {
   TransactionValidator validator;
   FakeTimeProvider timeProvider;
-  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
 
   uint64_t startTime = timeProvider.now();
@@ -556,7 +544,7 @@ TEST_F(tx_pool, OldTransactionIsDeletedDuringTxPoolInitialization) {
   GenerateTransaction(currency, tx, currency.minimumFee(), 1);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  ASSERT_TRUE(pool->add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   ASSERT_TRUE(pool->deinit());
@@ -565,7 +553,7 @@ TEST_F(tx_pool, OldTransactionIsDeletedDuringTxPoolInitialization) {
   uint64_t deleteTime = startTime + currency.mempoolTxLiveTime() + 1;
   timeProvider.timeNow = deleteTime;
 
-  pool.reset(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  pool.reset(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
   ASSERT_EQ(0, pool->get_transactions_count());
 }
@@ -573,7 +561,7 @@ TEST_F(tx_pool, OldTransactionIsDeletedDuringTxPoolInitialization) {
 TEST_F(tx_pool, TransactionThatWasDeletedLongAgoIsForgottenDuringTxPoolInitialization) {
   TransactionValidator validator;
   FakeTimeProvider timeProvider;
-  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
 
   uint64_t startTime = timeProvider.now();
@@ -582,7 +570,7 @@ TEST_F(tx_pool, TransactionThatWasDeletedLongAgoIsForgottenDuringTxPoolInitializ
   GenerateTransaction(currency, tx, currency.minimumFee(), 1);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  ASSERT_TRUE(pool->add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   uint64_t deleteTime = startTime + currency.mempoolTxLiveTime() + 1;
@@ -596,15 +584,15 @@ TEST_F(tx_pool, TransactionThatWasDeletedLongAgoIsForgottenDuringTxPoolInitializ
   uint64_t forgetDeletedTxTime = deleteTime + currency.numberOfPeriodsToForgetTxDeletedFromPool() * currency.mempoolTxLiveTime() + 1;
   timeProvider.timeNow = forgetDeletedTxTime;
 
-  pool.reset(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  pool.reset(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
 
   // Try to add tx again
-  ASSERT_TRUE(pool->add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
   ASSERT_TRUE(tvc.m_should_be_relayed);
-  ASSERT_FALSE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_FALSE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 
   ASSERT_EQ(1, pool->get_transactions_count());
 }
@@ -612,7 +600,7 @@ TEST_F(tx_pool, TransactionThatWasDeletedLongAgoIsForgottenDuringTxPoolInitializ
 TEST_F(tx_pool, RecentlyDeletedTxInfoIsSerializedAndDeserialized) {
   TransactionValidator validator;
   FakeTimeProvider timeProvider;
-  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
 
   uint64_t startTime = timeProvider.now();
@@ -621,7 +609,7 @@ TEST_F(tx_pool, RecentlyDeletedTxInfoIsSerializedAndDeserialized) {
   GenerateTransaction(currency, tx, currency.minimumFee(), 1);
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-  ASSERT_TRUE(pool->add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
 
   uint64_t deleteTime = startTime + currency.mempoolTxLiveTime() + 1;
@@ -631,18 +619,18 @@ TEST_F(tx_pool, RecentlyDeletedTxInfoIsSerializedAndDeserialized) {
 
   ASSERT_TRUE(pool->deinit());
 
-  pool.reset(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  pool.reset(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
 
   uint64_t timeBeforeCleanupDeletedTx = deleteTime + currency.numberOfPeriodsToForgetTxDeletedFromPool() * currency.mempoolTxLiveTime();
   timeProvider.timeNow = timeBeforeCleanupDeletedTx;
   pool->on_idle();
 
-  ASSERT_TRUE(pool->add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_FALSE(tvc.m_added_to_pool);
   ASSERT_FALSE(tvc.m_should_be_relayed);
-  ASSERT_FALSE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_FALSE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 
   ASSERT_EQ(0, pool->get_transactions_count());
 
@@ -650,11 +638,11 @@ TEST_F(tx_pool, RecentlyDeletedTxInfoIsSerializedAndDeserialized) {
   pool->on_idle();
 
   // Try to add tx again
-  ASSERT_TRUE(pool->add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
   ASSERT_TRUE(tvc.m_should_be_relayed);
-  ASSERT_FALSE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_FALSE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 
   ASSERT_EQ(1, pool->get_transactions_count());
 }
@@ -662,24 +650,24 @@ TEST_F(tx_pool, RecentlyDeletedTxInfoIsSerializedAndDeserialized) {
 TEST_F(tx_pool, TxPoolAcceptsValidFusionTransaction) {
   TransactionValidator validator;
   FakeTimeProvider timeProvider;
-  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
 
   FusionTransactionBuilder builder(currency, 10 * currency.defaultDustThreshold());
   auto tx = builder.buildTx();
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
 
-  ASSERT_TRUE(pool->add_tx(tx, tvc, false));
+  ASSERT_TRUE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_TRUE(tvc.m_added_to_pool);
   ASSERT_TRUE(tvc.m_should_be_relayed);
-  ASSERT_FALSE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_FALSE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 }
 
 TEST_F(tx_pool, TxPoolDoesNotAcceptInvalidFusionTransaction) {
   TransactionValidator validator;
   FakeTimeProvider timeProvider;
-  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+  std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger));
   ASSERT_TRUE(pool->init(m_configDir.string()));
 
   FusionTransactionBuilder builder(currency, 10 * currency.defaultDustThreshold());
@@ -687,18 +675,18 @@ TEST_F(tx_pool, TxPoolDoesNotAcceptInvalidFusionTransaction) {
   auto tx = builder.buildTx();
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
 
-  ASSERT_FALSE(pool->add_tx(tx, tvc, false));
+  ASSERT_FALSE(pool->add_tx(tx, tvc, false, 0));
   ASSERT_FALSE(tvc.m_added_to_pool);
   ASSERT_FALSE(tvc.m_should_be_relayed);
-  ASSERT_TRUE(tvc.m_verifivation_failed);
-  ASSERT_FALSE(tvc.m_verifivation_impossible);
+  ASSERT_TRUE(tvc.m_verification_failed);
+  ASSERT_FALSE(tvc.m_verification_impossible);
 }
 
 namespace {
 
 const size_t TEST_FUSION_TX_COUNT_PER_BLOCK = 3;
 const size_t TEST_TX_COUNT_UP_TO_MEDIAN = 10;
-const size_t TEST_MAX_TX_COUNT_PER_BLOCK = TEST_TX_COUNT_UP_TO_MEDIAN * 125 / 100;
+const size_t TEST_MAX_TX_COUNT_PER_BLOCK = 125 * TEST_TX_COUNT_UP_TO_MEDIAN / 100;
 const size_t TEST_TRANSACTION_SIZE = 2000;
 const size_t TEST_FUSION_TX_MAX_SIZE = TEST_FUSION_TX_COUNT_PER_BLOCK * TEST_TRANSACTION_SIZE;
 const size_t TEST_MINER_TX_BLOB_RESERVED_SIZE = 600;
@@ -747,7 +735,7 @@ public:
   void doTest(size_t poolOrdinaryTxCount, size_t poolFusionTxCount, size_t expectedBlockOrdinaryTxCount, size_t expectedBlockFusionTxCount) {
     TransactionValidator validator;
     FakeTimeProvider timeProvider;
-    std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger, false));
+    std::unique_ptr<tx_memory_pool> pool(new tx_memory_pool(currency, validator, timeProvider, logger));
     ASSERT_TRUE(pool->init(m_configDir.string()));
 
     std::unordered_map<Crypto::Hash, Transaction> ordinaryTxs;
@@ -764,12 +752,12 @@ public:
 
     for (auto pair : ordinaryTxs) {
       tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-      ASSERT_TRUE(pool->add_tx(pair.second, tvc, false));
+      ASSERT_TRUE(pool->add_tx(pair.second, tvc, false, 0));
     }
 
     for (auto pair : fusionTxs) {
       tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
-      ASSERT_TRUE(pool->add_tx(pair.second, tvc, false));
+      ASSERT_TRUE(pool->add_tx(pair.second, tvc, false, 0));
     }
 
     Block block;

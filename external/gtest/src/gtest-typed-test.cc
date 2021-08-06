@@ -30,7 +30,6 @@
 // Author: wan@google.com (Zhanyong Wan)
 
 #include "gtest/gtest-typed-test.h"
-
 #include "gtest/gtest.h"
 
 namespace testing {

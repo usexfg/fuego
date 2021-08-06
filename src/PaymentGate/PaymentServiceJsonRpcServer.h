@@ -1,20 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018, The Karbo developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -72,9 +72,14 @@ private:
 
   std::unordered_map<std::string, HandlerFunction> handlers;
 
-  std::error_code handleSave(const Save::Request& request, Save::Response& response);
   std::error_code handleReset(const Reset::Request& request, Reset::Response& response);
+  std::error_code handleSave(const Save::Request& request, Save::Response& response);
+  std::error_code handleExportWallet(const ExportWallet::Request &request, ExportWallet::Response &response);
+  std::error_code handleExportWalletKeys(const ExportWalletKeys::Request &request, ExportWalletKeys::Response &response);
+  std::error_code handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response);
+  std::error_code handleSplitIntegrated(const SplitIntegrated::Request& request, SplitIntegrated::Response& response);
   std::error_code handleCreateAddress(const CreateAddress::Request& request, CreateAddress::Response& response);
+  std::error_code handleCreateAddressList(const CreateAddressList::Request& request, CreateAddressList::Response& response);
   std::error_code handleDeleteAddress(const DeleteAddress::Request& request, DeleteAddress::Response& response);
   std::error_code handleGetSpendKeys(const GetSpendKeys::Request& request, GetSpendKeys::Response& response);
   std::error_code handleGetBalance(const GetBalance::Request& request, GetBalance::Response& response);
@@ -90,10 +95,14 @@ private:
   std::error_code handleSendDelayedTransaction(const SendDelayedTransaction::Request& request, SendDelayedTransaction::Response& response);
   std::error_code handleGetViewKey(const GetViewKey::Request& request, GetViewKey::Response& response);
   std::error_code handleGetStatus(const GetStatus::Request& request, GetStatus::Response& response);
+  std::error_code handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response);
+  std::error_code handleSendDeposit(const SendDeposit::Request& request, SendDeposit::Response& response);
+  std::error_code handleWithdrawDeposit(const WithdrawDeposit::Request &request, WithdrawDeposit::Response &response);
+  std::error_code handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response);
   std::error_code handleGetAddresses(const GetAddresses::Request& request, GetAddresses::Response& response);
-  std::error_code handleValidateAddress(const ValidateAddress::Request& request, ValidateAddress::Response& response);
-  std::error_code handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response);
+  std::error_code handleGetMessagesFromExtra(const GetMessagesFromExtra::Request& request, GetMessagesFromExtra::Response& response);
   std::error_code handleEstimateFusion(const EstimateFusion::Request& request, EstimateFusion::Response& response);
+  std::error_code handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response);
 };
 
 }//namespace PaymentService

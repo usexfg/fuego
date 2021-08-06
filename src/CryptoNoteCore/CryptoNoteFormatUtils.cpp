@@ -1,36 +1,39 @@
-// {DRGL} Kills White Walkers
-// <https://www.ZirtysPerzys.org>
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018 The Karbowanec developers
-// Copyright (c) 2018-2019 The DRAGONGLASS developers
+// This file is part of Fango.
 //
-// This file is part of DRAGONGLASS.
-// DRAGONGLASS is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// DRAGONGLASS is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
-// along with DRAGONGLASS.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "CryptoNoteFormatUtils.h"
 
 #include <set>
 #include <Logging/LoggerRef.h>
+#include <Common/BinaryArray.hpp>
+#include <Common/int-util.h>
 #include <Common/Varint.h>
+#include "Common/Base58.h"
 
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
-
+#include "CryptoNoteSerialization.h"
 #include "Account.h"
 #include "CryptoNoteBasicImpl.h"
 #include "CryptoNoteSerialization.h"
 #include "TransactionExtra.h"
 #include "CryptoNoteTools.h"
+#include "Currency.h"
 
 #include "CryptoNoteConfig.h"
 
@@ -83,63 +86,28 @@ uint64_t power_integral(uint64_t a, uint64_t b) {
   return total;
 }
 
-bool get_tx_fee(const Transaction& tx, uint64_t & fee) {
-  uint64_t amount_in = 0;
-  uint64_t amount_out = 0;
-
-  for (const auto& in : tx.inputs) {
-    if (in.type() == typeid(KeyInput)) {
-      amount_in += boost::get<KeyInput>(in).amount;
-    } else if (in.type() == typeid(MultisignatureInput)) {
-      amount_in += boost::get<MultisignatureInput>(in).amount;
-    }
-  }
-
-  for (const auto& o : tx.outputs) {
-    amount_out += o.amount;
-  }
-
-  if (!(amount_in >= amount_out)) {
-    return false;
-  }
-
-  fee = amount_in - amount_out;
-  return true;
-}
-
-uint64_t get_tx_fee(const Transaction& tx) {
-  uint64_t r = 0;
-  if (!get_tx_fee(tx, r))
-    return 0;
-  return r;
-}
-
-
 bool constructTransaction(
   const AccountKeys& sender_account_keys,
   const std::vector<TransactionSourceEntry>& sources,
   const std::vector<TransactionDestinationEntry>& destinations,
+  const std::vector<tx_message_entry>& messages,
+  uint64_t ttl,
   std::vector<uint8_t> extra,
   Transaction& tx,
   uint64_t unlock_time,
-  Crypto::SecretKey &tx_key,
-  Logging::ILogger& log) {
-
+  Logging::ILogger& log,
+  Crypto::SecretKey& transactionSK) {
   LoggerRef logger(log, "construct_tx");
 
   tx.inputs.clear();
   tx.outputs.clear();
   tx.signatures.clear();
 
-  tx.version = CURRENT_TRANSACTION_VERSION;
+  tx.version = TRANSACTION_VERSION_1;
   tx.unlockTime = unlock_time;
 
   tx.extra = extra;
-  KeyPair txkey = generateKeyPair();
-  addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
 
-  tx_key = txkey.secretKey;
-  
   struct input_generation_context_data {
     KeyPair in_ephemeral;
   };
@@ -169,6 +137,7 @@ bool constructTransaction(
       return false;
     }
 
+
     //put key image into tx input
     KeyInput input_to_key;
     input_to_key.amount = src_entr.amount;
@@ -182,6 +151,17 @@ bool constructTransaction(
     input_to_key.outputIndexes = absolute_output_offsets_to_relative(input_to_key.outputIndexes);
     tx.inputs.push_back(input_to_key);
   }
+
+  KeyPair txkey;
+  if (!generateDeterministicTransactionKeys(getObjectHash(tx.inputs), sender_account_keys.viewSecretKey, txkey))
+  {
+    logger(ERROR) << "Couldn't generate deterministic transaction keys";
+    return false;
+  }
+
+  addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
+
+  transactionSK = txkey.secretKey;
 
   // "Shuffle" outs
   std::vector<TransactionDestinationEntry> shuffled_dsts(destinations);
@@ -233,6 +213,22 @@ bool constructTransaction(
     return false;
   }
 
+  for (size_t i = 0; i < messages.size(); i++) {
+    const tx_message_entry &msg = messages[i];
+    tx_extra_message tag;
+    if (!tag.encrypt(i, msg.message, msg.encrypt ? &msg.addr : NULL, txkey)) {
+      return false;
+    }
+
+    if (!append_message_to_extra(tx.extra, tag)) {
+      return false;
+    }
+  }
+
+  if (ttl != 0) {
+    appendTTLToExtra(tx.extra, ttl);
+  }
+
   //generate ring signatures
   Hash tx_prefix_hash;
   getObjectHash(*static_cast<TransactionPrefix*>(&tx), tx_prefix_hash);
@@ -253,6 +249,22 @@ bool constructTransaction(
   }
 
   return true;
+}
+
+bool generateDeterministicTransactionKeys(const Crypto::Hash &inputsHash, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys)
+{
+  BinaryArray ba;
+  Common::append(ba, std::begin(viewSecretKey.data), std::end(viewSecretKey.data));
+  Common::append(ba, std::begin(inputsHash.data), std::end(inputsHash.data));
+
+  hash_to_scalar(ba.data(), ba.size(), generatedKeys.secretKey);
+  return Crypto::secret_key_to_public_key(generatedKeys.secretKey, generatedKeys.publicKey);
+}
+
+bool generateDeterministicTransactionKeys(const Transaction &tx, const SecretKey &viewSecretKey, KeyPair &generatedKeys)
+{
+  Crypto::Hash inputsHash = getObjectHash(tx.inputs);
+  return generateDeterministicTransactionKeys(inputsHash, viewSecretKey, generatedKeys);
 }
 
 bool get_inputs_money_amount(const Transaction& tx, uint64_t& money) {
@@ -285,7 +297,12 @@ uint32_t get_block_height(const Block& b) {
 
 bool check_inputs_types_supported(const TransactionPrefix& tx) {
   for (const auto& in : tx.inputs) {
-    if (in.type() != typeid(KeyInput) && in.type() != typeid(MultisignatureInput)) {
+    const auto& inputType = in.type();
+    if (inputType == typeid(MultisignatureInput)) {
+      if (tx.version < TRANSACTION_VERSION_2) {
+        return false;
+      }
+    } else if (in.type() != typeid(KeyInput) && in.type() != typeid(MultisignatureInput)) {
       return false;
     }
   }
@@ -310,6 +327,11 @@ bool check_outs_valid(const TransactionPrefix& tx, std::string* error) {
         return false;
       }
     } else if (out.target.type() == typeid(MultisignatureOutput)) {
+      if (tx.version < TRANSACTION_VERSION_2) {
+        *error = "Transaction contains multisignature output but its version is less than 2";
+        return false;
+      }
+
       const MultisignatureOutput& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
       if (multisignatureOutput.requiredSignatureCount > multisignatureOutput.keys.size()) {
         if (error) {
@@ -552,6 +574,14 @@ Hash get_tx_tree_hash(const Block& b) {
     txs_ids.push_back(th);
   }
   return get_tx_tree_hash(txs_ids);
+}
+
+bool is_valid_decomposed_amount(uint64_t amount) {
+  auto it = std::lower_bound(Currency::PRETTY_AMOUNTS.begin(), Currency::PRETTY_AMOUNTS.end(), amount);
+  if (it == Currency::PRETTY_AMOUNTS.end() || amount != *it) {
+	  return false;
+  }
+  return true;
 }
 
 }

@@ -1,25 +1,20 @@
-// {DRGL} Kills White Walkers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// 2018 {DRÆGONGLASS}
-// <https://www.ZirtysPerzys.org>
+// This file is part of Fango.
 //
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2016-2018, Karbo developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -31,8 +26,9 @@
 #include <time.h>
 #include <boost/functional/hash.hpp>
 
-#include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "crypto/crypto.h"
+#include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "WalletLegacy/WalletUnconfirmedTransactions.h"
 
 namespace CryptoNote {
 class ISerializer;
@@ -65,7 +61,12 @@ struct UnconfirmedTransferDetails {
   time_t sentTime;
   TransactionId transactionId;
   std::vector<TransactionOutputId> usedOutputs;
-  Crypto::SecretKey secretKey;
+};
+
+struct UnconfirmedSpentDepositDetails {
+  TransactionId transactionId;
+  uint64_t depositsSum;
+  uint64_t fee;
 };
 
 class WalletUnconfirmedTransactions
@@ -75,12 +76,22 @@ public:
   explicit WalletUnconfirmedTransactions(uint64_t uncofirmedTransactionsLiveTime);
 
   bool serialize(CryptoNote::ISerializer& s);
+  bool deserializeV1(CryptoNote::ISerializer& s);
 
   bool findTransactionId(const Crypto::Hash& hash, TransactionId& id);
   void erase(const Crypto::Hash& hash);
   void add(const CryptoNote::Transaction& tx, TransactionId transactionId, 
-    uint64_t amount, const std::list<TransactionOutputInformation>& usedOutputs, Crypto::SecretKey& tx_key);
+    uint64_t amount, const std::vector<TransactionOutputInformation>& usedOutputs);
   void updateTransactionId(const Crypto::Hash& hash, TransactionId id);
+
+  void addCreatedDeposit(DepositId id, uint64_t totalAmount);
+  void addDepositSpendingTransaction(const Crypto::Hash& transactionHash, const UnconfirmedSpentDepositDetails& details);
+
+  void eraseCreatedDeposit(DepositId id);
+
+  uint64_t countCreatedDepositsSum() const;
+  uint64_t countSpentDepositsProfit() const;
+  uint64_t countSpentDepositsTotalAmount() const;
 
   uint64_t countUnconfirmedOutsAmount() const;
   uint64_t countUnconfirmedTransactionsAmount() const;
@@ -94,12 +105,21 @@ private:
   void collectUsedOutputs();
   void deleteUsedOutputs(const std::vector<TransactionOutputId>& usedOutputs);
 
+  bool eraseUnconfirmedTransaction(const Crypto::Hash& hash);
+  bool eraseDepositSpendingTransaction(const Crypto::Hash& hash);
+
+  bool findUnconfirmedTransactionId(const Crypto::Hash& hash, TransactionId& id);
+  bool findUnconfirmedDepositSpendingTransactionId(const Crypto::Hash& hash, TransactionId& id);
+
   typedef std::unordered_map<Crypto::Hash, UnconfirmedTransferDetails, boost::hash<Crypto::Hash>> UnconfirmedTxsContainer;
   typedef std::unordered_set<TransactionOutputId> UsedOutputsContainer;
 
   UnconfirmedTxsContainer m_unconfirmedTxs;
   UsedOutputsContainer m_usedOutputs;
   uint64_t m_uncofirmedTransactionsLiveTime;
+
+  std::unordered_map<DepositId, uint64_t> m_createdDeposits;
+  std::unordered_map<Crypto::Hash, UnconfirmedSpentDepositDetails> m_spentDeposits;
 };
 
 } // namespace CryptoNote

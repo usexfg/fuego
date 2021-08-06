@@ -1,19 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "P2pNode.h"
 
@@ -26,6 +27,7 @@
 #include <System/TcpConnection.h>
 #include <System/TcpConnector.h>
 
+#include <CryptoNoteConfig.h>
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
@@ -209,7 +211,7 @@ void P2pNode::acceptLoop() {
     } catch (InterruptedException&) {
       break;
     } catch (const std::exception& e) {
-      logger(TRACE) << "Exception in acceptLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in acceptLoop: " << e.what();
     }
   }
 
@@ -224,7 +226,7 @@ void P2pNode::connectorLoop() {
     } catch (InterruptedException&) {
       break;
     } catch (const std::exception& e) {
-      logger(TRACE) << "Exception in connectorLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in connectorLoop: " << e.what();
     }
   }
 }
@@ -287,7 +289,7 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
   for (size_t tryCount = 0; idxGen.generate(peerIndex) && tryCount < m_cfg.getPeerListGetTryCount(); ++tryCount) {
     PeerlistEntry peer;
     if (!peerlist.get(peer, peerIndex)) {
-      logger(TRACE) << "Failed to get peer from list, idx = " << peerIndex;
+      logger(WARNING) << "Failed to get peer from list, idx = " << peerIndex;
       continue;
     }
 
@@ -320,7 +322,7 @@ void P2pNode::preprocessIncomingConnection(ContextPtr ctx) {
       enqueueConnection(std::move(proxy));
     }
   } catch (std::exception& e) {
-    logger(TRACE) << " Failed to process connection: " << e.what();
+    logger(WARNING) << " Failed to process connection: " << e.what();
   }
 }
 
@@ -407,6 +409,14 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
       return false;
     }
 
+    if (response.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+      logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: " << std::to_string(response.node_data.version);
+      return false;
+    } else if ((response.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
+      logger(WARNING) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrade to the latest version.";
+    }
+
+
     return handleRemotePeerList(response.local_peerlist, response.node_data.local_time);
   } catch (std::exception& e) {
     logger(INFO) << *connection << "Failed to obtain peer list: " << e.what();
@@ -451,7 +461,7 @@ std::list<PeerlistEntry> P2pNode::getLocalPeerList() const {
 basic_node_data P2pNode::getNodeData() const {
   basic_node_data nodeData;
   nodeData.network_id = m_cfg.getNetworkId();
-  nodeData.version = P2PProtocolVersion::CURRENT;
+  nodeData.version = CryptoNote::P2P_CURRENT_VERSION;
   nodeData.local_time = time(nullptr);
   nodeData.peer_id = m_myPeerId;
 
@@ -537,6 +547,12 @@ void P2pNode::handleNodeData(const basic_node_data& node, P2pContext& context) {
   if (node.network_id != m_cfg.getNetworkId()) {
     std::ostringstream msg;
     msg << context << "COMMAND_HANDSHAKE Failed, wrong network!  (" << node.network_id << ")";
+    throw std::runtime_error(msg.str());
+  }
+
+  if (node.version < CryptoNote::P2P_MINIMUM_VERSION) { 
+    std::ostringstream msg;
+    msg << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(node.version) << ")";
     throw std::runtime_error(msg.str());
   }
 

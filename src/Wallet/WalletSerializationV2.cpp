@@ -1,23 +1,23 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2018, Karbo developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "WalletSerializationV2.h"
-
+#include "IWallet.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
@@ -44,27 +44,28 @@ struct WalletTransactionDtoV2 {
     timestamp = wallet.timestamp;
     blockHeight = wallet.blockHeight;
     hash = wallet.hash;
+    depositCount = wallet.depositCount;
+    firstDepositId = wallet.firstDepositId;
     totalAmount = wallet.totalAmount;
     fee = wallet.fee;
     creationTime = wallet.creationTime;
     unlockTime = wallet.unlockTime;
     extra = wallet.extra;
     isBase = wallet.isBase;
-    if (wallet.secretKey)
-      secretKey = reinterpret_cast<const Crypto::SecretKey&>(wallet.secretKey.get());
   }
 
   CryptoNote::WalletTransactionState state;
   uint64_t timestamp;
   uint32_t blockHeight;
   Hash hash;
+  size_t depositCount;
+  size_t firstDepositId;
   int64_t totalAmount;
   uint64_t fee;
   uint64_t creationTime;
   uint64_t unlockTime;
   std::string extra;
   bool isBase;
-  boost::optional<Crypto::SecretKey> secretKey = CryptoNote::NULL_SECRET_KEY;
 };
 
 //DO NOT CHANGE IT
@@ -81,6 +82,36 @@ struct WalletTransferDtoV2 {
   std::string address;
   uint64_t amount;
   uint8_t type;
+};
+
+struct WalletDepositDtoV2 {
+  WalletDepositDtoV2() {
+  }
+
+  WalletDepositDtoV2(const CryptoNote::Deposit& wd) {
+
+    creatingTransactionId = wd.creatingTransactionId;
+    spendingTransactionId = wd.spendingTransactionId;
+    term = wd.term;
+    amount = wd.amount;
+    height = wd.height;
+    unlockHeight = wd.unlockHeight;
+    locked = wd.locked;
+    transactionHash = wd.transactionHash;
+    outputInTransaction = wd.outputInTransaction;
+    address = wd.address;
+  }
+
+  size_t creatingTransactionId;
+  size_t spendingTransactionId;
+  uint32_t term;
+  uint64_t amount;
+  uint64_t height;
+  uint64_t unlockHeight;
+  bool locked;
+  uint32_t outputInTransaction;
+  Crypto::Hash transactionHash;
+  std::string address;
 };
 
 void serialize(UnlockTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
@@ -101,19 +132,31 @@ void serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serialize
   serializer(value.hash, "hash");
   serializer(value.totalAmount, "totalAmount");
   serializer(value.fee, "fee");
+  serializer(value.depositCount, "depositCount");
+  serializer(value.firstDepositId, "firstDepositId");
   serializer(value.creationTime, "creationTime");
   serializer(value.unlockTime, "unlockTime");
   serializer(value.extra, "extra");
   serializer(value.isBase, "isBase");
-  Crypto::SecretKey secretKey = reinterpret_cast<const Crypto::SecretKey&>(value.secretKey.get());
-    serializer(secretKey, "secret_key");
-  value.secretKey = secretKey;
 }
 
 void serialize(WalletTransferDtoV2& value, CryptoNote::ISerializer& serializer) {
   serializer(value.address, "address");
   serializer(value.amount, "amount");
   serializer(value.type, "type");
+}
+
+void serialize(WalletDepositDtoV2& value, CryptoNote::ISerializer& serializer) {
+  serializer(value.height, "height");
+  serializer(value.transactionHash, "transactionHash");
+  serializer(value.outputInTransaction, "outputInTransaction");
+  serializer(value.creatingTransactionId, "creatingTransactionId");
+  serializer(value.spendingTransactionId, "spendingTransactionId");
+  serializer(value.amount, "amount");
+  serializer(value.term, "term");
+  serializer(value.unlockHeight, "unlockHeight");
+  serializer(value.locked, "locked");
+  serializer(value.address, "address");
 }
 
 }
@@ -126,11 +169,14 @@ WalletSerializerV2::WalletSerializerV2(
   Crypto::SecretKey& viewSecretKey,
   uint64_t& actualBalance,
   uint64_t& pendingBalance,
+    uint64_t& lockedDepositBalance,
+    uint64_t& unlockedDepositBalance,  
   WalletsContainer& walletsContainer,
   TransfersSyncronizer& synchronizer,
   UnlockTransactionJobs& unlockTransactions,
   WalletTransactions& transactions,
   WalletTransfers& transfers,
+  WalletDeposits& deposits,
   UncommitedTransactions& uncommitedTransactions,
   std::string& extra,
   uint32_t transactionSoftLockTime
@@ -138,11 +184,14 @@ WalletSerializerV2::WalletSerializerV2(
   m_transfersObserver(transfersObserver),
   m_actualBalance(actualBalance),
   m_pendingBalance(pendingBalance),
+  m_lockedDepositBalance(lockedDepositBalance),
+  m_unlockedDepositBalance(unlockedDepositBalance),
   m_walletsContainer(walletsContainer),
   m_synchronizer(synchronizer),
   m_unlockTransactions(unlockTransactions),
   m_transactions(transactions),
   m_transfers(transfers),
+  m_deposits(deposits),
   m_uncommitedTransactions(uncommitedTransactions),
   m_extra(extra),
   m_transactionSoftLockTime(transactionSoftLockTime)
@@ -161,6 +210,7 @@ void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
   if (saveLevel == WalletSaveLevel::SAVE_KEYS_AND_TRANSACTIONS || saveLevel == WalletSaveLevel::SAVE_ALL) {
     loadTransactions(s);
     loadTransfers(s);
+    loadDeposits(s);
   }
 
   if (saveLevel == WalletSaveLevel::SAVE_ALL) {
@@ -183,6 +233,7 @@ void WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLeve
   if (saveLevel == WalletSaveLevel::SAVE_KEYS_AND_TRANSACTIONS || saveLevel == WalletSaveLevel::SAVE_ALL) {
     saveTransactions(s);
     saveTransfers(s);
+    saveDeposits(s);
   }
 
   if (saveLevel == WalletSaveLevel::SAVE_ALL) {
@@ -208,6 +259,8 @@ void WalletSerializerV2::loadKeyListAndBanalces(CryptoNote::ISerializer& seriali
 
   m_actualBalance = 0;
   m_pendingBalance = 0;
+  m_lockedDepositBalance = 0;
+  m_unlockedDepositBalance = 0;
   m_deletedKeys.clear();
 
   std::unordered_set<Crypto::PublicKey> cachedKeySet;
@@ -216,11 +269,15 @@ void WalletSerializerV2::loadKeyListAndBanalces(CryptoNote::ISerializer& seriali
     Crypto::PublicKey spendPublicKey;
     uint64_t actualBalance;
     uint64_t pendingBalance;
+    uint64_t lockedDepositBalance;
+    uint64_t unlockedDepositBalance;
     serializer(spendPublicKey, "spendPublicKey");
 
     if (saveCache) {
       serializer(actualBalance, "actualBalance");
       serializer(pendingBalance, "pendingBalance");
+      serializer(lockedDepositBalance, "lockedDepositBalance");
+      serializer(unlockedDepositBalance, "unlockedDepositBalance");
     }
 
     cachedKeySet.insert(spendPublicKey);
@@ -231,10 +288,15 @@ void WalletSerializerV2::loadKeyListAndBanalces(CryptoNote::ISerializer& seriali
     } else if (saveCache) {
       m_actualBalance += actualBalance;
       m_pendingBalance += pendingBalance;
+      m_lockedDepositBalance += lockedDepositBalance;
+      m_unlockedDepositBalance += unlockedDepositBalance;
 
-      index.modify(it, [actualBalance, pendingBalance](WalletRecord& wallet) {
+      index.modify(it, [actualBalance, pendingBalance, lockedDepositBalance, unlockedDepositBalance](WalletRecord& wallet) {
         wallet.actualBalance = actualBalance;
         wallet.pendingBalance = pendingBalance;
+        wallet.lockedDepositBalance = lockedDepositBalance;
+        wallet.unlockedDepositBalance = unlockedDepositBalance;
+
       });
     }
   }
@@ -255,6 +317,8 @@ void WalletSerializerV2::saveKeyListAndBanalces(CryptoNote::ISerializer& seriali
     if (saveCache) {
       serializer(wallet.actualBalance, "actualBalance");
       serializer(wallet.pendingBalance, "pendingBalance");
+      serializer(wallet.lockedDepositBalance, "lockedDepositBalance");
+      serializer(wallet.unlockedDepositBalance, "unlockedDepositBalance");
     }
   }
 }
@@ -274,16 +338,42 @@ void WalletSerializerV2::loadTransactions(CryptoNote::ISerializer& serializer) {
     tx.timestamp = dto.timestamp;
     tx.blockHeight = dto.blockHeight;
     tx.hash = dto.hash;
+    tx.depositCount = dto.depositCount;
+    tx.firstDepositId = dto.firstDepositId;
     tx.totalAmount = dto.totalAmount;
     tx.fee = dto.fee;
     tx.creationTime = dto.creationTime;
     tx.unlockTime = dto.unlockTime;
     tx.extra = dto.extra;
     tx.isBase = dto.isBase;
-        if (dto.secretKey)
-      tx.secretKey = reinterpret_cast<const Crypto::SecretKey&>(dto.secretKey.get());
 
     m_transactions.get<RandomAccessIndex>().emplace_back(std::move(tx));
+  }
+}
+
+void WalletSerializerV2::loadDeposits(CryptoNote::ISerializer& serializer) {
+  uint64_t count = 0;
+  serializer(count, "depositCount");
+
+  m_deposits.get<RandomAccessIndex>().reserve(count);
+
+  for (uint64_t i = 0; i < count; ++i) {
+    WalletDepositDtoV2 dto;
+    serializer(dto, "deposit");
+
+    Deposit dp;
+    dp.creatingTransactionId = dto.creatingTransactionId;
+    dp.spendingTransactionId = dto.spendingTransactionId;
+    dp.term = dto.term;
+    dp.amount = dto.amount;
+    dp.height = dto.height;
+    dp.unlockHeight = dto.unlockHeight;
+    dp.locked = dto.locked;
+    dp.transactionHash = dto.transactionHash;
+    dp.outputInTransaction = dto.outputInTransaction;
+    dp.address = dto.address;
+
+    m_deposits.get<RandomAccessIndex>().emplace_back(std::move(dp));
   }
 }
 
@@ -294,6 +384,16 @@ void WalletSerializerV2::saveTransactions(CryptoNote::ISerializer& serializer) {
   for (const auto& tx : m_transactions) {
     WalletTransactionDtoV2 dto(tx);
     serializer(dto, "transaction");
+  }
+}
+
+void WalletSerializerV2::saveDeposits(CryptoNote::ISerializer& serializer) {
+  uint64_t count = m_deposits.size();
+  serializer(count, "depositCount");
+
+  for (const auto& tx : m_deposits) {
+    WalletDepositDtoV2 dto(tx);
+    serializer(dto, "deposit");
   }
 }
 

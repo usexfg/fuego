@@ -1,21 +1,10 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "Upgrade.h"
+#include "TestGenerator.h"
 
 using namespace CryptoNote;
 
@@ -42,28 +31,23 @@ namespace {
   }
 }
 
-gen_upgrade::gen_upgrade() : m_invalidBlockIndex(0), m_checkBlockTemplateVersionCallCounter(0),
-    m_coinsInCirculationBeforeUpgrade(0), m_coinsInCirculationAfterUpgrade(0) {
+gen_upgrade::gen_upgrade() : m_invalidBlockIndex(0), m_checkBlockTemplateVersionCallCounter(0) {
   CryptoNote::CurrencyBuilder currencyBuilder(m_logger);
   currencyBuilder.maxBlockSizeInitial(std::numeric_limits<size_t>::max() / 2);
   currencyBuilder.upgradeHeightV2(UpgradeDetectorBase::UNDEF_HEIGHT);
-  // Disable voting and never upgrade to v.3.0
-  currencyBuilder.upgradeHeightV3(CryptoNote::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER);
+  currencyBuilder.upgradeHeightV3(UpgradeDetectorBase::UNDEF_HEIGHT);
   m_currency = currencyBuilder.currency();
 
   REGISTER_CALLBACK_METHOD(gen_upgrade, markInvalidBlock);
   REGISTER_CALLBACK_METHOD(gen_upgrade, checkBlockTemplateVersionIsV1);
   REGISTER_CALLBACK_METHOD(gen_upgrade, checkBlockTemplateVersionIsV2);
-  REGISTER_CALLBACK_METHOD(gen_upgrade, checkBlockRewardEqFee);
-  REGISTER_CALLBACK_METHOD(gen_upgrade, checkBlockRewardIsZero);
-  REGISTER_CALLBACK_METHOD(gen_upgrade, rememberCoinsInCirculationBeforeUpgrade);
-  REGISTER_CALLBACK_METHOD(gen_upgrade, rememberCoinsInCirculationAfterUpgrade);
 }
 
 bool gen_upgrade::generate(std::vector<test_event_entry>& events) const {
   const uint64_t tsStart = 1338224400;
 
   GENERATE_ACCOUNT(minerAccount);
+  GENERATE_ACCOUNT(to);
   MAKE_GENESIS_BLOCK(events, blk0, minerAccount, tsStart);
 
   // Vote for upgrade
@@ -130,21 +114,14 @@ bool gen_upgrade::generate(std::vector<test_event_entry>& events) const {
 bool gen_upgrade::checkBeforeUpgrade(std::vector<test_event_entry>& events, test_generator& generator,
                                      const CryptoNote::Block& parentBlock, const CryptoNote::AccountBase& minerAcc,
                                      bool checkReward) const {
-  // Checking 1: get_block_templare returns block with major version 1
-  DO_CALLBACK(events, "checkBlockTemplateVersionIsV1");
-
-  // Checking 2: penalty doesn't apply to transactions fee
-  if (checkReward) {
-    // Add block to the blockchain, later it become an alternative
-    DO_CALLBACK(events, "rememberCoinsInCirculationBeforeUpgrade");
-    MAKE_TX_LIST_START(events, txs, minerAcc, minerAcc, MK_COINS(1), parentBlock);
-    Block alternativeBlk;
-    if (!generator.constructMaxSizeBlock(alternativeBlk, parentBlock, minerAcc, m_currency.rewardBlocksWindow(), txs)) {
-      return false;
-    }
-    events.push_back(alternativeBlk);
-    DO_CALLBACK(events, "checkBlockRewardEqFee");
+  // Checking 1: transactions with version 2.0 doesn't accepted
+  Block blk;
+  if (!makeBlockTxV2(events, generator, blk, parentBlock, minerAcc, to, 1, BLOCK_MAJOR_VERSION_1, BLOCK_MINOR_VERSION_1)) {
+    return false;
   }
+
+  // Checking 2: get_block_templare returns block with major version 1
+  DO_CALLBACK(events, "checkBlockTemplateVersionIsV1");
 
   // Checking 3: block with version 2.0 doesn't accepted
   Block badBlock;
@@ -157,25 +134,24 @@ bool gen_upgrade::checkAfterUpgrade(std::vector<test_event_entry>& events, test_
   // Checking 1: get_block_templare returns block with major version 2
   DO_CALLBACK(events, "checkBlockTemplateVersionIsV2");
 
-  // Checking 2: penalty applies to transactions fee
-  // Add block to the blockchain, later it become an alternative
-  DO_CALLBACK(events, "rememberCoinsInCirculationAfterUpgrade");
-  MAKE_TX_LIST_START(events, txs, minerAcc, minerAcc, MK_COINS(1), parentBlock);
-  Block alternativeBlk;
-  if (!generator.constructMaxSizeBlock(alternativeBlk, parentBlock, minerAcc, m_currency.rewardBlocksWindow(), txs)) {
-    return false;
-  }
-  events.push_back(alternativeBlk);
-  DO_CALLBACK(events, "checkBlockRewardIsZero");
-
-  // Checking 3: block with version 1.0 doesn't accepted
+  // Checking 2: block with version 1.0 doesn't accepted
   Block badBlock;
   DO_CALLBACK(events, "markInvalidBlock");
   if (!makeBlocks(events, generator, badBlock, parentBlock, minerAcc, 1, BLOCK_MAJOR_VERSION_1, BLOCK_MINOR_VERSION_0)) {
     return false;
   }
 
-  // Checking 2: block with version 1.1 doesn't accepted
+  Block blk1;
+  if (!makeBlockTxV1(events, generator, blk1, parentBlock, minerAcc, to, m_currency.minNumberVotingBlocks(), BLOCK_MAJOR_VERSION_2, BLOCK_MINOR_VERSION_0)) {
+    return false;
+  }
+
+  Block blk2;
+  if (!makeBlockTxV2(events, generator, blk2, parentBlock, minerAcc, to, m_currency.minNumberVotingBlocks(), BLOCK_MAJOR_VERSION_2, BLOCK_MINOR_VERSION_0, false)) {
+    return false;
+  }
+
+  // Checking 3: block with version 1.1 doesn't accepted
   DO_CALLBACK(events, "markInvalidBlock");
   return makeBlocks(events, generator, badBlock, parentBlock, minerAcc, 1, BLOCK_MAJOR_VERSION_1, BLOCK_MINOR_VERSION_1);
 }
@@ -183,9 +159,9 @@ bool gen_upgrade::checkAfterUpgrade(std::vector<test_event_entry>& events, test_
 bool gen_upgrade::check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t eventIdx, const CryptoNote::Block& /*blk*/) {
   if (m_invalidBlockIndex == eventIdx) {
     m_invalidBlockIndex = 0;
-    return bvc.m_verifivation_failed;
+    return bvc.m_verification_failed;
   } else {
-    return !bvc.m_verifivation_failed;
+    return !bvc.m_verification_failed;
   }
 }
 
@@ -222,36 +198,48 @@ bool gen_upgrade::checkBlockTemplateVersion(CryptoNote::core& c, uint8_t expecte
   return true;
 }
 
-bool gen_upgrade::checkBlockRewardEqFee(CryptoNote::core& c, size_t evIndex, const std::vector<test_event_entry>& events) {
-  DEFINE_TESTS_ERROR_CONTEXT("gen_upgrade::checkBlockRewardEqFee");
+bool gen_upgrade::makeBlockTxV1(std::vector<test_event_entry>& events, test_generator& generator, Block& lastBlock,
+                                const Block& parentBlock, const AccountBase& minerAcc, const AccountBase& to, size_t count,
+                                uint8_t majorVersion, uint8_t minorVersion) const {
+  Block prevBlock = parentBlock;
+  Block b;
+  TestGenerator gen(generator, minerAcc, parentBlock, m_currency, events);
+  Transaction transaction;
+  auto builder = gen.createTxBuilder(minerAcc, to, m_currency.depositMinAmount(), m_currency.minimumFee());
+  builder.m_destinations.clear();
 
-  Block blk = boost::get<Block>(events[evIndex - 1]);
-  uint64_t blockReward = get_outs_money_amount(blk.baseTransaction);
-  CHECK_EQ(blockReward, m_currency.minimumFee());
+  TransactionBuilder::KeysVector kv;
+  kv.push_back(to.getAccountKeys());
 
-  CHECK_EQ(m_coinsInCirculationBeforeUpgrade, c.getTotalGeneratedAmount());
-
+  builder.addOutput({ m_currency.depositMinAmount(), to.getAccountKeys().address });
+  builder.setVersion(TRANSACTION_VERSION_1);
+  auto tx = builder.build();
+  gen.addEvent(tx);
+  gen.makeNextBlock(tx);
+  lastBlock = gen.lastBlock;
   return true;
 }
 
-bool gen_upgrade::checkBlockRewardIsZero(CryptoNote::core& c, size_t evIndex, const std::vector<test_event_entry>& events) {
-  DEFINE_TESTS_ERROR_CONTEXT("gen_upgrade::checkBlockRewardIsZero");
+bool gen_upgrade::makeBlockTxV2(std::vector<test_event_entry>& events, test_generator& generator, Block& lastBlock,
+                                const Block& parentBlock, const AccountBase& minerAcc, const AccountBase& to, size_t count,
+                                uint8_t majorVersion, uint8_t minorVersion, bool before) const {
+  Block prevBlock = parentBlock;
+  Block b;
+  TestGenerator gen(generator, minerAcc, parentBlock, m_currency, events);
+  Transaction transaction;
+  auto builder = gen.createTxBuilder(minerAcc, to, m_currency.depositMinAmount(), m_currency.minimumFee());
+  builder.m_destinations.clear();
 
-  Block blk = boost::get<Block>(events[evIndex - 1]);
-  uint64_t blockReward = get_outs_money_amount(blk.baseTransaction);
-  CHECK_EQ(blockReward, 0);
+  TransactionBuilder::KeysVector kv;
+  kv.push_back(to.getAccountKeys());
 
-  CHECK_EQ(m_coinsInCirculationAfterUpgrade - m_currency.minimumFee(), c.getTotalGeneratedAmount());
-
-  return true;
-}
-
-bool gen_upgrade::rememberCoinsInCirculationBeforeUpgrade(CryptoNote::core& c, size_t /*evIndex*/, const std::vector<test_event_entry>& /*events*/) {
-  m_coinsInCirculationBeforeUpgrade = c.getTotalGeneratedAmount();
-  return true;
-}
-
-bool gen_upgrade::rememberCoinsInCirculationAfterUpgrade(CryptoNote::core& c, size_t /*evIndex*/, const std::vector<test_event_entry>& /*events*/) {
-  m_coinsInCirculationAfterUpgrade = c.getTotalGeneratedAmount();
+  builder.addMultisignatureOut(m_currency.depositMinAmount(), kv, 1, m_currency.depositMinTerm());
+  builder.setVersion(TRANSACTION_VERSION_2);
+  auto tx = builder.build();
+  //if (before) gen.addCallback("markInvalidBlock"); // should be rejected by the core
+  gen.addEvent(tx);
+  if (before) gen.addCallback("markInvalidBlock"); // should be rejected by the core
+  gen.makeNextBlock(tx);
+  lastBlock = gen.lastBlock;
   return true;
 }

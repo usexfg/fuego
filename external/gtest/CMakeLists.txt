@@ -27,6 +27,8 @@ option(
   "Build gtest with internal symbols hidden in shared libraries."
   OFF)
 
+set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "Generate debug library name with a postfix.")
+
 # Defines pre_project_set_up_hermetic_build() and set_up_hermetic_build().
 include(cmake/hermetic_build.cmake OPTIONAL)
 
@@ -284,7 +286,7 @@ if (gtest_build_tests)
   py_test(gtest_list_tests_unittest)
 
   cxx_executable(gtest_output_test_ test gtest)
-  py_test(gtest_output_test --no_stacktrace_support)
+  py_test(gtest_output_test)
 
   cxx_executable(gtest_shuffle_test_ test gtest)
   py_test(gtest_shuffle_test)
@@ -304,9 +306,7 @@ if (gtest_build_tests)
   cxx_executable(gtest_xml_outfile1_test_ test gtest_main)
   cxx_executable(gtest_xml_outfile2_test_ test gtest_main)
   py_test(gtest_xml_outfiles_test)
-  py_test(gtest_json_outfiles_test)
 
   cxx_executable(gtest_xml_output_unittest_ test gtest)
-  py_test(gtest_xml_output_unittest --no_stacktrace_support)
-  py_test(gtest_json_output_unittest)
+  py_test(gtest_xml_output_unittest)
 endif()

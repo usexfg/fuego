@@ -1,17 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright(c) 2014 - 2017 XDN - project developers
-// Copyright(c) 2018 The Karbo developers
-// This file is part of Bytecoin.
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
+//
+// This file is part of Fango.
+//
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "PaymentGateService.h"
 
@@ -21,11 +24,12 @@
 #include "InProcessNode/InProcessNode.h"
 #include "Logging/LoggerRef.h"
 #include "PaymentGate/PaymentServiceJsonRpcServer.h"
-#include "CheckpointsData.h"
+
 #include "CryptoNoteCore/CoreConfig.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "P2p/NetNode.h"
+#include "Rpc/RpcServer.h"
 #include <System/Context.h>
 #include "Wallet/WalletGreen.h"
 
@@ -51,26 +55,12 @@ void stopSignalHandler(PaymentGateService* pg) {
   pg->stop();
 }
 
-PaymentGateService::PaymentGateService() :
-  dispatcher(nullptr),
-  stopEvent(nullptr),
-  config(),
-  service(nullptr),
-  logger(),
-  currencyBuilder(logger),
-  fileLogger(Logging::TRACE),
-  consoleLogger(Logging::INFO) {
-  consoleLogger.setPattern("%D %T %L ");
-  fileLogger.setPattern("%D %T %L ");
-}
-
 bool PaymentGateService::init(int argc, char** argv) {
   if (!config.init(argc, argv)) {
     return false;
   }
 
   logger.setMaxLevel(static_cast<Logging::Level>(config.gateConfiguration.logLevel));
-  logger.setPattern("%D %T %L ");
   logger.addLogger(consoleLogger);
 
   Logging::LoggerRef log(logger, "main");
@@ -100,7 +90,9 @@ bool PaymentGateService::init(int argc, char** argv) {
 WalletConfiguration PaymentGateService::getWalletConfig() const {
   return WalletConfiguration{
     config.gateConfiguration.containerFile,
-    config.gateConfiguration.containerPassword
+    config.gateConfiguration.containerPassword,
+    config.gateConfiguration.secretSpendKey,
+    config.gateConfiguration.secretViewKey
   };
 }
 
@@ -133,7 +125,7 @@ void PaymentGateService::run() {
 void PaymentGateService::stop() {
   Logging::LoggerRef log(logger, "stop");
 
-  log(Logging::INFO, Logging::BRIGHT_WHITE) << "Stop signal caught";
+  log(Logging::INFO) << "Stop signal caught";
 
   if (dispatcher != nullptr) {
     dispatcher->remoteSpawn([&]() {
@@ -158,18 +150,11 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
   log(Logging::INFO) << "Starting Payment Gate with local node";
 
   CryptoNote::Currency currency = currencyBuilder.currency();
-  CryptoNote::core core(currency, NULL, logger, false);
+  CryptoNote::core core(currency, NULL, logger, false, false);
 
   CryptoNote::CryptoNoteProtocolHandler protocol(currency, *dispatcher, core, NULL, logger);
   CryptoNote::NodeServer p2pNode(*dispatcher, protocol, logger);
-  //courtesy of Helder Garcia (Niobio Cash)
-  CryptoNote::Checkpoints checkpoints(logger);
-  for (const auto& cp : CryptoNote::CHECKPOINTS) {
-    checkpoints.add_checkpoint(cp.height, cp.blockId);
-  }
-  if (!config.gateConfiguration.testnet) {
-    core.set_checkpoints(std::move(checkpoints));
-  }
+  CryptoNote::RpcServer rpcServer(*dispatcher, logger, core, p2pNode, protocol);
 
   protocol.set_p2p_endpoint(&p2pNode);
   core.set_cryptonote_protocol(&protocol);
@@ -190,9 +175,9 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
 
   node->init([&initPromise, &log](std::error_code ec) {
     if (ec) {
-      log(Logging::WARNING, Logging::YELLOW) << "Failed to initialize node: " << ec.message();
+      log(Logging::WARNING, Logging::YELLOW) << "Failed to init node: " << ec.message();
     } else {
-      log(Logging::INFO) << "node is initialized successfully";
+      log(Logging::INFO) << "node is inited successfully";
     }
 
     initPromise.set_value(ec);
@@ -202,6 +187,11 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
   if (ec) {
     throw std::system_error(ec);
   }
+
+  log(Logging::INFO) << "Starting core rpc server on "
+    << config.remoteNodeConfig.daemonHost << ":" << config.remoteNodeConfig.daemonPort;
+  rpcServer.start(config.remoteNodeConfig.daemonHost, config.remoteNodeConfig.daemonPort);
+  log(Logging::INFO) << "Core rpc server started ok";
 
   log(Logging::INFO) << "Spawning p2p server";
 
@@ -216,6 +206,8 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
 
   runWalletService(currency, *node);
 
+  log(Logging::INFO) << "Stopping core rpc server...";
+  rpcServer.stop();
   p2pNode.sendStopSignal();
   context.get();
   node->shutdown();
@@ -248,7 +240,7 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
   try {
     service->init();
   } catch (std::exception& e) {
-    Logging::LoggerRef(logger, "run")(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to initialize walletService reason: " << e.what();
+    Logging::LoggerRef(logger, "run")(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to init walletService reason: " << e.what();
     return;
   }
 
@@ -261,9 +253,8 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
     }
   } else {
     PaymentService::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
-    rpcServer.start(config.gateConfiguration.bindAddress, config.gateConfiguration.bindPort, config.gateConfiguration.m_rpcUser, config.gateConfiguration.m_rpcPassword);
-
-    Logging::LoggerRef(logger, "PaymentGateService")(Logging::INFO, Logging::BRIGHT_WHITE) << "JSON-RPC server stopped, stopping wallet service...";
+    rpcServer.start(config.gateConfiguration.bindAddress, config.gateConfiguration.bindPort,
+      config.gateConfiguration.rpcUser, config.gateConfiguration.rpcPassword);
 
     try {
       service->saveWallet();

@@ -4,14 +4,10 @@ gtest_output_test_.cc:#: Failure
 Value of: false
   Actual: false
 Expected: true
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Expected equality of these values:
   2
   3
-Stack trace: (omitted)
-
 [0;32m[==========] [mRunning 68 tests from 30 test cases.
 [0;32m[----------] [mGlobal test environment set-up.
 FooEnvironment::SetUp() called.
@@ -44,16 +40,12 @@ Expected equality of these values:
     Which is: "\"Line"
   actual
     Which is: "actual \"string\""
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Expected equality of these values:
   golden
     Which is: "\"Line"
   actual
     Which is: "actual \"string\""
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mNonfatalFailureTest.EscapesStringOperands
 [0;32m[ RUN      ] [mNonfatalFailureTest.DiffForLongStrings
 gtest_output_test_.cc:#: Failure
@@ -66,8 +58,6 @@ With diff:
 -\"Line\0 1\"
  Line 2
 
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mNonfatalFailureTest.DiffForLongStrings
 [0;32m[----------] [m3 tests from FatalFailureTest
 [0;32m[ RUN      ] [mFatalFailureTest.FatalFailureInSubroutine
@@ -77,8 +67,6 @@ Expected equality of these values:
   1
   x
     Which is: 2
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mFatalFailureTest.FatalFailureInSubroutine
 [0;32m[ RUN      ] [mFatalFailureTest.FatalFailureInNestedSubroutine
 (expecting a failure that x should be 1)
@@ -87,8 +75,6 @@ Expected equality of these values:
   1
   x
     Which is: 2
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mFatalFailureTest.FatalFailureInNestedSubroutine
 [0;32m[ RUN      ] [mFatalFailureTest.NonfatalFailureInSubroutine
 (expecting a failure on false)
@@ -96,8 +82,6 @@ gtest_output_test_.cc:#: Failure
 Value of: false
   Actual: false
 Expected: true
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mFatalFailureTest.NonfatalFailureInSubroutine
 [0;32m[----------] [m1 test from LoggingTest
 [0;32m[ RUN      ] [mLoggingTest.InterleavingLoggingAndAssertions
@@ -106,14 +90,10 @@ i == 0
 i == 1
 gtest_output_test_.cc:#: Failure
 Expected: (3) >= (a[i]), actual: 3 vs 9
-Stack trace: (omitted)
-
 i == 2
 i == 3
 gtest_output_test_.cc:#: Failure
 Expected: (3) >= (a[i]), actual: 3 vs 6
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mLoggingTest.InterleavingLoggingAndAssertions
 [0;32m[----------] [m7 tests from SCOPED_TRACETest
 [0;32m[ RUN      ] [mSCOPED_TRACETest.AcceptedValues
@@ -125,28 +105,20 @@ gtest_output_test_.cc:#: (null)
 gtest_output_test_.cc:#: 1337
 gtest_output_test_.cc:#: std::string
 gtest_output_test_.cc:#: literal string
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.AcceptedValues
 [0;32m[ RUN      ] [mSCOPED_TRACETest.ObeysScopes
 (expected to fail)
 gtest_output_test_.cc:#: Failure
 Failed
 This failure is expected, and shouldn't have a trace.
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 This failure is expected, and should have a trace.
 Google Test trace:
 gtest_output_test_.cc:#: Expected trace
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 This failure is expected, and shouldn't have a trace.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.ObeysScopes
 [0;32m[ RUN      ] [mSCOPED_TRACETest.WorksInLoop
 (expected to fail)
@@ -157,8 +129,6 @@ Expected equality of these values:
     Which is: 1
 Google Test trace:
 gtest_output_test_.cc:#: i = 1
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Expected equality of these values:
   1
@@ -166,8 +136,6 @@ Expected equality of these values:
     Which is: 2
 Google Test trace:
 gtest_output_test_.cc:#: i = 2
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.WorksInLoop
 [0;32m[ RUN      ] [mSCOPED_TRACETest.WorksInSubroutine
 (expected to fail)
@@ -178,8 +146,6 @@ Expected equality of these values:
     Which is: 1
 Google Test trace:
 gtest_output_test_.cc:#: n = 1
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Expected equality of these values:
   1
@@ -187,8 +153,6 @@ Expected equality of these values:
     Which is: 2
 Google Test trace:
 gtest_output_test_.cc:#: n = 2
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.WorksInSubroutine
 [0;32m[ RUN      ] [mSCOPED_TRACETest.CanBeNested
 (expected to fail)
@@ -200,8 +164,6 @@ Expected equality of these values:
 Google Test trace:
 gtest_output_test_.cc:#: n = 2
 gtest_output_test_.cc:#: 
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.CanBeNested
 [0;32m[ RUN      ] [mSCOPED_TRACETest.CanBeRepeated
 (expected to fail)
@@ -210,16 +172,12 @@ Failed
 This failure is expected, and should contain trace point A.
 Google Test trace:
 gtest_output_test_.cc:#: A
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 This failure is expected, and should contain trace point A and B.
 Google Test trace:
 gtest_output_test_.cc:#: B
 gtest_output_test_.cc:#: A
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 This failure is expected, and should contain trace point A, B, and C.
@@ -227,8 +185,6 @@ Google Test trace:
 gtest_output_test_.cc:#: C
 gtest_output_test_.cc:#: B
 gtest_output_test_.cc:#: A
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 This failure is expected, and should contain trace point A, B, and D.
@@ -236,8 +192,6 @@ Google Test trace:
 gtest_output_test_.cc:#: D
 gtest_output_test_.cc:#: B
 gtest_output_test_.cc:#: A
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.CanBeRepeated
 [0;32m[ RUN      ] [mSCOPED_TRACETest.WorksConcurrently
 (expecting 6 failures)
@@ -246,39 +200,27 @@ Failed
 Expected failure #1 (in thread B, only trace B alive).
 Google Test trace:
 gtest_output_test_.cc:#: Trace B
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #2 (in thread A, trace A & B both alive).
 Google Test trace:
 gtest_output_test_.cc:#: Trace A
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #3 (in thread B, trace A & B both alive).
 Google Test trace:
 gtest_output_test_.cc:#: Trace B
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #4 (in thread B, only trace A alive).
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #5 (in thread A, only trace A alive).
 Google Test trace:
 gtest_output_test_.cc:#: Trace A
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #6 (in thread A, no trace alive).
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.WorksConcurrently
 [0;32m[----------] [m1 test from ScopedTraceTest
 [0;32m[ RUN      ] [mScopedTraceTest.WithExplicitFileAndLine
@@ -287,8 +229,6 @@ Failed
 Check that the trace is attached to a particular location.
 Google Test trace:
 explicit_file.cc:123: expected trace message
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mScopedTraceTest.WithExplicitFileAndLine
 [0;32m[----------] [m1 test from NonFatalFailureInFixtureConstructorTest
 [0;32m[ RUN      ] [mNonFatalFailureInFixtureConstructorTest.FailureInConstructor
@@ -296,28 +236,18 @@ Stack trace: (omitted)
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #1, in the test fixture c'tor.
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #2, in SetUp().
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #3, in the test body.
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #4, in TearDown.
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #5, in the test fixture d'tor.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mNonFatalFailureInFixtureConstructorTest.FailureInConstructor
 [0;32m[----------] [m1 test from FatalFailureInFixtureConstructorTest
 [0;32m[ RUN      ] [mFatalFailureInFixtureConstructorTest.FailureInConstructor
@@ -325,13 +255,9 @@ Stack trace: (omitted)
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #1, in the test fixture c'tor.
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #2, in the test fixture d'tor.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mFatalFailureInFixtureConstructorTest.FailureInConstructor
 [0;32m[----------] [m1 test from NonFatalFailureInSetUpTest
 [0;32m[ RUN      ] [mNonFatalFailureInSetUpTest.FailureInSetUp
@@ -339,23 +265,15 @@ Stack trace: (omitted)
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #1, in SetUp().
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #2, in the test function.
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #3, in TearDown().
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #4, in the test fixture d'tor.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mNonFatalFailureInSetUpTest.FailureInSetUp
 [0;32m[----------] [m1 test from FatalFailureInSetUpTest
 [0;32m[ RUN      ] [mFatalFailureInSetUpTest.FailureInSetUp
@@ -363,26 +281,18 @@ Stack trace: (omitted)
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #1, in SetUp().
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #2, in TearDown().
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected failure #3, in the test fixture d'tor.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mFatalFailureInSetUpTest.FailureInSetUp
 [0;32m[----------] [m1 test from AddFailureAtTest
 [0;32m[ RUN      ] [mAddFailureAtTest.MessageContainsSpecifiedFileAndLineNumber
 foo.cc:42: Failure
 Failed
 Expected failure in foo.cc
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mAddFailureAtTest.MessageContainsSpecifiedFileAndLineNumber
 [0;32m[----------] [m4 tests from MixedUpTestCaseTest
 [0;32m[ RUN      ] [mMixedUpTestCaseTest.FirstTestFromNamespaceFoo
@@ -399,8 +309,6 @@ using two different test fixture classes.  This can happen if
 the two classes are from different namespaces or translation
 units and have the same name.  You should probably rename one
 of the classes to put the tests into different test cases.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mMixedUpTestCaseTest.ThisShouldFail
 [0;32m[ RUN      ] [mMixedUpTestCaseTest.ThisShouldFailToo
 gtest.cc:#: Failure
@@ -412,8 +320,6 @@ using two different test fixture classes.  This can happen if
 the two classes are from different namespaces or translation
 units and have the same name.  You should probably rename one
 of the classes to put the tests into different test cases.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mMixedUpTestCaseTest.ThisShouldFailToo
 [0;32m[----------] [m2 tests from MixedUpTestCaseWithSameTestNameTest
 [0;32m[ RUN      ] [mMixedUpTestCaseWithSameTestNameTest.TheSecondTestWithThisNameShouldFail
@@ -428,8 +334,6 @@ using two different test fixture classes.  This can happen if
 the two classes are from different namespaces or translation
 units and have the same name.  You should probably rename one
 of the classes to put the tests into different test cases.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mMixedUpTestCaseWithSameTestNameTest.TheSecondTestWithThisNameShouldFail
 [0;32m[----------] [m2 tests from TEST_F_before_TEST_in_same_test_case
 [0;32m[ RUN      ] [mTEST_F_before_TEST_in_same_test_case.DefinedUsingTEST_F
@@ -444,8 +348,6 @@ test DefinedUsingTEST_F is defined using TEST_F but
 test DefinedUsingTESTAndShouldFail is defined using TEST.  You probably
 want to change the TEST to TEST_F or move it to another test
 case.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mTEST_F_before_TEST_in_same_test_case.DefinedUsingTESTAndShouldFail
 [0;32m[----------] [m2 tests from TEST_before_TEST_F_in_same_test_case
 [0;32m[ RUN      ] [mTEST_before_TEST_F_in_same_test_case.DefinedUsingTEST
@@ -460,8 +362,6 @@ test DefinedUsingTEST_FAndShouldFail is defined using TEST_F but
 test DefinedUsingTEST is defined using TEST.  You probably
 want to change the TEST to TEST_F or move it to another test
 case.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mTEST_before_TEST_F_in_same_test_case.DefinedUsingTEST_FAndShouldFail
 [0;32m[----------] [m8 tests from ExpectNonfatalFailureTest
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.CanReferenceGlobalVariables
@@ -475,8 +375,6 @@ Stack trace: (omitted)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenThereIsNoNonfatalFailure
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenThereAreTwoNonfatalFailures
 (expecting a failure)
@@ -486,16 +384,10 @@ Expected: 1 non-fatal failure
 gtest_output_test_.cc:#: Non-fatal failure:
 Failed
 Expected non-fatal failure 1.
-Stack trace: (omitted)
-
 
 gtest_output_test_.cc:#: Non-fatal failure:
 Failed
 Expected non-fatal failure 2.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenThereAreTwoNonfatalFailures
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenThereIsOneFatalFailure
@@ -506,10 +398,6 @@ Expected: 1 non-fatal failure
 gtest_output_test_.cc:#: Fatal failure:
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenThereIsOneFatalFailure
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenStatementReturns
@@ -517,16 +405,12 @@ Stack trace: (omitted)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenStatementReturns
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenStatementThrows
 (expecting a failure)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenStatementThrows
 [0;32m[----------] [m8 tests from ExpectFatalFailureTest
 [0;32m[ RUN      ] [mExpectFatalFailureTest.CanReferenceGlobalVariables
@@ -540,8 +424,6 @@ Stack trace: (omitted)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenThereIsNoFatalFailure
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenThereAreTwoFatalFailures
 (expecting a failure)
@@ -551,16 +433,10 @@ Expected: 1 fatal failure
 gtest_output_test_.cc:#: Fatal failure:
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
 
 gtest_output_test_.cc:#: Fatal failure:
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenThereAreTwoFatalFailures
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenThereIsOneNonfatalFailure
@@ -571,10 +447,6 @@ Expected: 1 fatal failure
 gtest_output_test_.cc:#: Non-fatal failure:
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenThereIsOneNonfatalFailure
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenStatementReturns
@@ -582,16 +454,12 @@ Stack trace: (omitted)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenStatementReturns
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenStatementThrows
 (expecting a failure)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenStatementThrows
 [0;32m[----------] [m2 tests from TypedTest/0, where TypeParam = int
 [0;32m[ RUN      ] [mTypedTest/0.Success
@@ -603,8 +471,6 @@ Expected equality of these values:
   TypeParam()
     Which is: 0
 Expected failure
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mTypedTest/0.Failure, where TypeParam = int
 [0;32m[----------] [m2 tests from Unsigned/TypedTestP/0, where TypeParam = unsigned char
 [0;32m[ RUN      ] [mUnsigned/TypedTestP/0.Success
@@ -617,10 +483,8 @@ Expected equality of these values:
   TypeParam()
     Which is: '\0'
 Expected failure
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mUnsigned/TypedTestP/0.Failure, where TypeParam = unsigned char
-[0;32m[----------] [m2 tests from Unsigned/TypedTestP/1, where TypeParam = unsigned int
+[0;32m[----------] [m2 tests from Unsigned/TypedTestP/1, where TypeParam = unsigned
 [0;32m[ RUN      ] [mUnsigned/TypedTestP/1.Success
 [0;32m[       OK ] [mUnsigned/TypedTestP/1.Success
 [0;32m[ RUN      ] [mUnsigned/TypedTestP/1.Failure
@@ -631,9 +495,7 @@ Expected equality of these values:
   TypeParam()
     Which is: 0
 Expected failure
-Stack trace: (omitted)
-
-[0;31m[  FAILED  ] [mUnsigned/TypedTestP/1.Failure, where TypeParam = unsigned int
+[0;31m[  FAILED  ] [mUnsigned/TypedTestP/1.Failure, where TypeParam = unsigned
 [0;32m[----------] [m4 tests from ExpectFailureTest
 [0;32m[ RUN      ] [mExpectFailureTest.ExpectFatalFailure
 (expecting 1 failure)
@@ -642,10 +504,6 @@ Expected: 1 fatal failure
   Actual:
 gtest_output_test_.cc:#: Success:
 Succeeded
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -654,10 +512,6 @@ Expected: 1 fatal failure
 gtest_output_test_.cc:#: Non-fatal failure:
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -666,10 +520,6 @@ Expected: 1 fatal failure containing "Some other fatal failure expected."
 gtest_output_test_.cc:#: Fatal failure:
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFailureTest.ExpectFatalFailure
 [0;32m[ RUN      ] [mExpectFailureTest.ExpectNonFatalFailure
@@ -679,10 +529,6 @@ Expected: 1 non-fatal failure
   Actual:
 gtest_output_test_.cc:#: Success:
 Succeeded
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -691,10 +537,6 @@ Expected: 1 non-fatal failure
 gtest_output_test_.cc:#: Fatal failure:
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -703,10 +545,6 @@ Expected: 1 non-fatal failure containing "Some other non-fatal failure."
 gtest_output_test_.cc:#: Non-fatal failure:
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFailureTest.ExpectNonFatalFailure
 [0;32m[ RUN      ] [mExpectFailureTest.ExpectFatalFailureOnAllThreads
@@ -716,10 +554,6 @@ Expected: 1 fatal failure
   Actual:
 gtest_output_test_.cc:#: Success:
 Succeeded
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -728,10 +562,6 @@ Expected: 1 fatal failure
 gtest_output_test_.cc:#: Non-fatal failure:
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -740,10 +570,6 @@ Expected: 1 fatal failure containing "Some other fatal failure expected."
 gtest_output_test_.cc:#: Fatal failure:
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFailureTest.ExpectFatalFailureOnAllThreads
 [0;32m[ RUN      ] [mExpectFailureTest.ExpectNonFatalFailureOnAllThreads
@@ -753,10 +579,6 @@ Expected: 1 non-fatal failure
   Actual:
 gtest_output_test_.cc:#: Success:
 Succeeded
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -765,10 +587,6 @@ Expected: 1 non-fatal failure
 gtest_output_test_.cc:#: Fatal failure:
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 (expecting 1 failure)
 gtest.cc:#: Failure
@@ -777,10 +595,6 @@ Expected: 1 non-fatal failure containing "Some other non-fatal failure."
 gtest_output_test_.cc:#: Non-fatal failure:
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
-
-Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFailureTest.ExpectNonFatalFailureOnAllThreads
 [0;32m[----------] [m2 tests from ExpectFailureWithThreadsTest
@@ -789,26 +603,18 @@ Stack trace: (omitted)
 gtest_output_test_.cc:#: Failure
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectFailureWithThreadsTest.ExpectFatalFailure
 [0;32m[ RUN      ] [mExpectFailureWithThreadsTest.ExpectNonFatalFailure
 (expecting 2 failures)
 gtest_output_test_.cc:#: Failure
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 0 failures
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mExpectFailureWithThreadsTest.ExpectNonFatalFailure
 [0;32m[----------] [m1 test from ScopedFakeTestPartResultReporterTest
 [0;32m[ RUN      ] [mScopedFakeTestPartResultReporterTest.InterceptOnlyCurrentThread
@@ -816,13 +622,9 @@ Stack trace: (omitted)
 gtest_output_test_.cc:#: Failure
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
 gtest_output_test_.cc:#: Failure
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mScopedFakeTestPartResultReporterTest.InterceptOnlyCurrentThread
 [0;32m[----------] [m1 test from PrintingFailingParams/FailingParamTest
 [0;32m[ RUN      ] [mPrintingFailingParams/FailingParamTest.Fails/0
@@ -831,8 +633,6 @@ Expected equality of these values:
   1
   GetParam()
     Which is: 2
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mPrintingFailingParams/FailingParamTest.Fails/0, where GetParam() = 2
 [0;32m[----------] [m2 tests from PrintingStrings/ParamTest
 [0;32m[ RUN      ] [mPrintingStrings/ParamTest.Success/a
@@ -844,22 +644,16 @@ Expected equality of these values:
   GetParam()
     Which is: "a"
 Expected failure
-Stack trace: (omitted)
-
 [0;31m[  FAILED  ] [mPrintingStrings/ParamTest.Failure/a, where GetParam() = "a"
 [0;32m[----------] [mGlobal test environment tear-down
 BarEnvironment::TearDown() called.
 gtest_output_test_.cc:#: Failure
 Failed
 Expected non-fatal failure.
-Stack trace: (omitted)
-
 FooEnvironment::TearDown() called.
 gtest_output_test_.cc:#: Failure
 Failed
 Expected fatal failure.
-Stack trace: (omitted)
-
 [0;32m[==========] [m68 tests from 30 test cases ran.
 [0;32m[  PASSED  ] [m22 tests.
 [0;31m[  FAILED  ] [m46 tests, listed below:
@@ -899,7 +693,7 @@ Stack trace: (omitted)
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenStatementThrows
 [0;31m[  FAILED  ] [mTypedTest/0.Failure, where TypeParam = int
 [0;31m[  FAILED  ] [mUnsigned/TypedTestP/0.Failure, where TypeParam = unsigned char
-[0;31m[  FAILED  ] [mUnsigned/TypedTestP/1.Failure, where TypeParam = unsigned int
+[0;31m[  FAILED  ] [mUnsigned/TypedTestP/1.Failure, where TypeParam = unsigned
 [0;31m[  FAILED  ] [mExpectFailureTest.ExpectFatalFailure
 [0;31m[  FAILED  ] [mExpectFailureTest.ExpectNonFatalFailure
 [0;31m[  FAILED  ] [mExpectFailureTest.ExpectFatalFailureOnAllThreads
@@ -924,8 +718,6 @@ Expected equality of these values:
   1
   x
     Which is: 2
-Stack trace: (omitted)
-
 [  FAILED  ] FatalFailureTest.FatalFailureInSubroutine (? ms)
 [ RUN      ] FatalFailureTest.FatalFailureInNestedSubroutine
 (expecting a failure that x should be 1)
@@ -934,8 +726,6 @@ Expected equality of these values:
   1
   x
     Which is: 2
-Stack trace: (omitted)
-
 [  FAILED  ] FatalFailureTest.FatalFailureInNestedSubroutine (? ms)
 [ RUN      ] FatalFailureTest.NonfatalFailureInSubroutine
 (expecting a failure on false)
@@ -943,8 +733,6 @@ gtest_output_test_.cc:#: Failure
 Value of: false
   Actual: false
 Expected: true
-Stack trace: (omitted)
-
 [  FAILED  ] FatalFailureTest.NonfatalFailureInSubroutine (? ms)
 [----------] 3 tests from FatalFailureTest (? ms total)
 
@@ -955,14 +743,10 @@ i == 0
 i == 1
 gtest_output_test_.cc:#: Failure
 Expected: (3) >= (a[i]), actual: 3 vs 9
-Stack trace: (omitted)
-
 i == 2
 i == 3
 gtest_output_test_.cc:#: Failure
 Expected: (3) >= (a[i]), actual: 3 vs 6
-Stack trace: (omitted)
-
 [  FAILED  ] LoggingTest.InterleavingLoggingAndAssertions (? ms)
 [----------] 1 test from LoggingTest (? ms total)
 

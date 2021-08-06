@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 
@@ -78,10 +66,6 @@ protected:
 
 void InProcessNodeTests::SetUp() {
   logger.init("/dev/null");
-  for (auto iter = generator.getBlockchain().begin(); iter != generator.getBlockchain().end(); iter++) {
-    coreStub.addBlock(*iter);
-  }
-
   initNode();
 }
 
@@ -124,17 +108,10 @@ TEST_F(InProcessNodeTests, getPeersCountSuccess) {
 }
 
 TEST_F(InProcessNodeTests, getLastLocalBlockHeightSuccess) {
-  uint32_t index;
   Crypto::Hash ignore;
-  const size_t NUMBER_OF_BLOCKS = 5;
-  coreStub.get_blockchain_top(index, ignore);
-  generator.generateEmptyBlocks(NUMBER_OF_BLOCKS);
-  ASSERT_GE(generator.getBlockchain().size(), NUMBER_OF_BLOCKS);
-  for (auto iter = generator.getBlockchain().begin() + index + 1; iter != generator.getBlockchain().end(); iter++) {
-    coreStub.addBlock(*iter);
-  }
+  coreStub.set_blockchain_top(10, ignore);
 
-  ASSERT_EQ(index + NUMBER_OF_BLOCKS, node.getLastLocalBlockHeight());
+  ASSERT_EQ(10, node.getLastLocalBlockHeight());
 }
 
 TEST_F(InProcessNodeTests, getLastKnownBlockHeightSuccess) {
@@ -269,6 +246,8 @@ TEST_F(InProcessNodeTests, getBlocksByHeightEmpty) {
   ASSERT_EQ(blockHeights.size(), 0);
   ASSERT_EQ(blocks.size(), 0);
 
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
+
   CallbackStatus status;
   node.getBlocks(blockHeights, blocks, [&status] (std::error_code ec) { status.setStatus(ec); });
   ASSERT_TRUE(status.wait());
@@ -282,6 +261,8 @@ TEST_F(InProcessNodeTests, getBlocksByHeightMany) {
   std::vector<std::vector<CryptoNote::BlockDetails>> actualBlocks;
 
   std::vector<CryptoNote::Block> expectedBlocks;
+
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
 
   generator.generateEmptyBlocks(NUMBER_OF_BLOCKS);
   ASSERT_GE(generator.getBlockchain().size(), NUMBER_OF_BLOCKS);
@@ -323,6 +304,8 @@ TEST_F(InProcessNodeTests, getBlocksByHeightFail) {
   std::vector<uint32_t> blockHeights;
   std::vector<std::vector<CryptoNote::BlockDetails>> actualBlocks;
 
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
+
   generator.generateEmptyBlocks(NUMBER_OF_BLOCKS);
   ASSERT_LT(generator.getBlockchain().size(), NUMBER_OF_BLOCKS * 2);
 
@@ -362,6 +345,8 @@ TEST_F(InProcessNodeTests, getBlocksByHashEmpty) {
   ASSERT_EQ(blockHashes.size(), 0);
   ASSERT_EQ(blocks.size(), 0);
 
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
+
   CallbackStatus status;
   node.getBlocks(blockHashes, blocks, [&status] (std::error_code ec) { status.setStatus(ec); });
   ASSERT_TRUE(status.wait());
@@ -375,6 +360,8 @@ TEST_F(InProcessNodeTests, getBlocksByHashMany) {
   std::vector<CryptoNote::BlockDetails> actualBlocks;
 
   std::vector<CryptoNote::Block> expectedBlocks;
+
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
 
   generator.generateEmptyBlocks(NUMBER_OF_BLOCKS);
   ASSERT_GE(generator.getBlockchain().size(), NUMBER_OF_BLOCKS);
@@ -412,6 +399,8 @@ TEST_F(InProcessNodeTests, getBlocksByHashFail) {
 
   std::vector<Crypto::Hash> blockHashes;
   std::vector<CryptoNote::BlockDetails> actualBlocks;
+
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
 
   generator.generateEmptyBlocks(NUMBER_OF_BLOCKS);
   ASSERT_LT(generator.getBlockchain().size(), NUMBER_OF_BLOCKS * 2);
@@ -452,6 +441,8 @@ TEST_F(InProcessNodeTests, getTxEmpty) {
   ASSERT_EQ(transactionHashes.size(), 0);
   ASSERT_EQ(transactions.size(), 0);
 
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
+
   CallbackStatus status;
   node.getTransactions(transactionHashes, transactions, [&status] (std::error_code ec) { status.setStatus(ec); });
   ASSERT_TRUE(status.wait());
@@ -466,6 +457,8 @@ TEST_F(InProcessNodeTests, getTxMany) {
   std::vector<CryptoNote::TransactionDetails> actualTransactions;
 
   std::vector<std::tuple<CryptoNote::Transaction, Crypto::Hash, uint64_t>> expectedTransactions;
+
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
 
   size_t prevBlockchainSize = generator.getBlockchain().size();
   for (size_t i = 0; i < BLOCKCHAIN_TX_NUMBER; ++i) {
@@ -531,6 +524,8 @@ TEST_F(InProcessNodeTests, getTxFail) {
 
   std::vector<std::tuple<CryptoNote::Transaction, Crypto::Hash, uint64_t>> expectedTransactions;
 
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
+
   size_t prevBlockchainSize = generator.getBlockchain().size();
   for (size_t i = 0; i < BLOCKCHAIN_TX_NUMBER; ++i) {
     auto txptr = CryptoNote::createTransaction();
@@ -574,6 +569,8 @@ TEST_F(InProcessNodeTests, getTxNotInited) {
   std::vector<CryptoNote::TransactionDetails> transactions;
   ASSERT_EQ(transactionHashes.size(), 0);
   ASSERT_EQ(transactions.size(), 0);
+
+  coreStub.set_blockchain_top(0, boost::value_initialized<Crypto::Hash>());
 
   CallbackStatus status;
   newNode.getTransactions(transactionHashes, transactions, [&status] (std::error_code ec) { status.setStatus(ec); });
@@ -640,6 +637,27 @@ TEST_F(InProcessNodeTests, getLastLocalBlockTimestamp) {
   ASSERT_EQ(expectedTimestamp, timestamp);
 }
 
+TEST_F(InProcessNodeTests, getLastLocalBlockTimestampError) {
+  class GetBlockTimestampErrorCore : public ICoreStub {
+  public:
+    virtual void get_blockchain_top(uint32_t& height, Crypto::Hash& top_id) override {
+    }
+
+    virtual bool getBlockByHash(const Crypto::Hash &h, CryptoNote::Block &blk) override {
+      return false;
+    }
+  };
+
+  GetBlockTimestampErrorCore core;
+  CryptoNote::InProcessNode newNode(core, protocolQueryStub);
+
+  CallbackStatus initStatus;
+  newNode.init([&initStatus] (std::error_code ec) { initStatus.setStatus(ec); });
+  ASSERT_TRUE(initStatus.wait());
+
+  ASSERT_THROW(newNode.getLastLocalBlockTimestamp(), std::exception);
+}
+
 TEST_F(InProcessNodeTests, getPoolDiffereceNotInited) {
   CryptoNote::InProcessNode newNode(coreStub, protocolQueryStub);
 
@@ -668,9 +686,9 @@ TEST_F(InProcessNodeTests, getPoolDiffereceActualBC) {
     transactionHashes.insert(CryptoNote::getObjectHash(tx));
     CryptoNote::tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
     bool keptByBlock = false;
-    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock);
+    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock, 0);
     ASSERT_TRUE(tvc.m_added_to_pool);
-    ASSERT_FALSE(tvc.m_verifivation_failed);
+    ASSERT_FALSE(tvc.m_verification_failed);
   }
 
   ASSERT_EQ(transactionHashes.size(), POOL_TX_NUMBER);
@@ -707,9 +725,9 @@ TEST_F(InProcessNodeTests, getPoolDiffereceNotActualBC) {
     transactionHashes.insert(CryptoNote::getObjectHash(tx));
     CryptoNote::tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
     bool keptByBlock = false;
-    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock);
+    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock, 0);
     ASSERT_TRUE(tvc.m_added_to_pool);
-    ASSERT_FALSE(tvc.m_verifivation_failed);
+    ASSERT_FALSE(tvc.m_verification_failed);
   }
 
   ASSERT_EQ(transactionHashes.size(), POOL_TX_NUMBER);

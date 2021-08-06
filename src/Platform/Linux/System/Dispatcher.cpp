@@ -16,16 +16,17 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Dispatcher.h"
-#include <cassert>
 
+#include <System/ErrorMessage.h>
+#include <cassert>
+#include <fcntl.h>
+#include <stdexcept>
+#include <string.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
-#include <fcntl.h>
-#include <string.h>
 #include <ucontext.h>
 #include <unistd.h>
-#include "ErrorMessage.h"
 
 namespace System {
 
@@ -338,6 +339,8 @@ void Dispatcher::yield() {
           }
           pushContext(contextPair->readContext->context);
           contextPair->readContext->events = events[i].events;
+        } else if ((events[i].events & (EPOLLERR | EPOLLHUP)) != 0) {
+          throw std::runtime_error("Dispatcher::dispatch, events & (EPOLLERR | EPOLLHUP) != 0");
         } else {
           continue;
         }

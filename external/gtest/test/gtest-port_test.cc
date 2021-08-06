@@ -67,8 +67,8 @@ TEST(IsXDigitTest, WorksForNarrowAscii) {
 }
 
 TEST(IsXDigitTest, ReturnsFalseForNarrowNonAscii) {
-  EXPECT_FALSE(IsXDigit(static_cast<char>('\x80')));
-  EXPECT_FALSE(IsXDigit(static_cast<char>('0' | '\x80')));
+  EXPECT_FALSE(IsXDigit(static_cast<char>(0x80)));
+  EXPECT_FALSE(IsXDigit(static_cast<char>('0' | 0x80)));
 }
 
 TEST(IsXDigitTest, WorksForWideAscii) {
@@ -296,7 +296,7 @@ TEST(FormatCompilerIndependentFileLocationTest, FormatsUknownFileAndLine) {
   EXPECT_EQ("unknown file", FormatCompilerIndependentFileLocation(NULL, -1));
 }
 
-#if GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_QNX || GTEST_OS_FUCHSIA
+#if GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_QNX
 void* ThreadFunc(void* data) {
   internal::Mutex* mutex = static_cast<internal::Mutex*>(data);
   mutex->Lock();
@@ -340,7 +340,7 @@ TEST(GetThreadCountTest, ReturnsCorrectValue) {
 TEST(GetThreadCountTest, ReturnsZeroWhenUnableToCountThreads) {
   EXPECT_EQ(0U, GetThreadCount());
 }
-#endif  // GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_QNX || GTEST_OS_FUCHSIA
+#endif  // GTEST_OS_LINUX || GTEST_OS_MAC || GTEST_OS_QNX
 
 TEST(GtestCheckDeathTest, DiesWithCorrectOutputOnFailure) {
   const bool a_false_condition = false;

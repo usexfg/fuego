@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/Account.h"
@@ -52,24 +40,24 @@ bool test_transaction_generation_and_ring_signature()
   AccountBase rv_acc2;
   rv_acc2.generate();
   Transaction tx_mine_1;
-  currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 10, 0, miner_acc1.getAccountKeys().address, tx_mine_1);
+  currency.constructMinerTx(0, 0, 0, 10, 0, miner_acc1.getAccountKeys().address, tx_mine_1);
   Transaction tx_mine_2;
-  currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 0, 0, miner_acc2.getAccountKeys().address, tx_mine_2);
+  currency.constructMinerTx(0, 0, 0, 0, 0, miner_acc2.getAccountKeys().address, tx_mine_2);
   Transaction tx_mine_3;
-  currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 0, 0, miner_acc3.getAccountKeys().address, tx_mine_3);
+  currency.constructMinerTx(0, 0, 0, 0, 0, miner_acc3.getAccountKeys().address, tx_mine_3);
   Transaction tx_mine_4;
-  currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 0, 0, miner_acc4.getAccountKeys().address, tx_mine_4);
+  currency.constructMinerTx(0, 0, 0, 0, 0, miner_acc4.getAccountKeys().address, tx_mine_4);
   Transaction tx_mine_5;
-  currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 0, 0, miner_acc5.getAccountKeys().address, tx_mine_5);
+  currency.constructMinerTx(0, 0, 0, 0, 0, miner_acc5.getAccountKeys().address, tx_mine_5);
   Transaction tx_mine_6;
-  currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 0, 0, 0, 0, 0, miner_acc6.getAccountKeys().address, tx_mine_6);
+  currency.constructMinerTx(0, 0, 0, 0, 0, miner_acc6.getAccountKeys().address, tx_mine_6);
 
   //fill inputs entry
   typedef TransactionSourceEntry::OutputEntry tx_output_entry;
   std::vector<TransactionSourceEntry> sources;
   sources.resize(sources.size()+1);
   TransactionSourceEntry& src = sources.back();
-  src.amount = 70368744177663;
+  src.amount = 1;
   {
     tx_output_entry oe;
     oe.first = 0;
@@ -103,12 +91,13 @@ bool test_transaction_generation_and_ring_signature()
   //fill outputs entry
   TransactionDestinationEntry td;
   td.addr = rv_acc.getAccountKeys().address;
-  td.amount = 69368744177663;
+  td.amount = 1;
   std::vector<TransactionDestinationEntry> destinations;
   destinations.push_back(td);
 
   Transaction tx_rc1;
-  bool r = constructTransaction(miner_acc2.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_rc1, 0, logger);
+  Crypto::SecretKey txSK;
+  bool r = constructTransaction(miner_acc2.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_rc1, 0, logger, txSK);
   CHECK_AND_ASSERT_MES(r, false, "failed to construct transaction");
 
   Crypto::Hash pref_hash = getObjectHash(*static_cast<TransactionPrefix*>(&tx_rc1));
@@ -148,7 +137,7 @@ bool test_block_creation()
   bool r = currency.parseAccountAddressString("272xWzbWsP4cfNFfxY5ETN5moU8x81PKfWPwynrrqsNGDBQGLmD1kCkKCvPeDUXu5XfmZkCrQ53wsWmdfvHBGLNjGcRiDcK", adr);
   CHECK_AND_ASSERT_MES(r, false, "failed to import");
   Block b;
-  r = currency.constructMinerTx(BLOCK_MAJOR_VERSION_1, 90, Common::medianValue(szs), 3553616528562147, 33094, 10000000, adr, b.baseTransaction, BinaryArray(), 11);
+  r = currency.constructMinerTx(90, Common::medianValue(szs), 3553616528562147, 33094, 10000000, adr, b.baseTransaction, BinaryArray(), 11);
   return r;
 }
 

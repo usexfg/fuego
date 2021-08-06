@@ -1,41 +1,37 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free & open source software distributed in the hope 
+// that it will be useful, but WITHOUT ANY WARRANTY; without even
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You may redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
-#include <boost/functional/hash.hpp>
-#include <map>
 #include <string>
 #include <unordered_map>
-
+#include <map>
+#include <parallel_hashmap/phmap.h>
 #include "crypto/hash.h"
 #include "CryptoNoteBasic.h"
-
+using phmap::flat_hash_map;
 namespace CryptoNote {
 
 class ISerializer;
 
-inline size_t paymentIdHash(const Crypto::Hash& paymentId) {
-  return boost::hash_range(std::begin(paymentId.data), std::end(paymentId.data));
-}
-
 class PaymentIdIndex {
 public:
-  PaymentIdIndex(bool enabled);
+  PaymentIdIndex() = default;
 
   bool add(const Transaction& transaction);
   bool remove(const Transaction& transaction);
@@ -49,13 +45,12 @@ public:
     archive & index;
   }
 private:
-  std::unordered_multimap<Crypto::Hash, Crypto::Hash, std::function<decltype(paymentIdHash)>> index;
-  bool enabled = false;
+  std::unordered_multimap<Crypto::Hash, Crypto::Hash> index;
 };
 
 class TimestampBlocksIndex {
 public:
-  TimestampBlocksIndex(bool enabled);
+  TimestampBlocksIndex() = default;
 
   bool add(uint64_t timestamp, const Crypto::Hash& hash);
   bool remove(uint64_t timestamp, const Crypto::Hash& hash);
@@ -70,12 +65,11 @@ public:
   }
 private:
   std::multimap<uint64_t, Crypto::Hash> index;
-  bool enabled = false;
 };
 
 class TimestampTransactionsIndex {
 public:
-  TimestampTransactionsIndex(bool enabled);
+  TimestampTransactionsIndex() = default;
 
   bool add(uint64_t timestamp, const Crypto::Hash& hash);
   bool remove(uint64_t timestamp, const Crypto::Hash& hash);
@@ -90,12 +84,11 @@ public:
   }
 private:
   std::multimap<uint64_t, Crypto::Hash> index;
-  bool enabled = false;
 };
 
 class GeneratedTransactionsIndex {
 public:
-  GeneratedTransactionsIndex(bool enabled);
+  GeneratedTransactionsIndex();
 
   bool add(const Block& block);
   bool remove(const Block& block);
@@ -110,14 +103,13 @@ public:
     archive & lastGeneratedTxNumber;
   }
 private:
-  std::unordered_map<uint32_t, uint64_t> index;
+  flat_hash_map<uint32_t, uint64_t> index;
   uint64_t lastGeneratedTxNumber;
-  bool enabled = false;
 };
 
 class OrphanBlocksIndex {
 public:
-  OrphanBlocksIndex(bool enabled);
+  OrphanBlocksIndex() = default;
 
   bool add(const Block& block);
   bool remove(const Block& block);
@@ -125,7 +117,6 @@ public:
   void clear();
 private:
   std::unordered_multimap<uint32_t, Crypto::Hash> index;
-  bool enabled = false;
 };
 
 }

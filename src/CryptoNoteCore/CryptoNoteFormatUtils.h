@@ -1,25 +1,25 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2018, Karbo developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <boost/utility/value_init.hpp>
-
+#include <CryptoNote.h>
 #include "CryptoNoteBasic.h"
 #include "CryptoNoteSerialization.h"
 
@@ -52,20 +52,36 @@ struct TransactionDestinationEntry {
   TransactionDestinationEntry(uint64_t amount, const AccountPublicAddress &addr) : amount(amount), addr(addr) {}
 };
 
+struct tx_message_entry
+{
+  std::string message;
+  bool encrypt;
+  AccountPublicAddress addr;
+};
+
+bool generateDeterministicTransactionKeys(const Crypto::Hash &inputsHash, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
+bool generateDeterministicTransactionKeys(const Transaction &tx, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
 
 bool constructTransaction(
   const AccountKeys& senderAccountKeys,
   const std::vector<TransactionSourceEntry>& sources,
   const std::vector<TransactionDestinationEntry>& destinations,
- std::vector<uint8_t> extra, Transaction& transaction, uint64_t unlock_time, Crypto::SecretKey &tx_key, Logging::ILogger& log);
+  const std::vector<tx_message_entry>& messages,
+  uint64_t ttl, std::vector<uint8_t> extra, Transaction& transaction, uint64_t unlock_time, Logging::ILogger& log, Crypto::SecretKey& transactionSK);
 
+inline bool constructTransaction(
+  const AccountKeys& sender_account_keys,
+  const std::vector<TransactionSourceEntry>& sources,
+  const std::vector<TransactionDestinationEntry>& destinations,
+  std::vector<uint8_t> extra, Transaction& tx, uint64_t unlock_time, Logging::ILogger& log, Crypto::SecretKey& transactionSK) {
+
+  return constructTransaction(sender_account_keys, sources, destinations, std::vector<tx_message_entry>(), 0, extra, tx, unlock_time, log, transactionSK);
+}
 
 bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Crypto::PublicKey& tx_pub_key, size_t keyIndex);
 bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Crypto::KeyDerivation& derivation, size_t keyIndex);
 bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const Crypto::PublicKey& tx_pub_key, std::vector<size_t>& outs, uint64_t& money_transfered);
 bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, std::vector<size_t>& outs, uint64_t& money_transfered);
-bool get_tx_fee(const Transaction& tx, uint64_t & fee);
-uint64_t get_tx_fee(const Transaction& tx);
 bool generate_key_image_helper(const AccountKeys& ack, const Crypto::PublicKey& tx_public_key, size_t real_output_index, KeyPair& in_ephemeral, Crypto::KeyImage& ki);
 std::string short_hash_str(const Crypto::Hash& h);
 
@@ -125,5 +141,7 @@ void decompose_amount_into_digits(uint64_t amount, uint64_t dust_threshold, cons
 void get_tx_tree_hash(const std::vector<Crypto::Hash>& tx_hashes, Crypto::Hash& h);
 Crypto::Hash get_tx_tree_hash(const std::vector<Crypto::Hash>& tx_hashes);
 Crypto::Hash get_tx_tree_hash(const Block& b);
+bool is_valid_decomposed_amount(uint64_t amount);
+
 
 }

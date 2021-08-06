@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 
@@ -124,12 +112,11 @@ class DetachTest : public ::testing::Test, public IBlockchainSynchronizerObserve
 public:
 
   DetachTest() :
-    m_logger(Logging::ERROR),
     m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
     generator(m_currency),
     m_node(generator),
-    m_sync(m_node, m_logger, m_currency.genesisBlockHash()),
-    m_transfersSync(m_currency, m_logger, m_sync, m_node) {
+    m_sync(m_node, m_currency.genesisBlockHash()),
+    m_transfersSync(m_currency, m_sync, m_node) {
   }
 
   void addAccounts(size_t count) {
@@ -205,17 +192,6 @@ protected:
   std::future<std::error_code> syncCompletedFuture;
 
 };
-
-
-namespace CryptoNote {
-inline bool operator == (const TransactionOutputInformation& t1, const TransactionOutputInformation& t2) {
-  return
-    t1.type == t2.type &&
-    t1.amount == t2.amount &&
-    t1.outputInTransaction == t2.outputInTransaction &&
-    t1.transactionPublicKey == t2.transactionPublicKey;
-}
-}
 
 namespace {
   std::unique_ptr<ITransaction> createMoneyTransfer(
@@ -454,8 +430,8 @@ TEST_F(DetachTest, testDetachWithWallet) {
   ASSERT_EQ(txInfo.blockHeight, expectedTransactionBlockHeight);
   ASSERT_EQ(txInfo.totalAmount, tr.amount);
 
-  ASSERT_EQ(Bob.pendingBalance(), 0);
-  ASSERT_EQ(Bob.actualBalance(), tr.amount);
+  ASSERT_EQ(Bob.actualBalance(), 0);
+  ASSERT_EQ(Bob.pendingBalance(), tr.amount);
 
   m_node.startAlternativeChain(txInfo.blockHeight - 1);
   generator.generateEmptyBlocks(2);

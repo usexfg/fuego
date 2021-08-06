@@ -1,20 +1,20 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2017-2018, Karbo developers
-// Copyright (c) 2017-2021, Fandom Gold Society
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
 // This file is part of Fango.
 //
-// FANGO is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// FANGO is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
-// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
-
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Miner.h"
 
@@ -225,7 +225,7 @@ namespace CryptoNote
     std::lock_guard<std::mutex> lk(m_threads_lock);
 
     if(!m_threads.empty()) {
-      logger(ERROR) << "Unable to start mining because there are jobs already started";
+      logger(ERROR) << "Unable to start miner because there are active mining threads";
       return false;
     }
 
@@ -243,7 +243,7 @@ namespace CryptoNote
       m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
     }
 
-    logger(INFO, YELLOW) << "FANGO mining has begun. Using " << threads_count << " CPU threads";
+    logger(INFO, YELLOW) << "Fango mining has begun. Using " << threads_count << " CPU threads";
     return true;
   }
   
@@ -273,7 +273,7 @@ namespace CryptoNote
     }
 
     m_threads.clear();
-    logger(INFO) << "FANGO mining has been stopped, " << m_threads.size() << " halted" ;
+    logger(INFO) << "Fango mining has been stopped, " << m_threads.size() << " halted" ;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------

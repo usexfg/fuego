@@ -1,26 +1,25 @@
-
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2014-2016 XDN developers
-// Copyright (c) 2016-2018 Karbowanec developers
+// Copyright (c) 2019-2021 Fango Developers
+// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fango.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Fango is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fango includes elements written 
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fango. If not, see <https://www.gnu.org/licenses/>.
 
 #include "HttpServer.h"
 #include <boost/scope_exit.hpp>
 
+#include <Common/Base64.h>
 #include <HTTP/HttpParser.h>
 #include <System/InterruptedException.h>
 #include <System/TcpStream.h>
@@ -29,41 +28,12 @@
 using namespace Logging;
 
 namespace {
-	std::string base64Encode(const std::string& data) {
-		static const char* encodingTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-		const size_t resultSize = 4 * ((data.size() + 2) / 3);
-		std::string result;
-		result.reserve(resultSize);
-
-		for (size_t i = 0; i < data.size(); i += 3) {
-			size_t a = static_cast<size_t>(data[i]);
-			size_t b = i + 1 < data.size() ? static_cast<size_t>(data[i + 1]) : 0;
-			size_t c = i + 2 < data.size() ? static_cast<size_t>(data[i + 2]) : 0;
-
-			result.push_back(encodingTable[a >> 2]);
-			result.push_back(encodingTable[((a & 0x3) << 4) | (b >> 4)]);
-			if (i + 1 < data.size()) {
-				result.push_back(encodingTable[((b & 0xF) << 2) | (c >> 6)]);
-				if (i + 2 < data.size()) {
-					result.push_back(encodingTable[c & 0x3F]);
-				}
-			}
-		}
-
-		while (result.size() != resultSize) {
-			result.push_back('=');
-		}
-
-		return result;
-	}
-
 	void fillUnauthorizedResponse(CryptoNote::HttpResponse& response) {
 		response.setStatus(CryptoNote::HttpResponse::STATUS_401);
 		response.addHeader("WWW-Authenticate", "Basic realm=\"RPC\"");
 		response.addHeader("Content-Type", "text/plain");
 		response.setBody("Authorization required");
 	}
-
 }
 
 namespace CryptoNote {
@@ -78,7 +48,7 @@ void HttpServer::start(const std::string& address, uint16_t port, const std::str
   workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
   
   		if (!user.empty() || !password.empty()) {
-			m_credentials = base64Encode(user + ":" + password);
+			m_credentials = Tools::Base64::encode(user + ":" + password);
 		}
 }
 
@@ -107,6 +77,8 @@ void HttpServer::acceptLoop() {
     BOOST_SCOPE_EXIT_ALL(this, &connection) { 
       m_connections.erase(&connection); };
 
+	workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
+
 	//auto addr = connection.getPeerAddressAndPort();
 	auto addr = std::pair<System::Ipv4Address, uint16_t>(static_cast<System::Ipv4Address>(0), 0);
 	try {
@@ -116,8 +88,6 @@ void HttpServer::acceptLoop() {
 	}
 
     logger(DEBUGGING) << "Incoming connection from " << addr.first.toDottedDecimal() << ":" << addr.second;
-
-    workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
 
     System::TcpStreambuf streambuf(connection);
     std::iostream stream(&streambuf);

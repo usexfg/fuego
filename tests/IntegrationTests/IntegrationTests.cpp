@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 #include <Logging/LoggerRef.h>
@@ -71,8 +59,10 @@ public:
   }
 
   void makeWallets() {
+    Logging::ConsoleLogger m_logger;
     for (auto& n: inodes) {
-      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n));
+      
+      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n, m_logger));
       std::unique_ptr<WalletLegacyObserver> observer(new WalletLegacyObserver());
 
       wallet->initAndGenerate(walletPassword);
@@ -127,7 +117,14 @@ public:
     tr.amount = amount;
     std::error_code result;
 
-    auto txId = wallets[srcWallet]->sendTransaction(tr, fee);
+    std::vector<CryptoNote::TransactionMessage> messages;
+    std::string extraString;
+    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    uint64_t mixIn = 0;
+    uint64_t unlockTimestamp = 0;
+    uint64_t ttl = 0;
+    Crypto::SecretKey transactionSK;
+    auto txId = wallets[srcWallet]->sendTransaction(transactionSK, tr, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
     logger(DEBUGGING) << "Transaction id = " << txId;
 

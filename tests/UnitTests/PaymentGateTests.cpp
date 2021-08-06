@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "gtest/gtest.h"
 #include <numeric>
@@ -23,7 +11,6 @@
 #include <Logging/ConsoleLogger.h>
 
 #include "PaymentGate/WalletService.h"
-#include "Wallet/WalletGreen.h"
 
 // test helpers
 #include "INodeStubs.h"
@@ -35,9 +22,8 @@ using namespace CryptoNote;
 class PaymentGateTest : public testing::Test {
 public:
 
-  PaymentGateTest() :
-    logger(Logging::ERROR),
-    currency(CryptoNote::CurrencyBuilder(logger).currency()),
+  PaymentGateTest() : 
+    currency(CryptoNote::CurrencyBuilder(logger).currency()), 
     generator(currency),
     nodeStub(generator) 
   {}
@@ -49,7 +35,6 @@ public:
   std::unique_ptr<WalletService> createWalletService(const WalletConfiguration& cfg) {
     WalletGreen* walletGreen = new CryptoNote::WalletGreen(dispatcher, currency, nodeStub, logger);
     wallet.reset(walletGreen);
-    std::unique_ptr<WalletService> service(new WalletService(currency, dispatcher, nodeStub, *walletGreen, *walletGreen, cfg, logger));
     service->init();
     return service;
   }

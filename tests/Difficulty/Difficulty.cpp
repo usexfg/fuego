@@ -1,19 +1,7 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
-//
-// This file is part of Bytecoin.
-//
-// Bytecoin is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Bytecoin is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2014-2016 SDN developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cstddef>
 #include <cstdint>
@@ -57,7 +45,6 @@ int main(int argc, char *argv[]) {
             begin = end - currency.difficultyWindow();
         }
         uint64_t res = currency.nextDifficulty(
-			CryptoNote::BLOCK_MAJOR_VERSION_1,
             vector<uint64_t>(timestamps.begin() + begin, timestamps.begin() + end),
             vector<uint64_t>(cumulative_difficulties.begin() + begin, cumulative_difficulties.begin() + end));
         if (res != difficulty) {

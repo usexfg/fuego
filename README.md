@@ -5,7 +5,7 @@ Based on the CryptoNote protocol & philosophy.
 
 * <p align="left"><a href="https://fandom.gold">Website</a><p align="left">
 * <p align="left"><a href="http://explorer.fandom.gold">Explorer</a><p align="left">
-* <p align="left"><a href="http://xfg.dedaloproduction.ch/#">Explorer</a><p align="left">
+* <p align="left"><a href="https://fangotango.hopto.org">Explorer</a><p align="left">
  
 
  ______________________________
@@ -64,7 +64,7 @@ or <code>./fangod --help</code> when outside of dæmon
 _________________________________________________________
 For the most user-friendly graphical interface experience
 
-the [Fango Desktop Wallet](https://github.com/fandomgold/fango-wallet). 
+see [Fango Desktop Wallet](https://github.com/fandomgold/fango-desktop). 
 _________________________________________________________
 
 _________________________________________________________
@@ -76,104 +76,58 @@ _________________________________________________________
 * Building with Clang: it may be possible to use Clang instead of GCC, but this may not work everywhere. To build, run `export CC=clang CXX=clang++` before running `make`.
 
 **************************************************************************************************
-### On Windows
-Dependencies: MSVC 2013 or later, CMake 2.8.6 or later, and Boost 1.55. You may download them from:
+### Windows 10
 
-* http://www.microsoft.com/
-* http://www.cmake.org/
-* http://www.boost.org/
+#### Prerequisites
 
-To build, change to a directory where this file is located, and run these commands: 
-```
-mkdir build
-cd build
-cmake -G "Visual Studio 12 Win64" ..
-```
+- Install [Visual Studio 2019 Community Edition](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
+- Install [CMake](https://cmake.org/download/)
+- When installing Visual Studio, you need to install **Desktop development with C++** and the **MSVC v142 - VS 2019 C++ x64/x86 build tools** components. The option to install the v142 build tools can be found by expanding the "Desktop development with C++" node on the right. You will need this for the project to build correctly.
+- Install [Boost 1.73.0](https://sourceforge.net/projects/boost/files/boost-binaries/1.73.0/boost_1_73_0-msvc-14.2-64.exe/download), **ensuring** you download the installer for **MSVC 14.2**.
 
-And then do Build.
-________________
+#### Building
 
-****Quick step by step tutorial using a Bash terminal on Windows 10****
+From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
-*(courtesy of & gratitude to Sir WindowSlayer of Galapagos)*
-
-https://www.windowscentral.com/how-install-bash-shell-command-line-windows-10
-
-Start a Bash window and do as follows
-
-1:Go to root
-```
-cd
-```
-2: Run updates and install dependencies
-```
-sudo apt-get update
-sudo apt-get install build-essential git cmake libboost-all-dev
-```
-3: Grab the Fango files from Github repository
-```
-git clone https://github.com/FandomGold/fango.git
-```
-4: Build the files
-```
+```bash
+git clone https://github.com/FandomGold/fango
 cd fango
-make
-```
-5: Start client and begin syncing blockchain
-```
-cd build/release/src/
-./fangod
-```
-*!!keep this terminal running and open new terminal for next step!!*
-
-6: Start simplewallet and create your new wallet (navigate to the folder where you created the wallet)
-```
-~fango/build/release/src$ ./simplewallet
-```
-or
-```
-cd fango/build/release/src
-./simplewallet
-```
-set up your wallet name & password
-
-then use "help" in wallet for a list of all available commands
-
-*!!Remember you have to use linux command in Bash*
-
-You'll find your folders and wallet in
-C:\Users\YOURUSERNAME\AppData\Local\lxss\home
-
-**************************************************
-
-### Build for Android on Linux
-
-Set up the 32 bit toolchain
-Download and extract the Android SDK and NDK
-```
-android-ndk-r15c/build/tools/make_standalone_toolchain.py --api 21 --stl=libc++ --arch arm --install-dir /opt/android/tool32
+mkdir build
+cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
+msbuild fangoX.sln /p:Configuration=Release /m
 ```
 
-Download and setup the Boost 1.65.1 source
-```
-wget https://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.bz2/download -O boost_1_65_1.tar.bz2
-tar xjf boost_1_65_1.tar.bz2
-cd boost_1_65_1
-./bootstrap.sh
-```
-apply patch from external/boost1_65_1/libs/filesystem/src
+If the build is successful the binaries will be in the `src/Release` folder.
 
-Build Boost with the 32 bit toolchain
-```
-export PATH=/opt/android/tool32/arm-linux-androideabi/bin:/opt/android/tool32/bin:$PATH
-./b2 abi=aapcs architecture=arm binary-format=elf address-model=32 link=static runtime-link=static --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-system --with-thread --with-context --with-coroutine --with-atomic --build-dir=android32 --stagedir=android32 toolset=clang threading=multi threadapi=pthread target-os=android --reconfigure stage
+### macOS
+
+#### Prerequisites
+
+In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
+Once both are ready, open Terminal app and run the following command to install additional tools:
+
+```bash
+$ xcode-select --install
 ```
 
-Build fango for 32 bit Android
+On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
+
+After that, proceed with installing dependencies:
+
+```bash
+$ brew install git python cmake gcc boost
 ```
-mkdir -p build/release.android32
-cd build/release.android32
-CC=clang CXX=clang++ cmake -D BUILD_TESTS=OFF -D ARCH="armv7-a" -ldl -D STATIC=ON -D BUILD_64=OFF -D CMAKE_BUILD_TYPE=release -D ANDROID=true -D BUILD_TAG="android" -D BOOST_ROOT=/opt/android/boost_1_65_1 -D BOOST_LIBRARYDIR=/opt/android/boost_1_65_1/android32/lib -D CMAKE_POSITION_INDEPENDENT_CODE:BOOL=true -D BOOST_IGNORE_SYSTEM_PATHS_DEFAULT=ON ../..
-make SimpleWallet
+
+#### Building
+
+When all dependencies are installed, build Conceal Core binaries:
+
+```bash
+$ git clone https://github.com/FandomGold/fango
+$ cd fango
+$ mkdir build && cd $_
+$ cmake ..
+$ make
 ```
-**************************************************
+
+If the build is successful the binaries will be located in `src` directory.

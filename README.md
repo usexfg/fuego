@@ -51,7 +51,7 @@ cd fango
     (resulting programs will be found in build/release/src)
 
 ```
-make -j4
+make
 ```
 
 5. Starting Fango daemon
@@ -120,7 +120,7 @@ $ brew install git python cmake gcc boost
 
 #### Building
 
-When all dependencies are installed, build Conceal Core binaries:
+When all dependencies are installed, build Fango core binaries:
 
 ```bash
 $ git clone https://github.com/FandomGold/fango
@@ -131,3 +131,8 @@ $ make
 ```
 
 If the build is successful the binaries will be located in `src` directory.
+*******************************
+
+Join our ever-growing community of Fango holders. 
+Social channels include Discord, Reddit, or Twitter.
+

@@ -40,7 +40,7 @@ namespace CryptoNote
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT  = 60 * 60 * 2;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1 = DIFFICULTY_TARGET_DRGL * 6;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2 = DIFFICULTY_TARGET * 2;
-		const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE = 10;		 /* ? minutes */
+		const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE = 10;
 		const size_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW = 60;
 		const size_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1 = 11; /* LWMA3 */
 
@@ -176,13 +176,14 @@ namespace CryptoNote
 	const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT = 2000; // 2 seconds
 	const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000; // 2 minutes
 	const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;  // 5 seconds
+        const uint32_t P2P_IP_BLOCKTIME         = (60 * 60 * 24);  // 24 hr
+        const uint32_t P2P_IP_FAILS_BEFORE_BLOCK  =  45;
 	const char P2P_STAT_TRUSTED_PUB_KEY[] = "";
 
 	// Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES = {
 		"104.236.0.16:10808",
 		"188.226.177.187:10808",
-		"fangotango.hopto.org:10808",
 		"fango.money:10808"
 	};
 
@@ -243,9 +244,11 @@ namespace CryptoNote
 			{ 720000, "673574f7b28a84ef81fb00f072d378fca271ba48e77250f225748c35ce873619" },
 			{ 730000, "25020873d7851cd0b0787d8dd6a5eb758eb5c531bc793837e9399d9f05e0a4a4" },
 			{ 740000, "5c1b20e346df61f719a6d39cef03ca53d6978f4b00915b61ce139a67a5ea5d8d" },
-			{ 750000, "4fe3b7759428705b39f725ef1f5a9ce1b501c983de5e3079d30bc497f587242f" }
+			{ 750000, "4fe3b7759428705b39f725ef1f5a9ce1b501c983de5e3079d30bc497f587242f" },
+			{ 752411, "8675187b8a7bdf73ac93ac9d86f37315c0780a41ff4c0aa671f5d809b6c5b631" },
+			{ 752593, "e270b1419d5ae8589ea8fdb148a6de6b02637432e76a1b23258324754a16f46f" }
 		};
 
 } // namespace CryptoNote
-
+//Knowledge has made you powerful but there is still so much you don't know.
 #define ALLOW_DEBUG_COMMANDS

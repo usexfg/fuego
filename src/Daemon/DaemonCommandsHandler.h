@@ -82,4 +82,7 @@ private:
 
   bool start_mining(const std::vector<std::string>& args);
   bool stop_mining(const std::vector<std::string>& args);
+  bool print_ban(const std::vector<std::string>& args);
+  bool ban(const std::vector<std::string>& args);
+  bool unban(const std::vector<std::string>& args);
 };

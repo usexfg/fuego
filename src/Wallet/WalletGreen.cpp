@@ -515,7 +515,7 @@ namespace CryptoNote
     wallets = pickWallets({sourceAddress});
 
     /* Select the transfers */
-    uint64_t fee = 1000;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
     uint64_t neededMoney = amount + fee;
     std::vector<OutputToTransfer> selectedTransfers;
     uint64_t foundMoney = selectTransfers(neededMoney,

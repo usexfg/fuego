@@ -1391,8 +1391,8 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
     {
       //do reorganize!
       logger(INFO, BRIGHT_YELLOW) <<
-        "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 << " with cum_difficulty " << m_blocks.back().cumulative_difficulty
-        << ENDL << " alternative blockchain size: " << alt_chain.size() << " with cum_difficulty " << bei.cumulative_difficulty;
+        "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 << " with cumulative_difficulty " << m_blocks.back().cumulative_difficulty
+        << ENDL << " alternative blockchain size: " << alt_chain.size() << " with cumulative_difficulty " << bei.cumulative_difficulty;
       bool r = switch_to_alternative_blockchain(alt_chain, false);
       if (r) {
         bvc.m_added_to_main_chain = true;

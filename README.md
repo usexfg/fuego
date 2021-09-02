@@ -3,8 +3,8 @@
 
 Based on the CryptoNote protocol & philosophy.
 
-* <p align="left"><a href="https://fandom.gold">Website</a><p align="left">
-* <p align="left"><a href="http://explorer.fandom.gold">Explorer</a><p align="left">
+* <p align="left"><a href="https://fango.money">Website</a><p align="left">
+* <p align="left"><a href="http://explorer.fango.money">Explorer</a><p align="left">
 * <p align="left"><a href="https://fangotango.hopto.org">Explorer</a><p align="left">
  
 
@@ -134,5 +134,6 @@ If the build is successful the binaries will be located in `src` directory.
 *******************************
 
 Join our ever-growing community of Fango holders. 
-Social channels include Discord, Reddit, or Twitter.
+ 
+Social channels include [Discord](https://discordapp.com/invite/5UJcJJg), [Reddit](https://reddit.com/r/Fango), or [Twitter](https://twitter.com/fandomgold).
 

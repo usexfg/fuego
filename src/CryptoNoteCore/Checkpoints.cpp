@@ -20,6 +20,7 @@
 #include "Checkpoints.h"
 #include "../CryptoNoteConfig.h"
 #include "Common/StringTools.h"
+#include <fstream>
 
 using namespace Logging;
 
@@ -42,6 +43,67 @@ bool Checkpoints::add_checkpoint(uint32_t height, const std::string &hash_str) {
 
   m_points[height] = h;
   return true;
+}
+//---------------------------------------------------------------------------
+// add external checkpoints file
+bool Checkpoints::loadCheckpointsFromFile(const std::string &filename)
+{
+	std::ifstream file(filename);
+
+	if (!file)
+	{
+		logger(ERROR, BRIGHT_RED) << "Could not load checkpoints file: " << filename;
+		return false;
+	}
+	
+	/* The block this checkpoint is for (as a string) */
+	std::string indexString;
+
+	/* The hash this block has (as a string) */
+	std::string hash;
+
+	/* The block index (as a uint64_t) */
+	uint64_t index;
+
+	/* Checkpoints file has this format:
+	 
+	   index,hash
+	   index2,hash2
+
+	   So, we do std::getline() on the file with the delimiter as ',' to take
+	   the index, then we do std::getline() on the file again with the standard
+	   delimiter of '\n', to get the hash. 
+	
+	*/
+	while (std::getline(file, indexString, ','), std::getline(file, hash))
+	{
+		/* Try and parse the indexString as an int */
+		try
+		{
+			index = std::stoull(indexString);
+			/* Failed to parse hash, or checkpoint already exists */
+			if (!add_checkpoint(index, hash))
+			{
+				return false;
+			}
+		}
+		catch (const std::out_of_range &)
+		{
+			logger(ERROR, BRIGHT_RED) << "Invalid checkpoint file format - "
+						  << "height is out of range of uint64_t";
+			return false;
+		}
+		catch (const std::invalid_argument &)
+		{
+			logger(ERROR, BRIGHT_RED) << "Invalid checkpoint file format - "
+						  << "could not parse height as a number";
+			return false;
+		}
+	}
+
+	logger(INFO) << "Loaded " << m_points.size() << " checkpoints from " << filename;
+
+	return true;
 }
 //---------------------------------------------------------------------------
 bool Checkpoints::is_in_checkpoint_zone(uint32_t  height) const {

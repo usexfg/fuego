@@ -65,6 +65,7 @@ namespace
   const command_line::arg_descriptor<std::string> arg_set_fee_address = { "fee-address", "Sets fee address for light wallets to the daemon's RPC responses.", "" };
   const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
     "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag.", false};
+  const command_line::arg_descriptor<std::string> arg_load_checkpoints = { "load-checkpoints", "<filename> Load checkpoints from csv file.", "" }; // add external checkpoint file
 }
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
 	  command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
 	  command_line::add_arg(desc_cmd_sett, arg_enable_blockchain_indexes);
 	  command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
-
+	  command_line::add_arg(desc_cmd_sett, arg_load_checkpoints); // add external checkpoint file 
     
     RpcServerConfig::initOptions(desc_cmd_sett);
     CoreConfig::initOptions(desc_cmd_sett);
@@ -237,9 +238,30 @@ int main(int argc, char* argv[])
     CryptoNote::Currency currency = currencyBuilder.currency();
     CryptoNote::core ccore(currency, nullptr, logManager, command_line::get_arg(vm, arg_enable_blockchain_indexes));
 
+    // add external checkpoints file 
+    bool use_checkpoints = !command_line::get_arg(vm, arg_load_checkpoints).empty(); 	
+    //logger(INFO) << "use_checkpoints = " << use_checkpoints ; 				// debug is 0 if not set and 1 if file set
+    //logger(INFO) << "filename = " << command_line::get_arg(vm, arg_load_checkpoints); 	// debug filename = checkpoints.csv
+
     CryptoNote::Checkpoints checkpoints(logManager);
-    for (const auto& cp : CryptoNote::CHECKPOINTS) {
-      checkpoints.add_checkpoint(cp.height, cp.blockId);
+    logger(INFO) << "Loading Checkpoints for faster initial sync...";
+    // add external checkpoints file 
+    if (use_checkpoints)
+    {
+	    auto checkpointsfile = command_line::get_arg(vm, arg_load_checkpoints); 
+	    bool results = checkpoints.loadCheckpointsFromFile(checkpointsfile);
+	    if (!results)
+	    {
+		    throw std::runtime_error("Failed to load checkpoints");
+	    }
+    }
+    else // use defaut hardcoded checkpoints
+    {
+	for (const auto& cp : CryptoNote::CHECKPOINTS)
+	{
+		checkpoints.add_checkpoint(cp.height, cp.blockId);
+	}
+	logger(INFO) << "Loaded " << CryptoNote::CHECKPOINTS.size() << " default checkpoints";
     }
 
     if (!testnet_mode) {

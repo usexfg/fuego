@@ -121,7 +121,7 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "testnetminer_con
 } // parameters
 
 const char     CRYPTONOTE_NAME[]                             = "XFG_TESTNET"; 
-const char     GENESIS_COINBASE_TX_HEX[]                     = ""; // change me
+const char     GENESIS_COINBASE_TX_HEX[]                     = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101aeba4ab2c89f2fa87a73f28f8002bdb9a86309f0a2e7465e18cbf9c58625347d"; // TESTNET GENESIS TXN HEX
 
 const uint8_t  CURRENT_TRANSACTION_VERSION                   =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
@@ -167,7 +167,7 @@ const char* const SEED_NODES[] = {
 "104.236.0.16:28282",
 "188.226.177.187:28282",
 "178.128.164.245:28282",
-"176.223.134.27:28282"
+"fangotango.hopto.org:28282"
 };
 
 }

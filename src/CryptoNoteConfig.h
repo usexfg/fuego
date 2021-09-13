@@ -33,7 +33,7 @@ const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
 const uint64_t DIFFICULTY_TARGET_DRGL                        = 81;
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 203478502; // all public addresses begin w/ "fango"
+const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 1075740; // all public addresses begin w/ "TEST"
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 60;
 
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2;
@@ -97,12 +97,12 @@ const size_t   FUSION_TX_MAX_SIZE                            = CRYPTONOTE_BLOCK_
 const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 
-const uint32_t UPGRADE_HEIGHT_V2                             = 147958; //{Hardhome}
-const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{Longclaw}
-const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
-const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
-const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandomgold
+const uint32_t UPGRADE_HEIGHT_V2                             = 2; //{Hardhome}
+const uint32_t UPGRADE_HEIGHT_V3                             = 3; //{Longclaw}
+const uint32_t UPGRADE_HEIGHT_V4                             = 4; //{Dracarys}
+const uint32_t UPGRADE_HEIGHT_V5                             = 5; //{Ironborn}  CN7  (variant1) 
+const uint32_t UPGRADE_HEIGHT_V6                             = 6; //{Ice&fire}  CN8  (variant2)
+const uint32_t UPGRADE_HEIGHT_V7                             = 7; //Fandomgold
 const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Fango Emission
   
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
@@ -111,17 +111,17 @@ const uint32_t UPGRADE_WINDOW                                = EXPECTED_NUMBER_O
 static_assert(0 < UPGRADE_VOTING_THRESHOLD && UPGRADE_VOTING_THRESHOLD <= 100, "Bad UPGRADE_VOTING_THRESHOLD");
 static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 
-const char     CRYPTONOTE_BLOCKS_FILENAME[]                  = "blocks.dat";
-const char     CRYPTONOTE_BLOCKINDEXES_FILENAME[]            = "blockindexes.dat";
-const char     CRYPTONOTE_BLOCKSCACHE_FILENAME[]             = "blockscache.dat";
-const char     CRYPTONOTE_POOLDATA_FILENAME[]                = "poolstate.bin";
-const char     P2P_NET_DATA_FILENAME[]                       = "p2pstate.bin";
-const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      = "blockchainindices.dat";
-const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json";
+const char     CRYPTONOTE_BLOCKS_FILENAME[]                  = "testnetblocks.dat";
+const char     CRYPTONOTE_BLOCKINDEXES_FILENAME[]            = "testnetblockindexes.dat";
+const char     CRYPTONOTE_BLOCKSCACHE_FILENAME[]             = "testnetblockscache.dat";
+const char     CRYPTONOTE_POOLDATA_FILENAME[]                = "testnetpoolstate.bin";
+const char     P2P_NET_DATA_FILENAME[]                       = "testnetp2pstate.bin";
+const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      = "testnetblockchainindices.dat";
+const char     MINER_CONFIG_FILE_NAME[]                      = "testnetminer_conf.json";
 } // parameters
 
-const char     CRYPTONOTE_NAME[]                             = "fango"; 
-const char     GENESIS_COINBASE_TX_HEX[]                     = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
+const char     CRYPTONOTE_NAME[]                             = "XFG_TESTNET"; 
+const char     GENESIS_COINBASE_TX_HEX[]                     = ""; // change me
 
 const uint8_t  CURRENT_TRANSACTION_VERSION                   =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
@@ -140,8 +140,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;  //by def
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  128;    //by default, block count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
 
-const int      P2P_DEFAULT_PORT                              =  10808;
-const int      RPC_DEFAULT_PORT                              =  18180; 
+const int      P2P_DEFAULT_PORT                              =  28282;
+const int      RPC_DEFAULT_PORT                              =  38383; 
 
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 =  5000;
@@ -164,10 +164,10 @@ const uint32_t CRYPTONOTE_PROTOCOL_MAX_OBJECT_REQUEST_COUNT  = 500;
 const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "";
 
 const char* const SEED_NODES[] = {
-"104.236.0.16:10808",
-"188.226.177.187:10808",
-"178.128.164.245:10808",
-"176.223.134.27:10808"
+"104.236.0.16:28282",
+"188.226.177.187:28282",
+"178.128.164.245:28282",
+"176.223.134.27:28282"
 };
 
 }

@@ -146,7 +146,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   std::cout << std::endl
 	  << (synced ? "Synced " : "Syncing ") << height << "/" << last_known_block_index
 	  << " (" << get_sync_percentage(height, last_known_block_index) << "%) "
-	  << "on " << (m_core.currency().isTestnet() ? "testnet, " : "Fango Mainnet, ")
+	  << "on " << (m_core.currency().isTestnet() ? "testnet, " : "Fango TESTNET, ")
 	  << "network hashrate: " << get_mining_speed(hashrate) << ", difficulty: " << difficulty << ", "
 	  << "block v. " << (int)majorVersion << ", "
 	  << outgoing_connections_count << " out. + " << incoming_connections_count << " inc. connections, "
@@ -158,7 +158,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   std::cout << std::endl
     <<(synced ? "Synced " : "Syncing ")<< bolden << height << "/" << last_known_block_index
     << " (" << get_sync_percentage(height, last_known_block_index) << "%) "<< odef
-    << gold << "on " << bolden  << "FANGO " << odef<< gold << (m_core.currency().isTestnet() ? "TESTNET, " : "Mainnet ") << odef << std::endl;
+    << gold << "on " << bolden  << "FANGO " << odef<< gold << (m_core.currency().isTestnet() ? "TESTNET, " : "TESTNET ") << odef << std::endl;
   std::cout << gold << uld << "Network Hashrate: " << odef << bolden << get_mining_speed(hashrate) << odef << gold << uld <<", Difficulty: "<< odef << bolden << difficulty << odef
     << gold << uld << ", Block Major Version: " << odef << bolden << (int)majorVersion << odef <<","<< std::endl;
   std::cout << gold << uld << "Outgoing Connections: " << odef << bolden << outgoing_connections_count << odef << gold << uld <<", Incoming connections: " << odef << bolden << incoming_connections_count << odef  
@@ -404,7 +404,7 @@ bool DaemonCommandsHandler::start_mining(const std::vector<std::string> &args) {
 
   CryptoNote::AccountPublicAddress adr;
   if (!m_core.currency().parseAccountAddressString(args.front(), adr)) {
-    std::cout << "target account address has wrong format" << std::endl;
+    std::cout << "account address has wrong format - testnet addresses begin with TEST" << std::endl;
     return true;
   }
 

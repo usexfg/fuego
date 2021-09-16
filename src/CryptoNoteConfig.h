@@ -185,7 +185,7 @@ namespace CryptoNote
 		"104.236.0.16:28282",
 		"188.226.177.187:28282",
 		"fango.money:28282",
-		'fangotango.hopto.org:28282"
+		"fangotango.hopto.org:28282"
 	};
 
 	struct CheckpointData
@@ -197,7 +197,6 @@ namespace CryptoNote
 #ifdef __GNUC__
 	__attribute__((unused))
 #endif
-
 	// Blockchain Checkpoints:
 	// {<block height>, "<block hash>"},
 	const std::initializer_list<CheckpointData>

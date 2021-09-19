@@ -722,6 +722,11 @@ namespace CryptoNote
 
 		uint64_t nextDiffZ = low / timeSpan;
 
+		// minimum limit
+		if (!isTestnet() && nextDiffZ < 10000) {
+			nextDiffZ = 10000;
+		}
+
 		return nextDiffZ;
 	}
 
@@ -780,6 +785,11 @@ namespace CryptoNote
 		nextDifficulty = harmonic_mean_D * T / LWMA;
 		next_difficulty = static_cast<uint64_t>(nextDifficulty);
 		
+		// minimum limit
+		//if (!isTestnet() && next_difficulty < 10000) { //REMOVED THROUGH TESTNET
+		//	next_difficulty = 10000;
+		//} 
+
 		return next_difficulty;
 	}	
 	
@@ -797,8 +807,9 @@ namespace CryptoNote
 			   uint64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V3; // N=60, 90, and 120 for T=600, 120, 60.
 			   uint64_t  L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
 			   uint32_t Dracarys = CryptoNote::parameters::UPGRADE_HEIGHT_V4;
-	   		   uint64_t difficulty_plate = 777;
-	   		   
+	   		   //uint64_t difficulty_plate = 10000;
+	   		     uint64_t difficulty_plate = 777; //TESTNET
+
 			   //assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 
 			   // If it's a new coin, do startup code. Do not remove in case other coins copy your code.
@@ -835,7 +846,7 @@ namespace CryptoNote
 			     else { i /= 10; }
 			   }
 			   // Make least 2 digits = size of hash rate change last 11 blocks if it's statistically significant.
-			   // D=2540035 => hash rate 3.5x higher than D expected. Blocks coming 3.5x too fast.
+			   // D=2540035 => hash rate 3.5x higher than D expectde. Blocks coming 3.5x too fast.
 			   if ( next_D > 10000 ) { 
 			     uint64_t est_HR = (10*(11*T+(timestamps[N]-timestamps[N-11])/2))/(timestamps[N]-timestamps[N-11]+1);
 			     if (  est_HR > 5 && est_HR < 22 )  {  est_HR=0;   }
@@ -843,8 +854,10 @@ namespace CryptoNote
 			     next_D = ((next_D+50)/100)*100 + est_HR;  
 			   }
 	         	   // mini-lim
-	   		   if (!isTestnet() && next_D < 100) {
-	  			next_D = 100;
+	   		   //if (!isTestnet() && next_D < 10000) {
+	  		   //	next_D = 10000;
+			   if (!isTestnet() && next_D < 100) {  //TESTNET
+				  next_D = 100; 		//TESTNET
 			   }
 
 			   return  next_D;
@@ -861,9 +874,11 @@ namespace CryptoNote
 			   const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
 			   uint64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V4; // N=60, 90, and 120 for T=600, 120, 60.
 			   uint64_t  L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
-			   uint32_t Fangold = CryptoNote::parameters::UPGRADE_HEIGHT_V7;
-	   		   uint64_t difficulty_plate = 888;
-	   		   
+			   //uint32_t FanG = CryptoNote::parameters::UPGRADE_HEIGHT_V7;
+	   		   //uint64_t difficulty_plate = 100000;
+	   		   uint32_t Fangold = CryptoNote::parameters::UPGRADE_HEIGHT_V7; //TESTNET
+			   uint64_t difficulty_plate = 888; // TESTNET
+
 			   //assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 
 			   // If it's a new coin, do startup code. Do not remove in case other coins copy your code.
@@ -874,8 +889,9 @@ namespace CryptoNote
 			   // This will also cover up a very common type of backwards-incompatible fork.
 			   // difficulty_guess = 10000; //  Dev may change.  Guess lower than anything expected.
 			  
-	  		   if ( height <= Fangold + 1 + N ) { return difficulty_plate;  }
- 
+	  		   //if ( height <= FanG + 1 + N ) { return difficulty_plate;  }
+ 			   if ( height <= Fangold + 1 + N ) { return difficulty_plate; } //TESTNET
+
 			   previous_timestamp = timestamps[0];
 			   for ( i = 1; i <= N; i++) {        
 			      // Safely prevent out-of-sequence timestamps
@@ -908,8 +924,10 @@ namespace CryptoNote
 			     next_D = ((next_D+50)/100)*100 + est_HR;  
 			   }
 	         	   // mini-lim
-	   		   if (!isTestnet() && next_D < 1000) {
-	  			next_D = 1000;
+	   		   //if (!isTestnet() && next_D < 10000) {
+	  		   //	next_D = 10000;
+			   if (!isTestnet() && next_D < 100) {  //TESTNET
+				next_D = 100;   		//TESTNET
 			   }
 
 			   return  next_D;

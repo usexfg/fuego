@@ -129,7 +129,7 @@ namespace CryptoNote
 	} // namespace parameters
 
 	const char CRYPTONOTE_NAME[] = "XFG_TESTNET";
-	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
+	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101aeba4ab2c89f2fa87a73f28f8002bdb9a86309f0a2e7465e18cbf9c58625347d";
 
 	const uint8_t  TRANSACTION_VERSION_1                         =  1;
 	const uint8_t  TRANSACTION_VERSION_2                         =  2;

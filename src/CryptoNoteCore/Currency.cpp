@@ -722,10 +722,10 @@ namespace CryptoNote
 
 		uint64_t nextDiffZ = low / timeSpan;
 
-		// minimum limit
-		if (!isTestnet() && nextDiffZ < 10000) {
-			nextDiffZ = 10000;
-		}
+		// minimum limit				//TESTNET DISABLED
+		//if (!isTestnet() && nextDiffZ < 10000) {
+	        //		nextDiffZ = 10000;
+		//}
 
 		return nextDiffZ;
 	}

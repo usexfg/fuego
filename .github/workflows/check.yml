@@ -132,7 +132,7 @@ jobs:
 
   build-macos:
     name: macOS
-    runs-on: macos-latest
+    runs-on: macOS-10.15
     steps:
       - uses: actions/checkout@master
 

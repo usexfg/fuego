@@ -110,7 +110,7 @@ namespace CryptoNote
 		const uint32_t UPGRADE_HEIGHT_V5                             = 5; //{Ironborn}  CN7  (variant1) 
 		const uint32_t UPGRADE_HEIGHT_V6                             = 6; //{Ice&fire}  CN8  (variant2)
 		const uint32_t UPGRADE_HEIGHT_V7                             = 7; //Fandomgold
-		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonbourne (emission|deposits)
+		const uint32_t UPGRADE_HEIGHT_V8                             = 5439; //Dragonbourne (emission|deposits)
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;

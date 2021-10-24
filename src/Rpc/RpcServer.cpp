@@ -814,6 +814,16 @@ bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMM
   return true;
 }
 
+bool RpcServer::on_get_payment_id(const COMMAND_RPC_GEN_PAYMENT_ID::request& req, COMMAND_RPC_GEN_PAYMENT_ID::response& res) {
+  std::string pid;
+  try {
+    pid = Common::podToHex(Crypto::rand<Crypto::Hash>());
+  } catch (const std::exception& e) {
+    throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: can't generate Payment ID" };
+  }
+  res.payment_id = pid;
+  return true;
+}
 //------------------------------------------------------------------------------------------------------------------------------
 // JSON RPC methods
 //------------------------------------------------------------------------------------------------------------------------------

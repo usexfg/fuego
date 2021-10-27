@@ -1370,7 +1370,7 @@ namespace PaymentService
       sendParams.sourceAddresses = request.sourceAddresses;
       sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
       sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
-      sendParams.fee = 1000;
+      sendParams.fee = CryptoNote::parameters::MINIMUM_FEE;
       sendParams.mixIn = parameters::MINIMUM_MIXIN;
       sendParams.unlockTimestamp = request.unlockTime;
       sendParams.changeDestination = request.changeAddress;

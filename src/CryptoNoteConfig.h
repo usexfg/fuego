@@ -49,7 +49,7 @@ namespace CryptoNote
 		const uint64_t MINIMUM_FEE_V1 = UINT64_C(800000);
 		const uint64_t MINIMUM_FEE_V2 = UINT64_C(80000);	/* 0.008 XFG */
 		const uint64_t MINIMUM_FEE = MINIMUM_FEE_V2;		
-		const uint64_t MINIMUM_FEE_BANKING = UINT64_C(80000);  /* 0.008 XFG */
+		const uint64_t MINIMUM_FEE_BANKING = UINT64_C(160000);  /* 0.016 XFG */
 		const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(20000); /* < 0.002 XFG */
 		const size_t   MINIMUM_MIXIN = 2;
 

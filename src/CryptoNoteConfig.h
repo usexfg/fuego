@@ -49,7 +49,7 @@ namespace CryptoNote
 		const uint64_t MINIMUM_FEE_V1 = UINT64_C(800000);
 		const uint64_t MINIMUM_FEE_V2 = UINT64_C(80000);	/* 0.008 XFG */
 		const uint64_t MINIMUM_FEE = MINIMUM_FEE_V2;		
-		const uint64_t MINIMUM_FEE_BANKING = UINT64_C(80000);  /* 0.008 XFG */
+		const uint64_t MINIMUM_FEE_BANKING = UINT64_C(160000);  /* 0.016 XFG */
 		const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(20000); /* < 0.002 XFG */
 		const size_t   MINIMUM_MIXIN = 2;
 
@@ -75,7 +75,7 @@ namespace CryptoNote
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 		const uint64_t DEPOSIT_MIN_AMOUNT = 8 * COIN;
-		const uint32_t DEPOSIT_MIN_TERM = 8;  //test term 		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */ 
+		const uint32_t DEPOSIT_MIN_TERM = 2;  //test term 		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */ 
 		const uint32_t DEPOSIT_MAX_TERM = 1 * 12 * 80;  		 /* one year | use 3 month min/max */
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");

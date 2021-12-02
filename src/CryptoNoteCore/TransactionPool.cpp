@@ -150,7 +150,12 @@ namespace CryptoNote
       }
     }
 
-    uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);
+   uint64_t inputs_amount = 0;
+    if (!get_inputs_money_amount(tx, inputs_amount)) {
+      tvc.m_verification_failed = true;
+      return false;
+    }    
+    
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
     logger(DEBUGGING, WHITE) << "Processing tx " << id << " with inputs of " << inputs_amount << " and outputs of " << outputs_amount;

@@ -156,12 +156,26 @@ namespace
       throwIf(!transactionsCache.getDeposit(id, deposit), error::DEPOSIT_DOESNOT_EXIST);
       throwIf(deposit.locked, error::DEPOSIT_LOCKED);
 
-      amount += deposit.amount;
+      amount += deposit.amount + deposit.interest;
     }
 
     return amount;
   }
+  
+  void countDepositsTotalSumAndInterestSum(const std::vector<DepositId> &depositIds, WalletUserTransactionsCache &depositsCache,
+                                           uint64_t &totalSum, uint64_t &interestsSum)
+  {
+    totalSum = 0;
+    interestsSum = 0;
 
+    for (auto id : depositIds)
+    {
+      Deposit &deposit = depositsCache.getDeposit(id);
+      totalSum += deposit.amount + deposit.interest;
+      interestsSum += deposit.interest;
+    }
+  }
+  
 } //namespace
 
 namespace CryptoNote
@@ -514,6 +528,7 @@ namespace CryptoNote
       deposit.creatingTransactionId = context->transactionId;
       deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
       uint32_t height = transactionInfo.blockHeight;
+      deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, height);
       deposit.locked = true;
       DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());
       transactionInfo.firstDepositId = depositId;
@@ -581,9 +596,9 @@ namespace CryptoNote
       transactionInfo.hash = transaction->getTransactionHash();
 
       Transaction lowlevelTransaction = convertTransaction(*transaction, static_cast<size_t>(m_upperTransactionSizeLimit));
-
+      uint64_t interestsSum;
       uint64_t totalSum;
-
+      countDepositsTotalSumAndInterestSum(depositIds, m_transactionsCache, totalSum, interestsSum);
       UnconfirmedSpentDepositDetails unconfirmed;
       unconfirmed.depositsSum = totalSum;
       unconfirmed.fee = transactionInfo.fee;

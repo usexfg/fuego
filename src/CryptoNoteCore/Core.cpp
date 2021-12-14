@@ -353,21 +353,14 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
     return false;
   }
 	
-  uint64_t amount_in = 0;
-  get_inputs_money_amount(tx, amount_in);
-  // uint64_t amount_in = m_currency.getTransactionInputAmount(tx, height);
+  // uint64_t amount_in = 0;
+  // get_inputs_money_amount(tx, amount_in);
+  uint64_t amount_in = m_currency.getTransactionAllInputsAmount(tx, height);
   uint64_t amount_out = get_outs_money_amount(tx);
 
-  if (amount_in < amount_out){
-	  //correct check for unknown deposit creation height
-	  uint32_t testHeight = (uint32_t)(-1); //try other mode
-	  amount_in = m_currency.getTransactionAllInputsAmount(tx, testHeight);
-	  if (amount_in < amount_out) {
-		logger(ERROR) << "tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << getObjectHash(tx);
-		return false;
-	  } else {
-		  height = testHeight;
-	  }
+  if (amount_in < amount_out) {
+    logger(ERROR) << "tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << getObjectHash(tx);
+    return false;
   }
 
   //check if tx use different key images

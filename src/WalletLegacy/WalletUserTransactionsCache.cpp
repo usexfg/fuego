@@ -38,6 +38,7 @@ struct LegacyDeposit {
   TransactionId spendingTransactionId;
   uint32_t term;
   uint64_t amount;
+  uint64_t interest;
 };
 
 struct LegacyDepositInfo {
@@ -56,6 +57,7 @@ void serialize(LegacyDeposit& deposit, ISerializer& serializer) {
 
   serializer(deposit.term, "term");
   serializer(deposit.amount, "amount");
+  serializer(deposit.interest, "interest");
 }
 
 void serialize(LegacyDepositInfo& depositInfo, ISerializer& serializer) {
@@ -105,6 +107,7 @@ void convertLegacyDeposits(const std::vector<LegacyDepositInfo>& legacyDeposits,
     DepositInfo info;
     info.deposit.amount = legacyDepositInfo.deposit.amount;
     info.deposit.creatingTransactionId = legacyDepositInfo.deposit.creatingTransactionId;
+    info.deposit.interest = legacyDepositInfo.deposit.interest;
     info.deposit.spendingTransactionId = legacyDepositInfo.deposit.spendingTransactionId;
     info.deposit.term = legacyDepositInfo.deposit.term;
     info.deposit.locked = true;
@@ -623,6 +626,7 @@ DepositId WalletUserTransactionsCache::insertNewDeposit(const TransactionOutputI
   deposit.creatingTransactionId = creatingTransactionId;
   deposit.term = depositOutput.term;
   deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
+  deposit.interest = currency.calculateInterest(deposit.amount, deposit.term, height);
   deposit.locked = true;
 
   return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);

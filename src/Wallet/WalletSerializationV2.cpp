@@ -94,6 +94,7 @@ struct WalletDepositDtoV2 {
     spendingTransactionId = wd.spendingTransactionId;
     term = wd.term;
     amount = wd.amount;
+    interest = wd.interest;
     height = wd.height;
     unlockHeight = wd.unlockHeight;
     locked = wd.locked;
@@ -106,6 +107,7 @@ struct WalletDepositDtoV2 {
   size_t spendingTransactionId;
   uint32_t term;
   uint64_t amount;
+  uint64_t interest;
   uint64_t height;
   uint64_t unlockHeight;
   bool locked;
@@ -154,6 +156,7 @@ void serialize(WalletDepositDtoV2& value, CryptoNote::ISerializer& serializer) {
   serializer(value.spendingTransactionId, "spendingTransactionId");
   serializer(value.amount, "amount");
   serializer(value.term, "term");
+  serializer(value.interest, "interest");
   serializer(value.unlockHeight, "unlockHeight");
   serializer(value.locked, "locked");
   serializer(value.address, "address");
@@ -366,6 +369,7 @@ void WalletSerializerV2::loadDeposits(CryptoNote::ISerializer& serializer) {
     dp.spendingTransactionId = dto.spendingTransactionId;
     dp.term = dto.term;
     dp.amount = dto.amount;
+    dp.interest = dto.interest;
     dp.height = dto.height;
     dp.unlockHeight = dto.unlockHeight;
     dp.locked = dto.locked;

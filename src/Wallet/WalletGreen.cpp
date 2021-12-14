@@ -77,7 +77,7 @@ namespace
   {
     int index = 0;
     return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights](uint64_t sum, const CryptoNote::TransactionOutputInformation &deposit) {
-      return sum + deposit.amount;
+      return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
     });
   }
 
@@ -364,7 +364,7 @@ namespace CryptoNote
     TransactionOutputInformation transfer;
 
     uint64_t foundMoney = 0;
-    foundMoney += deposit.amount;
+    foundMoney += deposit.amount + deposit.interest;
     m_logger(DEBUGGING, WHITE) << "found money " << foundMoney;
 
     container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state);
@@ -3439,6 +3439,7 @@ namespace CryptoNote
     deposit.creatingTransactionId = creatingTransactionId;
     deposit.term = depositOutput.term;
     deposit.spendingTransactionId = WALLET_INVALID_TRANSACTION_ID;
+    deposit.interest = currency.calculateInterest(deposit.amount, deposit.term, height);
     deposit.height = height;
     deposit.unlockHeight = height + depositOutput.term;
     deposit.locked = true;

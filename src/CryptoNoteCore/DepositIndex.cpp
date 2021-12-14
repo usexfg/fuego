@@ -44,6 +44,9 @@ auto DepositIndex::fullDepositAmount() const -> DepositAmount {
   return index.empty() ? 0 : index.back().amount;
 }
 
+auto DepositIndex::fullInterestAmount() const -> DepositInterest {
+  return index.empty() ? 0 : index.back().interest;
+}
 
 static inline bool sumWillOverflow(int64_t x, int64_t y) {
   if (y > 0 && x > std::numeric_limits<int64_t>::max() - y) {
@@ -65,18 +68,22 @@ static inline bool sumWillOverflow(uint64_t x, uint64_t y) {
   return false;
 }
 
-void DepositIndex::pushBlock(DepositAmount amount) {
+void DepositIndex::pushBlock(DepositAmount amount, DepositInterest interest) {
   DepositAmount lastAmount;
-    if (index.empty()) {
+  DepositInterest lastInterest;
+  if (index.empty()) {
     lastAmount = 0;
- } else {
+    lastInterest = 0;
+  } else {
     lastAmount = index.back().amount;
+    lastInterest = index.back().interest;
   }
 
   assert(!sumWillOverflow(amount, lastAmount));
- assert(amount + lastAmount >= 0);
+  assert(!sumWillOverflow(interest, lastInterest));
+  assert(amount + lastAmount >= 0);
   if (amount != 0) {
-    index.push_back({blockCount, amount + lastAmount});
+    index.push_back({blockCount, amount + lastAmount, interest + lastInterest});
   }
 
   ++blockCount;
@@ -129,6 +136,14 @@ auto DepositIndex::depositAmountAtHeight(DepositHeight height) const -> DepositA
   }
 }
 
+auto DepositIndex::depositInterestAtHeight(DepositHeight height) const -> DepositInterest {
+  if (blockCount == 0) {
+    return 0;
+  } else {
+    auto it = upperBound(height);
+    return it == index.cbegin() ? 0 : (--it)->interest;
+  }
+}
 
 void DepositIndex::serialize(ISerializer& s) {
   s(blockCount, "blockCount");
@@ -142,6 +157,7 @@ void DepositIndex::serialize(ISerializer& s) {
 void DepositIndex::DepositIndexEntry::serialize(ISerializer& s) {
   s(height, "height");
   s(amount, "amount");
+  s(interest, "interest");
 }
 
 }

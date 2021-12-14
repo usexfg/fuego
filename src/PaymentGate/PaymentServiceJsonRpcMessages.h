@@ -199,6 +199,7 @@ struct GetDeposit
   {
     uint64_t amount;
     uint64_t term;
+    uint64_t interest;
     uint64_t height;
     uint64_t unlockHeight;
     std::string creatingTransactionHash;

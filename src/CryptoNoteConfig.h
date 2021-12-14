@@ -80,6 +80,8 @@ namespace CryptoNote
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
+		const uint64_t MULTIPLIER_FACTOR = 100;		 /* legacy deposits */
+		const uint32_t END_MULTIPLIER_BLOCK = 50; /* legacy deposits */
 
 		static constexpr uint64_t POISSON_CHECK_TRIGGER = 10; // Reorg size that triggers poisson timestamp check
 		static constexpr uint64_t POISSON_CHECK_DEPTH = 60;   // Main-chain depth of poisson check. The attacker will have to tamper 50% of those blocks

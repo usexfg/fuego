@@ -222,6 +222,7 @@ namespace CryptoNote
     uint64_t bLo = mul128(amount, a, &bHi);
     uint64_t cHi;
     uint64_t cLo;
+    uint64_t offchaininterest = 0 + 0;
     assert(std::numeric_limits<uint32_t>::max() / 100 > m_depositMaxTerm);
     div128_32(bHi, bLo, static_cast<uint32_t>(100 * m_depositMaxTerm), &cHi, &cLo);
     assert(cHi == 0);
@@ -239,7 +240,7 @@ namespace CryptoNote
       interestHi = cHi;
       interestLo = cLo;
     }
-    return interestLo;
+    return offchaininterest;
   }
 
   /* ---------------------------------------------------------------------------------------------------- */

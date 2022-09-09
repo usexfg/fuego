@@ -199,6 +199,7 @@ struct GetDeposit
   {
     uint64_t amount;
     uint64_t term;
+    uint64_t interest;
     uint64_t height;
     uint64_t unlockHeight;
     std::string creatingTransactionHash;
@@ -511,7 +512,7 @@ struct SendTransaction
     std::vector<std::string> sourceAddresses;
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
-    uint64_t fee = 1000;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
     uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
     std::string extra;
     std::string paymentId;
@@ -536,7 +537,7 @@ struct CreateDelayedTransaction
     std::vector<std::string> addresses;
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
-    uint64_t fee = 1000;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
     uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
     std::string extra;
     std::string paymentId;

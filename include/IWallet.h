@@ -67,6 +67,7 @@ struct Deposit
   size_t spendingTransactionId;
   uint32_t term;
   uint64_t amount;
+  uint64_t interest;
   uint64_t height;
   uint64_t unlockHeight;
   bool locked;

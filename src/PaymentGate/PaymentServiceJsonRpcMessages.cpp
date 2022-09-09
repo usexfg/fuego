@@ -125,6 +125,7 @@ void GetDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(amount, "amount");
   serializer(term, "term");
+  serializer(interest, "interest");
   serializer(creatingTransactionHash, "creatingTransactionHash");
   serializer(spendingTransactionHash, "spendingTransactionHash");
   serializer(height, "height");

@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2019-2022 Fango Developers
+// Copyright (c) 2018-2022 Fandom Gold Society
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2014-2018 The Forknote developers
@@ -74,12 +74,14 @@ namespace CryptoNote
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-		const uint64_t DEPOSIT_MIN_AMOUNT = 8 * COIN;
-		const uint32_t DEPOSIT_MIN_TERM = 8;  //test term 		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */ 
-		const uint32_t DEPOSIT_MAX_TERM = 1 * 12 * 80;  		 /* one year | use 3 month min/max */
+		const uint64_t DEPOSIT_MIN_AMOUNT = 100 * COIN;
+		const uint32_t DEPOSIT_MIN_TERM = 5480;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */ 
+		const uint32_t DEPOSIT_MAX_TERM = 1 * 12 * 5480;  		 /* one year | use 3 month min/max? */
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
+		const uint64_t MULTIPLIER_FACTOR = 100;		 /* legacy deposits */
+		const uint32_t END_MULTIPLIER_BLOCK = 50; /* legacy deposits */
 
 		static constexpr uint64_t POISSON_CHECK_TRIGGER = 10; // Reorg size that triggers poisson timestamp check
 		static constexpr uint64_t POISSON_CHECK_DEPTH = 60;   // Main-chain depth of poisson check. The attacker will have to tamper 50% of those blocks
@@ -105,11 +107,11 @@ namespace CryptoNote
 		const size_t FUSION_TX_MIN_IN_OUT_COUNT_RATIO = 4;
 
 		const uint32_t UPGRADE_HEIGHT_V2                             = 147958; //{Hardhome}
-		const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{Longclaw}
-		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
-		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
-		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-		const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandomgold
+ 		const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{Longclaw}
+ 		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
+ 		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
+ 		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
+ 		const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandomgold
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonbourne (emission|deposits)
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -119,12 +121,12 @@ namespace CryptoNote
 		static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 
 		const char CRYPTONOTE_BLOCKS_FILENAME[] = "blocks.dat";
-		const char CRYPTONOTE_BLOCKINDEXES_FILENAME[] = "blockindexes.dat";
-		const char CRYPTONOTE_BLOCKSCACHE_FILENAME[] = "blockscache.dat";
-		const char CRYPTONOTE_POOLDATA_FILENAME[] = "poolstate.bin";
-		const char P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
-		const char CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[] = "blockchainindices.dat";
-		const char MINER_CONFIG_FILE_NAME[] = "miner_conf.json";
+ 		const char CRYPTONOTE_BLOCKINDEXES_FILENAME[] = "blockindexes.dat";
+ 		const char CRYPTONOTE_BLOCKSCACHE_FILENAME[] = "blockscache.dat";
+ 		const char CRYPTONOTE_POOLDATA_FILENAME[] = "poolstate.bin";
+ 		const char P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
+ 		const char CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[] = "blockchainindices.dat";
+ 		const char MINER_CONFIG_FILE_NAME[] = "miner_conf.json";
 
 	} // namespace parameters
 
@@ -149,7 +151,7 @@ namespace CryptoNote
 	const size_t COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
 
 	const int P2P_DEFAULT_PORT = 10808;
-	const int RPC_DEFAULT_PORT = 18180;
+ 	const int RPC_DEFAULT_PORT = 18180;
 
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
@@ -183,8 +185,9 @@ namespace CryptoNote
 	// Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES = {
 		"104.236.0.16:10808",
-		"188.226.177.187:10808",
-		"fango.money:10808"
+ 		"188.226.177.187:10808",
+ 		"fango.money:10808",
+		"fangotango.hopto.org:10808"
 	};
 
 	struct CheckpointData
@@ -196,59 +199,60 @@ namespace CryptoNote
 #ifdef __GNUC__
 	__attribute__((unused))
 #endif
-
 	// Blockchain Checkpoints:
 	// {<block height>, "<block hash>"},
 	const std::initializer_list<CheckpointData>
 		CHECKPOINTS = {
-			{ 800,    "c1c64f752f6f5f6f69671b3794f741af0707c71b35302ea4fc96b0befdce8ce9" },
-			{ 8008,   "299702f163995cd790b5c45362c78ad596f8717d749ff9016ce27eaa625b8a5e" },
-			{ 18008,  "46baf8aea2b9472a9f127ad7cdcb01a871ecf20d710e9e0d3a2b13176a452112" },
-			{ 63312,  "57c815dd1480b6a1de7037f85aa510ff7c784b91808f3777451c030d40614ddb" },
-			{ 80008,  "19e65aec81a283e756c9b55a884927bcbffa4639c9fe21fd4894ef211e0e8472" },
-			{ 108801, "0cb48287678f9df42a63c6c344f448ddce5316f9c5c03548e77d9a1193ebf5fd" },
-			{ 147959, "cecc0692782cd1956fb12bf170c4ebd6c7b6bb5c12e7071ef2d98e7c940f1961" },
-			{ 148000, "bd318f33b5f1804bc648ce847d4214cff8cfd7498483461db660a87e342eb0e9" },
-			{ 154322, "73232b04d18cdc9cc6430194298166c6e775a55ff0f48e2f819f8ed5fd873df7" },
-			{ 155433, "89be8af3d0a62454e95cf71cf7c17df9480ac337b4b5a294e0d75400b8989700" },
-			{ 158000, "153b22f4912d1a6db9f235de40ae2be3a178eb44cbde8e2a4fe0c7727037ab34" },
-			{ 180018, "3c0c6fd2f6c2805280f2079f50f772433957fae495ad81e305835bdb935fd21e" },
-			{ 200000, "4c4555f73e54b43f62fe26950d3c7f877e35c448a1e865b5ea07aa09d971e0e5" },
-			{ 222222, "801d187ca11851d0379c0fa4a790d26aa24e76835d26bf7e54f4b858bfd7ad53" },
-			{ 250000, "1a2cfc1c53a62038468feff7f22a150a95ba65090842d09fadd97f789e1e00fc" },
-			{ 260000, "968fc54cd727b5d70c4ccc1f9fe144c58bd909acc97cd27c491c4f6fc1b97087" },
-			{ 280000, "fa6016236d07c8a5ab660f5ddd788f2f002bd518146e2bc379dd66d1bc7f94a8" },
-			{ 300001, "ba7e401c03a9f5b2111ef402d8715761990ff53e31069c413f5c78c7cd819de9" },
-			{ 320000, "2c42f527960ce443ffa645b0af85d85bdf10cf9df8625d900b4edd0b29b68735" },
-			{ 324820, "99fb6b6c81c9ceff7bcdef0667cf270a5300dec6393de21bd599d414eef38569" },
-			{ 333333, "d58919713e37e4317a3e50c12639fe591958d2e43637cf8f99f596c6c8275241" },
-			{ 342600, "cae28d470dddbc42fbc0f0a9d3345add566f23dea8130c9ae900697d0e1580c9" },
-			{ 345679, "8ce385e3816ce48adfe13952e010d1207eaf006e366e67c65f0e19cd1a550ce1" },
-			{ 369369, "e32cf1e1b365690fb95544ce35c0e2c0ea846fab12cbd5c70a1d336689325973" },
-			{ 400004, "07b68b28622969c3df1987d0d5c6259cedf661f277039662e817051384c9b5af" },
-			{ 444444, "b3dd057a72e415861db116f9f7e49c3e9417e29614bf4962fe4f90e4632d0cef" },
-			{ 500000, "30138ff16e9925fe7a8d2db702cf52da2822c614066c3d41d6bcbb704a47eeeb" },
-			{ 555555, "b8bca0bc95a995f60e6e70d3d6d5efde291c4eb7a7ce4a76b126b47354ce74ef" },
-			{ 600000, "bea84c3cde5c6c47ea739e33e09e39b672c33acae434d34ccc5bf1d8177fe29c" },
-			{ 620000, "aff4cbc82e142ef03e4e4a9953034071c21752f9a7c00e5b385aa0cac0eeb9bb" },
-			{ 640000, "63f664a39a9bc958fa61e5088862ab117f1f513fda16584f4ec7031087661fce" },
-			{ 656000, "35b04e2217494c7b818eccad9b7f7fadc3d8d23a8e216dfcff444691fd57fc0f" },
-			{ 656114, "6c5ff7712c1bd5716679969b3903a6711b258202e78a729907c2af0eb299214c" },
-			{ 657001, "68cc01388e1e4a1b4a8fc885e911f0c09dbea594183111047d926fad41669a09" },
-			{ 657002, "29952d93e156602008c03070089d6ba6375e770dda5d31603d7493eec23e8618" },
-			{ 657025, "b654644cc363120a88f15e044cbe04935f7a0e347a72901a46d1db88348a7392" },
-			{ 690000, "294f9c92ec345d23543ce7dfb7d2487cb6d3b3c64e6d0158b165bf9f530aef30" },
-			{ 696969, "da78f75378ca0d84108f636119cb228ba7185f953f36511c4c80812d77664050" },
-			{ 700000, "1ffc42a47c84a82a2a050d1607bbd5a4524c3b47099f6cf61f8dab5b24abbf2a" },
-			{ 710000, "c7493d9721e3d5ebd196f035d8bb74bd5485443181840b05f62dd0b7709a14c4" },
-			{ 720000, "673574f7b28a84ef81fb00f072d378fca271ba48e77250f225748c35ce873619" },
-			{ 730000, "25020873d7851cd0b0787d8dd6a5eb758eb5c531bc793837e9399d9f05e0a4a4" },
-			{ 740000, "5c1b20e346df61f719a6d39cef03ca53d6978f4b00915b61ce139a67a5ea5d8d" },
-			{ 750000, "4fe3b7759428705b39f725ef1f5a9ce1b501c983de5e3079d30bc497f587242f" },
-			{ 752411, "8675187b8a7bdf73ac93ac9d86f37315c0780a41ff4c0aa671f5d809b6c5b631" },
-			{ 752593, "e270b1419d5ae8589ea8fdb148a6de6b02637432e76a1b23258324754a16f46f" }
-		};
+ 			{ 800,    "c1c64f752f6f5f6f69671b3794f741af0707c71b35302ea4fc96b0befdce8ce9" },
+ 			{ 8008,   "299702f163995cd790b5c45362c78ad596f8717d749ff9016ce27eaa625b8a5e" },
+ 			{ 18008,  "46baf8aea2b9472a9f127ad7cdcb01a871ecf20d710e9e0d3a2b13176a452112" },
+ 			{ 63312,  "57c815dd1480b6a1de7037f85aa510ff7c784b91808f3777451c030d40614ddb" },
+ 			{ 80008,  "19e65aec81a283e756c9b55a884927bcbffa4639c9fe21fd4894ef211e0e8472" },
+ 			{ 108801, "0cb48287678f9df42a63c6c344f448ddce5316f9c5c03548e77d9a1193ebf5fd" },
+ 			{ 147959, "cecc0692782cd1956fb12bf170c4ebd6c7b6bb5c12e7071ef2d98e7c940f1961" },
+ 			{ 148000, "bd318f33b5f1804bc648ce847d4214cff8cfd7498483461db660a87e342eb0e9" },
+ 			{ 154322, "73232b04d18cdc9cc6430194298166c6e775a55ff0f48e2f819f8ed5fd873df7" },
+ 			{ 155433, "89be8af3d0a62454e95cf71cf7c17df9480ac337b4b5a294e0d75400b8989700" },
+ 			{ 158000, "153b22f4912d1a6db9f235de40ae2be3a178eb44cbde8e2a4fe0c7727037ab34" },
+ 			{ 180018, "3c0c6fd2f6c2805280f2079f50f772433957fae495ad81e305835bdb935fd21e" },
+ 			{ 200000, "4c4555f73e54b43f62fe26950d3c7f877e35c448a1e865b5ea07aa09d971e0e5" },
+ 			{ 222222, "801d187ca11851d0379c0fa4a790d26aa24e76835d26bf7e54f4b858bfd7ad53" },
+ 			{ 250000, "1a2cfc1c53a62038468feff7f22a150a95ba65090842d09fadd97f789e1e00fc" },
+ 			{ 260000, "968fc54cd727b5d70c4ccc1f9fe144c58bd909acc97cd27c491c4f6fc1b97087" },
+ 			{ 280000, "fa6016236d07c8a5ab660f5ddd788f2f002bd518146e2bc379dd66d1bc7f94a8" },
+ 			{ 300001, "ba7e401c03a9f5b2111ef402d8715761990ff53e31069c413f5c78c7cd819de9" },
+ 			{ 320000, "2c42f527960ce443ffa645b0af85d85bdf10cf9df8625d900b4edd0b29b68735" },
+ 			{ 324820, "99fb6b6c81c9ceff7bcdef0667cf270a5300dec6393de21bd599d414eef38569" },
+ 			{ 333333, "d58919713e37e4317a3e50c12639fe591958d2e43637cf8f99f596c6c8275241" },
+ 			{ 342600, "cae28d470dddbc42fbc0f0a9d3345add566f23dea8130c9ae900697d0e1580c9" },
+ 			{ 345679, "8ce385e3816ce48adfe13952e010d1207eaf006e366e67c65f0e19cd1a550ce1" },
+ 			{ 369369, "e32cf1e1b365690fb95544ce35c0e2c0ea846fab12cbd5c70a1d336689325973" },
+ 			{ 400004, "07b68b28622969c3df1987d0d5c6259cedf661f277039662e817051384c9b5af" },
+ 			{ 444444, "b3dd057a72e415861db116f9f7e49c3e9417e29614bf4962fe4f90e4632d0cef" },
+ 			{ 500000, "30138ff16e9925fe7a8d2db702cf52da2822c614066c3d41d6bcbb704a47eeeb" },
+ 			{ 555555, "b8bca0bc95a995f60e6e70d3d6d5efde291c4eb7a7ce4a76b126b47354ce74ef" },
+ 			{ 600000, "bea84c3cde5c6c47ea739e33e09e39b672c33acae434d34ccc5bf1d8177fe29c" },
+ 			{ 620000, "aff4cbc82e142ef03e4e4a9953034071c21752f9a7c00e5b385aa0cac0eeb9bb" },
+ 			{ 640000, "63f664a39a9bc958fa61e5088862ab117f1f513fda16584f4ec7031087661fce" },
+ 			{ 656000, "35b04e2217494c7b818eccad9b7f7fadc3d8d23a8e216dfcff444691fd57fc0f" },
+ 			{ 656114, "6c5ff7712c1bd5716679969b3903a6711b258202e78a729907c2af0eb299214c" },
+ 			{ 657001, "68cc01388e1e4a1b4a8fc885e911f0c09dbea594183111047d926fad41669a09" },
+ 			{ 657002, "29952d93e156602008c03070089d6ba6375e770dda5d31603d7493eec23e8618" },
+ 			{ 657025, "b654644cc363120a88f15e044cbe04935f7a0e347a72901a46d1db88348a7392" },
+ 			{ 690000, "294f9c92ec345d23543ce7dfb7d2487cb6d3b3c64e6d0158b165bf9f530aef30" },
+ 			{ 696969, "da78f75378ca0d84108f636119cb228ba7185f953f36511c4c80812d77664050" },
+ 			{ 700000, "1ffc42a47c84a82a2a050d1607bbd5a4524c3b47099f6cf61f8dab5b24abbf2a" },
+ 			{ 710000, "c7493d9721e3d5ebd196f035d8bb74bd5485443181840b05f62dd0b7709a14c4" },
+ 			{ 720000, "673574f7b28a84ef81fb00f072d378fca271ba48e77250f225748c35ce873619" },
+ 			{ 730000, "25020873d7851cd0b0787d8dd6a5eb758eb5c531bc793837e9399d9f05e0a4a4" },
+ 			{ 740000, "5c1b20e346df61f719a6d39cef03ca53d6978f4b00915b61ce139a67a5ea5d8d" },
+ 			{ 750000, "4fe3b7759428705b39f725ef1f5a9ce1b501c983de5e3079d30bc497f587242f" },
+ 			{ 752411, "8675187b8a7bdf73ac93ac9d86f37315c0780a41ff4c0aa671f5d809b6c5b631" },
+ 			{ 752593, "e270b1419d5ae8589ea8fdb148a6de6b02637432e76a1b23258324754a16f46f" },
+			{ 777777, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" }
+ 		};
 
 } // namespace CryptoNote
-//Knowledge has made you powerful but there is still so much you don't know.
+
 #define ALLOW_DEBUG_COMMANDS
+//Knowledge has made you powerful but there is still so much you don't know.

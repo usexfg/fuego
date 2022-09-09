@@ -159,7 +159,7 @@ struct TransferCommand {
   uint64_t ttl;
 
   TransferCommand(const CryptoNote::Currency& currency) :
-    m_currency(currency), fake_outs_count(0), fee(currency.minimumFeeV2()), ttl(0) {
+    m_currency(currency), fake_outs_count(0), fee(currency.minimumFee()), ttl(0) {
   }
 
 /* This parses arguments from the transfer command */
@@ -629,6 +629,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
+  m_consoleHandler.setHandler("payment_id", boost::bind(&simple_wallet::payment_id, this, _1), "Generate random Payment ID");
 }
 
 /* This function shows the number of outputs in the wallet
@@ -661,6 +662,10 @@ bool simple_wallet::set_log(const std::vector<std::string> &args) {
 }
 
 bool key_import = true;
+bool simple_wallet::payment_id(const std::vector<std::string> &args) {
+  success_msg_writer() << "Payment ID: " << Crypto::rand<Crypto::Hash>();
+  return true;
+}
 
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::init(const boost::program_options::variables_map& vm) {

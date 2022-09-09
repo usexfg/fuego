@@ -107,6 +107,7 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
   { "/feeaddress", { jsonMethod<COMMAND_RPC_GET_FEE_ADDRESS>(&RpcServer::on_get_fee_address), true } },
   { "/peers", { jsonMethod<COMMAND_RPC_GET_PEER_LIST>(&RpcServer::on_get_peer_list), true } },
   { "/getpeers", { jsonMethod<COMMAND_RPC_GET_PEER_LIST>(&RpcServer::on_get_peer_list), true } },
+  { "/paymentid", { jsonMethod<COMMAND_RPC_GEN_PAYMENT_ID>(&RpcServer::on_get_payment_id), true } },
 
   // json rpc
   { "/json_rpc", { std::bind(&RpcServer::processJsonRpcRequest, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), true } }
@@ -813,6 +814,16 @@ bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMM
   return true;
 }
 
+bool RpcServer::on_get_payment_id(const COMMAND_RPC_GEN_PAYMENT_ID::request& req, COMMAND_RPC_GEN_PAYMENT_ID::response& res) {
+  std::string pid;
+  try {
+    pid = Common::podToHex(Crypto::rand<Crypto::Hash>());
+  } catch (const std::exception& e) {
+    throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: can't generate Payment ID" };
+  }
+  res.payment_id = pid;
+  return true;
+}
 //------------------------------------------------------------------------------------------------------------------------------
 // JSON RPC methods
 //------------------------------------------------------------------------------------------------------------------------------
@@ -881,14 +892,15 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
       "Internal error: coinbase transaction in the block has the wrong type" };
   }
 
-  block_header_response block_header;
+  block_header_response block_header; // create block_header_response object
 
   uint32_t block_height = boost::get<BaseInput>(blk.baseTransaction.inputs.front()).blockIndex;
   res.block.height = block_height;
   Crypto::Hash tmp_hash = m_core.getBlockIdByHeight(block_height);
-  bool is_orphaned = hash != tmp_hash;
+  bool is_orphaned = hash != tmp_hash; // true!=true -> false,  true!=false -> true , fase!=false --> false 
 
-  fill_block_header_response(blk, is_orphaned, block_height, hash, block_header);
+  fill_block_header_response(blk, is_orphaned, res.block.height, hash, block_header); // fill up block_header object
+
 
   res.block.major_version = block_header.major_version;
   res.block.minor_version = block_header.minor_version;
@@ -898,9 +910,10 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   res.block.hash = Common::podToHex(hash);
   res.block.orphan_status = is_orphaned;
   res.block.depth = m_core.get_current_blockchain_height() - res.block.height - 1;
-  m_core.getBlockDifficulty(static_cast<uint32_t>(res.block.height), res.block.difficulty);
-
+  res.block.orphan_status = block_header.orphan_status; // set orphan status from block_header object response
+  res.block.difficulty = block_header.difficulty; // set difficulty from block_header object response
   res.block.reward = block_header.reward;
+  //m_core.getBlockDifficulty(static_cast<uint32_t>(res.block.height), res.block.difficulty);
 
   std::vector<size_t> blocksSizes;
   if (!m_core.getBackwardBlocksSizes(res.block.height, blocksSizes, parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW)) {

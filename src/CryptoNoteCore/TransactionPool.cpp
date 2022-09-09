@@ -150,7 +150,7 @@ namespace CryptoNote
       }
     }
 
-    uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);
+    uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);   
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
     logger(DEBUGGING, WHITE) << "Processing tx " << id << " with inputs of " << inputs_amount << " and outputs of " << outputs_amount;
@@ -282,7 +282,7 @@ namespace CryptoNote
 
     if (height >= parameters::UPGRADE_HEIGHT_V8) {
       tvc.m_added_to_pool = true;
-      tvc.m_should_be_relayed = inputsValid && (fee == 1000 || isFusionTransaction || isWithdrawalTransaction || ttl.ttl != 0);
+      tvc.m_should_be_relayed = inputsValid && (fee == CryptoNote::parameters::MINIMUM_FEE || isFusionTransaction || isWithdrawalTransaction || ttl.ttl != 0);
       tvc.m_verification_failed = true;
     } else {
       tvc.m_added_to_pool = true;

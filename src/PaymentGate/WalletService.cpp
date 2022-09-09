@@ -1125,7 +1125,7 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address)
+  std::error_code WalletService::getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address)
   {
     try
     {
@@ -1133,6 +1133,7 @@ namespace PaymentService
       Deposit deposit = wallet.getDeposit(depositId);
       amount = deposit.amount;
       term = deposit.term;
+      interest = deposit.interest;
       height = deposit.height;
       unlockHeight = deposit.unlockHeight;
 
@@ -1370,7 +1371,7 @@ namespace PaymentService
       sendParams.sourceAddresses = request.sourceAddresses;
       sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
       sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
-      sendParams.fee = 1000;
+      sendParams.fee = CryptoNote::parameters::MINIMUM_FEE;
       sendParams.mixIn = parameters::MINIMUM_MIXIN;
       sendParams.unlockTimestamp = request.unlockTime;
       sendParams.changeDestination = request.changeAddress;

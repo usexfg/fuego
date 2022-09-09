@@ -106,6 +106,7 @@ void serialize(Deposit& deposit, CryptoNote::ISerializer& serializer) {
 
   serializer(deposit.term, "term");
   serializer(deposit.amount, "amount");
+  serializer(deposit.interest, "interest");
   serializer(deposit.locked, "locked");
 }
 

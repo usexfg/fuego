@@ -40,7 +40,7 @@ executing the following command.
 
 2. Clone Fuego repository
 ```
-git clone https://github.com/FandomGold/fuego
+git clone https://github.com/usexfg/fuego
 
 ```
 3. Open folder with copied repository
@@ -64,7 +64,7 @@ or <code>./fuegod --help</code> when outside of dæmon
 _________________________________________________________
 For the most user-friendly graphical interface experience
 
-see [Fuego Desktop Wallet](https://github.com/fandomgold/fuego-wallet). 
+see [Fuego Desktop Wallet](https://github.com/usexfg/fuego-wallet). 
 _________________________________________________________
 
 _________________________________________________________
@@ -90,7 +90,7 @@ _________________________________________________________
 From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
 ```bash
-git clone https://github.com/FandomGold/fuego
+git clone https://github.com/usexfg/fuego
 cd fuego
 mkdir build
 cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
@@ -123,7 +123,7 @@ $ brew install git python cmake gcc boost
 When all dependencies are installed, build Fuego core binaries:
 
 ```bash
-$ git clone https://github.com/FandomGold/fuego
+$ git clone https://github.com/usexfg/fuego
 $ cd fuego
 $ mkdir build && cd $_
 $ cmake ..

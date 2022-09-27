@@ -50,7 +50,7 @@ namespace Crypto
    inline void generate_chacha8_key(Crypto::cn_context &context, const std::string& password, chacha8_key& key, int cn_variant = 0) { 
     static_assert(sizeof(chacha8_key) <= sizeof(Hash), "Size of hash must be at least that of chacha8_key");
     Hash pwd_hash;
-    cn_slow_hash(context, password.data(), password.size(), pwd_hash, cn_variant); 
+    cn_slow_hash(context, password.data(), password.size(), pwd_hash, 0, 0, 0); 
     memcpy(&key, &pwd_hash, sizeof(key));
     memset(&pwd_hash, 0, sizeof(pwd_hash));
   }

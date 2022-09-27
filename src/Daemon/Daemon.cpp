@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2019-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "version.h"
 
@@ -165,7 +164,7 @@ int main(int argc, char* argv[])
 
      if (command_line::get_arg(vm, command_line::arg_help))
      {
-       std::cout << "Fango || " << PROJECT_VERSION_LONG << ENDL;
+       std::cout << "Fuego || " << PROJECT_VERSION_LONG << ENDL;
        std::cout << desc_options << std::endl;
        return false;
      }
@@ -217,27 +216,24 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		logger(INFO, BRIGHT_CYAN) <<
+		logger(INFO, BRIGHT_MAGENTA) <<
 #ifdef _WIN32
-" \n"
-"       8F88888888  A8888 N88b    N8N  .d8888b.   .d88888b.  \n"
-"       8F8        A88888 N888b   N8N d88P  Y88b d08P` `Y08b \n"
-"       8F8       A88P888 N8888b  N8N 8G8    8G8 800     008 \n"
-"       8F88888  A88P 888 N88Y88b N8N 8G8        800     008 \n"
-"       8F8     A88P  888 N8N Y88b88N 8G8  8888G 800     008 \n"
-"       8F8    A88P   888 N8N  Y8888N 8G8    8G8 800     008 \n"
-"       8F8   A8888888888 N8N   Y888N 8G8b  dGG8 Y80b. .d80P \n"
-"       8F8  A88P     888 N8N    Y88N  `Y8888P`   `Y80008P'  \n"
+" \n"		
+"       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n" 
+"       888        888     888 888       d88P  Y88b d88P` `Y88b  \n"
+"       888        888     888 888       888    888 888     888  \n"
+"       8888888    888     888 8888888   888        888     888  \n"
+"       888        888     888 888       888  88888 888     888  \n"
+"       888        888     888 888       888    888 888     888  \n"
+"       888        Y88b. .d88P 888       Y88b  d88P Y88b. .d88P  \n"
+"       888         `Y88888P`  8888888888 `Y8888P88  `Y88888P`   \n"                                                   
 #else
 " \n"
-" ███████████   █████████   ██████   █████   █████████     ███████   \n"
-"░░███░░░░░░█  ███░░░░░███ ░░██████ ░░███   ███░░░░░███  ███░░░░░███ \n"
-" ░███   █ ░  ░███    ░███  ░███░███ ░███  ███     ░░░  ███     ░░███ \n"
-" ░███████    ░███████████  ░███░░███░███ ░███         ░███      ░███ \n"
-" ░███░░░█    ░███░░░░░███  ░███ ░░██████ ░███    █████░███      ░███ \n"
-" ░███  ░     ░███    ░███  ░███  ░░█████ ░░███  ░░███ ░░███     ███  \n"
-" █████       █████   █████ █████  ░░█████ ░░█████████  ░░░███████░   \n"
-" ░░░░░       ░░░░░   ░░░░░ ░░░░░    ░░░░░   ░░░░░░░░░     ░░░░░░░    \n"
+" ░░░░░░░  ░░    ░░ ░░░░░░░  ░░░░░░   ░░░░░░  \n"
+" ▒▒       ▒▒     ▒▒ ▒▒      ▒▒        ▒▒    ▒▒ \n"
+" ▒▒▒▒▒    ▒▒     ▒▒ ▒▒▒▒▒   ▒▒    ▒▒▒  ▒▒    ▒▒ \n"
+" ▓▓      ▓▓    ▓▓ ▓▓      ▓▓    ▓▓ ▓▓    ▓▓ \n"
+" ██       ██████  ███████  ██████   ██████  \n"
 #endif
 			"\n"
 			<< "             "  PROJECT_VERSION_LONG "\n"

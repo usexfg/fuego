@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Miner.h"
 
@@ -243,7 +242,7 @@ namespace CryptoNote
       m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
     }
 
-    logger(INFO, YELLOW) << "Fango mining has begun. Using " << threads_count << " CPU threads";
+    logger(INFO, YELLOW) << "Fuego mining has begun. Using " << threads_count << " CPU threads";
     return true;
   }
   
@@ -273,7 +272,7 @@ namespace CryptoNote
     }
 
     m_threads.clear();
-    logger(INFO) << "Fango mining has been stopped, " << m_threads.size() << " halted" ;
+    logger(INFO) << "Fuego mining has been stopped, " << m_threads.size() << " halted" ;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
@@ -409,7 +408,7 @@ namespace CryptoNote
         //we lucky!
         ++m_config.current_extra_message_index;
 
-        logger(INFO, BRIGHT_YELLOW) << "FANGO block found at difficulty of: " << local_diff;
+        logger(INFO, BRIGHT_YELLOW) << "Fuego block found at difficulty of: " << local_diff;  // add block height to message
 
         if(!m_handler.handle_block_found(b)) {
           --m_config.current_extra_message_index;

@@ -3,19 +3,19 @@
 // Copyright (c) 2018-2019 The Ryo Currency Developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2017-2022 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Blockchain.h"
 
@@ -677,7 +677,7 @@ bool Blockchain::storeCache() {
     logger(ERROR, BRIGHT_RED) << "Failed to save blockchain cache";
     return false;
   }
-    logger(INFO, BRIGHT_GREEN) << "Fango blockchain was successfully saved.";
+    logger(INFO, BRIGHT_GREEN) << "Fuego blockchain was successfully saved.";
   return true;
 }
 
@@ -1178,7 +1178,7 @@ bool Blockchain::validate_miner_transaction(const Block& b, uint32_t height, siz
 
   auto blockMajorVersion = getBlockMajorVersionForHeight(height);
   if (!m_currency.getBlockReward(blockMajorVersion, blocksSizeMedian, cumulativeBlockSize, alreadyGeneratedCoins, fee, height, reward, emissionChange)) {
-    logger(INFO, BRIGHT_WHITE) << "block size " << cumulativeBlockSize << " is bigger than what is currently allowed on Fango's blockchain";
+    logger(INFO, BRIGHT_WHITE) << "block size " << cumulativeBlockSize << " is bigger than what is currently allowed on Fuego blockchain";
     return false;
   }
 

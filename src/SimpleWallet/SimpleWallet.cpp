@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "SimpleWallet.h"
 
@@ -253,7 +252,7 @@ struct TransferCommand {
             aliases[aliasUrl].emplace_back(WalletLegacyTransfer{"", static_cast<int64_t>(de.amount)});
           }
 
-          /* Remote node transactions fees are 10000 X */
+          /* Remote node transactions fees are 0.25% <-add option for Elder Nodes to set own % fee, if not, default 0.25%*/
           if (!remote_fee_address.empty()) {
             destination.address = remote_fee_address;                     
             int64_t remote_node_fee = static_cast<int64_t>(de.amount * 0.0025);
@@ -710,18 +709,15 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   if (m_generate_new.empty() && m_wallet_file_arg.empty()) {
     std::cout <<"\n";
     std::cout <<"\n";
-    std::cout <<"       8F88888888  A8888 N88b    N8N  .d8888b.   .d88888b.        "<< "\n";
-    std::cout <<"       8F8        A88888 N888b   N8N d88P  Y88b d08P` `Y08b       "<< "\n";
-    std::cout <<"       8F8       A88P888 N8888b  N8N 8G8    8G8 800     008       "<< "\n";
-    std::cout <<"       8F88888  A88P 888 N88Y88b N8N 8G8        800     008       "<< "\n";
-    std::cout <<"       8F8     A88P  888 N8N Y88b88N 8G8  8888G 800     008       "<< "\n";
-    std::cout <<"       8F8    A88P   888 N8N  Y8888N 8G8    8G8 800     008       "<< "\n";
-    std::cout <<"       8F8   A8888888888 N8N   Y888N 8G8b  dGG8 Y80b. .d80P       "<< "\n";
-    std::cout <<"       8F8  A88P     888 N8N    Y88N  `Y8888P`   `Y80008P'        "<< "\n";
+    std::cout <<"       ░░░░░░░ ░░    ░░ ░░░░░░░  ░░░░░░   ░░░░░░        "<< "\n";     
+    std::cout <<"       ▒▒      ▒▒    ▒▒ ▒▒      ▒▒       ▒▒    ▒▒       "<< "\n";     
+    std::cout <<"       ▒▒▒▒▒   ▒▒    ▒▒ ▒▒▒▒▒   ▒▒   ▒▒▒ ▒▒    ▒▒       "<< "\n";     
+    std::cout <<"       ▓▓      ▓▓    ▓▓ ▓▓      ▓▓    ▓▓ ▓▓    ▓▓       "<< "\n";     
+    std::cout <<"       ██       ██████  ███████  ██████   ██████        "<< "\n";     
     std::cout <<"\n";
     std::cout <<"\n";
     std::cout <<"\n";
-    std::cout <<  "Welcome to the FANGO command-line wallet."<<"\n";
+    std::cout <<  "Welcome to the Fuego command-line wallet."<<"\n";
     std::cout << "Please choose from the following options what you would like to do:\n";
     std::cout << "G - Generate new wallet\n";
     std::cout << "O - Open wallet\n";
@@ -1022,7 +1018,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
     std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
-    logger(INFO, BRIGHT_GREEN) << "fango-wallet-cli is an open-source, client-side, free wallet which allows you to send & receive Fango instantly on the blockchain. You are in control of your funds & your private keys. When you generate a new wallet, login, send, receive or deposit $XFG - everything happens locally. Your seed is never transmitted, received or stored. That's why it is IMPERATIVE that you write, print or save your seed somewhere safe. The backup of keys is your responsibility only. If you lose your seed, your account can NOT be recovered. You must truly act as your own bank." << std::endl << std::endl;
+    logger(INFO, BRIGHT_GREEN) << "fuego-wallet-cli is an open-source, client-side, free wallet which allows you to send & receive Fuego instantly on the blockchain. Only YOU are in control of your funds & your private keys. When you generate a new wallet, send, receive or deposit Fuego - everything happens locally. Your seed is never transmitted, received or stored. IT IS IMPERATIVE that you write down, print, or save your seed phrase somewhere safe. The backup of keys is your responsibility only. If you lose your seed, your account can NOT be recovered. Freedom isn't free - You must truly act as your own bank." << std::endl << std::endl;
 
     std::cout << "Wallet Address: " << m_wallet->getAddress() << std::endl;
     std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
@@ -1039,7 +1035,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     "**********************************************************************\n" <<
     "Your wallet has been generated.\n" <<
     "Use \"help\" command to see the list of available commands.\n" <<
-    "Always use \"exit\" command when closing fango-wallet-cli to save\n" <<
+    "Always use \"exit\" command when closing fuego-wallet-cli to save\n" <<
     "current session's state. Otherwise, you will possibly need to synchronize \n" <<
     "your wallet again. Your wallet keys are not under risk in doing so.\n" <<
     "**********************************************************************";
@@ -1092,7 +1088,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                   "**********************************************************************\n" <<
                   "Your wallet has been imported.\n" <<
                   "Use \"help\" command to see the list of available commands.\n" <<
-                  "Always use \"exit\" command when closing fango-wallet-cli to save\n" <<
+                  "Always use \"exit\" command when closing fuego-wallet-cli to save\n" <<
                   "current session's state. Otherwise, you will possibly need to synchronize \n" <<
                   "your wallet again. Your wallet key is not under risk in doing so.\n" <<
                   "**********************************************************************";
@@ -1495,7 +1491,7 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
   std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
-  logger(INFO, BRIGHT_GREEN) << std::endl << "fango-wallet-cli is an open-source, client-side, free wallet which allows you to send & receive Fango instantly on the blockchain. You are in control of your funds & your private keys. When you generate a new wallet, login, send, receive or deposit $XFG - everything happens locally. Your seed is never transmitted, received or stored. That's why it is imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility only. If you lose your seed, your account can not be recovered. You must truly act as your own bank." << std::endl << std::endl;
+  logger(INFO, BRIGHT_GREEN) << std::endl << "fuego-wallet-cli is an open-source, client-side, free wallet which allows you to send & receive Fuego instantly on the blockchain. You are in control of your funds & your private keys. When you generate a new wallet, login, send, receive or deposit $XFG - everything happens locally. Your seed is never transmitted, received or stored. That's why IT IS IMPERATIVE to write down, print or save your seed somewhere safe. The backup of keys is your responsibility only. If you lose your seed, your account can not be recovered. Freedom isn't free - the cost is you must truly act as your own bank." << std::endl << std::endl;
 
   std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
@@ -1995,12 +1991,12 @@ int main(int argc, char* argv[]) {
       CryptoNote::Currency tmp_currency = CryptoNote::CurrencyBuilder(logManager).currency();
       CryptoNote::simple_wallet tmp_wallet(dispatcher, tmp_currency, logManager);
 
-      std::cout << "fango-wallet-cli -" << PROJECT_VERSION_LONG << std::endl;
-      std::cout << "Usage: fango-wallet-cli [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
+      std::cout << "fuego-wallet-cli -" << PROJECT_VERSION_LONG << std::endl;
+      std::cout << "Usage: fuego-wallet-cli [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
       std::cout << desc_all << '\n' << tmp_wallet.get_commands_str();
       return false;
     } else if (command_line::get_arg(vm, command_line::arg_version))  {
-      std::cout << "fango-wallet-cli -" << PROJECT_VERSION_LONG << std::endl;
+      std::cout << "fuego-wallet-cli -" << PROJECT_VERSION_LONG << std::endl;
       return false;
     }
 
@@ -2022,7 +2018,7 @@ int main(int argc, char* argv[]) {
 
   logManager.configure(buildLoggerConfiguration(logLevel, Common::ReplaceExtenstion(argv[0], ".log")));
 
-  logger(INFO, BRIGHT_GREEN) << "fango-wallet-cli -" << PROJECT_VERSION_LONG;
+  logger(INFO, BRIGHT_GREEN) << "fuego-wallet-cli -" << PROJECT_VERSION_LONG;
 
   CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();

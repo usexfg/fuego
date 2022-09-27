@@ -1,12 +1,18 @@
-<img title="Unlock the Power of Fandom" src="https://cdn.discordapp.com/attachments/666275125724839976/1014700582633734224/D0AE2DD9-0B7A-47E6-B1C2-60D39D13005D.gif"><img/>
-### Fuego is open-source decentralized P2P privacy cryptocurrency built by sound money advocates and freedom enthusiasts.
+<img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/Fango_gif01.GIF"><img/>
+### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency for freedom enthusiasts and advocates of sound money.
 
 Based on the CryptoNote protocol & philosophy.
 
-* <p align="left"><a href="https://fango.money">Website</a><p align="left">
-* <p align="left"><a href="http://explorer.fango.money">Explorer</a><p align="left">
-* <p align="left"><a href="https://fangotango.hopto.org">Explorer</a><p align="left">
- 
+#### Resources
+
+-   Web: <https://fango.money>
+-   Explorer: <http://explorer.fango.money>
+-   Explorer: <https://fangotango.hopto.org>
+-   Discord: <https://discord.gg/5UJcJJg>
+-   Twitter: <https://twitter.com/useXFG>
+-   Reddit: <https://www.reddit.com/r/Fango>
+-   Medium: <https://medium.com/@usexfg>
+-   Bitcoin Talk: <https://bitcointalk.org/index.php?topic=2712001>
 
  ______________________________
  
@@ -40,7 +46,7 @@ executing the following command.
 
 2. Clone Fuego repository
 ```
-git clone https://github.com/usexfg/fuego
+git clone https://github.com/FandomGold/fuego
 
 ```
 3. Open folder with copied repository
@@ -64,7 +70,7 @@ or <code>./fuegod --help</code> when outside of dæmon
 _________________________________________________________
 For the most user-friendly graphical interface experience
 
-see [Fuego Desktop Wallet](https://github.com/usexfg/fuego-wallet). 
+see [Fuego Desktop Wallet](https://github.com/fandomgold/fuego-desktop). 
 _________________________________________________________
 
 _________________________________________________________
@@ -90,7 +96,7 @@ _________________________________________________________
 From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
 ```bash
-git clone https://github.com/usexfg/fuego
+git clone https://github.com/FandomGold/fuego
 cd fuego
 mkdir build
 cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
@@ -123,7 +129,7 @@ $ brew install git python cmake gcc boost
 When all dependencies are installed, build Fuego core binaries:
 
 ```bash
-$ git clone https://github.com/usexfg/fuego
+$ git clone https://github.com/FandomGold/fuego
 $ cd fuego
 $ mkdir build && cd $_
 $ cmake ..
@@ -133,7 +139,7 @@ $ make
 If the build is successful the binaries will be located in `src` directory.
 *******************************
 
-Join the ever-growing community of Fuego holders. 
- 
-Social channels include [Discord](https://discordapp.com/invite/5UJcJJg), [Reddit](https://reddit.com/r/Fango), or [Twitter](https://twitter.com/usexfg).
+Join our ever-expanding community of Fuego holders thru [Discord](https://discordapp.com/invite/5UJcJJg), [Reddit](https://reddit.com/r/Fango), or [Twitter](https://twitter.com/usexfg).
+
+
 

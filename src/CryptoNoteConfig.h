@@ -1,5 +1,4 @@
-// Copyright (c) 2019-2022 Fango Developers
-// Copyright (c) 2018-2022 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2014-2018 The Forknote developers
@@ -7,17 +6,17 @@
 // Copyright (c) 2012-2018 The CryptoNote developers
 // Copyright (c) 2018-2019 The Ryo Currency developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -32,11 +31,12 @@ namespace CryptoNote
 		const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
 		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 500000000;
 		const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
-		const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 203478502; /* fango address prefix */
+                const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
 		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;	
 		const uint64_t DIFFICULTY_TARGET_DRGL = 81;
 		const unsigned EMISSION_SPEED_FACTOR = 18;
-		const unsigned EMISSION_SPEED_FACTOR_FANGO = 19;
+                const unsigned EMISSION_SPEED_FACTOR_FANGO = 19;  //major version 8
+                const unsigned EMISSION_SPEED_FACTOR_FUEGO = 20;   //major version 9
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT  = 60 * 60 * 2;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1 = DIFFICULTY_TARGET_DRGL * 6;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2 = DIFFICULTY_TARGET * 2;
@@ -71,12 +71,13 @@ namespace CryptoNote
 		const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fango
 
 		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
+               // const uint64_t MIN_TX_MIXIN_SIZE_V9                          = 8;
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-		const uint64_t DEPOSIT_MIN_AMOUNT = 100 * COIN;
-		const uint32_t DEPOSIT_MIN_TERM = 5480;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */ 
-		const uint32_t DEPOSIT_MAX_TERM = 1 * 12 * 5480;  		 /* one year | use 3 month min/max? */
+		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;
+                const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
+                const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month min/max? */
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
@@ -111,8 +112,9 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
- 		const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandomgold
-		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonbourne (emission|deposits)
+                const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandom Gold
+		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
+                const uint32_t UPGRADE_HEIGHT_V8                             = 888888; //Fire & Blood (emission|UPX2|Fuego)
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -130,7 +132,7 @@ namespace CryptoNote
 
 	} // namespace parameters
 
-	const char CRYPTONOTE_NAME[] = "fango";
+        const char CRYPTONOTE_NAME[] = "fuego";
 	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
 
 	const uint8_t  TRANSACTION_VERSION_1                         =  1;
@@ -187,7 +189,7 @@ namespace CryptoNote
 		"104.236.0.16:10808",
  		"188.226.177.187:10808",
  		"fango.money:10808",
-		"fangotango.hopto.org:10808"
+                "xfg.ms-pool.com:10808"
 	};
 
 	struct CheckpointData

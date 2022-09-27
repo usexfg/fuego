@@ -114,7 +114,7 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
                 const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandom Gold
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
-                const uint32_t UPGRADE_HEIGHT_V8                             = 888888; //Fire & Blood (emission|UPX2|Fuego)
+                const uint32_t UPGRADE_HEIGHT_V9                             = 888888; //Fire & Blood (emission|UPX2|Fuego)
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -145,6 +145,7 @@ namespace CryptoNote
 	const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 	const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
 	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8; 
+	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  9;
 	const uint8_t  BLOCK_MINOR_VERSION_0 			     =  0;
 	const uint8_t  BLOCK_MINOR_VERSION_1 			     =  1;
 
@@ -188,7 +189,7 @@ namespace CryptoNote
 	const std::initializer_list<const char *> SEED_NODES = {
 		"104.236.0.16:10808",
  		"188.226.177.187:10808",
- 		"fango.money:10808",
+ 		"fuego.money:10808",
                 "xfg.ms-pool.com:10808"
 	};
 

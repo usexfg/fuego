@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Elder Node Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free & open source software distributed in the hope 
+// Fuego is free & open source software distributed in the hope 
 // that it will be useful, but WITHOUT ANY WARRANTY; without even
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You may redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written 
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -60,8 +59,11 @@ namespace Crypto {
   };
 
    inline void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash, int variant = 0) { 
-    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant); 
+    cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 0); 
   }
+  
+  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, Hash &hash, int variant = 0) {
+     cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), variant, 1);
 
   inline void tree_hash(const Hash *hashes, size_t count, Hash &root_hash) {
     tree_hash(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));

@@ -55,7 +55,7 @@ namespace Crypto {
   private:
 
     void *data;
-   friend inline void cn_slow_hash(cn_context &, const void *, size_t, Hash &, int); 
+   friend inline void cn_slow_hash(cn_context &, const void *, size_t, Hash &, int, int); 
   };
 
    inline void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash, int light = 0, int variant = 0) { 

@@ -55,14 +55,14 @@ namespace Crypto {
   private:
 
     void *data;
-   friend inline void cn_slow_hash(cn_context &, const void *, size_t, Hash &, int, int); 
+   friend inline void cn_slow_hash(cn_context &, const void *, size_t, Hash &, int, int, int); 
   };
 
-   inline void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash, int light = 0, int variant = 0) { 
+   inline void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash, int light = 0, int variant = 0, int prehashed = 0) { 
     cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), light, variant, 0); 
   }
   
-  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, Hash &hash, int light = 0, int variant = 0) {
+  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, Hash &hash, int light = 0, int variant = 0, int prehashed = 0) {
      cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), light, variant, 1);
   }
 

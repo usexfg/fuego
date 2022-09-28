@@ -459,7 +459,9 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
         if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
       b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
     } else if (b.majorVersion >= BLOCK_MAJOR_VERSION_2) {
-      if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_8) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+             if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_9) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+        b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_8 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
+      } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_8) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_7 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
       } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_7) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_6 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
@@ -829,8 +831,8 @@ bool core::on_idle() {
   if (!m_starter_message_showed) {
     logger(INFO, BRIGHT_YELLOW)
       << "**********************************************************************" << ENDL
-      << "The daemon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
-      << "Fuego blockchain can also be downloaded at https://github.com/FandomGold/XFG-data/releases "<< ENDL
+      << "Your daemon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
+      << "Fuego blockchain can also be downloaded at https://github.com/usexfg/XFG-data/releases "<< ENDL
       << "You can use the \"set_log <level>\" command for a more detailed view of the process."<< ENDL
       << "Using <level> option from 0 (no details) up to 4 (very verbose)." << ENDL
       << "Use \"help\" command to see a list of available commands." << ENDL

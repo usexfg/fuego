@@ -286,6 +286,8 @@ namespace CryptoNote {
     UpgradeDetector m_upgradeDetectorV6;
     UpgradeDetector m_upgradeDetectorV7;
     UpgradeDetector m_upgradeDetectorV8;
+    UpgradeDetector m_upgradeDetectorV9;
+
 
     bool m_blockchainIndexesEnabled;
     bool m_blockchainAutosaveEnabled;

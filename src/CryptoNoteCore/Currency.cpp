@@ -83,6 +83,8 @@ namespace CryptoNote
 			m_upgradeHeightV6 = 6;	
 			m_upgradeHeightV7 = 7;	
 			m_upgradeHeightV8 = 8;
+			m_upgradeHeightV9 = 9;
+
       m_blocksFileName = "testnet_" + m_blocksFileName;
       m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
       m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
@@ -159,6 +161,9 @@ namespace CryptoNote
 		}
 		else if (majorVersion == BLOCK_MAJOR_VERSION_8) {
 			return m_upgradeHeightV8;
+		}
+		else if (majorVersion == BLOCK_MAJOR_VERSION_9) {
+			return m_upgradeHeightV9;
 		}
 		else {
 			return static_cast<uint32_t>(-1);
@@ -1183,6 +1188,8 @@ namespace CryptoNote
 		case BLOCK_MAJOR_VERSION_6:
 		case BLOCK_MAJOR_VERSION_7:
 		case BLOCK_MAJOR_VERSION_8:
+		case BLOCK_MAJOR_VERSION_9:
+
 
 			return checkProofOfWorkV2(context, block, currentDiffic, proofOfWork);
 		}
@@ -1281,6 +1288,8 @@ namespace CryptoNote
     upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
     upgradeHeightV7(parameters::UPGRADE_HEIGHT_V7);
     upgradeHeightV8(parameters::UPGRADE_HEIGHT_V8);
+    upgradeHeightV8(parameters::UPGRADE_HEIGHT_V9);
+
     upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
     upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
     upgradeWindow(parameters::UPGRADE_WINDOW);

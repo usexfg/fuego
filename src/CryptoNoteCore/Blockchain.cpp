@@ -363,7 +363,8 @@ private:
                          m_upgradeDetectorV5(currency, m_blocks, BLOCK_MAJOR_VERSION_5, logger),
                          m_upgradeDetectorV6(currency, m_blocks, BLOCK_MAJOR_VERSION_6, logger), 
 			 m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger),
-			 m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger) {
+			 m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger),
+        		 m_upgradeDetectorV9(currency, m_blocks, BLOCK_MAJOR_VERSION_9, logger) {
 }
 
 bool Blockchain::addObserver(IBlockchainStorageObserver* observer) {
@@ -516,7 +517,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     rollbackBlockchainTo(lastValidCheckpointHeight);
   }
 
-if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init()) {
+if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init() || !m_upgradeDetectorV9.init()) {
     logger(ERROR, BRIGHT_RED) << "Failed to initialize upgrade detector. Trying self-healing procedure.";
 }
 
@@ -564,8 +565,14 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
     " expected=" << static_cast<int>(m_upgradeDetectorV8.targetVersion()) << ". Rollback blockchain to height=" << upgradeHeight;
     rollbackBlockchainTo(upgradeHeight);
     reinitUpgradeDetectors = true;
+  } else if (!checkUpgradeHeight(m_upgradeDetectorV9)) {
+    uint32_t upgradeHeight = m_upgradeDetectorV9.upgradeHeight();
+    logger(WARNING, BRIGHT_MAGENTA) << "Invalid block version at " << upgradeHeight + 1 << ": real=" << static_cast<int>(m_blocks[upgradeHeight + 1].bl.majorVersion) <<
+    " expected=" << static_cast<int>(m_upgradeDetectorV9.targetVersion()) << ". Rollback blockchain to height=" << upgradeHeight;
+    rollbackBlockchainTo(upgradeHeight);
+    reinitUpgradeDetectors = true;
   }
-  if (reinitUpgradeDetectors && (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init())) {
+  if (reinitUpgradeDetectors && (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init() || !m_upgradeDetectorV9.init())) {
     logger(ERROR, BRIGHT_RED) << "Failed again to initialize upgrade detector";
     return false;
   }
@@ -849,7 +856,9 @@ uint64_t Blockchain::coinsEmittedAtHeight(uint64_t height) {
   }
   
 uint8_t Blockchain::getBlockMajorVersionForHeight(uint32_t height) const {
-         if (height > m_upgradeDetectorV8.upgradeHeight()) {
+         if (height > m_upgradeDetectorV9.upgradeHeight()) {
+    return m_upgradeDetectorV9.targetVersion();
+  } else if (height > m_upgradeDetectorV8.upgradeHeight()) {
     return m_upgradeDetectorV8.targetVersion();
   } else if (height > m_upgradeDetectorV7.upgradeHeight()) {
     return m_upgradeDetectorV7.targetVersion();
@@ -2307,6 +2316,8 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
   m_upgradeDetectorV6.blockPushed();
   m_upgradeDetectorV7.blockPushed();
   m_upgradeDetectorV8.blockPushed();
+  m_upgradeDetectorV9.blockPushed();
+
   update_next_comulative_size_limit();
 
   return true;
@@ -2408,6 +2419,8 @@ void Blockchain::popBlock(const Crypto::Hash& blockHash) {
   m_upgradeDetectorV6.blockPopped();
   m_upgradeDetectorV7.blockPopped();
   m_upgradeDetectorV8.blockPopped();
+  m_upgradeDetectorV9.blockPopped();
+
 
 }
 

@@ -1,21 +1,20 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free & open source software distributed in the hope 
+// Fuego is free & open source software distributed in the hope
 // that it will be useful, but WITHOUT ANY WARRANTY; without even
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You may redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
@@ -128,6 +127,7 @@ namespace CryptoNote {
     bool isBlockInMainChain(const Crypto::Hash& blockId);
     uint64_t fullDepositAmount() const;
     uint64_t depositAmountAtHeight(size_t height) const;
+    uint64_t depositInterestAtHeight(size_t height) const;
     uint64_t coinsEmittedAtHeight(uint64_t height);
     uint64_t difficultyAtHeight(uint64_t height);
     bool isInCheckpointZone(const uint32_t height);
@@ -286,6 +286,8 @@ namespace CryptoNote {
     UpgradeDetector m_upgradeDetectorV6;
     UpgradeDetector m_upgradeDetectorV7;
     UpgradeDetector m_upgradeDetectorV8;
+    UpgradeDetector m_upgradeDetectorV9;
+
 
     bool m_blockchainIndexesEnabled;
     bool m_blockchainAutosaveEnabled;
@@ -302,7 +304,7 @@ namespace CryptoNote {
     bool switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator> &alt_chain, bool discard_disconnected_chain);
     bool handle_alternative_block(const Block &b, const Crypto::Hash &id, block_verification_context &bvc, bool sendNewAlternativeBlockMessage = true);
     difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator> &alt_chain, BlockEntry &bei);
-    void pushToDepositIndex(const BlockEntry &block);
+    void pushToDepositIndex(const BlockEntry &block, uint64_t interest);
     bool prevalidate_miner_transaction(const Block &b, uint32_t height);
     bool validate_miner_transaction(const Block &b, uint32_t height, size_t cumulativeBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t &reward, int64_t &emissionChange);
     bool rollback_blockchain_switching(std::list<Block> &original_chain, size_t rollback_height);

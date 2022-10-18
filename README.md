@@ -1,12 +1,18 @@
 <img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/Fango_gif01.GIF"><img/>
-### Fango is open-source decentralized P2P privacy cryptocurrency built by sound money advocates and fandom enthusiasts.
+### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency for freedom enthusiasts and advocates of sound money.
 
 Based on the CryptoNote protocol & philosophy.
 
-* <p align="left"><a href="https://fango.money">Website</a><p align="left">
-* <p align="left"><a href="http://explorer.fango.money">Explorer</a><p align="left">
-* <p align="left"><a href="https://fangotango.hopto.org">Explorer</a><p align="left">
- 
+#### Resources
+
+-   Web: <https://fango.money>
+-   Explorer: <http://explorer.fango.money>
+-   Explorer: <https://fangotango.hopto.org>
+-   Discord: <https://discord.gg/5UJcJJg>
+-   Twitter: <https://twitter.com/useXFG>
+-   Reddit: <https://www.reddit.com/r/Fango>
+-   Medium: <https://medium.com/@usexfg>
+-   Bitcoin Talk: <https://bitcointalk.org/index.php?topic=2712001>
 
  ______________________________
  
@@ -38,14 +44,14 @@ executing the following command.
  sudo apt-get install build-essential git cmake libboost-all-dev
 ```
 
-2. Clone Fango repository
+2. Clone Fuego repository
 ```
-git clone https://github.com/FandomGold/fango
+git clone https://github.com/FandomGold/fuego
 
 ```
 3. Open folder with copied repository
 ```
-cd fango
+cd fuego
 ```
 4. Building (Compiling)
     (resulting programs will be found in build/release/src)
@@ -54,17 +60,17 @@ cd fango
 make
 ```
 
-5. Starting Fango daemon
+5. Starting Fuego daemon
 ```
-cd fango/build/release/src `
-./fangod
+cd fuego/build/release/src `
+./fuegod
 ````
 try --help from within dæmon for a full list of available commands
-or <code>./fangod --help</code> when outside of dæmon 
+or <code>./fuegod --help</code> when outside of dæmon 
 _________________________________________________________
 For the most user-friendly graphical interface experience
 
-see [Fango Desktop Wallet](https://github.com/fandomgold/fango-desktop). 
+see [Fuego Desktop Wallet](https://github.com/fandomgold/fuego-desktop). 
 _________________________________________________________
 
 _________________________________________________________
@@ -90,11 +96,11 @@ _________________________________________________________
 From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
 ```bash
-git clone https://github.com/FandomGold/fango
-cd fango
+git clone https://github.com/FandomGold/fuego
+cd fuego
 mkdir build
 cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
-msbuild fangoX.sln /p:Configuration=Release /m
+msbuild fuegoX.sln /p:Configuration=Release /m
 ```
 
 If the build is successful the binaries will be in the `src/Release` folder.
@@ -120,11 +126,11 @@ $ brew install git python cmake gcc boost
 
 #### Building
 
-When all dependencies are installed, build Fango core binaries:
+When all dependencies are installed, build Fuego core binaries:
 
 ```bash
-$ git clone https://github.com/FandomGold/fango
-$ cd fango
+$ git clone https://github.com/FandomGold/fuego
+$ cd fuego
 $ mkdir build && cd $_
 $ cmake ..
 $ make
@@ -133,7 +139,7 @@ $ make
 If the build is successful the binaries will be located in `src` directory.
 *******************************
 
-Join our ever-growing community of Fango holders. 
- 
-Social channels include [Discord](https://discordapp.com/invite/5UJcJJg), [Reddit](https://reddit.com/r/Fango), or [Twitter](https://twitter.com/fandomgold).
+Join our ever-expanding community of Fuego holders thru [Discord](https://discordapp.com/invite/5UJcJJg), [Reddit](https://reddit.com/r/Fango), or [Twitter](https://twitter.com/usexfg).
+
+
 

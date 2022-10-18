@@ -17,7 +17,7 @@ jobs:
         run: |
           build_folder="build/"
           xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
-          release_name="fango-cli-macOS-v$xfg_ver"
+          release_name="fuego-cli-macOS-v$xfg_ver"
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"

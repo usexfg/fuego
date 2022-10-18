@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Currency.h"
 #include <cctype>
@@ -84,6 +83,8 @@ namespace CryptoNote
 			m_upgradeHeightV6 = 6;	
 			m_upgradeHeightV7 = 7;	
 			m_upgradeHeightV8 = 8;
+			m_upgradeHeightV9 = 9;
+
       m_blocksFileName = "testnet_" + m_blocksFileName;
       m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
       m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
@@ -161,6 +162,9 @@ namespace CryptoNote
 		else if (majorVersion == BLOCK_MAJOR_VERSION_8) {
 			return m_upgradeHeightV8;
 		}
+		else if (majorVersion == BLOCK_MAJOR_VERSION_9) {
+			return m_upgradeHeightV9;
+		}
 		else {
 			return static_cast<uint32_t>(-1);
 		}
@@ -199,8 +203,192 @@ namespace CryptoNote
 
   uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const
   {
-    return 0;
+
+    /* deposits 3.0 and investments 1.0 
+    if (term % 21900 == 0)
+    {
+      return calculateInterestV3(amount, term);
+    }
+
+    // deposits 2.0 and investments 1.0 
+    if (term % 64800 == 0)
+    {
+      return calculateInterestV2(amount, term);
+    }
+
+    if (term % 5040 == 0)
+    {
+      return calculateInterestV2(amount, term);
+    }
+*/
+    uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
+    uint64_t bHi;
+    uint64_t bLo = mul128(amount, a, &bHi);
+    uint64_t cHi;
+    uint64_t cLo;
+    uint64_t offchaininterest = 0 + 0;
+    assert(std::numeric_limits<uint32_t>::max() / 100 > m_depositMaxTerm);
+    div128_32(bHi, bLo, static_cast<uint32_t>(100 * m_depositMaxTerm), &cHi, &cLo);
+    assert(cHi == 0);
+
+    // early deposit multiplier 
+    uint64_t interestHi;
+    uint64_t interestLo;
+    if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK)
+    {
+      interestLo = mul128(cLo, CryptoNote::parameters::MULTIPLIER_FACTOR, &interestHi);
+      assert(interestHi == 0);
+    }
+    else
+    {
+      interestHi = cHi;
+      interestLo = cLo;
+    }
+    return offchaininterest;
   }
+
+  /* ---------------------------------------------------------------------------------------------------- */
+/*
+  uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const
+  {
+
+    uint64_t returnVal = 0;
+
+    // investments 
+    if (term % 64800 == 0)
+    {
+
+      // minimum 50000 for investments 
+      uint64_t amount4Humans = amount / 1000000;
+      // assert(amount4Humans >= 50000); //fails at block 166342
+
+     //  quantity tiers 
+      float qTier = 1;
+      if (amount4Humans > 110000 && amount4Humans < 180000)
+        qTier = static_cast<float>(1.01);
+
+      if (amount4Humans >= 180000 && amount4Humans < 260000)
+        qTier = static_cast<float>(1.02);
+
+      if (amount4Humans >= 260000 && amount4Humans < 350000)
+        qTier = static_cast<float>(1.03);
+
+      if (amount4Humans >= 350000 && amount4Humans < 450000)
+        qTier = static_cast<float>(1.04);
+
+      if (amount4Humans >= 450000 && amount4Humans < 560000)
+        qTier = static_cast<float>(1.05);
+
+      if (amount4Humans >= 560000 && amount4Humans < 680000)
+        qTier = static_cast<float>(1.06);
+
+      if (amount4Humans >= 680000 && amount4Humans < 810000)
+        qTier = static_cast<float>(1.07);
+
+      if (amount4Humans >= 810000 && amount4Humans < 950000)
+        qTier = static_cast<float>(1.08);
+
+      if (amount4Humans >= 950000 && amount4Humans < 1100000)
+        qTier = static_cast<float>(1.09);
+
+      if (amount4Humans >= 1100000 && amount4Humans < 1260000)
+        qTier = static_cast<float>(1.1);
+
+      if (amount4Humans >= 1260000 && amount4Humans < 1430000)
+        qTier = static_cast<float>(1.11);
+
+      if (amount4Humans >= 1430000 && amount4Humans < 1610000)
+        qTier = static_cast<float>(1.12);
+
+      if (amount4Humans >= 1610000 && amount4Humans < 1800000)
+        qTier = static_cast<float>(1.13);
+
+      if (amount4Humans >= 1800000 && amount4Humans < 2000000)
+        qTier = static_cast<float>(1.14);
+
+      if (amount4Humans > 2000000)
+        qTier = static_cast<float>(1.15);
+
+      float mq = static_cast<float>(1.4473);
+      float termQuarters = term / 64800;
+      float m8 = 100.0 * pow(1.0 + (mq / 100.0), termQuarters) - 100.0;
+      float m5 = termQuarters * 0.5;
+      float m7 = m8 * (1 + (m5 / 100));
+      float rate = m7 * qTier;
+      float interest = amount * (rate / 100);
+      returnVal = static_cast<uint64_t>(interest);
+      return returnVal;
+    }
+
+    // weekly deposits 
+    if (term % 5040 == 0)
+    {
+      uint64_t actualAmount = amount;
+      float weeks = term / 5040;
+      float baseInterest = static_cast<float>(0.0696);
+      float interestPerWeek = static_cast<float>(0.0002);
+      float interestRate = baseInterest + (weeks * interestPerWeek);
+      float interest = actualAmount * ((weeks * interestRate) / 100);
+      returnVal = static_cast<uint64_t>(interest);
+      return returnVal;
+    }
+
+    return returnVal;
+
+  }  Currency::calculateInterestV2 
+
+  uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
+  {
+
+    uint64_t returnVal = 0;
+    uint64_t amount4Humans = amount / 1000000;
+
+    float baseInterest = static_cast<float>(0.029);
+
+    if (amount4Humans >= 10000 && amount4Humans < 20000)
+      baseInterest = static_cast<float>(0.039);
+
+    if (amount4Humans >= 20000)
+      baseInterest = static_cast<float>(0.049);
+
+    // Consensus 2019 - Monthly deposits 
+
+    float months = term / 21900;
+    if (months > 12)
+    {
+      months = 12;
+    }
+    float ear = baseInterest + (months - 1) * 0.001;
+    float eir = (ear / 12) * months;
+    returnVal = static_cast<uint64_t>(eir);
+
+    float interest = amount * eir;
+    returnVal = static_cast<uint64_t>(interest);
+    return returnVal;
+  }  Currency::calculateInterestV3 
+*/
+  /* ---------------------------------------------------------------------------------------------------- */
+
+  uint64_t Currency::calculateTotalTransactionInterest(const Transaction &tx, uint32_t height) const
+  {
+    uint64_t interest = 0;
+    for (const TransactionInput &input : tx.inputs)
+    {
+      if (input.type() == typeid(MultisignatureInput))
+      {
+        const MultisignatureInput &multisignatureInput = boost::get<MultisignatureInput>(input);
+        if (multisignatureInput.term != 0)
+        {
+          interest += calculateInterest(multisignatureInput.amount, multisignatureInput.term, height);
+        }
+      }
+    }
+
+    return interest;
+  }
+
+  /* ---------------------------------------------------------------------------------------------------- */
+
   uint64_t Currency::getTransactionInputAmount(const TransactionInput &in, uint32_t height) const
   {
     if (in.type() == typeid(KeyInput))
@@ -213,6 +401,10 @@ namespace CryptoNote
       if (multisignatureInput.term == 0)
       {
         return multisignatureInput.amount;
+      }
+      else
+      {
+        return multisignatureInput.amount + calculateInterest(multisignatureInput.amount, multisignatureInput.term, height);
       }
     }
       else if (in.type() == typeid(BaseInput))
@@ -723,9 +915,9 @@ namespace CryptoNote
 		uint64_t nextDiffZ = low / timeSpan;
 
 		// minimum limit
-		if (!isTestnet() && nextDiffZ < 10000) {
-			nextDiffZ = 10000;
-		}
+ 		if (!isTestnet() && nextDiffZ < 10000) {
+ 			nextDiffZ = 10000;
+ 		}
 
 		return nextDiffZ;
 	}
@@ -786,9 +978,9 @@ namespace CryptoNote
 		next_difficulty = static_cast<uint64_t>(nextDifficulty);
 		
 		// minimum limit
-		if (!isTestnet() && next_difficulty < 10000) {
-			next_difficulty = 10000;
-		} 
+ 		if (!isTestnet() && next_difficulty < 10000) {
+ 			next_difficulty = 10000;
+ 		} 
 
 		return next_difficulty;
 	}	
@@ -809,7 +1001,8 @@ namespace CryptoNote
 			   uint32_t Dracarys = CryptoNote::parameters::UPGRADE_HEIGHT_V4;
 	   		   uint64_t difficulty_plate = 10000;
 	   		   
-			   //assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
+
+			   assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 
 			   // If it's a new coin, do startup code. Do not remove in case other coins copy your code.
 			   // uint64_t difficulty_guess = 10000;
@@ -845,7 +1038,7 @@ namespace CryptoNote
 			     else { i /= 10; }
 			   }
 			   // Make least 2 digits = size of hash rate change last 11 blocks if it's statistically significant.
-			   // D=2540035 => hash rate 3.5x higher than D expectde. Blocks coming 3.5x too fast.
+			   // D=2540035 => hash rate 3.5x higher than D expected. Blocks coming 3.5x too fast.
 			   if ( next_D > 10000 ) { 
 			     uint64_t est_HR = (10*(11*T+(timestamps[N]-timestamps[N-11])/2))/(timestamps[N]-timestamps[N-11]+1);
 			     if (  est_HR > 5 && est_HR < 22 )  {  est_HR=0;   }
@@ -854,7 +1047,8 @@ namespace CryptoNote
 			   }
 	         	   // mini-lim
 	   		   if (!isTestnet() && next_D < 10000) {
-	  			next_D = 10000;
+	  		   	next_D = 10000;
+			   
 			   }
 
 			   return  next_D;
@@ -874,7 +1068,8 @@ namespace CryptoNote
 			   uint32_t FanG = CryptoNote::parameters::UPGRADE_HEIGHT_V7;
 	   		   uint64_t difficulty_plate = 100000;
 	   		   
-			   //assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
+
+			   assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 
 			   // If it's a new coin, do startup code. Do not remove in case other coins copy your code.
 			   // uint64_t difficulty_guess = 10000;
@@ -885,7 +1080,7 @@ namespace CryptoNote
 			   // difficulty_guess = 10000; //  Dev may change.  Guess lower than anything expected.
 			  
 	  		   if ( height <= FanG + 1 + N ) { return difficulty_plate;  }
- 
+
 			   previous_timestamp = timestamps[0];
 			   for ( i = 1; i <= N; i++) {        
 			      // Safely prevent out-of-sequence timestamps
@@ -910,7 +1105,7 @@ namespace CryptoNote
 			     else { i /= 10; }
 			   }
 			   // Make least 2 digits = size of hash rate change last 11 blocks if it's statistically significant.
-			   // D=2540035 => hash rate 3.5x higher than D expectde. Blocks coming 3.5x too fast.
+			   // D=2540035 => hash rate 3.5x higher than D expected. Blocks coming 3.5x too fast.
 			   if ( next_D > 10000 ) { 
 			     uint64_t est_HR = (10*(11*T+(timestamps[N]-timestamps[N-11])/2))/(timestamps[N]-timestamps[N-11]+1);
 			     if (  est_HR > 5 && est_HR < 22 )  {  est_HR=0;   }
@@ -919,7 +1114,8 @@ namespace CryptoNote
 			   }
 	         	   // mini-lim
 	   		   if (!isTestnet() && next_D < 10000) {
-	  			next_D = 10000;
+	  		   	next_D = 10000;
+			   
 			   }
 
 			   return  next_D;
@@ -992,6 +1188,8 @@ namespace CryptoNote
 		case BLOCK_MAJOR_VERSION_6:
 		case BLOCK_MAJOR_VERSION_7:
 		case BLOCK_MAJOR_VERSION_8:
+		case BLOCK_MAJOR_VERSION_9:
+
 
 			return checkProofOfWorkV2(context, block, currentDiffic, proofOfWork);
 		}
@@ -1041,6 +1239,8 @@ namespace CryptoNote
 		moneySupply(parameters::MONEY_SUPPLY);
 		emissionSpeedFactor(parameters::EMISSION_SPEED_FACTOR);
 		emissionSpeedFactor_FANGO(parameters::EMISSION_SPEED_FACTOR_FANGO);
+                emissionSpeedFactor_FUEGO(parameters::EMISSION_SPEED_FACTOR_FUEGO);
+
 
 		cryptonoteCoinVersion(parameters::CRYPTONOTE_COIN_VERSION);
 
@@ -1088,6 +1288,8 @@ namespace CryptoNote
     upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
     upgradeHeightV7(parameters::UPGRADE_HEIGHT_V7);
     upgradeHeightV8(parameters::UPGRADE_HEIGHT_V8);
+    upgradeHeightV8(parameters::UPGRADE_HEIGHT_V9);
+
     upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
     upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
     upgradeWindow(parameters::UPGRADE_WINDOW);
@@ -1128,6 +1330,14 @@ namespace CryptoNote
 		m_currency.m_emissionSpeedFactor_FANGO = val;
 		return *this;
 	}
+        CurrencyBuilder& CurrencyBuilder::emissionSpeedFactor_FUEGO(unsigned int val) {
+                if (val <= 0 || val > 8 * sizeof(uint64_t)) {
+                        throw std::invalid_argument("val at emissionSpeedFactor_FUEGO()");
+                }
+
+                m_currency.m_emissionSpeedFactor_FUEGO = val;
+                return *this;
+        }
 
 	CurrencyBuilder& CurrencyBuilder::numberOfDecimalPlaces(size_t val) {
 		m_currency.m_numberOfDecimalPlaces = val;

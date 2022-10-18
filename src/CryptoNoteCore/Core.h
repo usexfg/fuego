@@ -1,23 +1,23 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
-// will be useful, but WITHOUT ANY WARRANTY; without even the
+// Fuego is free & open source software distributed in the hope
+// that it will be useful, but WITHOUT ANY WARRANTY; without even
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-// PURPOSE. You can redistribute it and/or modify it under the terms
+// PURPOSE. You may redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <ctime>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
@@ -149,6 +149,7 @@ namespace CryptoNote {
     void print_blockchain(uint32_t start_index, uint32_t end_index);
     void print_blockchain_index();
     std::string print_pool(bool short_format);
+    std::list<CryptoNote::tx_memory_pool::TransactionDetails> getMemoryPool() const;
     void print_blockchain_outs(const std::string &file);
     virtual bool getPoolChanges(const Crypto::Hash &tailBlockId, const std::vector<Crypto::Hash> &knownTxsIds,
                                 std::vector<Transaction> &addedTxs, std::vector<Crypto::Hash> &deletedTxsIds) override;
@@ -161,7 +162,7 @@ namespace CryptoNote {
     uint64_t getTotalGeneratedAmount();
     uint64_t fullDepositAmount() const;
     uint64_t depositAmountAtHeight(size_t height) const;
-     uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
+    uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
 
     bool is_key_image_spent(const Crypto::KeyImage &key_im);
 
@@ -171,11 +172,10 @@ namespace CryptoNote {
     bool parse_tx_from_blob(Transaction &tx, Crypto::Hash &tx_hash, Crypto::Hash &tx_prefix_hash, const BinaryArray &blob);
     bool handle_incoming_block(const Block &b, block_verification_context &bvc, bool control_miner, bool relay_block);
 
-    bool check_tx_syntax(const Transaction &tx);
-    //check correct values, amounts and all lightweight checks not related with database
-    bool check_tx_semantic(const Transaction &tx, bool keeped_by_block, uint32_t &height);
-    //check if tx already in memory pool or in main blockchain
-     bool check_tx_mixin(const Transaction& tx);
+    bool check_tx_syntax(const Transaction &tx);  //check correct values, amounts and all lightweight checks not related with database
+    bool check_tx_semantic(const Transaction &tx, bool keeped_by_block, uint32_t &height); //check if tx already in memory pool or in main blockchain
+    bool check_tx_mixin(const Transaction& tx);   //check if the mixin is not too large
+    bool check_tx_fee(const Transaction& tx, size_t blobSize, tx_verification_context& tvc); //check for proper tx fee
 
     bool check_tx_ring_signature(const KeyInput &tx, const Crypto::Hash &tx_prefix_hash, const std::vector<Crypto::Signature> &sig);
     bool is_tx_spendtime_unlocked(uint64_t unlock_time);

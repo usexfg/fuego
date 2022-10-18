@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "WalletSerializationV2.h"
 #include "IWallet.h"
@@ -94,6 +93,7 @@ struct WalletDepositDtoV2 {
     spendingTransactionId = wd.spendingTransactionId;
     term = wd.term;
     amount = wd.amount;
+    interest = wd.interest;
     height = wd.height;
     unlockHeight = wd.unlockHeight;
     locked = wd.locked;
@@ -106,6 +106,7 @@ struct WalletDepositDtoV2 {
   size_t spendingTransactionId;
   uint32_t term;
   uint64_t amount;
+  uint64_t interest;
   uint64_t height;
   uint64_t unlockHeight;
   bool locked;
@@ -154,6 +155,7 @@ void serialize(WalletDepositDtoV2& value, CryptoNote::ISerializer& serializer) {
   serializer(value.spendingTransactionId, "spendingTransactionId");
   serializer(value.amount, "amount");
   serializer(value.term, "term");
+  serializer(value.interest, "interest");
   serializer(value.unlockHeight, "unlockHeight");
   serializer(value.locked, "locked");
   serializer(value.address, "address");
@@ -366,6 +368,7 @@ void WalletSerializerV2::loadDeposits(CryptoNote::ISerializer& serializer) {
     dp.spendingTransactionId = dto.spendingTransactionId;
     dp.term = dto.term;
     dp.amount = dto.amount;
+    dp.interest = dto.interest;
     dp.height = dto.height;
     dp.unlockHeight = dto.unlockHeight;
     dp.locked = dto.locked;

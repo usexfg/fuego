@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Core.h"
 
@@ -300,6 +299,36 @@ bool core::check_tx_mixin(const Transaction& tx) {
   return true;
 }
 
+bool core::check_tx_fee(const Transaction& tx, size_t blobSize, tx_verification_context& tvc) {
+	uint64_t inputs_amount = 0;
+	if (!get_inputs_money_amount(tx, inputs_amount)) {
+		tvc.m_verification_failed = true;
+		return false;
+	}
+
+	uint64_t outputs_amount = get_outs_money_amount(tx);
+
+	if (outputs_amount > inputs_amount) {
+		logger(DEBUGGING) << "transaction uses more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
+			", have " << m_currency.formatAmount(inputs_amount);
+		tvc.m_verification_failed = true;
+		return false;
+	}
+
+	Crypto::Hash h = NULL_HASH;
+	getObjectHash(tx, h, blobSize);
+	const uint64_t fee = inputs_amount - outputs_amount;
+	bool isFusionTransaction = fee == 0 && m_currency.isFusionTransaction(tx, blobSize);
+	if (!isFusionTransaction && fee < m_currency.minimumFee()) {
+		logger(DEBUGGING) << "transaction fee is not enough: " << m_currency.formatAmount(fee) <<
+			", minimum fee: " << m_currency.formatAmount(m_currency.minimumFee());
+		tvc.m_verification_failed = true;
+		tvc.m_tx_fee_too_small = true;
+		return false;
+	}
+
+	return true;
+}
 
 bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32_t &height) {
   if (!tx.inputs.size()) {
@@ -430,7 +459,9 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
         if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
       b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
     } else if (b.majorVersion >= BLOCK_MAJOR_VERSION_2) {
-      if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_8) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+             if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_9) == UpgradeDetectorBase::UNDEF_HEIGHT) {
+        b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_8 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
+      } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_8) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_7 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
       } else if (m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_7) == UpgradeDetectorBase::UNDEF_HEIGHT) {
         b.minorVersion = b.majorVersion == BLOCK_MAJOR_VERSION_6 ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
@@ -739,9 +770,9 @@ std::vector<Transaction> core::getPoolTransactions() {
   for (auto& tx : txs) {
     result.emplace_back(std::move(tx));
   }
-
   return result;
 }
+
 
 std::vector<Crypto::Hash> core::buildSparseChain() {
   assert(m_blockchain.getCurrentBlockchainHeight() != 0);
@@ -800,8 +831,8 @@ bool core::on_idle() {
   if (!m_starter_message_showed) {
     logger(INFO, BRIGHT_YELLOW)
       << "**********************************************************************" << ENDL
-      << "The daemon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
-      << "Fango blockchain can also be downloaded at https://github.com/FandomGold/XFG-data/releases "<< ENDL
+      << "Your daemon will now begin synchronizing with the network's historical chain of data blocks. It may take some time." << ENDL
+      << "Fuego blockchain can also be downloaded at https://github.com/usexfg/XFG-data/releases "<< ENDL
       << "You can use the \"set_log <level>\" command for a more detailed view of the process."<< ENDL
       << "Using <level> option from 0 (no details) up to 4 (very verbose)." << ENDL
       << "Use \"help\" command to see a list of available commands." << ENDL

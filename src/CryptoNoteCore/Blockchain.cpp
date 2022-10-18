@@ -3,20 +3,19 @@
 // Copyright (c) 2018-2019 The Ryo Currency Developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2017-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// FANGO is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// FANGO is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
-// along with FANGO.  If not, see <http://www.gnu.org/licenses/>.
+// Fuego is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fuego includes elements written
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Blockchain.h"
 
@@ -364,7 +363,8 @@ private:
                          m_upgradeDetectorV5(currency, m_blocks, BLOCK_MAJOR_VERSION_5, logger),
                          m_upgradeDetectorV6(currency, m_blocks, BLOCK_MAJOR_VERSION_6, logger), 
 			 m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger),
-			 m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger) {
+			 m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger),
+        		 m_upgradeDetectorV9(currency, m_blocks, BLOCK_MAJOR_VERSION_9, logger) {
 }
 
 bool Blockchain::addObserver(IBlockchainStorageObserver* observer) {
@@ -517,7 +517,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     rollbackBlockchainTo(lastValidCheckpointHeight);
   }
 
-if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init()) {
+if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init() || !m_upgradeDetectorV9.init()) {
     logger(ERROR, BRIGHT_RED) << "Failed to initialize upgrade detector. Trying self-healing procedure.";
 }
 
@@ -565,8 +565,14 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
     " expected=" << static_cast<int>(m_upgradeDetectorV8.targetVersion()) << ". Rollback blockchain to height=" << upgradeHeight;
     rollbackBlockchainTo(upgradeHeight);
     reinitUpgradeDetectors = true;
+  } else if (!checkUpgradeHeight(m_upgradeDetectorV9)) {
+    uint32_t upgradeHeight = m_upgradeDetectorV9.upgradeHeight();
+    logger(WARNING, BRIGHT_MAGENTA) << "Invalid block version at " << upgradeHeight + 1 << ": real=" << static_cast<int>(m_blocks[upgradeHeight + 1].bl.majorVersion) <<
+    " expected=" << static_cast<int>(m_upgradeDetectorV9.targetVersion()) << ". Rollback blockchain to height=" << upgradeHeight;
+    rollbackBlockchainTo(upgradeHeight);
+    reinitUpgradeDetectors = true;
   }
-  if (reinitUpgradeDetectors && (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init())) {
+  if (reinitUpgradeDetectors && (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDetectorV4.init() || !m_upgradeDetectorV5.init() || !m_upgradeDetectorV6.init() || !m_upgradeDetectorV7.init() || !m_upgradeDetectorV8.init() || !m_upgradeDetectorV9.init())) {
     logger(ERROR, BRIGHT_RED) << "Failed again to initialize upgrade detector";
     return false;
   }
@@ -628,6 +634,7 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
       const BlockEntry &block = m_blocks[b];
       Crypto::Hash blockHash = get_block_hash(block.bl);
       m_blockIndex.push(blockHash);
+      uint64_t interest = 0;
       for (uint16_t t = 0; t < block.transactions.size(); ++t)
       {
         const TransactionEntry &transaction = block.transactions[t];
@@ -659,9 +666,10 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
           m_multisignatureOutputs[out.amount].push_back(usage);
         }
       }
+        interest += m_currency.calculateTotalTransactionInterest(transaction.tx, b); //block.height); //block.height shows 0 wrongly sometimes apparently
+      }
+      pushToDepositIndex(block, interest);
     }
-      pushToDepositIndex(block);
-  }
 
   std::chrono::duration<double> duration = std::chrono::steady_clock::now() - timePoint;
   logger(INFO, BRIGHT_WHITE) << "Rebuilding internal structures took: " << duration.count();
@@ -676,7 +684,7 @@ bool Blockchain::storeCache() {
     logger(ERROR, BRIGHT_RED) << "Failed to save blockchain cache";
     return false;
   }
-    logger(INFO, BRIGHT_GREEN) << "Fango blockchain was successfully saved.";
+    logger(INFO, BRIGHT_GREEN) << "Fuego blockchain was successfully saved.";
   return true;
 }
 
@@ -848,7 +856,9 @@ uint64_t Blockchain::coinsEmittedAtHeight(uint64_t height) {
   }
   
 uint8_t Blockchain::getBlockMajorVersionForHeight(uint32_t height) const {
-         if (height > m_upgradeDetectorV8.upgradeHeight()) {
+         if (height > m_upgradeDetectorV9.upgradeHeight()) {
+    return m_upgradeDetectorV9.targetVersion();
+  } else if (height > m_upgradeDetectorV8.upgradeHeight()) {
     return m_upgradeDetectorV8.targetVersion();
   } else if (height > m_upgradeDetectorV7.upgradeHeight()) {
     return m_upgradeDetectorV7.targetVersion();
@@ -1177,7 +1187,7 @@ bool Blockchain::validate_miner_transaction(const Block& b, uint32_t height, siz
 
   auto blockMajorVersion = getBlockMajorVersionForHeight(height);
   if (!m_currency.getBlockReward(blockMajorVersion, blocksSizeMedian, cumulativeBlockSize, alreadyGeneratedCoins, fee, height, reward, emissionChange)) {
-    logger(INFO, BRIGHT_WHITE) << "block size " << cumulativeBlockSize << " is bigger than what is currently allowed on Fango's blockchain";
+    logger(INFO, BRIGHT_WHITE) << "block size " << cumulativeBlockSize << " is bigger than what is currently allowed on Fuego blockchain";
     return false;
   }
 
@@ -2215,11 +2225,14 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
   size_t coinbase_blob_size = getObjectBinarySize(blockData.baseTransaction);
   size_t cumulative_block_size = coinbase_blob_size;
   uint64_t fee_summary = 0;
-  for (size_t i = 0; i < transactions.size(); ++i) {
-    const Crypto::Hash& tx_id = blockData.transactionHashes[i];
-    block.transactions.resize(block.transactions.size() + 1);
-    block.transactions.back().tx = transactions[i];
-    size_t blob_size = toBinaryArray(transactions[i]).size();
+    uint64_t interestSummary = 0;
+
+    for (size_t i = 0; i < transactions.size(); ++i)
+    {
+      const Crypto::Hash &tx_id = blockData.transactionHashes[i];
+      block.transactions.resize(block.transactions.size() + 1);
+      block.transactions.back().tx = transactions[i];
+      size_t blob_size = toBinaryArray(transactions[i]).size();
 
     uint64_t in_amount = m_currency.getTransactionAllInputsAmount(transactions[i], block.height);
 	  uint64_t out_amount = getOutputAmount(transactions[i]);
@@ -2255,6 +2268,7 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
 
     cumulative_block_size += blob_size;
     fee_summary += fee;
+      interestSummary += m_currency.calculateTotalTransactionInterest(transactions[i], block.height);
   }
 
   if (!checkCumulativeBlockSize(blockHash, cumulative_block_size, m_blocks.size())) {
@@ -2281,7 +2295,7 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
   }
 
   pushBlock(block);
-  pushToDepositIndex(block);
+    pushToDepositIndex(block, interestSummary);
 
   auto block_processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - blockProcessingStart).count();
 
@@ -2302,6 +2316,8 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
   m_upgradeDetectorV6.blockPushed();
   m_upgradeDetectorV7.blockPushed();
   m_upgradeDetectorV8.blockPushed();
+  m_upgradeDetectorV9.blockPushed();
+
   update_next_comulative_size_limit();
 
   return true;
@@ -2317,28 +2333,42 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
   return m_depositIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
 }
 
-void Blockchain::pushToDepositIndex(const BlockEntry& block) {
-  int64_t deposit = 0;
-  for (const auto& tx : block.transactions) {
-    for (const auto& in : tx.tx.inputs) {
-      if (in.type() == typeid(MultisignatureInput)) {
-        auto& multisign = boost::get<MultisignatureInput>(in);
-        if (multisign.term > 0) {
-          deposit -= multisign.amount;
-        }
-      }
-    }
-    for (const auto& out : tx.tx.outputs) {
-      if (out.target.type() == typeid(MultisignatureOutput)) {
-        auto& multisign = boost::get<MultisignatureOutput>(out.target);
-        if (multisign.term > 0) {
-          deposit += out.amount;
-        }
-      }
-    }
+  uint64_t Blockchain::depositInterestAtHeight(size_t height) const
+  {
+    std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+    return m_depositIndex.depositInterestAtHeight(static_cast<DepositIndex::DepositHeight>(height));
   }
-  m_depositIndex.pushBlock(deposit);
-}
+
+  void Blockchain::pushToDepositIndex(const BlockEntry &block, uint64_t interest)
+  {
+    int64_t deposit = 0;
+    for (const auto &tx : block.transactions)
+    {
+      for (const auto &in : tx.tx.inputs)
+      {
+        if (in.type() == typeid(MultisignatureInput))
+        {
+          auto &multisign = boost::get<MultisignatureInput>(in);
+          if (multisign.term > 0)
+          {
+            deposit -= multisign.amount;
+          }
+        }
+      }
+      for (const auto &out : tx.tx.outputs)
+      {
+        if (out.target.type() == typeid(MultisignatureOutput))
+        {
+          auto &multisign = boost::get<MultisignatureOutput>(out.target);
+          if (multisign.term > 0)
+          {
+            deposit += out.amount;
+          }
+        }
+      }
+    }
+    m_depositIndex.pushBlock(deposit, interest);
+  }
 
 bool Blockchain::pushBlock(BlockEntry &block) {
   Crypto::Hash blockHash = get_block_hash(block.bl);
@@ -2389,6 +2419,8 @@ void Blockchain::popBlock(const Crypto::Hash& blockHash) {
   m_upgradeDetectorV6.blockPopped();
   m_upgradeDetectorV7.blockPopped();
   m_upgradeDetectorV8.blockPopped();
+  m_upgradeDetectorV9.blockPopped();
+
 
 }
 

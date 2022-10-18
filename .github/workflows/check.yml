@@ -35,11 +35,11 @@ jobs:
           $build_folder = "build"
           $sha = "${{ github.sha }}"
           $xfg_ver = $sha.SubString(0,7)
-          $release_name = "fango-cli-win64-v$xfg_ver"
+          $release_name = "fuego-cli-win64-v$xfg_ver"
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -G "Visual Studio 16 2019" ..
-          msbuild fangoX.sln /p:Configuration=Release /m
+          msbuild fuegoX.sln /p:Configuration=Release /m
           cd src\Release
           Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
           $sha256 = (Get-FileHash "$release_name.zip").Hash
@@ -74,7 +74,7 @@ jobs:
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fango-cli-ubuntu-1804-dev"$xfg_ver"
+          release_name=fuego-cli-ubuntu-1804-dev"$xfg_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Debug
@@ -109,7 +109,7 @@ jobs:
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fango-cli-ubuntu-2004-dev"$xfg_ver"
+          release_name=fuego-cli-ubuntu-2004-dev"$xfg_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Debug
@@ -142,7 +142,7 @@ jobs:
           build_folder="build/"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fango-cli-macos-dev"$xfg_ver"
+          release_name=fuego-cli-macos-dev"$xfg_ver"
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"

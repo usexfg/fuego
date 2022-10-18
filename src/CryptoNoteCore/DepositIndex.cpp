@@ -1,20 +1,19 @@
-// Copyright (c) 2019-2021 Fango Developers
-// Copyright (c) 2018-2021 Fandom Gold Society
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2016 The XDN developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
-// This file is part of Fango.
+// This file is part of Fuego.
 //
-// Fango is free software distributed in the hope that it
+// Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
 // implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 // PURPOSE. You can redistribute it and/or modify it under the terms
 // of the GNU General Public License v3 or later versions as published
-// by the Free Software Foundation. Fango includes elements written 
+// by the Free Software Foundation. Fuego includes elements written
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
-// along with Fango. If not, see <https://www.gnu.org/licenses/>.
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include <CryptoNoteCore/DepositIndex.h>
 
@@ -44,6 +43,9 @@ auto DepositIndex::fullDepositAmount() const -> DepositAmount {
   return index.empty() ? 0 : index.back().amount;
 }
 
+auto DepositIndex::fullInterestAmount() const -> DepositInterest {
+  return index.empty() ? 0 : index.back().interest;
+}
 
 static inline bool sumWillOverflow(int64_t x, int64_t y) {
   if (y > 0 && x > std::numeric_limits<int64_t>::max() - y) {
@@ -65,18 +67,22 @@ static inline bool sumWillOverflow(uint64_t x, uint64_t y) {
   return false;
 }
 
-void DepositIndex::pushBlock(DepositAmount amount) {
+void DepositIndex::pushBlock(DepositAmount amount, DepositInterest interest) {
   DepositAmount lastAmount;
-    if (index.empty()) {
+  DepositInterest lastInterest;
+  if (index.empty()) {
     lastAmount = 0;
- } else {
+    lastInterest = 0;
+  } else {
     lastAmount = index.back().amount;
+    lastInterest = index.back().interest;
   }
 
   assert(!sumWillOverflow(amount, lastAmount));
- assert(amount + lastAmount >= 0);
+  assert(!sumWillOverflow(interest, lastInterest));
+  assert(amount + lastAmount >= 0);
   if (amount != 0) {
-    index.push_back({blockCount, amount + lastAmount});
+    index.push_back({blockCount, amount + lastAmount, interest + lastInterest});
   }
 
   ++blockCount;
@@ -129,6 +135,14 @@ auto DepositIndex::depositAmountAtHeight(DepositHeight height) const -> DepositA
   }
 }
 
+auto DepositIndex::depositInterestAtHeight(DepositHeight height) const -> DepositInterest {
+  if (blockCount == 0) {
+    return 0;
+  } else {
+    auto it = upperBound(height);
+    return it == index.cbegin() ? 0 : (--it)->interest;
+  }
+}
 
 void DepositIndex::serialize(ISerializer& s) {
   s(blockCount, "blockCount");
@@ -142,6 +156,7 @@ void DepositIndex::serialize(ISerializer& s) {
 void DepositIndex::DepositIndexEntry::serialize(ISerializer& s) {
   s(height, "height");
   s(amount, "amount");
+  s(interest, "interest");
 }
 
 }

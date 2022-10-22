@@ -1,5 +1,5 @@
-<img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/FandomGold/XFG-data/master/Fango_gif01.GIF"><img/>
-### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency for freedom enthusiasts and advocates of sound money.
+<img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
+### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency for freedom fighters and advocates of sound money.
 
 Based on the CryptoNote protocol & philosophy.
 
@@ -46,7 +46,7 @@ executing the following command.
 
 2. Clone Fuego repository
 ```
-git clone https://github.com/FandomGold/fuego
+git clone https://github.com/usexfg/fuego
 
 ```
 3. Open folder with copied repository
@@ -68,9 +68,9 @@ cd fuego/build/release/src `
 try --help from within dæmon for a full list of available commands
 or <code>./fuegod --help</code> when outside of dæmon 
 _________________________________________________________
-For the most user-friendly graphical interface experience
+For the most user-friendly graphic interface experience
 
-see [Fuego Desktop Wallet](https://github.com/fandomgold/fuego-desktop). 
+see [Fuego Desktop Wallet](https://github.com/usexfg/fuego-desktop). 
 _________________________________________________________
 
 _________________________________________________________
@@ -96,7 +96,7 @@ _________________________________________________________
 From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
 ```bash
-git clone https://github.com/FandomGold/fuego
+git clone https://github.com/usexfg/fuego
 cd fuego
 mkdir build
 cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
@@ -129,7 +129,7 @@ $ brew install git python cmake gcc boost
 When all dependencies are installed, build Fuego core binaries:
 
 ```bash
-$ git clone https://github.com/FandomGold/fuego
+$ git clone https://github.com/usexfg/fuego
 $ cd fuego
 $ mkdir build && cd $_
 $ cmake ..

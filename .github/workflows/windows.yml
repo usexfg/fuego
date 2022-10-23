@@ -51,7 +51,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ steps.build.outputs.asset_path }}
-          name: Fango CLI Suite v${{ steps.build.outputs.xfg_ver }}
+          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}
           body: |
             **${{ steps.build.outputs.release_name }}**
             ${{ steps.build.outputs.sha256 }}

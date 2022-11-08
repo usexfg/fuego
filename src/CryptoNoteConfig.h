@@ -1,10 +1,10 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2022 Elder Node Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
+// Copyright (c) 2018-2019 The Ryo Currency developers
 // Copyright (c) 2014-2018 The Forknote developers
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
-// Copyright (c) 2018-2019 The Ryo Currency developers
 //
 // This file is part of Fuego.
 //
@@ -68,7 +68,7 @@ namespace CryptoNote
 		const size_t   DIFFICULTY_WINDOW                             = 1067; // blocks  Original CryptoNote
 		const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks  Zawy v1.0
 		const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
-		const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fango
+		const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fuego (~180 block per day)
 
 		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
                // const uint64_t MIN_TX_MIXIN_SIZE_V9                          = 8;
@@ -77,7 +77,7 @@ namespace CryptoNote
 
 		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;
                 const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
-                const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month min/max? */
+                const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
@@ -112,9 +112,9 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-                const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Fandom Gold
+                const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
-                const uint32_t UPGRADE_HEIGHT_V9                             = 888888; //Fire & Blood (emission|UPX2|Fuego)
+                const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -254,7 +254,11 @@ namespace CryptoNote
  			{ 750000, "4fe3b7759428705b39f725ef1f5a9ce1b501c983de5e3079d30bc497f587242f" },
  			{ 752411, "8675187b8a7bdf73ac93ac9d86f37315c0780a41ff4c0aa671f5d809b6c5b631" },
  			{ 752593, "e270b1419d5ae8589ea8fdb148a6de6b02637432e76a1b23258324754a16f46f" },
-			{ 777777, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" }
+			{ 777777, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" },
+		//      { 800000, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" },
+ 	       //	{ 810000, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" },
+	      //	{ 820000, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" }
+
  		};
 
 } // namespace CryptoNote

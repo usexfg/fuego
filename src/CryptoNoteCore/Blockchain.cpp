@@ -1911,8 +1911,7 @@ uint64_t Blockchain::get_adjusted_time() {
   return time(NULL);
 }
 
-bool Blockchain::check_tx_outputs(const Transaction& tx) const {
-auto blockMajorVersion = getBlockMajorVersionForHeight(height);
+bool Blockchain::check_tx_outputs(const Transaction& tx, uint32_t height) const {
 
   for (TransactionOutput out : tx.outputs) {
     if (out.target.type() == typeid(MultisignatureOutput)) {
@@ -1921,7 +1920,7 @@ auto blockMajorVersion = getBlockMajorVersionForHeight(height);
         return false;
       } else {
         const auto& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
-        if (multisignatureOutput.term != 0 && blockMajorVersion >= 9) {
+        if (multisignatureOutput.term != 0 && height >= 821000) {
           if (multisignatureOutput.term < m_currency.depositMinTerm() || multisignatureOutput.term > m_currency.depositMaxTerm()) {
             logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output has invalid term: " << multisignatureOutput.term;
             return false;

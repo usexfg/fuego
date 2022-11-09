@@ -1300,7 +1300,7 @@ namespace CryptoNote
     upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
     upgradeHeightV7(parameters::UPGRADE_HEIGHT_V7);
     upgradeHeightV8(parameters::UPGRADE_HEIGHT_V8);
-    upgradeHeightV8(parameters::UPGRADE_HEIGHT_V9);
+    upgradeHeightV9(parameters::UPGRADE_HEIGHT_V9);
 
     upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
     upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);

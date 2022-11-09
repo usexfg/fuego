@@ -3,6 +3,8 @@
 // Copyright (c) 2018-2019 The TurtleCoin developers
 // Copyright (c) 2016-2020 The Karbo developers
 // Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2022 Fuego Developers
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -685,11 +687,11 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized()
   if (m_synchronized.compare_exchange_strong(val_expected, true)) {
     logger(Logging::INFO, Logging::BRIGHT_CYAN)
       << "**********************************************************************" << ENDL
-      << "You are synchronized with the Fango network." << ENDL
-      << "fango-wallet-cli is at your service, m'lorde." << ENDL
+      << "You are synchronized with the Fuego network." << ENDL
+      << "fuego-wallet-cli is now at your service, m'lorde." << ENDL
       << "Type \"help\" to see Fango daemon commands." << ENDL
       << ENDL
-      << "Please note, the blockchain will only be saved after" << ENDL
+      << "Please note, the Fuego blockchain will only be saved after" << ENDL
       << "you quit the daemon with \"exit\" command" << ENDL
       << "Better yet use the \"save\" command." << ENDL
       << "Otherwise, it may be necessary to re-sync.";

@@ -2250,7 +2250,7 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
       logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << " has at least one transaction with wrong inputs: " << tx_id;
     }
 
-    if (!check_tx_outputs(transactions[i])) {
+    if (!check_tx_outputs(transactions[i], block.height)) {
       isTransactionValid = false;
       logger(INFO, BRIGHT_WHITE) << "Transaction " << tx_id << " has at least one invalid output";
     }

@@ -325,7 +325,7 @@ namespace CryptoNote {
     bool check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_prefix_hash, const std::vector<Crypto::Signature>& sig, uint32_t* pmax_related_block_height = NULL);
     bool checkTransactionInputs(const Transaction& tx, const Crypto::Hash& tx_prefix_hash, uint32_t* pmax_used_block_height = NULL);
     bool checkTransactionInputs(const Transaction& tx, uint32_t* pmax_used_block_height = NULL);
-    bool check_tx_outputs(const Transaction& tx) const;
+    bool check_tx_outputs(const Transaction& tx, uint32_t height) const;
     const TransactionEntry& transactionByIndex(TransactionIndex index);
     bool pushBlock(const Block &blockData, const Crypto::Hash &id, block_verification_context &bvc, uint32_t height);
     bool pushBlock(const Block &blockData, const std::vector<Transaction> &transactions, const Crypto::Hash &id, block_verification_context &bvc);

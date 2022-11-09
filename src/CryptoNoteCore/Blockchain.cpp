@@ -376,7 +376,7 @@ bool Blockchain::removeObserver(IBlockchainStorageObserver* observer) {
 }
 
 bool Blockchain::checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock) {
-  return checkTransactionInputs(tx, maxUsedBlock.height, maxUsedBlock.id) && check_tx_outputs(tx);
+  return checkTransactionInputs(tx, maxUsedBlock.height, maxUsedBlock.id) && check_tx_outputs(tx, maxUsedBlock.height);
 }
 
 bool Blockchain::checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock, BlockInfo& lastFailed) {
@@ -1911,7 +1911,7 @@ uint64_t Blockchain::get_adjusted_time() {
   return time(NULL);
 }
 
-bool Blockchain::check_tx_outputs(const Transaction& tx) const {
+bool Blockchain::check_tx_outputs(const Transaction& tx, uint32_t height) const {
   for (TransactionOutput out : tx.outputs) {
     if (out.target.type() == typeid(MultisignatureOutput)) {
       if (tx.version < CryptoNote::TRANSACTION_VERSION_2) {
@@ -1919,7 +1919,7 @@ bool Blockchain::check_tx_outputs(const Transaction& tx) const {
         return false;
       } else {
         const auto& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
-        if (multisignatureOutput.term != 0) {
+        if (multisignatureOutput.term != 0 && height >= 821000) {
           if (multisignatureOutput.term < m_currency.depositMinTerm() || multisignatureOutput.term > m_currency.depositMaxTerm()) {
             logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output has invalid term: " << multisignatureOutput.term;
             return false;
@@ -2249,7 +2249,7 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
       logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << " has at least one transaction with wrong inputs: " << tx_id;
     }
 
-    if (!check_tx_outputs(transactions[i])) {
+    if (!check_tx_outputs(transactions[i], block.height)) {
       isTransactionValid = false;
       logger(INFO, BRIGHT_WHITE) << "Transaction " << tx_id << " has at least one invalid output";
     }

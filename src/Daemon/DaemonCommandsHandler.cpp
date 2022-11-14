@@ -328,9 +328,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
 
 
 std::cout << std::endl
-
-         << "FUEGO |" << (m_core.currency().isTestnet() ? " LOCAL Testnet - " : " TESTNET | ")
-
+         << "FUEGO |" << (m_core.currency().isTestnet() ? " LOCAL Testnet - " : " MAINNET | ")
          << (synced ? "synced " : "syncing ") << height << "/" << last_known_block_index 
          << " (" << get_sync_percentage(height, last_known_block_index) << "%) "<< std::endl;
 std::cout << "**************************************************"<< std::endl;

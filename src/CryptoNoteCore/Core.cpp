@@ -351,9 +351,7 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
     logger(ERROR) << "tx have money overflow, rejected for tx id= " << getObjectHash(tx);
     return false;
   }
-	
-  // uint64_t amount_in = 0;
-  // get_inputs_money_amount(tx, amount_in);
+
   uint64_t amount_in = m_currency.getTransactionAllInputsAmount(tx, height);
   uint64_t amount_out = get_outs_money_amount(tx);
 

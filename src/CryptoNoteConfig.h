@@ -192,7 +192,7 @@ namespace CryptoNote
 		"104.236.0.16:10808",
  		"188.226.177.187:10808",
  		"fuego.money:10808",
-                "xfg.ms-pool.com:10808"
+                "xfg.ms-pool.com:10808",
 	        "fangotango.hopto.org:10808"
 			
 	};

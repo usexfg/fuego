@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Elder Node Council
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2018-2019 The Ryo Currency developers
@@ -189,10 +189,9 @@ namespace CryptoNote
 
 	// Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES = {
-		"104.236.0.16:10808",
- 		"188.226.177.187:10808",
- 		"fuego.money:10808",
-                "xfg.ms-pool.com:10808",
+		"18.220.144.38:10808",
+ 		"80.89.228.157:10808",
+ 		"207.244.247.64:10808",
 	        "fangotango.hopto.org:10808"
 			
 	};

@@ -43,7 +43,7 @@ jobs:
           echo "xfg_version=${xfg_version}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}

@@ -10,7 +10,6 @@ Based on the CryptoNote protocol & philosophy.
 -   Explorer: <https://fangotango.hopto.org>
 -   Discord: <https://discord.gg/5UJcJJg>
 -   Twitter: <https://twitter.com/useXFG>
--   Reddit: <https://www.reddit.com/r/Fango>
 -   Medium: <https://medium.com/@usexfg>
 -   Bitcoin Talk: <https://bitcointalk.org/index.php?topic=2712001>
 
@@ -70,7 +69,7 @@ or <code>./fuegod --help</code> when outside of dæmon
 _________________________________________________________
 For the most user-friendly graphic interface experience
 
-see [Fuego Desktop Wallet](https://github.com/usexfg/fuego-desktop). 
+see [Fuego Desktop Wallet](https://github.com/usexfg/fuego-wallet). 
 _________________________________________________________
 
 _________________________________________________________

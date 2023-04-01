@@ -1,5 +1,5 @@
 <img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
-### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency for freedom fighters and advocates of sound money.
+### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency built by advocates of freedom thru sound money.
 
 Based on the CryptoNote protocol & philosophy.
 

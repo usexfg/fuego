@@ -108,6 +108,11 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
   { "/getpeers", { jsonMethod<COMMAND_RPC_GET_PEER_LIST>(&RpcServer::on_get_peer_list), true } },
   { "/paymentid", { jsonMethod<COMMAND_RPC_GEN_PAYMENT_ID>(&RpcServer::on_get_payment_id), true } },
 
+  // disabled in restricted rpc mode
+  { "/start_mining", { jsonMethod<COMMAND_RPC_START_MINING>(&RpcServer::on_start_mining), false } },
+  { "/stop_mining", { jsonMethod<COMMAND_RPC_STOP_MINING>(&RpcServer::on_stop_mining), false } },
+  { "/stop_daemon", { jsonMethod<COMMAND_RPC_STOP_DAEMON>(&RpcServer::on_stop_daemon), true } },
+
   // json rpc
   { "/json_rpc", { std::bind(&RpcServer::processJsonRpcRequest, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), true } }
 };
@@ -139,6 +144,9 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
   using namespace JsonRpc;
 
   response.addHeader("Content-Type", "application/json");
+  if (!m_cors_domain.empty()) {
+        response.addHeader("Access-Control-Allow-Origin", m_cors_domain);
+  }
 
   JsonRpcRequest jsonRequest;
   JsonRpcResponse jsonResponse;
@@ -163,6 +171,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false}},
         {"getlastblockheader", {makeMemberMethod(&RpcServer::on_get_last_block_header), false}},
         {"getblockheaderbyhash", {makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false}},
+        { "validateaddress", { makeMemberMethod(&RpcServer::on_validate_address), false } },
         {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false}}};
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
@@ -184,6 +193,16 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
 
   response.setBody(jsonResponse.getBody());
   logger(TRACE) << "JSON-RPC response: " << jsonResponse.getBody();
+  return true;
+}
+
+bool RpcServer::restrictRPC(const bool is_restricted) {
+  m_restricted_rpc = is_restricted;
+  return true;
+}
+
+bool RpcServer::enableCors(const std::string domain) {
+  m_cors_domain = domain;
   return true;
 }
 
@@ -517,6 +536,57 @@ bool RpcServer::setViewKey(const std::string& view_key) {
   m_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
   return true;
 }
+
+bool RpcServer::on_start_mining(const COMMAND_RPC_START_MINING::request& req, COMMAND_RPC_START_MINING::response& res) {
+  if (m_restricted_rpc) {
+        res.status = "Failed, restricted handle";
+        return false;
+  }
+
+  AccountPublicAddress adr;
+  if (!m_core.currency().parseAccountAddressString(req.miner_address, adr)) {
+    res.status = "Failed, wrong address";
+    return true;
+  }
+
+  if (!m_core.get_miner().start(adr, static_cast<size_t>(req.threads_count))) {
+    res.status = "Failed, mining not started";
+    return true;
+  }
+
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res) {
+  if (m_restricted_rpc) {
+        res.status = "Failed, restricted handle";
+        return false;
+  }
+
+  if (!m_core.get_miner().stop()) {
+    res.status = "Failed, mining not stopped";
+    return true;
+  }
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMMAND_RPC_STOP_DAEMON::response& res) {
+  if (m_restricted_rpc) {
+        res.status = "Failed, restricted handle";
+        return false;
+  }
+  if (m_core.currency().isTestnet()) {
+    m_p2p.sendStopSignal();
+    res.status = CORE_RPC_STATUS_OK;
+  } else {
+    res.status = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
+    return false;
+  }
+  return true;
+}
+
 
 bool RpcServer::on_get_fee_address(const COMMAND_RPC_GET_FEE_ADDRESS::request& req, COMMAND_RPC_GET_FEE_ADDRESS::response& res) {
   if (m_fee_address.empty()) {

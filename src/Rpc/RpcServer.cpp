@@ -171,7 +171,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false}},
         {"getlastblockheader", {makeMemberMethod(&RpcServer::on_get_last_block_header), false}},
         {"getblockheaderbyhash", {makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false}},
-        { "validateaddress", { makeMemberMethod(&RpcServer::on_validate_address), false } },
+        {"validateaddress", { makeMemberMethod(&RpcServer::on_validate_address), false } },
         {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false}}};
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
@@ -375,7 +375,7 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Failed to parse address " + req.address + '.' };
 	}
 
-	// parse sugnature
+	// parse signature
 	static constexpr char header[] = "ReserveProofV1";
 	const size_t header_len = strlen(header);
 	if (req.signature.size() < header_len || req.signature.substr(0, header_len) != header) {
@@ -450,7 +450,7 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 			return true;
 		}
 
-		// check if the address really received the fund
+		// check if the address really received the funds
 		Crypto::KeyDerivation derivation;
     if (!Crypto::generate_key_derivation(proof.shared_secret, Crypto::EllipticCurveScalar2SecretKey(Crypto::I), derivation))
     {
@@ -536,57 +536,6 @@ bool RpcServer::setViewKey(const std::string& view_key) {
   m_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
   return true;
 }
-
-bool RpcServer::on_start_mining(const COMMAND_RPC_START_MINING::request& req, COMMAND_RPC_START_MINING::response& res) {
-  if (m_restricted_rpc) {
-        res.status = "Failed, restricted handle";
-        return false;
-  }
-
-  AccountPublicAddress adr;
-  if (!m_core.currency().parseAccountAddressString(req.miner_address, adr)) {
-    res.status = "Failed, wrong address";
-    return true;
-  }
-
-  if (!m_core.get_miner().start(adr, static_cast<size_t>(req.threads_count))) {
-    res.status = "Failed, mining not started";
-    return true;
-  }
-
-  res.status = CORE_RPC_STATUS_OK;
-  return true;
-}
-
-bool RpcServer::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res) {
-  if (m_restricted_rpc) {
-        res.status = "Failed, restricted handle";
-        return false;
-  }
-
-  if (!m_core.get_miner().stop()) {
-    res.status = "Failed, mining not stopped";
-    return true;
-  }
-  res.status = CORE_RPC_STATUS_OK;
-  return true;
-}
-
-bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMMAND_RPC_STOP_DAEMON::response& res) {
-  if (m_restricted_rpc) {
-        res.status = "Failed, restricted handle";
-        return false;
-  }
-  if (m_core.currency().isTestnet()) {
-    m_p2p.sendStopSignal();
-    res.status = CORE_RPC_STATUS_OK;
-  } else {
-    res.status = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
-    return false;
-  }
-  return true;
-}
-
 
 bool RpcServer::on_get_fee_address(const COMMAND_RPC_GET_FEE_ADDRESS::request& req, COMMAND_RPC_GET_FEE_ADDRESS::response& res) {
   if (m_fee_address.empty()) {
@@ -819,6 +768,10 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
 }
 
 bool RpcServer::on_start_mining(const COMMAND_RPC_START_MINING::request& req, COMMAND_RPC_START_MINING::response& res) {
+  if (m_restricted_rpc) {
+        res.status = "Failed, restricted handle";
+        return false;
+  }
   AccountPublicAddress adr;
   if (!m_core.currency().parseAccountAddressString(req.miner_address, adr)) {
     res.status = "Failed, wrong address";
@@ -864,6 +817,10 @@ bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 */
 
 bool RpcServer::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res) {
+  if (m_restricted_rpc) {
+        res.status = "Failed, restricted handle";
+        return false;
+  }
   if (!m_core.get_miner().stop()) {
     res.status = "Failed, mining not stopped";
     return true;
@@ -873,6 +830,10 @@ bool RpcServer::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMM
 }
 
 bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMMAND_RPC_STOP_DAEMON::response& res) {
+  if (m_restricted_rpc) {
+        res.status = "Failed, restricted handle";
+        return false;
+  }
   if (m_core.currency().isTestnet()) {
     m_p2p.sendStopSignal();
     res.status = CORE_RPC_STATUS_OK;
@@ -882,7 +843,7 @@ bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMM
   }
   return true;
 }
-
+	
 bool RpcServer::on_get_payment_id(const COMMAND_RPC_GEN_PAYMENT_ID::request& req, COMMAND_RPC_GEN_PAYMENT_ID::response& res) {
   std::string pid;
   try {

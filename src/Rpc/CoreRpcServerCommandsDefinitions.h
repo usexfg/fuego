@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2023 Fuego Developers
+// Copyright (c) 2017-2022 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -618,6 +618,7 @@ struct currency_core {
   uint64_t MINIMUM_FEE;
   uint64_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
   uint64_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
+//  uint64_t CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
   uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
   uint64_t P2P_DEFAULT_PORT;
   uint64_t RPC_DEFAULT_PORT;
@@ -626,6 +627,7 @@ struct currency_core {
   uint64_t UPGRADE_HEIGHT;
   uint64_t DIFFICULTY_CUT;
   uint64_t DIFFICULTY_LAG;
+  //std::string BYTECOIN_NETWORK;
   std::string CRYPTONOTE_NAME;
   std::string GENESIS_COINBASE_TX_HEX;
   std::vector<std::string> CHECKPOINTS;
@@ -636,10 +638,12 @@ struct currency_core {
     KV_MEMBER(DIFFICULTY_TARGET)
     KV_MEMBER(CRYPTONOTE_DISPLAY_DECIMAL_POINT)
     KV_MEMBER(MONEY_SUPPLY)
+ //   KV_MEMBER(GENESIS_BLOCK_REWARD)
     KV_MEMBER(DEFAULT_DUST_THRESHOLD)
     KV_MEMBER(MINIMUM_FEE)
     KV_MEMBER(CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
     KV_MEMBER(CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE)
+//    KV_MEMBER(CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1)
     KV_MEMBER(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX)
     KV_MEMBER(P2P_DEFAULT_PORT)
     KV_MEMBER(RPC_DEFAULT_PORT)
@@ -648,6 +652,7 @@ struct currency_core {
     KV_MEMBER(UPGRADE_HEIGHT)
     KV_MEMBER(DIFFICULTY_CUT)
     KV_MEMBER(DIFFICULTY_LAG)
+//    KV_MEMBER(BYTECOIN_NETWORK)
     KV_MEMBER(CRYPTONOTE_NAME)
     KV_MEMBER(GENESIS_COINBASE_TX_HEX)
     KV_MEMBER(CHECKPOINTS)
@@ -852,32 +857,6 @@ struct COMMAND_RPC_GEN_PAYMENT_ID {
 		  KV_MEMBER(payment_id)
 	  }
   };
-};
-	
-struct COMMAND_RPC_VALIDATE_ADDRESS {
- struct request {
-   std::string address;
-
-   void serialize(ISerializer &s) {
-     KV_MEMBER(address)
-   }
- };
-
- struct response {
-   bool isvalid;
-   std::string address;
-   std::string spendPublicKey;
-   std::string viewPublicKey;
-   std::string status;
-
-   void serialize(ISerializer &s) {
-     KV_MEMBER(isvalid)
-     KV_MEMBER(address)
-     KV_MEMBER(spendPublicKey)
-     KV_MEMBER(viewPublicKey)
-     KV_MEMBER(status)
-   }
- };
 };
 
 struct reserve_proof_entry

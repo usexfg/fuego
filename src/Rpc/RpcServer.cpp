@@ -171,7 +171,6 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false}},
         {"getlastblockheader", {makeMemberMethod(&RpcServer::on_get_last_block_header), false}},
         {"getblockheaderbyhash", {makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false}},
-        {"validateaddress", { makeMemberMethod(&RpcServer::on_validate_address), false } },
         {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false}}};
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());

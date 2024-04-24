@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2024 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2018-2019 The Ryo Currency developers
@@ -192,7 +192,7 @@ namespace CryptoNote
 		"3.16.217.33:10808",
  		"80.89.228.157:10808",
  		"207.244.247.64:10808",
-	        "fangotango.hopto.org:10808"
+	        "216.145.66.224:10808"
 			
 	};
 
@@ -262,7 +262,8 @@ namespace CryptoNote
 			{ 826421, "9a0158c87c062c63a675c65eda91c10bb6d7b68b854be783aa85b2cbbf3b8a55" },
 			{ 830000, "cee38b0701df9f26a938f6c65a1f233d1f810e5f19eb1b4cb87b15d514342064" },
 			{ 840000, "ec767b0e56d7002966e3184e197b3da06c5f94484bf6218781a38f59a75bfaab" },
-			{ 888888, "b818f74d11ab6b16f86455986b3078217dd2eb0cac3de9b9a0c3111ebb07b9dc" }
+			{ 888888, "b818f74d11ab6b16f86455986b3078217dd2eb0cac3de9b9a0c3111ebb07b9dc" },
+			{ 895000, "2bc71e117bf0544ec1c4a193a0c012c106f0bedc0c27b62feeef944bb16b83e3" }
 
 
 

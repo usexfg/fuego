@@ -1,11 +1,11 @@
 <img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
-### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency built by advocates of freedom thru sound money.
+### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency built by advocates for freedom thru sound money.
 
-Based on the CryptoNote protocol & philosophy.
+Based upon the CryptoNote protocol & philosophy.
 
 #### Resources
 
--   Web: <https://fuego.money>
+-   Web: <https://usexfg.org>
 -   Explorer: <http://fuego.spaceportx.net>
 -   Explorer: [http://radioactive.sytes.net](http://radioactive.sytes.net:8000/index.html)
 -   Explorer: <https://explore-xfg.loudmining.com>
@@ -20,7 +20,13 @@ Based on the CryptoNote protocol & philosophy.
 
 ##### Master Status   
 
-[![Build Status](https://travis-ci.org/FandomGold/fandomgold.svg?branch=master)](https://travis-ci.org/FandomGold/fandomgold) 
+[![macOS](https://github.com/usexfg/fuego/actions/workflows/macOS.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/macOS.yml)
+
+[![Ubuntu 20.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu20.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu20.yml)
+
+[![Ubuntu 22.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml)
+
+[![Windows](https://github.com/usexfg/fuego/actions/workflows/windows.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/windows.yml)
 
 <sup>"Working software is the primary measure of progress." [‣]</sup>
 

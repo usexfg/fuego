@@ -256,7 +256,7 @@ struct is_trivially_copy_constructible
 template <typename T>
 struct is_trivially_copy_assignable
     : std::integral_constant<
-          bool, __has_trivial_assign(typename std::remove_reference<T>::type) &&
+          bool, __is_trivially_assignable(typename std::remove_reference<T>::type) &&
       phmap::is_copy_assignable<T>::value> {};
 
 // -----------------------------------------------------------------------------

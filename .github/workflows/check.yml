@@ -13,7 +13,7 @@ jobs:
     name: Windows
     runs-on: windows-2022
     env:
-      BOOST_ROOT: C:/local/boost_1_83_0
+      BOOST_ROOT: C:/local/boost_1_72_0
     steps:
       - uses: actions/checkout@master
 
@@ -34,13 +34,13 @@ jobs:
         id: restore-boost
         with:
           path: ${{env.BOOST_ROOT}}
-          key: boost_1_83_0-msvc-14.3-64
+          key: boost_1_72_0-msvc-14.3-64
 
       - name: Install Boost
         if: steps.restore-boost.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.3-64.exe/download"
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.3-64.exe/download"
           (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
           Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
       - name: Build
@@ -94,7 +94,7 @@ jobs:
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-          make -j2
+          make -j4
           mkdir -p "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
@@ -130,7 +130,7 @@ jobs:
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-          make -j2
+          make -j4
           mkdir -p "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
@@ -164,7 +164,7 @@ jobs:
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
-          make -j2
+          make -j4
           mkdir "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" ); done

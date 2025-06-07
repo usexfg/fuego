@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "../../include/CryptoTypes.h"
+
 #define CHACHA8_KEY_SIZE 32
 #define CHACHA8_IV_SIZE 8
 
@@ -51,7 +53,7 @@ namespace Crypto
     static_assert(sizeof(chacha8_key) <= sizeof(Hash), "Size of hash must be at least that of chacha8_key");
     Hash pwd_hash;
     cn_slow_hash(context, password.data(), password.size(), pwd_hash, 0, 0, 0); 
-    memcpy(&key, &pwd_hash, sizeof(key));
+    key = *reinterpret_cast<chacha8_key*>(&pwd_hash);
     memset(&pwd_hash, 0, sizeof(pwd_hash));
   }
 

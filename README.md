@@ -1,4 +1,5 @@
-<img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
+<img title="The Long Night Is Coming" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
+
 ### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency built by advocates for freedom thru sound money.
 
 Based upon the CryptoNote protocol & philosophy.
@@ -76,7 +77,9 @@ or <code>./fuegod --help</code> when outside of dæmon
 _________________________________________________________
 For the most user-friendly graphic interface experience
 
+
 see [Fuego Desktop Wallet](https://github.com/usexfg/fuego-wallet). 
+
 _________________________________________________________
 
 _________________________________________________________

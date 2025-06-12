@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2024 Fuego Developers
+// Copyright (c) 2017-2022 Fuego Elder Council Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2018-2019 The Ryo Currency developers
@@ -75,11 +75,13 @@ namespace CryptoNote
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
+
 		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
-                const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
-                const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
-                const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
+    const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
+    const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
+    const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
+
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
@@ -189,11 +191,11 @@ namespace CryptoNote
 
 	// Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES = {
+
 		"3.16.217.33:10808",
  		"80.89.228.157:10808",
  		"207.244.247.64:10808",
 	        "216.145.66.224:10808"
-			
 	};
 
 	struct CheckpointData
@@ -256,9 +258,9 @@ namespace CryptoNote
  			{ 752411, "8675187b8a7bdf73ac93ac9d86f37315c0780a41ff4c0aa671f5d809b6c5b631" },
  			{ 752593, "e270b1419d5ae8589ea8fdb148a6de6b02637432e76a1b23258324754a16f46f" },
 			{ 777777, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" },
-		        { 800001, "ee744efcc80fe4a483b21bf6918f72bfa19ca2b4324b51786c522428acffce98" },
- 	         	{ 810000, "ca66bed2600a0750f4dafe8ec7a8e4581b2ab9df326cc8f321ffd96bc2947b2c" },
-	        	{ 820000, "6bb848f23668412e35c7bdcd60cd0aea70761d11f1f41204a1b8ca2d808e79d7" },
+		  { 800001, "ee744efcc80fe4a483b21bf6918f72bfa19ca2b4324b51786c522428acffce98" },
+ 	    { 810000, "ca66bed2600a0750f4dafe8ec7a8e4581b2ab9df326cc8f321ffd96bc2947b2c" },
+	    { 820000, "6bb848f23668412e35c7bdcd60cd0aea70761d11f1f41204a1b8ca2d808e79d7" },
 			{ 826421, "9a0158c87c062c63a675c65eda91c10bb6d7b68b854be783aa85b2cbbf3b8a55" },
 			{ 830000, "cee38b0701df9f26a938f6c65a1f233d1f810e5f19eb1b4cb87b15d514342064" },
 			{ 840000, "ec767b0e56d7002966e3184e197b3da06c5f94484bf6218781a38f59a75bfaab" },

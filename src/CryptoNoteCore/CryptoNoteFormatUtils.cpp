@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Elder Node Council
+// Copyright (c) 2017-2025 Los Guardianes del Fuego
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -530,9 +530,9 @@ bool get_block_longhash(cn_context &context, const Block& b, Hash& res) {
     }
   } else {
     return false;
-  }
+  }     // original CryptoNight (0) until v5, anti-ASIC CNv7 var(1), CNv8(2) from v6 thru CNupx/2
   const int cn_variant = b.majorVersion < 5 ? 0 : b.majorVersion >= BLOCK_MAJOR_VERSION_6 ? 2 : 1;
-  const int light = b.majorVersion >= BLOCK_MAJOR_VERSION_9 ? 1 : 0;
+  const int light = ( b.majorVersion >= BLOCK_MAJOR_VERSION_9) ? 1 : 0;
   cn_slow_hash(context, bd.data(), bd.size(), res, light, cn_variant);
   return true;
 }

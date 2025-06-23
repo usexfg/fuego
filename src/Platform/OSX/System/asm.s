@@ -11,6 +11,8 @@
 #define FPSIMD_CONTEXT_OFFSET    464
 #define REG_OFFSET(__reg)        (MCONTEXT_GREGS + ((__reg) * REG_SZ))
 
+.text
+.align 4
 .globl _setmcontext
 _setmcontext:
 	/* restore GPRs */
@@ -44,6 +46,7 @@ _setmcontext:
 	/* jump to new PC */
 	br	x16
 
+.align 4
 .globl _getmcontext
 _getmcontext:
 	str	xzr, [x0, #REG_OFFSET(0)]

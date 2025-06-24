@@ -8,7 +8,16 @@ on:
 jobs:
   build-macos:
     name: macOS
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            arch: intel
+            arch_flag: x86_64
+          - os: macos-14
+            arch: apple
+            arch_flag: arm64
     steps:
       - uses: actions/checkout@master
 
@@ -17,12 +26,12 @@ jobs:
         run: |
           build_folder="build/"
           xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
-          release_name="fuego-cli-macOS-v$xfg_ver"
+          release_name="fuego-cli-macOS-${{ matrix.arch }}-v$xfg_ver"
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
-          make -j2
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..
+          make -j4
           mkdir "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" ); done
@@ -33,7 +42,7 @@ jobs:
           echo "sha256=${sha256}" >> $GITHUB_OUTPUT
           echo "release_name=${release_name}.zip" >> $GITHUB_OUTPUT
           echo "asset_path=${asset_path}" >> $GITHUB_OUTPUT
-          echo "xfg_version=${xfg_version}" >> $GITHUB_OUTPUT
+          echo "xfg_version=${xfg_ver}" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

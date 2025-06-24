@@ -1,4 +1,4 @@
-name: Ubuntu 20.04
+name: Ubuntu 24.04
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
       - "*"
 
 jobs:
-  build-ubuntu20:
-    name: Ubuntu 20.04
-    runs-on: ubuntu-20.04
+  build-ubuntu24:
+    name: Ubuntu 24.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@master
 
@@ -24,11 +24,11 @@ jobs:
           build_folder="build/debug"
           xfg_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fuego-cli-ubuntu-2004-v"$xfg_ver"
+          release_name=fuego-cli-ubuntu-2404-v"$xfg_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../..
-          make -j2
+          make -j4
           mkdir -p "$release_name/$xfg_ver_folder"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
@@ -40,7 +40,7 @@ jobs:
           echo "sha256=${sha256}" >> $GITHUB_OUTPUT
           echo "release_name=${release_name}.tar.gz" >> $GITHUB_OUTPUT
           echo "asset_path=${asset_path}" >> $GITHUB_OUTPUT
-          echo "xfg_version=${xfg_version}" >> $GITHUB_OUTPUT
+          echo "xfg_version=${xfg_ver}" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -52,4 +52,4 @@ jobs:
             ${{ steps.build.outputs.sha256 }}
           append_body: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

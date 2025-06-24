@@ -20,11 +20,15 @@ jobs:
         uses: microsoft/setup-msbuild@v1.1
 
       - name: Install Boost
-        shell: cmd
+        shell: powershell
         run: |
-          choco install wget --no-progress
-          wget -nv -O boost-installer.exe "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.2-64.exe/download"
-          boost-installer.exe /dir=%BOOST_ROOT% /sp- /verysilent /suppressmsgboxes /norestart
+          choco install boost-msvc-14.2 --version=1.72.0 --force
+          if (Test-Path "$env:BOOST_ROOT") {
+            Write-Host "Boost already exists at $env:BOOST_ROOT"
+          } else {
+            New-Item -ItemType Directory -Force -Path "C:\thirdparties"
+            Move-Item "C:\ProgramData\chocolatey\lib\boost-msvc-14.2\tools\boost_1_72_0" "$env:BOOST_ROOT"
+          }
 
       - name: Build
         shell: powershell

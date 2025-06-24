@@ -40,9 +40,13 @@ jobs:
         if: steps.restore-boost.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.3-64.exe/download"
-          (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
-          Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
+          choco install boost-msvc-14.3 --version=1.83.0 --force
+          if (Test-Path "C:\local\boost_1_83_0") {
+            Write-Host "Boost already exists at C:\local\boost_1_83_0"
+          } else {
+            New-Item -ItemType Directory -Force -Path "C:\local"
+            Move-Item "C:\ProgramData\chocolatey\lib\boost-msvc-14.3\tools\boost_1_83_0" "C:\local\boost_1_83_0"
+          }
       - name: Build
         shell: powershell
         id: build

@@ -36,17 +36,14 @@ jobs:
           path: ${{env.BOOST_ROOT}}
           key: boost_1_83_0-msvc-14.3-64
 
-      - name: Install Boost
-        if: steps.restore-boost.outputs.cache-hit != 'true'
-        shell: powershell
-        run: |
-          choco install boost-msvc-14.3 --version=1.83.0 --force
-          if (Test-Path "C:\local\boost_1_83_0") {
-            Write-Host "Boost already exists at C:\local\boost_1_83_0"
-          } else {
-            New-Item -ItemType Directory -Force -Path "C:\local"
-            Move-Item "C:\ProgramData\chocolatey\lib\boost-msvc-14.3\tools\boost_1_83_0" "C:\local\boost_1_83_0"
-          }
+      - name: Download and Extract Boost
+          if: steps.restore-boost.outputs.cache-hit != 'true'
+       shell: powershell
+          run: |
+            Invoke-WebRequest -Uri "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip" -OutFile "boost_1_83_0.zip"
+            Expand-Archive -Path "boost_1_83_0.zip" -DestinationPath "C:\local"
+            Rename-Item "C:\local\boost_1_83_0" "C:\local\boost_1_83_0" -Force
+    
       - name: Build
         shell: powershell
         id: build

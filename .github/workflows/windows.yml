@@ -10,7 +10,7 @@ jobs:
     name: Windows
     runs-on: windows-2019
     env:
-      BOOST_ROOT: C:\thirdparties\boost-1.72.0
+      BOOST_ROOT: C:\local\boost_1_83_0
     steps:
       - uses: actions/checkout@v3
         with:
@@ -19,16 +19,28 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
         
-      - name: Install Boost
+      - name: Restore Boost
+        uses: actions/cache@v3
+        id: restore-boost
+        with:
+          path: ${{env.BOOST_ROOT}}
+          key: boost_1_83_0-msvc-14.2-64
+        
+      - name: Download and Extract Boost
+        if: steps.restore-boost.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          choco install boost-msvc-14.2 --version=1.72.0 --force
-          if (Test-Path "$env:BOOST_ROOT") {
-            Write-Host "Boost already exists at $env:BOOST_ROOT"
-          } else {
-            New-Item -ItemType Directory -Force -Path "C:\thirdparties"
-            Move-Item "C:\ProgramData\chocolatey\lib\boost-msvc-14.2\tools\boost_1_72_0" "$env:BOOST_ROOT"
+          Invoke-WebRequest -Uri "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip" -OutFile "boost_1_83_0.zip"
+          # Verify zip is not corrupted
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          try {
+            [System.IO.Compression.ZipFile]::OpenRead("boost_1_83_0.zip").Dispose()
+          } catch {
+            Write-Host "Downloaded Boost zip is corrupted."
+            exit 1
           }
+          Expand-Archive -Path "boost_1_83_0.zip" -DestinationPath "C:\local"
+          Rename-Item "C:\local\boost_1_83_0" "C:\local\boost_1_83_0" -Force
 
       - name: Build
         shell: powershell

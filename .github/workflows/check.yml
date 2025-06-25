@@ -37,12 +37,12 @@ jobs:
           key: boost_1_83_0-msvc-14.3-64
 
       - name: Download and Extract Boost
-          if: steps.restore-boost.outputs.cache-hit != 'true'
-       shell: powershell
-          run: |
-            Invoke-WebRequest -Uri "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip" -OutFile "boost_1_83_0.zip"
-            Expand-Archive -Path "boost_1_83_0.zip" -DestinationPath "C:\local"
-            Rename-Item "C:\local\boost_1_83_0" "C:\local\boost_1_83_0" -Force
+        if: steps.restore-boost.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip" -OutFile "boost_1_83_0.zip"
+          Expand-Archive -Path "boost_1_83_0.zip" -DestinationPath "C:\local"
+          Rename-Item "C:\local\boost_1_83_0" "C:\local\boost_1_83_0" -Force
     
       - name: Build
         shell: powershell

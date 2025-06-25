@@ -70,7 +70,9 @@ size_t P2pNodeConfig::getWhiteListConnectionsPercent() const {
 
 boost::uuids::uuid P2pNodeConfig::getNetworkId() const {
   if (getTestnet()) {
-    return CRYPTONOTE_NETWORK_TESTNET;
+    boost::uuids::uuid copy = networkId;
+    copy.data[0] += 1;
+    return copy;
   }
   return networkId;
 }

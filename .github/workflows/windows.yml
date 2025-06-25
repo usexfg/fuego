@@ -29,18 +29,29 @@ jobs:
       - name: Download and Extract Boost
         if: steps.restore-boost.outputs.cache-hit != 'true'
         shell: powershell
-        run: |
-          Invoke-WebRequest -Uri "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip" -OutFile "boost_1_83_0.zip"
-          # Verify zip is not corrupted
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          try {
-            [System.IO.Compression.ZipFile]::OpenRead("boost_1_83_0.zip").Dispose()
-          } catch {
-            Write-Host "Downloaded Boost zip is corrupted."
-            exit 1
-          }
-          Expand-Archive -Path "boost_1_83_0.zip" -DestinationPath "C:\local"
-          Rename-Item "C:\local\boost_1_83_0" "C:\local\boost_1_83_0" -Force
+        run:  |
+         $url = "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip"
+         $outfile = "boost_1_83_0.zip"
+         $maxRetries = 3
+         $retry = 0
+         do {
+         try {
+         Invoke-WebRequest -Uri $url -OutFile $outfile -ErrorAction Stop
+             Add-Type -AssemblyName System.IO.Compression.FileSystem
+             [System.IO.Compression.ZipFile]::OpenRead($outfile).Dispose()
+             $valid = $true
+           } catch {
+          $valid = $false
+          Remove-Item -ErrorAction SilentlyContinue $outfile
+         Start-Sleep -Seconds 5
+         }
+         $retry++
+         } while (-not $valid -and $retry -lt $maxRetries)
+         if (-not $valid) {
+         throw "Failed to download a valid Boost archive after $maxRetries attempts."
+         }
+         Expand-Archive -Path $outfile -DestinationPath "C:\local"
+         Rename-Item "C:\local\boost_1_83_0" "C:\local\boost_1_83_0" -Force
 
       - name: Build
         shell: powershell

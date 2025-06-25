@@ -27,7 +27,7 @@ jobs:
           echo "release_name=${release_name}" >> $env:GITHUB_OUTPUT
 
       - name: Install msbuild
-        uses: microsoft/setup-msbuild@v1.1.
+        uses: microsoft/setup-msbuild@v1.1
 
       - name: Download and Install Boost 1.83
         run: |

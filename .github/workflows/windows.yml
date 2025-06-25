@@ -10,7 +10,7 @@ jobs:
     name: Windows
     runs-on: windows-2019
     env:
-      BOOST_ROOT: C:\local\boost_1_83_0
+      BOOST_ROOT: C:\thirdparties\boost-1.83.0
     steps:
       - uses: actions/checkout@v3
         with:
@@ -19,39 +19,12 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
         
-      - name: Restore Boost
-        uses: actions/cache@v3
-        id: restore-boost
-        with:
-          path: ${{env.BOOST_ROOT}}
-          key: boost_1_83_0-msvc-14.2-64
-        
-      - name: Download and Extract Boost
-        if: steps.restore-boost.outputs.cache-hit != 'true'
-        shell: powershell
-        run:  |
-         $url = "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip"
-         $outfile = "boost_1_83_0.zip"
-         $maxRetries = 3
-         $retry = 0
-         do {
-         try {
-         Invoke-WebRequest -Uri $url -OutFile $outfile -ErrorAction Stop
-             Add-Type -AssemblyName System.IO.Compression.FileSystem
-             [System.IO.Compression.ZipFile]::OpenRead($outfile).Dispose()
-             $valid = $true
-           } catch {
-          $valid = $false
-          Remove-Item -ErrorAction SilentlyContinue $outfile
-         Start-Sleep -Seconds 5
-         }
-         $retry++
-         } while (-not $valid -and $retry -lt $maxRetries)
-         if (-not $valid) {
-         throw "Failed to download a valid Boost archive after $maxRetries attempts."
-         }
-         Expand-Archive -Path $outfile -DestinationPath "C:\local"
-         Rename-Item "C:\local\boost_1_83_0" "C:\local\boost_1_83_0" -Force
+      - name: Download and Install Boost 1.83
+        run: |
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.2-64.exe"
+          $OutputPath = "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\boost-installer.exe"
+          curl -L $Url -o $OutputPath
+          Start-Process -Wait -FilePath $OutputPath "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\\thirdparties\\boost-1.83.0"
 
       - name: Build
         shell: powershell

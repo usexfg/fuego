@@ -1,4 +1,4 @@
-<img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
+<img title="The Long Night Is Coming" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
 ### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency built by advocates for freedom thru sound money.
 
 Based upon the CryptoNote protocol & philosophy.
@@ -19,10 +19,11 @@ Based upon the CryptoNote protocol & philosophy.
 
 
 ##### Master Status   
+[![Build check](https://github.com/usexfg/fuego/actions/workflows/check.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/check.yml)
 
 [![macOS](https://github.com/usexfg/fuego/actions/workflows/macOS.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/macOS.yml)
 
-[![Ubuntu 20.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu20.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu20.yml)
+[![Ubuntu 24.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml)
 
 [![Ubuntu 22.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml)
 

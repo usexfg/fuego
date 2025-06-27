@@ -11,9 +11,9 @@ on:
 jobs:
   build-windows:
     name: Windows
-    runs-on: windows-2022
+    runs-on: windows-2019
     env:
-      BOOST_ROOT: C:/local/boost_1_72_0
+      BOOST_ROOT: C:\thirdparties\boost-1.83.0
     steps:
       - uses: actions/checkout@master
 
@@ -27,22 +27,15 @@ jobs:
           echo "release_name=${release_name}" >> $env:GITHUB_OUTPUT
 
       - name: Install msbuild
-        uses: microsoft/setup-msbuild@v1.1.3
+        uses: microsoft/setup-msbuild@v1.1
 
-      - name: Restore Boost
-        uses: actions/cache@v3
-        id: restore-boost
-        with:
-          path: ${{env.BOOST_ROOT}}
-          key: boost_1_72_0-msvc-14.3-64
-
-      - name: Install Boost
-        if: steps.restore-boost.outputs.cache-hit != 'true'
-        shell: powershell
+      - name: Download and Install Boost 1.83
         run: |
-          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.3-64.exe/download"
-          (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
-          Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.2-64.exe"
+          $OutputPath = "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\boost-installer.exe"
+          curl -L $Url -o $OutputPath
+          Start-Process -Wait -FilePath $OutputPath "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\\thirdparties\\boost-1.83.0"
+    
       - name: Build
         shell: powershell
         id: build
@@ -53,7 +46,7 @@ jobs:
           $release_name = "fuego-cli-win64-v$xfg_ver"
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -G "Visual Studio 17 2022" ..
+          cmake -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT" -DBOOST_INCLUDE_DIRS="$env:BOOST_ROOT/include" ..
           msbuild fuegoX.sln /p:Configuration=Release /m
           cd src\Release
           Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
@@ -76,9 +69,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-  build-ubuntu20:
-    name: Ubuntu 20.04
-    runs-on: ubuntu-20.04
+  build-ubuntu24:
+    name: Ubuntu 24.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@master
 
@@ -90,7 +83,7 @@ jobs:
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fuego-cli-ubuntu-2004-dev"$xfg_ver"
+          release_name=fuego-cli-ubuntu-2404-dev"$xfg_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Debug
@@ -149,7 +142,16 @@ jobs:
 
   build-macos:
     name: macOS
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            arch: intel
+            arch_flag: x86_64
+          - os: macos-14
+            arch: apple
+            arch_flag: arm64
     steps:
       - uses: actions/checkout@master
 
@@ -159,11 +161,11 @@ jobs:
           build_folder="build/"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fuego-cli-macos-dev"$xfg_ver"
+          release_name=fuego-cli-macos-${{ matrix.arch }}-dev"$xfg_ver"
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..
           make -j4
           mkdir "$release_name"
           exeFiles=()

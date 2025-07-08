@@ -120,7 +120,5 @@ COLD is a *decentralised software protocol.* HEAT and O tokens provide utility (
 ## 10  Conclusion
 COLD L3 unifies PoW security, L2 scalability, and cutting-edge privacy into a coherent, economically sound roll-up. By anchoring to Fuego and Ethereum while leveraging Celestia DA, the network delivers censorship-resistant settlement, zero-inflation tokenomics, and a first-class developer experience.  
 
-> **Join the community:**  
-> Twitter @coldchain  |  Discord cold.gg/discord  |  Docs docs.cold.xyz
 
 *This lightpaper omits proprietary implementation details such as encryption-key rotation, circuit layouts, and sequencer heuristics. A full technical whitepaper and audited codebase will be released ahead of main-net launch.* 

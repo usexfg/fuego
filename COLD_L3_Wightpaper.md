@@ -1,7 +1,7 @@
 # COLD L3 – Privacy-First Modular Roll-up  
 ### Lightpaper v0.9 • July 2025  
 
-> "Merge-mined security, zero-inflation economics, and cross-chain liquidity — without surrendering privacy."
+> "Merge-mined security, zero-added-inflation economics, and cross-chain liquidity — without surrendering privacy."
 
 ---
 
@@ -11,7 +11,7 @@ COLD L3 is a next-generation roll-up that fuses the proof-of-work security of th
 * **Merge-Mined Security** — every COLD block-hash is embedded inside a Fuego PoW header, inheriting its immutability while retaining L2 finality on Ethereum.  
 * **Zero-Inflation Gas Token (HEAT)** — supply originates **only** from verifiable burns of XFG on Fuego (1 XFG → 10 000 000 HEAT).  
 * **Privacy by Default** — fixed-denomination deposits, Tornado-style mixers, confidential transfers, MEV-minimised sequencing, and Poseidon/Bulletproof precompiles.  
-* **Two-Tier Validators** — democratic + guardian nodes share 100 % of transaction fees; no block rewards, no capital inflation.  
+* **Two-Tier Validators** — democratic + guardian nodes share 100 % of transaction fees; no block rewards, no capital inflation*.  
 * **Cross-Chain Utility** — O-Tokens enable inverse exposure, governance, and protocol bonding on Solana and other chains.  
 
 COLD L3 delivers a censorship-resistant, privacy-preserving execution environment for DeFi, payments, and beyond—without relying on trusted parties or perpetual token inflation.
@@ -41,16 +41,16 @@ Fuego L1│ CryptoNote chain, XFG burns
 
 ## 3  Token Economics
 ### HEAT — Scarce Gas Asset
-• **Minting Rule**: 1 XFG burned on Fuego mints 10 000 000 HEAT on COLD (Arbitrum).  
+• **Minting Rule**: 1 XFG burned on Fuego mints 10 000 000 HEAT (XFG atomic units) on COLD (Arbitrum).  
 • **Supply Cap**: Hard-capped by total XFG that can ever exist (≈ 8 Million ).  
 • **Utility**: Gas, collateral, and base pair in AMMs.  
-• **L3 Inflation**: **Zero** — no staking or block rewards. Validators earn fees in HEAT.
+• **L3 Inflation**: **Zero** — no staking* or block rewards. Validators* earn fees in HEAT.
 
 ### O Token — Certificate of Ledger Deposit
 • **Hard Cap**: 80 tokens (12 decimals).  
 • **Role**: Captures a share of protocol fees and treasury bonding incentives.  
 • **Cross-Chain Allocation**: 20 O tokens will exist **per chain** on four networks—COLD L3 (Arbitrum), Solana, and two yet-to-be-selected **TBD** chains—totalling 80.  
-• **Governance Weighting**: O on **COLD L3** carries **40 %** of total voting power, while each satellite chain’s 20 O bucket represents **20 %**.  
+• **Governance Weighting**: O on **COLD L3** carries **40 %** of total voting power, while each satellite chain’s 20 COLD represents **20 %**.  
 • **Burn Mechanics**: 8 % of losing vaults in the Fuego Forecast prediction market are burned, permanently reducing supply.
 
 ---
@@ -59,8 +59,7 @@ Fuego L1│ CryptoNote chain, XFG burns
 1. **Pow Anchor** — Fuego’s 480-second blocks seal COLD block-hashes; altering COLD would require re-mining Fuego.  
 2. **Roll-up Finality** — Arbitrum fraud-proof window inherits Ethereum finality.  
 3. **Encrypted Mempool** — Celestia blobs are AES-GCM encrypted; keys released only after PoW nonce disclosure, neutralising early MEV.  
-4. **Batch Auctions** — Residual MEV is captured via sealed-bid auctions, redistributing value **without new token issuance**—proceeds fund HEAT buy-back-and-burn and bolster the protocol treasury.
-
+4. **Batch Auctions** — Residual MEV is captured via sealed-bid auctions, redistributing value **without new token issuance**
 ---
 
 ## 5  Privacy Stack
@@ -92,18 +91,18 @@ All features are optional at the contract level but *on* by default in protocol 
 | 2 | Celestia encrypted blobs + header commitments | Q4 2025 |
 | 3 | **COLD L3 Genesis** on Arbitrum main-net (HEAT + 20 O) | Q1 2026 |
 | 4 | **SPL-O** bonding & liquidity on Solana *(20 O cap)* | Q2 2026 |
-| 5 | O deployment on **TBD chain #1** *(20 O cap)* | Q3 2026 |
-| 6 | O deployment on **TBD chain #2** *(20 O cap)* | TBD |
+| 5 | O deployment on **TBD chain #3** *(20 O cap)* | Q3 2026 |
+| 6 | O deployment on **TBD chain #4** *(20 O cap)* | TBD |
 | 7 | Private DEX, LP privacy, full production UX | Q3 2026 |
-
+dates are tentative, ofc, sooner or later™️
 KPIs: ≥99.9 % uptime, ≥10 M tx/day capacity, validator set >21 nodes across ≥5 continents.
 
 ---
 
 ## 8  Governance & Community
-• **Validators** — 15 democratic + 6 guardian operators share 95 % of fees; 5 % to protocol treasury.  
+• **Validators** — 15 democratic + 6 guardian operators* share 95 % of fees; 5 % to protocol treasury.  
 • **On-Chain Voting** — O-Token holders govern treasury spend and parameter changes, with **COLD L3 O tokens weighted 2×** relative to each satellite allocation.  
-• **Rotation & Slashing** — Validators rotate monthly/quarterly; faults are slashed in HEAT.  
+• **Rotation & Slashing** — Validators* rotate monthly/quarterly; faults are slashed in HEAT.  
 • **Grants Program** — Treasury allocates 10 % of holdings annually to ecosystem builders.
 
 ---
@@ -120,5 +119,5 @@ COLD is a *decentralised software protocol.* HEAT and O tokens provide utility (
 ## 10  Conclusion
 COLD L3 unifies PoW security, L2 scalability, and cutting-edge privacy into a coherent, economically sound roll-up. By anchoring to Fuego and Ethereum while leveraging Celestia DA, the network delivers censorship-resistant settlement, zero-inflation tokenomics, and a first-class developer experience.  
 
-
+(*) tenative. may also use full PoW (merge-mining with Fuego) consensus mechanism, making miners validators/sequencers.
 *This lightpaper omits proprietary implementation details such as encryption-key rotation, circuit layouts, and sequencer heuristics. A full technical whitepaper and audited codebase will be released ahead of main-net launch.* 

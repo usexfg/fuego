@@ -1,0 +1,57 @@
+# === OS & Editor Junk ===
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+.idea/
+.vscode/
+
+# === Node & JS Build Artifacts ===
+node_modules/
+dist/
+build/
+.cache/
+.nyc_output/
+coverage/
+
+# === Rust & Solana Build Artifacts ===
+target/
+Cargo.lock
+*.so
+*.dylib
+*.rlib
+
+# === Anchor Build Artifacts ===
+**/target/
+**/.anchor/
+
+# === Personal & Local Files ===
+*.local
+*.env
+.env.*
+*.log
+*.bak
+*.tmp
+*.old
+
+# === Misc ===
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.test.js
+*.test.ts
+
+# === Ignore backup and temp files ===
+*~
+*.tmp
+*.bak
+
+# === Ignore by convention ===
+secret/
+private/
+
+# === End === 

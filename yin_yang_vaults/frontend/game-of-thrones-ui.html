@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iron Throne - COLD L3 Network</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Trajan+Pro:wght@400;700&family=Crimson+Text:wght@400;600;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables for House Themes */
+        :root {
+            /* Stark Colors - Winter is Coming */
+            --stark-primary: #2c3e50;
+            --stark-secondary: #34495e;
+            --stark-accent: #7fb3d3;
+            --stark-text: #ecf0f1;
+            --stark-gold: #f39c12;
+            
+            /* Lannister Colors - Hear Me Roar */
+            --lannister-primary: #8b0000;
+            --lannister-secondary: #b8860b;
+            --lannister-accent: #ffd700;
+            --lannister-text: #f4f4f4;
+            --lannister-dark: #2c1810;
+            
+            /* Targaryen Colors - Fire and Blood */
+            --targaryen-primary: #1a1a1a;
+            --targaryen-secondary: #8b0000;
+            --targaryen-accent: #ff6b35;
+            --targaryen-text: #f5f5f5;
+            --targaryen-gold: #daa520;
+            
+            /* Current Theme - Default to Stark */
+            --primary-bg: var(--stark-primary);
+            --secondary-bg: var(--stark-secondary);
+            --accent-color: var(--stark-accent);
+            --text-color: var(--stark-text);
+            --gold-color: var(--stark-gold);
+            
+            /* Shadows and Effects */
+            --shadow-dark: rgba(0, 0, 0, 0.8);
+            --shadow-light: rgba(255, 255, 255, 0.1);
+            --border-color: #5a5a5a;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Text', serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, #000000 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Background Texture */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="%23ffffff" opacity="0.02"/><circle cx="80" cy="40" r="1" fill="%23ffffff" opacity="0.03"/><circle cx="40" cy="80" r="1" fill="%23ffffff" opacity="0.02"/><circle cx="60" cy="60" r="1" fill="%23ffffff" opacity="0.025"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Main Container */
+        .got-container {
+            position: relative;
+            z-index: 2;
+            width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header with House Banners */
+        .got-header {
+            background: linear-gradient(90deg, var(--primary-bg) 0%, var(--secondary-bg) 50%, var(--primary-bg) 100%);
+            border-bottom: 3px solid var(--gold-color);
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 20px var(--shadow-dark);
+        }
+
+        .got-header::before,
+        .got-header::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold-color), transparent);
+            transform: translateY(-50%);
+        }
+
+        .got-header::before {
+            left: 20px;
+        }
+
+        .got-header::after {
+            right: 20px;
+        }
+
+        .got-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold-color);
+            text-shadow: 2px 2px 4px var(--shadow-dark);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .got-subtitle {
+            font-family: 'Trajan Pro', serif;
+            font-size: 1rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+        }
+
+        /* House Selector */
+        .house-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .house-btn {
+            background: linear-gradient(145deg, var(--secondary-bg), var(--primary-bg));
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 16px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .house-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--gold-color), transparent);
+            opacity: 0.3;
+            transition: left 0.5s ease;
+        }
+
+        .house-btn:hover::before {
+            left: 100%;
+        }
+
+        .house-btn:hover {
+            border-color: var(--gold-color);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .house-btn.active {
+            background: linear-gradient(145deg, var(--gold-color), var(--accent-color));
+            color: var(--primary-bg);
+            border-color: var(--gold-color);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Navigation */
+        .got-nav {
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+            box-shadow: 0 2px 10px var(--shadow-dark);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-tab {
+            background: linear-gradient(180deg, var(--secondary-bg), var(--primary-bg));
+            border-right: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+            margin: 0 -1px;
+            position: relative;
+        }
+
+        .nav-tab:first-child {
+            border-left: none;
+        }
+
+        .nav-tab:last-child {
+            border-right: none;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 15px 25px;
+            color: var(--text-color);
+            text-decoration: none;
+            font-family: 'Cinzel', serif;
+            font-weight: 500;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--gold-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--gold-color);
+            background: linear-gradient(180deg, var(--primary-bg), var(--secondary-bg));
+        }
+
+        .nav-link:hover::before,
+        .nav-link.active::before {
+            width: 100%;
+        }
+
+        /* Main Content */
+        .got-main {
+            flex: 1;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Content Panels */
+        .got-panel {
+            background: linear-gradient(145deg, var(--secondary-bg), var(--primary-bg));
+            border: 2px solid var(--border-color);
+            border-radius: 0;
+            padding: 25px;
+            box-shadow: 
+                0 10px 30px var(--shadow-dark),
+                inset 0 1px 0 var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .got-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold-color), var(--accent-color), var(--gold-color));
+        }
+
+        .got-panel::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px solid var(--shadow-light);
+            pointer-events: none;
+        }
+
+        .panel-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gold-color);
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .panel-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: var(--accent-color);
+        }
+
+        /* Status Grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-item {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .status-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gold-color);
+        }
+
+        /* Forms */
+        .got-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            background: var(--primary-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 12px 15px;
+            font-family: 'Crimson Text', serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--gold-color);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .got-btn {
+            background: linear-gradient(145deg, var(--gold-color), var(--accent-color));
+            border: 2px solid var(--gold-color);
+            color: var(--primary-bg);
+            padding: 12px 25px;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .got-btn:hover {
+            background: linear-gradient(145deg, var(--accent-color), var(--gold-color));
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .got-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .got-main {
+                grid-template-columns: 1fr;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .got-title {
+                font-size: 2rem;
+            }
+
+            .house-selector {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .house-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .nav-link {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Theme Animations */
+        .theme-transition {
+            transition: all 0.5s ease;
+        }
+
+        /* Decorative Elements */
+        .decorative-border {
+            position: relative;
+        }
+
+        .decorative-border::before,
+        .decorative-border::after {
+            content: '⚔️';
+            position: absolute;
+            font-size: 1.2rem;
+            color: var(--gold-color);
+            opacity: 0.6;
+        }
+
+        .decorative-border::before {
+            top: -10px;
+            left: -10px;
+        }
+
+        .decorative-border::after {
+            bottom: -10px;
+            right: -10px;
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="got-container theme-transition">
+        <!-- Header -->
+        <header class="got-header">
+            <h1 class="got-title">Iron Throne</h1>
+            <p class="got-subtitle">COLD L3 Network Command</p>
+            
+            <!-- House Selector -->
+            <div class="house-selector">
+                <button class="house-btn active" onclick="changeHouse('stark')" data-house="stark">House Stark</button>
+                <button class="house-btn" onclick="changeHouse('lannister')" data-house="lannister">House Lannister</button>
+                <button class="house-btn" onclick="changeHouse('targaryen')" data-house="targaryen">House Targaryen</button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="got-nav">
+            <ul class="nav-tabs">
+                <li class="nav-tab"><a href="#" class="nav-link active" onclick="showTab('realm')">The Realm</a></li>
+                <li class="nav-tab"><a href="#" class="nav-link" onclick="showTab('treasury')">Royal Treasury</a></li>
+                <li class="nav-tab"><a href="#" class="nav-link" onclick="showTab('trade')">Trade Routes</a></li>
+                <li class="nav-tab"><a href="#" class="nav-link" onclick="showTab('ravens')">Raven Network</a></li>
+                <li class="nav-tab"><a href="#" class="nav-link" onclick="showTab('council')">Small Council</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="got-main">
+            <!-- Realm Status Panel -->
+            <div class="got-panel decorative-border">
+                <h2 class="panel-title">Realm Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">Block Height</div>
+                        <div class="status-value" id="blockHeight">1,247,893</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Network Hash</div>
+                        <div class="status-value" id="networkHash">847.2 TH/s</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Active Lords</div>
+                        <div class="status-value" id="activeLords">2,847</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Treasury Gold</div>
+                        <div class="status-value" id="treasuryGold">94,782 COLD</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Oracle Panel -->
+            <div class="got-panel decorative-border">
+                <h2 class="panel-title">Price Oracle</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">COLD Price</div>
+                        <div class="status-value" id="coldPrice">$0.0847</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">XFG Price</div>
+                        <div class="status-value" id="xfgPrice">$1.2894</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">24h Change</div>
+                        <div class="status-value" id="priceChange">+12.4%</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Market Cap</div>
+                        <div class="status-value" id="marketCap">$8.47M</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade Commands Panel -->
+            <div class="got-panel decorative-border">
+                <h2 class="panel-title">Trade Commands</h2>
+                <form class="got-form">
+                    <div class="form-group">
+                        <label class="form-label">Trade Type</label>
+                        <select class="form-select">
+                            <option>Buy COLD</option>
+                            <option>Sell COLD</option>
+                            <option>Swap COLD/XFG</option>
+                            <option>Liquidity Mining</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-input" placeholder="Enter amount">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price Limit</label>
+                        <input type="number" class="form-input" placeholder="Optional price limit">
+                    </div>
+                    <button type="submit" class="got-btn">Execute Trade</button>
+                </form>
+            </div>
+
+            <!-- Network Messages Panel -->
+            <div class="got-panel decorative-border">
+                <h2 class="panel-title">Raven Messages</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">Last Block</div>
+                        <div class="status-value">2 min ago</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Tx Pool</div>
+                        <div class="status-value">1,247</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Peer Count</div>
+                        <div class="status-value">847</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Sync Status</div>
+                        <div class="status-value">100%</div>
+                    </div>
+                </div>
+                <form class="got-form">
+                    <div class="form-group">
+                        <label class="form-label">Send Message</label>
+                        <textarea class="form-textarea" placeholder="Write your message to the realm..."></textarea>
+                    </div>
+                    <button type="submit" class="got-btn">Send Raven</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Theme Management
+        function changeHouse(house) {
+            const root = document.documentElement;
+            const buttons = document.querySelectorAll('.house-btn');
+            
+            // Remove active class from all buttons
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            document.querySelector(`[data-house="${house}"]`).classList.add('active');
+            
+            // Apply theme colors
+            switch(house) {
+                case 'stark':
+                    root.style.setProperty('--primary-bg', 'var(--stark-primary)');
+                    root.style.setProperty('--secondary-bg', 'var(--stark-secondary)');
+                    root.style.setProperty('--accent-color', 'var(--stark-accent)');
+                    root.style.setProperty('--text-color', 'var(--stark-text)');
+                    root.style.setProperty('--gold-color', 'var(--stark-gold)');
+                    break;
+                case 'lannister':
+                    root.style.setProperty('--primary-bg', 'var(--lannister-primary)');
+                    root.style.setProperty('--secondary-bg', 'var(--lannister-secondary)');
+                    root.style.setProperty('--accent-color', 'var(--lannister-accent)');
+                    root.style.setProperty('--text-color', 'var(--lannister-text)');
+                    root.style.setProperty('--gold-color', 'var(--lannister-accent)');
+                    break;
+                case 'targaryen':
+                    root.style.setProperty('--primary-bg', 'var(--targaryen-primary)');
+                    root.style.setProperty('--secondary-bg', 'var(--targaryen-secondary)');
+                    root.style.setProperty('--accent-color', 'var(--targaryen-accent)');
+                    root.style.setProperty('--text-color', 'var(--targaryen-text)');
+                    root.style.setProperty('--gold-color', 'var(--targaryen-gold)');
+                    break;
+            }
+        }
+
+        // Tab Management
+        function showTab(tabName) {
+            const links = document.querySelectorAll('.nav-link');
+            links.forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Here you would typically show/hide different content sections
+            console.log(`Switching to ${tabName} tab`);
+        }
+
+        // Simulate live data updates
+        function updateData() {
+            const blockHeight = document.getElementById('blockHeight');
+            const networkHash = document.getElementById('networkHash');
+            const activeLords = document.getElementById('activeLords');
+            const treasuryGold = document.getElementById('treasuryGold');
+            const coldPrice = document.getElementById('coldPrice');
+            const xfgPrice = document.getElementById('xfgPrice');
+            const priceChange = document.getElementById('priceChange');
+            const marketCap = document.getElementById('marketCap');
+
+            if (blockHeight) {
+                // Simulate block height increment
+                const currentHeight = parseInt(blockHeight.textContent.replace(/,/g, ''));
+                blockHeight.textContent = (currentHeight + Math.floor(Math.random() * 3)).toLocaleString();
+            }
+
+            if (networkHash) {
+                // Simulate network hash fluctuation
+                const baseHash = 847.2;
+                const variation = (Math.random() - 0.5) * 20;
+                networkHash.textContent = (baseHash + variation).toFixed(1) + ' TH/s';
+            }
+
+            if (coldPrice) {
+                // Simulate price fluctuation
+                const basePrice = 0.0847;
+                const variation = (Math.random() - 0.5) * 0.01;
+                coldPrice.textContent = '$' + (basePrice + variation).toFixed(4);
+            }
+
+            if (xfgPrice) {
+                // Simulate XFG price fluctuation
+                const basePrice = 1.2894;
+                const variation = (Math.random() - 0.5) * 0.1;
+                xfgPrice.textContent = '$' + (basePrice + variation).toFixed(4);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update data every 5 seconds
+            setInterval(updateData, 5000);
+            
+            // Initial data update
+            updateData();
+        });
+
+        // Form submission handlers
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Simulate form processing
+                const submitBtn = this.querySelector('.got-btn');
+                const originalText = submitBtn.textContent;
+                
+                submitBtn.textContent = 'Processing...';
+                submitBtn.disabled = true;
+                
+                setTimeout(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    
+                    // Show success message (you could implement a proper notification system)
+                    alert('Command executed successfully!');
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

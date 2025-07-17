@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuego Forecast - Skyrim Style</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Uncial+Antiqua&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            /* Monochromatic Grayscale Palette - Softer for Eyes */
+            --pure-black: #000000;
+            --deep-gray: #1a1a1a;
+            --dark-gray: #2a2a2a;
+            --medium-gray: #404040;
+            --mid-gray: #606060;
+            --light-gray: #808080;
+            --lighter-gray: #a0a0a0;
+            --soft-white: #c0c0c0;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --text-muted: #808080;
+            --shadow: rgba(0, 0, 0, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cinzel', serif;
+            background: #000000;
+            color: var(--text-secondary);
+            min-height: 100vh;
+            overflow: auto;
+        }
+
+        /* Main Container */
+        .skyrim-container {
+            width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--pure-black);
+            padding-bottom: 20px;
+        }
+
+        /* Ornate Border */
+        .skyrim-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid var(--medium-gray);
+            background: var(--deep-gray);
+            border-radius: 10px;
+            z-index: -1;
+            box-shadow: 
+                inset 0 0 20px rgba(255, 255, 255, 0.02),
+                0 0 30px var(--shadow);
+        }
+
+        /* Header */
+        .skyrim-header {
+            text-align: center;
+            padding: 10px;
+            background: var(--deep-gray);
+            border-bottom: 1px solid var(--medium-gray);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .skyrim-title {
+            font-family: 'Uncial Antiqua', serif;
+            font-size: 24px;
+            color: var(--text-primary);
+            text-shadow: 
+                1px 1px 2px var(--shadow),
+                0 0 10px rgba(255, 255, 255, 0.1);
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .skyrim-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-shadow: 1px 1px 2px var(--shadow);
+            font-weight: 400;
+        }
+
+        /* Dragon Ornament */
+        .dragon-ornament {
+            position: absolute;
+            top: 50%;
+            left: 50px;
+            right: 50px;
+            height: 2px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                var(--medium-gray) 20%,
+                var(--light-gray) 50%,
+                var(--medium-gray) 80%,
+                transparent 100%
+            );
+            transform: translateY(-50%);
+        }
+
+        .dragon-ornament::before,
+        .dragon-ornament::after {
+            content: '⚔';
+            position: absolute;
+            top: -8px;
+            font-size: 16px;
+            color: var(--light-gray);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+
+        .dragon-ornament::before {
+            left: -20px;
+        }
+
+        .dragon-ornament::after {
+            right: -20px;
+        }
+
+        /* Navigation Bar - Top Horizontal */
+        .skyrim-nav {
+            width: 100%;
+            background: var(--deep-gray);
+            border: none;
+            border-top: 1px solid var(--medium-gray);
+            border-bottom: 1px solid var(--medium-gray);
+            padding: 0;
+            box-shadow: 
+                inset 0 0 20px rgba(255, 255, 255, 0.02),
+                0 3px 10px var(--shadow);
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        /* Ornate Navigation Container */
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 8px 0;
+        }
+
+        /* Left and Right Ornaments */
+        .nav-ornament-left,
+        .nav-ornament-right {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 150px;
+            height: 2px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                var(--medium-gray) 30%,
+                var(--light-gray) 50%,
+                var(--medium-gray) 70%,
+                transparent 100%
+            );
+        }
+
+        .nav-ornament-left {
+            left: 20px;
+        }
+
+        .nav-ornament-right {
+            right: 20px;
+        }
+
+        .nav-ornament-left::before,
+        .nav-ornament-left::after,
+        .nav-ornament-right::before,
+        .nav-ornament-right::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--light-gray);
+            border-radius: 50%;
+            top: -2px;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-ornament-left::before {
+            left: 30%;
+        }
+
+        .nav-ornament-left::after {
+            left: 70%;
+        }
+
+        .nav-ornament-right::before {
+            right: 30%;
+        }
+
+        .nav-ornament-right::after {
+            right: 70%;
+        }
+
+        /* Navigation Items Container */
+        .nav-items {
+            display: flex;
+            gap: 0;
+            z-index: 2;
+            position: relative;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            background: var(--dark-gray);
+            border: none;
+            border-left: 1px solid var(--medium-gray);
+            border-right: 1px solid var(--medium-gray);
+            color: var(--text-secondary);
+            font-family: 'Oswald', 'Futura Condensed', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            min-width: 100px;
+        }
+
+        .nav-item:first-child {
+            border-left: 1px solid var(--light-gray);
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+
+        .nav-item:last-child {
+            border-right: 1px solid var(--light-gray);
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: left 0.5s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--medium-gray);
+            color: var(--text-primary);
+            box-shadow: 
+                0 0 8px rgba(255, 255, 255, 0.1),
+                inset 0 0 8px rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        .nav-item.active {
+            background: var(--mid-gray);
+            color: var(--text-primary);
+            box-shadow: 
+                0 0 10px rgba(255, 255, 255, 0.15),
+                inset 0 0 10px rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--light-gray);
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        /* Main Content */
+        .skyrim-main {
+            flex: 1;
+            display: block;
+            padding: 10px;
+        }
+
+        /* Content Panel */
+        .skyrim-content {
+            flex: 1;
+            background: var(--pure-black);
+            border: 1px solid var(--medium-gray);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 
+                inset 0 0 20px rgba(255, 255, 255, 0.02),
+                0 5px 15px var(--shadow);
+            height: fit-content;
+            position: relative;
+        }
+
+        /* Ornate Corner Elements */
+        .skyrim-content::before,
+        .skyrim-content::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--light-gray);
+            background: var(--medium-gray);
+            opacity: 0.6;
+        }
+
+        .skyrim-content::before {
+            top: -2px;
+            left: -2px;
+            border-radius: 0 0 15px 0;
+            border-top: none;
+            border-left: none;
+        }
+
+        .skyrim-content::after {
+            bottom: -2px;
+            right: -2px;
+            border-radius: 15px 0 0 0;
+            border-bottom: none;
+            border-right: none;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            animation: fadeInSlide 0.5s ease-in-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeInSlide {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-family: 'Uncial Antiqua', serif;
+            font-size: 20px;
+            color: var(--text-primary);
+            text-shadow: 1px 1px 2px var(--shadow);
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid var(--medium-gray);
+            padding-bottom: 6px;
+        }
+
+        /* Forecast Panel */
+        .forecast-panel {
+            background: var(--dark-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 
+                inset 0 0 10px rgba(255, 255, 255, 0.02),
+                0 3px 8px var(--shadow);
+            position: relative;
+        }
+
+        /* Panel Corner Ornaments */
+        .forecast-panel::before {
+            content: '◆';
+            position: absolute;
+            top: -8px;
+            left: 15px;
+            color: var(--light-gray);
+            font-size: 12px;
+            background: var(--medium-gray);
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .forecast-header {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px var(--shadow);
+            border-bottom: 1px solid var(--medium-gray);
+            padding-bottom: 6px;
+        }
+
+        .forecast-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(64, 64, 64, 0.5);
+            font-size: 16px;
+        }
+
+        .forecast-row:last-child {
+            border-bottom: none;
+        }
+
+        .forecast-label {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-family: 'Oswald', 'Futura Condensed', sans-serif;
+        }
+
+        .forecast-value {
+            color: var(--text-primary);
+            font-weight: 700;
+            text-shadow: 1px 1px 2px var(--shadow);
+        }
+
+        .forecast-value.positive {
+            color: var(--light-gray);
+        }
+
+        .forecast-value.negative {
+            color: var(--dark-gray);
+        }
+
+        /* Skyrim Button */
+        .skyrim-button {
+            background: var(--dark-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Oswald', 'Futura Condensed', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skyrim-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: left 0.5s ease;
+        }
+
+        .skyrim-button:hover {
+            background: var(--medium-gray);
+            border-color: var(--light-gray);
+            color: var(--text-primary);
+            box-shadow: 
+                0 0 8px rgba(255, 255, 255, 0.1),
+                inset 0 0 8px rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .skyrim-button:hover::before {
+            left: 100%;
+        }
+
+        .skyrim-button:active {
+            transform: translateY(0);
+        }
+
+        /* Input Fields */
+        .skyrim-input {
+            background: var(--deep-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Oswald', 'Futura Condensed', sans-serif;
+            font-size: 16px;
+            font-weight: 300;
+            padding: 10px 15px;
+            width: 100%;
+            margin: 10px 0;
+            box-shadow: inset 0 0 5px var(--shadow);
+        }
+
+        .skyrim-input:focus {
+            outline: none;
+            border-color: var(--light-gray);
+            box-shadow: 
+                inset 0 0 5px var(--shadow),
+                0 0 8px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Status Indicators */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .status-item {
+            background: var(--dark-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.02);
+        }
+
+        .status-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Oswald', 'Futura Condensed', sans-serif;
+            font-weight: 500;
+        }
+
+        .status-value {
+            font-size: 24px;
+            color: var(--text-primary);
+            font-weight: 700;
+            text-shadow: 1px 1px 2px var(--shadow);
+        }
+
+        /* Scrollbar Styling */
+        .skyrim-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .skyrim-content::-webkit-scrollbar-track {
+            background: var(--deep-gray);
+            border-radius: 4px;
+        }
+
+        .skyrim-content::-webkit-scrollbar-thumb {
+            background: var(--medium-gray);
+            border-radius: 4px;
+            border: 1px solid var(--dark-gray);
+        }
+
+        .skyrim-content::-webkit-scrollbar-thumb:hover {
+            background: var(--light-gray);
+        }
+
+
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-items {
+                flex-wrap: wrap;
+                gap: 2px;
+            }
+            
+            .nav-item {
+                min-width: 80px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            
+            .nav-ornament-left,
+            .nav-ornament-right {
+                display: none;
+            }
+            
+            .skyrim-title {
+                font-size: 20px;
+            }
+            
+            .section-title {
+                font-size: 16px;
+            }
+
+            .smoke-container {
+                height: 150px;
+            }
+
+            .smoke-particle {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="skyrim-container">
+        <!-- Header -->
+        <div class="skyrim-header">
+            <h1 class="skyrim-title">Fuego Forecast</h1>
+            <p class="skyrim-subtitle">Divine Prophecy of Market Fortunes</p>
+            <div class="dragon-ornament"></div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="skyrim-nav">
+            <div class="nav-container">
+                <div class="nav-ornament-left"></div>
+                <div class="nav-items">
+                    <button class="nav-item active" data-section="overview">QUESTS</button>
+                    <button class="nav-item" data-section="forecast">GENERAL STATS</button>
+                    <button class="nav-item" data-section="mining">SYSTEM</button>
+                    <button class="nav-item" data-section="trading">TRADING</button>
+                    <button class="nav-item" data-section="vault">VAULT</button>
+                    <button class="nav-item" data-section="settings">SETTINGS</button>
+                </div>
+                <div class="nav-ornament-right"></div>
+            </div>
+        </div>
+
+        <!-- Skyrim O/HEAT Flip UI START -->
+        <div class="flip-container" id="flipContainer">
+          <div class="flipper" id="flipper">
+            <!-- FRONT: O/COLD MODE -->
+            <div class="front" id="oModePanel">
+                <!-- Market Overview -->
+                <div class="content-section active" id="overview">
+                    <h2 class="section-title">Active Quests</h2>
+                    
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Current Epoch</div>
+                            <div class="status-value" id="current-epoch">1</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Time Remaining</div>
+                            <div class="status-value" id="time-remaining">7:23:45</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Active Seers</div>
+                            <div class="status-value" id="active-players">1,337</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Treasury Pool</div>
+                            <div class="status-value" id="total-pool">50,000 COLD</div>
+                        </div>
+                    </div>
+
+                    <div class="forecast-panel">
+                        <div class="forecast-header">Current Market Status</div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">COLD Token Price:</span>
+                            <span class="forecast-value" id="cold-price">$0.0024</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">24h Change:</span>
+                            <span class="forecast-value positive" id="price-change">+12.5%</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Market Cap:</span>
+                            <span class="forecast-value" id="market-cap">$2.4M</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Volume (24h):</span>
+                            <span class="forecast-value" id="volume">$156K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Prophecy -->
+                <div class="content-section" id="forecast">
+                    <h2 class="section-title">General Stats</h2>
+                    
+                    <div class="forecast-panel">
+                        <div class="forecast-header">Submit Your Prophecy</div>
+                        <p style="margin-bottom: 20px; color: var(--text-secondary); line-height: 1.6;">
+                            Channel your inner seer and predict the future price of COLD tokens. 
+                            The most accurate prophets shall be rewarded with treasures from the guild treasury.
+                        </p>
+                        
+                        <div style="margin: 20px 0;">
+                            <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                                Predicted Price (USD):
+                            </label>
+                            <input type="number" class="skyrim-input" id="price-prediction" 
+                                   placeholder="Enter your price prophecy..." step="0.000001">
+                        </div>
+                        
+                        <div style="margin: 20px 0;">
+                            <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                                Stake Amount (COLD):
+                            </label>
+                            <input type="number" class="skyrim-input" id="stake-amount" 
+                                   placeholder="Amount to stake on your prophecy..." min="1">
+                        </div>
+                        
+                        <button class="skyrim-button" onclick="submitForecast()">
+                            Submit Prophecy
+                        </button>
+                    </div>
+
+                    <div class="forecast-panel">
+                        <div class="forecast-header">Your Active Prophecies</div>
+                        <div id="user-forecasts">
+                            <div class="forecast-row">
+                                <span class="forecast-label">Epoch #1 Prediction:</span>
+                                <span class="forecast-value">$0.0025 (100 COLD staked)</span>
+                            </div>
+                            <div class="forecast-row">
+                                <span class="forecast-label">Status:</span>
+                                <span class="forecast-value positive">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mining Guild -->
+                <div class="content-section" id="mining">
+                    <h2 class="section-title">System Status</h2>
+                    
+                    <div class="forecast-panel">
+                        <div class="forecast-header">Guild Mining Status</div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Current Hash Rate:</span>
+                            <span class="forecast-value" id="hash-rate">1.2 TH/s</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Blocks Mined:</span>
+                            <span class="forecast-value" id="blocks-mined">42,156</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Mining Reward:</span>
+                            <span class="forecast-value" id="mining-reward">50 COLD</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Next Difficulty:</span>
+                            <span class="forecast-value" id="difficulty">Medium</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trading Post -->
+                <div class="content-section" id="trading">
+                    <h2 class="section-title">Trading Post</h2>
+                    
+                    <div class="forecast-panel">
+                        <div class="forecast-header">Exchange Rates</div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">COLD/USD:</span>
+                            <span class="forecast-value" id="cold-usd-rate">$0.0024</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">COLD/BTC:</span>
+                            <span class="forecast-value" id="cold-btc-rate">0.00000005</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">COLD/ETH:</span>
+                            <span class="forecast-value" id="cold-eth-rate">0.000001</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Treasury Vault -->
+                <div class="content-section" id="vault">
+                    <h2 class="section-title">Treasury Vault</h2>
+                    
+                    <div class="forecast-panel">
+                        <div class="forecast-header">Your Holdings</div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">COLD Balance:</span>
+                            <span class="forecast-value" id="cold-balance">1,000 COLD</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Staked Amount:</span>
+                            <span class="forecast-value" id="staked-amount">100 COLD</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Pending Rewards:</span>
+                            <span class="forecast-value positive" id="pending-rewards">25 COLD</span>
+                        </div>
+                        <div class="forecast-row">
+                            <span class="forecast-label">Total Value:</span>
+                            <span class="forecast-value" id="total-value">$2.70</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guild Settings -->
+                <div class="content-section" id="settings">
+                    <h2 class="section-title">Guild Settings</h2>
+                    
+                    <div class="forecast-panel">
+                        <div class="forecast-header">Preferences</div>
+                        <div style="margin: 15px 0;">
+                            <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                                Notification Settings:
+                            </label>
+                            <button class="skyrim-button" style="margin: 5px;">Enable Alerts</button>
+                        </div>
+                        
+                        <div style="margin: 15px 0;">
+                            <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                                Auto-Stake Settings:
+                            </label>
+                            <input type="number" class="skyrim-input" placeholder="Auto-stake percentage..." min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- BACK: HEAT MODE -->
+            <div class="back" id="heatModePanel">
+              <!-- Market Overview -->
+              <div class="content-section active" id="overview">
+                  <h2 class="section-title">Active Quests</h2>
+                  
+                  <div class="status-grid">
+                      <div class="status-item">
+                          <div class="status-label">Current Epoch</div>
+                          <div class="status-value" id="current-epoch">1</div>
+                      </div>
+                      <div class="status-item">
+                          <div class="status-label">Time Remaining</div>
+                          <div class="status-value" id="time-remaining">7:23:45</div>
+                      </div>
+                      <div class="status-item">
+                          <div class="status-label">Active Seers</div>
+                          <div class="status-value" id="active-players">1,337</div>
+                      </div>
+                      <div class="status-item">
+                          <div class="status-label">Treasury Pool</div>
+                          <div class="status-value" id="total-pool">50,000 HEAT</div>
+        </div>
+    </div>
+
+                  <div class="forecast-panel">
+                      <div class="forecast-header">Current Market Status</div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">HEAT Token Price:</span>
+                          <span class="forecast-value" id="heat-price">$0.0024</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">24h Change:</span>
+                          <span class="forecast-value positive" id="price-change">+12.5%</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Market Cap:</span>
+                          <span class="forecast-value" id="market-cap">$2.4M</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Volume (24h):</span>
+                          <span class="forecast-value" id="volume">$156K</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Price Prophecy -->
+              <div class="content-section" id="forecast">
+                  <h2 class="section-title">General Stats</h2>
+                  
+                  <div class="forecast-panel">
+                      <div class="forecast-header">Submit Your Prophecy</div>
+                      <p style="margin-bottom: 20px; color: var(--text-secondary); line-height: 1.6;">
+                          Channel your inner seer and predict the future price of HEAT tokens. 
+                          The most accurate prophets shall be rewarded with treasures from the guild treasury.
+                      </p>
+                      
+                      <div style="margin: 20px 0;">
+                          <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                              Predicted Price (USD):
+                          </label>
+                          <input type="number" class="skyrim-input" id="price-prediction" 
+                                 placeholder="Enter your price prophecy..." step="0.000001">
+                      </div>
+                      
+                      <div style="margin: 20px 0;">
+                          <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                              Stake Amount (HEAT):
+                          </label>
+                          <input type="number" class="skyrim-input" id="stake-amount" 
+                                 placeholder="Amount to stake on your prophecy..." min="1">
+                      </div>
+                      
+                      <button class="skyrim-button" onclick="submitForecast()">
+                          Submit Prophecy
+                      </button>
+                  </div>
+
+                  <div class="forecast-panel">
+                      <div class="forecast-header">Your Active Prophecies</div>
+                      <div id="user-forecasts">
+                          <div class="forecast-row">
+                              <span class="forecast-label">Epoch #1 Prediction:</span>
+                              <span class="forecast-value">$0.0025 (100 HEAT staked)</span>
+                          </div>
+                          <div class="forecast-row">
+                              <span class="forecast-label">Status:</span>
+                              <span class="forecast-value positive">Active</span>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Mining Guild -->
+              <div class="content-section" id="mining">
+                  <h2 class="section-title">System Status</h2>
+                  
+                  <div class="forecast-panel">
+                      <div class="forecast-header">Guild Mining Status</div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Current Hash Rate:</span>
+                          <span class="forecast-value" id="hash-rate">1.2 TH/s</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Blocks Mined:</span>
+                          <span class="forecast-value" id="blocks-mined">42,156</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Mining Reward:</span>
+                          <span class="forecast-value" id="mining-reward">50 HEAT</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Next Difficulty:</span>
+                          <span class="forecast-value" id="difficulty">Medium</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Trading Post -->
+              <div class="content-section" id="trading">
+                  <h2 class="section-title">Trading Post</h2>
+                  
+                  <div class="forecast-panel">
+                      <div class="forecast-header">Exchange Rates</div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">HEAT/USD:</span>
+                          <span class="forecast-value" id="heat-usd-rate">$0.0024</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">HEAT/BTC:</span>
+                          <span class="forecast-value" id="heat-btc-rate">0.00000005</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">HEAT/ETH:</span>
+                          <span class="forecast-value" id="heat-eth-rate">0.000001</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Treasury Vault -->
+              <div class="content-section" id="vault">
+                  <h2 class="section-title">Treasury Vault</h2>
+                  
+                  <div class="forecast-panel">
+                      <div class="forecast-header">Your Holdings</div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">HEAT Balance:</span>
+                          <span class="forecast-value" id="heat-balance">1,000 HEAT</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Staked Amount:</span>
+                          <span class="forecast-value" id="staked-amount">100 HEAT</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Pending Rewards:</span>
+                          <span class="forecast-value positive" id="pending-rewards">25 HEAT</span>
+                      </div>
+                      <div class="forecast-row">
+                          <span class="forecast-label">Total Value:</span>
+                          <span class="forecast-value" id="total-value">$2.70</span>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Guild Settings -->
+              <div class="content-section" id="settings">
+                  <h2 class="section-title">Guild Settings</h2>
+                  
+                  <div class="forecast-panel">
+                      <div class="forecast-header">Preferences</div>
+                      <div style="margin: 15px 0;">
+                          <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                              Notification Settings:
+                          </label>
+                          <button class="skyrim-button" style="margin: 5px;">Enable Alerts</button>
+                      </div>
+                      
+                      <div style="margin: 15px 0;">
+                          <label style="color: var(--text-primary); font-weight: 600; display: block; margin-bottom: 8px;">
+                              Auto-Stake Settings:
+                          </label>
+                          <input type="number" class="skyrim-input" placeholder="Auto-stake percentage..." min="0" max="100">
+                      </div>
+                  </div>
+              </div>
+            </div>
+          </div>
+          <!-- Flip Toggle Button -->
+          <button class="skyrim-flip-btn" id="modeToggleBtn">FLIP TO HEAT MODE</button>
+        </div>
+        <!-- Skyrim O/HEAT Flip UI END -->
+
+        <style>
+        .flip-container {
+          perspective: 2000px;
+          width: 100vw;
+          min-height: 100vh;
+          position: relative;
+        }
+        .flipper {
+          position: relative;
+          width: 100%;
+          min-height: 100vh;
+          transition: transform 1.2s cubic-bezier(.4,2,.6,1);
+          transform-style: preserve-3d;
+        }
+        .flip-container.flipped .flipper {
+          transform: rotateY(180deg);
+        }
+        .front, .back {
+          position: absolute;
+          width: 100%;
+          min-height: 100vh;
+          backface-visibility: hidden;
+        }
+        .front { z-index: 2; }
+        .back {
+          transform: rotateY(180deg);
+          z-index: 1;
+        }
+        .skyrim-flip-btn {
+          position: absolute;
+          top: 18px;
+          right: 32px;
+          z-index: 20;
+          background: var(--dark-gray);
+          color: var(--text-primary);
+          border: 2px solid var(--medium-gray);
+          border-radius: 8px;
+          font-family: 'Cinzel', serif;
+          font-size: 15px;
+          font-weight: 700;
+          padding: 8px 22px;
+          cursor: pointer;
+          box-shadow: 0 2px 8px #000a;
+          transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .skyrim-flip-btn:hover {
+          background: var(--medium-gray);
+          color: #fff;
+          border-color: var(--light-gray);
+        }
+        </style>
+
+    <script>
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const targetSection = this.getAttribute('data-section');
+                    
+                    // Remove active class from all nav items and sections
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    contentSections.forEach(section => section.classList.remove('active'));
+                    
+                    // Add active class to clicked nav item and target section
+                    this.classList.add('active');
+                    document.getElementById(targetSection).classList.add('active');
+                });
+            });
+
+            // Initialize with some sample data
+            updateMarketData();
+            setInterval(updateMarketData, 30000); // Update every 30 seconds
+        });
+
+        // Market data simulation
+        function updateMarketData() {
+            const currentTime = new Date();
+            const epochEnd = new Date(currentTime.getTime() + (7 * 60 + 23) * 60 * 1000 + 45 * 1000);
+            
+            // Update countdown timer
+            updateCountdown(epochEnd);
+            
+            // Simulate price changes
+            const basePrice = 0.0024;
+            const variation = (Math.random() - 0.5) * 0.0002;
+            const newPrice = (basePrice + variation).toFixed(6);
+            
+            document.getElementById('cold-price').textContent = `$${newPrice}`;
+            
+            // Update other values with slight variations
+            const change = ((Math.random() - 0.5) * 20).toFixed(1);
+            const changeElement = document.getElementById('price-change');
+            changeElement.textContent = `${change > 0 ? '+' : ''}${change}%`;
+            changeElement.className = `forecast-value ${change > 0 ? 'positive' : 'negative'}`;
+        }
+
+        function updateCountdown(targetTime) {
+            const now = new Date().getTime();
+            const distance = targetTime.getTime() - now;
+            
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById('time-remaining').textContent = 
+                `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Forecast submission
+        function submitForecast() {
+            const prediction = document.getElementById('price-prediction').value;
+            const stakeAmount = document.getElementById('stake-amount').value;
+            
+            if (!prediction || !stakeAmount) {
+                alert('Please enter both a price prediction and stake amount.');
+                return;
+            }
+            
+            if (parseFloat(stakeAmount) < 1) {
+                alert('Minimum stake amount is 1 COLD.');
+                return;
+            }
+            
+            // Simulate transaction
+            alert(`Prophecy submitted! Predicted price: $${prediction}, Staked: ${stakeAmount} COLD`);
+            
+            // Clear form
+            document.getElementById('price-prediction').value = '';
+            document.getElementById('stake-amount').value = '';
+            
+            // Update user forecasts (simulation)
+            updateUserForecasts(prediction, stakeAmount);
+        }
+
+        function updateUserForecasts(prediction, stake) {
+            const forecastsDiv = document.getElementById('user-forecasts');
+            const currentEpoch = document.getElementById('current-epoch').textContent;
+            
+            forecastsDiv.innerHTML = `
+                <div class="forecast-row">
+                    <span class="forecast-label">Epoch #${currentEpoch} Prediction:</span>
+                    <span class="forecast-value">$${prediction} (${stake} COLD staked)</span>
+                </div>
+                <div class="forecast-row">
+                    <span class="forecast-label">Status:</span>
+                    <span class="forecast-value positive">Active</span>
+                </div>
+                <div class="forecast-row">
+                    <span class="forecast-label">Submission Time:</span>
+                    <span class="forecast-value">${new Date().toLocaleTimeString()}</span>
+                </div>
+            `;
+        }
+
+        // Add some atmospheric effects
+        function addSnowEffect() {
+            // Create subtle particle effect (optional)
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createSnowflake();
+                }, i * 100);
+            }
+        }
+
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.style.cssText = `
+                position: fixed;
+                top: -10px;
+                left: ${Math.random() * window.innerWidth}px;
+                width: 2px;
+                height: 2px;
+                background: rgba(212, 175, 55, 0.3);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 1000;
+                animation: fall ${3 + Math.random() * 2}s linear forwards;
+            `;
+            
+            document.body.appendChild(snowflake);
+            
+            setTimeout(() => {
+                snowflake.remove();
+            }, 5000);
+        }
+
+        // Add CSS for snowflake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(${window.innerHeight + 10}px) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize atmospheric effects
+        setTimeout(addSnowEffect, 1000);
+    </script>
+    <script>
+// --- Skyrim O/HEAT Flip Logic ---
+const flipContainer = document.getElementById('flipContainer');
+const flipper = document.getElementById('flipper');
+const modeToggleBtn = document.getElementById('modeToggleBtn');
+let isHeat = false;
+let userTheme = null;
+
+function setTheme(theme) {
+  document.body.classList.remove('theme-green','theme-amber','theme-red','theme-blue','theme-purple');
+  document.body.classList.add('theme-' + theme);
+  localStorage.setItem('skyrim-theme', theme);
+}
+function autoThemeOnFlip() {
+  if (userTheme === 'green') { setTheme('green'); return; }
+  if (userTheme) { setTheme(userTheme); return; }
+  if (isHeat) {
+    setTheme(Math.random() < 0.5 ? 'amber' : 'red');
+  } else {
+    setTheme(Math.random() < 0.5 ? 'blue' : 'purple');
+  }
+}
+modeToggleBtn.onclick = function() {
+  isHeat = !isHeat;
+  flipContainer.classList.toggle('flipped');
+  modeToggleBtn.textContent = isHeat ? 'FLIP TO O MODE' : 'FLIP TO HEAT MODE';
+  if (userTheme === 'green') {
+    setTheme('green');
+  } else {
+    userTheme = null;
+    autoThemeOnFlip();
+  }
+  // Reset nav/section state for the new side
+  resetNavAndSections();
+};
+// Theme button click logic (update for Skyrim theme buttons)
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.onclick = function() {
+    const t = btn.classList.contains('green') ? 'green' :
+              btn.classList.contains('amber') ? 'amber' :
+              btn.classList.contains('red') ? 'red' :
+              btn.classList.contains('blue') ? 'blue' :
+              btn.classList.contains('purple') ? 'purple' : null;
+    if (!t) return;
+    setTheme(t);
+    if (t === 'green') {
+      userTheme = 'green';
+    } else {
+      userTheme = t;
+    }
+  };
+});
+// Init
+let savedTheme = localStorage.getItem('skyrim-theme');
+if (savedTheme === 'green') {
+  userTheme = 'green';
+  setTheme('green');
+} else {
+  userTheme = null;
+  setTheme(Math.random() < 0.5 ? 'blue' : 'purple');
+}
+
+// --- Skyrim NAVIGATION LOGIC (scoped per side) ---
+function setupNavForPanel(panelId) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  const navItems = panel.querySelectorAll('.nav-item');
+  const contentSections = panel.querySelectorAll('.content-section');
+  navItems.forEach(item => {
+    item.addEventListener('click', function() {
+      const targetSection = this.getAttribute('data-section');
+      // Remove active class from all nav items and sections in this panel only
+      navItems.forEach(nav => nav.classList.remove('active'));
+      contentSections.forEach(section => section.classList.remove('active'));
+      // Add active class to clicked nav item and target section
+      this.classList.add('active');
+      const section = panel.querySelector(`#${targetSection}`);
+      if (section) section.classList.add('active');
+    });
+  });
+}
+function resetNavAndSections() {
+  // For O side
+  const oPanel = document.getElementById('oModePanel');
+  if (oPanel) {
+    const navItems = oPanel.querySelectorAll('.nav-item');
+    const contentSections = oPanel.querySelectorAll('.content-section');
+    navItems.forEach(nav => nav.classList.remove('active'));
+    contentSections.forEach(section => section.classList.remove('active'));
+    if (navItems[0]) navItems[0].classList.add('active');
+    if (contentSections[0]) contentSections[0].classList.add('active');
+  }
+  // For HEAT side
+  const hPanel = document.getElementById('heatModePanel');
+  if (hPanel) {
+    const navItems = hPanel.querySelectorAll('.nav-item');
+    const contentSections = hPanel.querySelectorAll('.content-section');
+    navItems.forEach(nav => nav.classList.remove('active'));
+    contentSections.forEach(section => section.classList.remove('active'));
+    if (navItems[0]) navItems[0].classList.add('active');
+    if (contentSections[0]) contentSections[0].classList.add('active');
+  }
+}
+// Setup nav for both panels on load
+setupNavForPanel('oModePanel');
+setupNavForPanel('heatModePanel');
+// Ensure correct sections are shown on first load
+resetNavAndSections();
+    </script>
+</body>
+</html> 

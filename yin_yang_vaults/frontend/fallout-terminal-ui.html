@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O-BOY 8000 - COLD L3 Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323:wght@400&display=swap');
+        
+        :root {
+            /* Default Green Theme */
+            --primary-color: #00ff41;
+            --secondary-color: #00cc33;
+            --accent-color: #ffff00;
+            --warning-color: #ff6600;
+            --danger-color: #ff0000;
+            --background-color: #000000;
+            --terminal-bg: rgba(0, 20, 0, 0.95);
+            --border-color: var(--primary-color);
+            --text-shadow: 0 0 10px var(--primary-color);
+            --glow-intensity: 0.8;
+            
+            /* Theme-aware alpha colors - Green theme defaults */
+            --primary-alpha-05: rgba(0, 255, 65, 0.05);
+            --primary-alpha-10: rgba(0, 255, 65, 0.1);
+            --primary-alpha-20: rgba(0, 255, 65, 0.2);
+            --primary-alpha-30: rgba(0, 255, 65, 0.3);
+            --primary-alpha-50: rgba(0, 255, 65, 0.5);
+            
+            /* Legacy variables for compatibility */
+            --pip-green: var(--primary-color);
+            --pip-amber: var(--accent-color);
+            --pip-dark: #001100;
+            --pip-bg: var(--background-color);
+            --pip-border: var(--border-color);
+        }
+
+        /* Color Themes */
+        .theme-amber {
+            --primary-color: #ffb000;
+            --secondary-color: #ff8800;
+            --accent-color: #ffff00;
+            --terminal-bg: rgba(20, 15, 0, 0.95);
+            --pip-green: #ffb000;
+            --pip-amber: #ffff00;
+            --pip-dark: #221100;
+            --primary-alpha-05: rgba(255, 176, 0, 0.05);
+            --primary-alpha-10: rgba(255, 176, 0, 0.1);
+            --primary-alpha-20: rgba(255, 176, 0, 0.2);
+            --primary-alpha-30: rgba(255, 176, 0, 0.3);
+            --primary-alpha-50: rgba(255, 176, 0, 0.5);
+        }
+
+        .theme-green {
+            --primary-color: #00ff41;
+            --secondary-color: #00cc33;
+            --accent-color: #88ff88;
+            --terminal-bg: rgba(0, 20, 0, 0.95);
+            --pip-green: #00ff41;
+            --pip-amber: #88ff88;
+            --pip-dark: #001100;
+        }
+
+        .theme-blue {
+            --primary-color: #00aaff;
+            --secondary-color: #0088cc;
+            --accent-color: #88ddff;
+            --terminal-bg: rgba(0, 10, 20, 0.95);
+            --pip-green: #00aaff;
+            --pip-amber: #88ddff;
+            --pip-dark: #001122;
+            --primary-alpha-05: rgba(0, 170, 255, 0.05);
+            --primary-alpha-10: rgba(0, 170, 255, 0.1);
+            --primary-alpha-20: rgba(0, 170, 255, 0.2);
+            --primary-alpha-30: rgba(0, 170, 255, 0.3);
+            --primary-alpha-50: rgba(0, 170, 255, 0.5);
+        }
+
+        .theme-red {
+            --primary-color: #ff4444;
+            --secondary-color: #cc2222;
+            --accent-color: #ff8888;
+            --terminal-bg: rgba(20, 0, 0, 0.95);
+            --pip-green: #ff4444;
+            --pip-amber: #ff8888;
+            --pip-dark: #220000;
+            --primary-alpha-05: rgba(255, 68, 68, 0.05);
+            --primary-alpha-10: rgba(255, 68, 68, 0.1);
+            --primary-alpha-20: rgba(255, 68, 68, 0.2);
+            --primary-alpha-30: rgba(255, 68, 68, 0.3);
+            --primary-alpha-50: rgba(255, 68, 68, 0.5);
+        }
+
+        .theme-purple {
+            --primary-color: #aa44ff;
+            --secondary-color: #8822cc;
+            --accent-color: #cc88ff;
+            --terminal-bg: rgba(15, 0, 20, 0.95);
+            --pip-green: #aa44ff;
+            --pip-amber: #cc88ff;
+            --pip-dark: #110022;
+            --primary-alpha-05: rgba(170, 68, 255, 0.05);
+            --primary-alpha-10: rgba(170, 68, 255, 0.1);
+            --primary-alpha-20: rgba(170, 68, 255, 0.2);
+            --primary-alpha-30: rgba(170, 68, 255, 0.3);
+            --primary-alpha-50: rgba(170, 68, 255, 0.5);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--pip-bg);
+            color: var(--pip-green);
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            line-height: 1.2;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        /* O-Boy Container */
+        .pipboy-container {
+            width: 100vw;
+            height: 100vh;
+            background: var(--pip-bg);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* O-Boy Header */
+        .pipboy-header {
+            height: 23px;
+            background: linear-gradient(180deg, var(--pip-dark) 0%, var(--pip-bg) 100%);
+            border-bottom: 2px solid var(--pip-green);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-shadow: 0 2px 10px var(--primary-alpha-30);
+            position: relative; /* Added for flip button positioning */
+        }
+        
+        .pipboy-title {
+            font-size: 28px;
+            color: var(--pip-amber);
+            text-shadow: 0 0 10px var(--pip-amber);
+            letter-spacing: 2px;
+            flex: 1 1 auto; /* Added to allow title to grow */
+        }
+        
+        .pipboy-status {
+            display: flex;
+            gap: 30px;
+            font-size: 16px;
+            flex: 1 1 auto; /* Added to allow status to grow */
+            justify-content: flex-end; /* Added to align status to the right */
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pip-green);
+            box-shadow: 0 0 6px var(--pip-green);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Main Content Area */
+        .pipboy-main {
+            flex: 1;
+            display: flex;
+            background: var(--pip-bg);
+        }
+        
+        /* Navigation Tabs */
+        .pipboy-nav {
+            width: 200px;
+            background: linear-gradient(90deg, var(--pip-dark) 0%, var(--pip-bg) 100%);
+            border-right: 2px solid var(--pip-green);
+            padding: 20px 0;
+        }
+        
+        .nav-tab {
+            display: block;
+            width: 100%;
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            color: var(--pip-green);
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .nav-tab:hover {
+            background: var(--primary-alpha-10);
+            border-left: 4px solid var(--pip-green);
+            box-shadow: inset 0 0 20px var(--primary-alpha-10);
+        }
+        
+        .nav-tab.active {
+            background: var(--primary-alpha-20);
+            border-left: 4px solid var(--pip-amber);
+            color: var(--pip-amber);
+            text-shadow: 0 0 8px var(--pip-amber);
+        }
+        
+        /* Screen Content */
+        .pipboy-screen {
+            flex: 1;
+            padding: 0px;
+            position: relative;
+            overflow: hidden;
+            animation: subtleFlicker 4s infinite linear;
+        }
+        
+        .screen-section {
+            display: none;
+            height: 100%;
+            animation: screenFadeIn 0.5s ease-in-out;
+        }
+        
+        .screen-section.active {
+            display: block;
+        }
+        
+        @keyframes screenFadeIn {
+            0% { opacity: 0; transform: translateX(20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes subtleFlicker {
+            0%, 98% { opacity: 1; }
+            99% { opacity: 0.98; }
+            100% { opacity: 1; }
+        }
+        
+        /* O-Boy Scanlines - DISABLED per Fallout 4 mod community preferences */
+        .scanlines-effect {
+            display: none !important;
+            visibility: hidden !important;
+            /* Disabled following Fallout 4 community mod preferences for cleaner terminal experience */
+        }
+        
+        /* O-Boy Screen Glow - Uses theme colors */
+        .glow-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                ellipse at center,
+                var(--primary-color) 0%,
+                transparent 60%
+            );
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 999;
+            animation: glow-pulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow-pulse {
+            0% { opacity: 0.1; }
+            100% { opacity: 0.2; }
+        }
+
+        /* Flicker Effect */
+        .flicker-effect {
+            animation: crt-flicker 0.12s infinite linear alternate;
+        }
+
+        @keyframes crt-flicker {
+            0% { opacity: 1; }
+            94% { opacity: 1; }
+            95% { opacity: 0.96; }
+            96% { opacity: 0.92; }
+            97% { opacity: 0.98; }
+            98% { opacity: 0.90; }
+            99% { opacity: 0.95; }
+            100% { opacity: 1; }
+        }
+
+        /* VHS Noise Effect - Uses theme colors */
+        .vhs-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 1px,
+                    var(--primary-color) 1px,
+                    var(--primary-color) 1.5px,
+                    transparent 1.5px,
+                    transparent 3px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 1px,
+                    var(--primary-color) 1px,
+                    var(--primary-color) 1.5px,
+                    transparent 1.5px,
+                    transparent 3px
+                );
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 998;
+            animation: vhs-noise 0.2s infinite;
+        }
+
+        @keyframes vhs-noise {
+            0% { transform: translateX(0px) translateY(0px); opacity: 0.08; }
+            10% { transform: translateX(-1px) translateY(1px); opacity: 0.06; }
+            20% { transform: translateX(1px) translateY(-1px); opacity: 0.1; }
+            30% { transform: translateX(-1px) translateY(-1px); opacity: 0.07; }
+            40% { transform: translateX(1px) translateY(1px); opacity: 0.09; }
+            50% { transform: translateX(0px) translateY(-1px); opacity: 0.05; }
+            60% { transform: translateX(-1px) translateY(0px); opacity: 0.08; }
+            70% { transform: translateX(1px) translateY(1px); opacity: 0.06; }
+            80% { transform: translateX(0px) translateY(-1px); opacity: 0.1; }
+            90% { transform: translateX(-1px) translateY(1px); opacity: 0.07; }
+            100% { transform: translateX(0px) translateY(0px); opacity: 0.08; }
+        }
+        
+        /* O-Boy Data Panels */
+        .data-panel {
+            background: linear-gradient(135deg, var(--pip-dark) 0%, var(--primary-alpha-05) 100%);
+            border: 1px solid var(--pip-green);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 
+                0 0 10px var(--primary-alpha-20),
+                inset 0 0 20px var(--primary-alpha-05);
+        }
+        
+        .data-header {
+            font-size: 24px;
+            color: var(--pip-amber);
+            text-shadow: 0 0 8px var(--pip-amber);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--pip-green);
+            padding-bottom: 8px;
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--primary-alpha-20);
+        }
+        
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            color: var(--pip-green);
+            font-size: 18px;
+        }
+        
+        .data-value {
+            color: var(--pip-amber);
+            font-size: 18px;
+            text-shadow: 0 0 6px var(--pip-amber);
+        }
+        
+        /* O-Boy Buttons */
+        .pip-button {
+            background: linear-gradient(135deg, var(--pip-dark) 0%, var(--primary-alpha-10) 100%);
+            border: 2px solid var(--pip-green);
+            color: var(--pip-green);
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px var(--primary-alpha-30);
+        }
+        
+        .pip-button:hover {
+            background: linear-gradient(135deg, var(--primary-alpha-10) 0%, var(--primary-alpha-20) 100%);
+            color: var(--pip-amber);
+            text-shadow: 0 0 8px var(--pip-amber);
+            box-shadow: 0 0 20px var(--primary-alpha-50);
+        }
+        
+        .pip-button.active {
+            background: linear-gradient(135deg, rgba(255,176,0,0.1) 0%, rgba(255,176,0,0.2) 100%);
+            border-color: var(--pip-amber);
+            color: var(--pip-amber);
+            text-shadow: 0 0 10px var(--pip-amber);
+        }
+        
+        /* Input Styling */
+        .pip-input {
+            background: var(--pip-bg);
+            border: 1px solid var(--pip-green);
+            color: var(--pip-green);
+            padding: 8px;
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            box-shadow: inset 0 0 10px var(--primary-alpha-10);
+        }
+        
+        .pip-input:focus {
+            outline: none;
+            border-color: var(--pip-amber);
+            box-shadow: 0 0 10px rgba(255,176,0,0.3);
+        }
+
+        /* Settings Panel */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settings-section {
+            background: linear-gradient(135deg, var(--pip-dark) 0%, var(--primary-alpha-05) 100%);
+            border: 1px solid var(--pip-green);
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .settings-title {
+            font-size: 16px;
+            color: var(--pip-amber);
+            text-shadow: 0 0 8px var(--pip-amber);
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--pip-green);
+            padding-bottom: 5px;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--pip-green);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .theme-btn.active {
+            border-color: var(--pip-amber);
+            box-shadow: 0 0 10px var(--pip-amber);
+        }
+
+        .theme-btn.amber { background: #ffb000; }
+        .theme-btn.green { background: #00ff41; }
+        .theme-btn.blue { background: #00aaff; }
+        .theme-btn.red { background: #ff4444; }
+        .theme-btn.purple { background: #aa44ff; }
+
+        /* Settings Controls */
+        .setting-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .setting-slider {
+            width: 100px;
+            height: 4px;
+            background: var(--pip-dark);
+            border: 1px solid var(--pip-green);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .setting-toggle {
+            background: var(--pip-dark);
+            border: 1px solid var(--pip-green);
+            color: var(--pip-green);
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'VT323', monospace;
+            font-size: 12px;
+        }
+
+        .setting-toggle:hover,
+        .setting-toggle.active {
+            background: var(--pip-green);
+            color: var(--pip-dark);
+        }
+
+        /* Block Cursor */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 16px;
+            background: var(--primary-color);
+            animation: cursorBlink 1s infinite;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes cursorBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Terminal Input with Cursor */
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+        }
+
+        .terminal-prompt {
+            color: var(--pip-amber);
+            margin-right: 10px;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: var(--pip-green);
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            outline: none;
+            flex: 1;
+        }
+        .flip-btn {
+            font-size: 1em;
+            font-weight: 600;
+            padding: 6px 18px;
+            border-radius: 8px;
+            border: 2px solid var(--primary-color, #00ff00);
+            background: #181818;
+            color: var(--primary-color, #00ff00);
+            cursor: pointer;
+            box-shadow: 0 1px 4px #000a;
+            text-shadow: 0 1px 2px #000a;
+            letter-spacing: 1px;
+            margin-top: 0;
+            margin-bottom: 0;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .header-flip-btn {
+            margin: 0 24px;
+            vertical-align: middle;
+            font-size: 0.95em;
+            font-weight: 600;
+            padding: 4px 16px;
+            border-radius: 7px;
+            border: 2px solid var(--primary-color, #00ff00);
+            background: #181818;
+            color: var(--primary-color, #00ff00);
+            cursor: pointer;
+            box-shadow: 0 1px 4px #000a;
+            text-shadow: 0 1px 2px #000a;
+            letter-spacing: 1px;
+            transition: border-color 0.2s, color 0.2s;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .header-flip-btn:hover {
+            background: #232323;
+            border-color: #fff;
+            color: #fff;
+        }
+        .flip-container {
+            perspective: 2000px;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        .flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 1.5s cubic-bezier(.4,2,.6,1);
+            transform-style: preserve-3d;
+        }
+        .flip-container.flipped .flipper {
+            transform: rotateX(180deg);
+        }
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+        }
+        .front { z-index: 2; }
+        .back {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+        /* Theme colors (add your own CSS vars or classes as needed) */
+        body.theme-green { --primary-color: #00ff00; }
+        body.theme-amber { --primary-color: #ffb300; }
+        body.theme-red { --primary-color: #ff1744; }
+        body.theme-blue { --primary-color: #00b0ff; }
+        body.theme-purple { --primary-color: #b388ff; }
+        .mode-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color, #00ff00);
+            font-family: inherit;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            text-shadow: 0 0 10px var(--primary-color, #00ff00);
+            letter-spacing: 2px;
+            outline: none;
+            transition: color 0.2s;
+        }
+        .mode-toggle-btn:hover, .mode-toggle-btn:focus {
+            color: #fff;
+            text-shadow: 0 0 16px var(--primary-color, #00ff00);
+        }
+        .cli-output {
+            color: var(--secondary-color);
+        }
+        .cli-output-blue { color: #aa44ff; } /* purple */
+        .cli-output-purple { color: #00aaff; } /* blue */
+        .cli-output-green-o { color: #ffb000; } /* amber */
+        .cli-output-amber { color: #ff4444; } /* red */
+        .cli-output-red { color: #ffb000; } /* amber */
+        .cli-output-green-h { color: #ff4444; } /* red */
+        /* Add styles for two-column layout in Vaults and Forecast sections */
+        .vaults-forecast-columns {
+            display: flex;
+            gap: 32px;
+            justify-content: space-between;
+        }
+        .vaults-forecast-col {
+            flex: 1 1 0;
+            background: #181818;
+            border-radius: 10px;
+            padding: 18px 16px;
+            box-shadow: 0 2px 8px #000a;
+            min-width: 0;
+        }
+        .vaults-forecast-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        @media (max-width: 900px) {
+            .vaults-forecast-columns { flex-direction: column; gap: 18px; }
+        }
+    </style>
+</head>
+    <body>
+        <!-- Flip button will be inside the header below -->
+        <div class="flip-container" id="flipContainer">
+            <div class="flipper" id="flipper">
+                <div class="front" id="oModePanel">
+                    <!-- O MODE CONTENT START -->
+                    <div id="mainContentO">
+    <div class="pipboy-container">
+        <!-- Screen Effects -->
+                            <div class="glow-effect" id="glow-overlay-o"></div>
+                            <div class="vhs-effect" id="vhs-overlay-o"></div>
+        <!-- O-Boy Header -->
+        <div class="pipboy-header">
+                                <button id="modeToggleO" class="pipboy-title mode-toggle-btn">O-BOY 8000</button>
+            <div class="pipboy-status">
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>ONLINE</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>COLD L3</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>ACTIVE</span>
+                </div>
+                </div>
+                </div>
+
+        <!-- Main Content -->
+        <div class="pipboy-main">
+            <!-- Navigation -->
+            <div class="pipboy-nav">
+                <button class="nav-tab active" data-section="stats">STATS</button>
+                <button class="nav-tab" data-section="vaults">VAULTS</button>
+                <button class="nav-tab" data-section="forecast">FORECAST</button>
+                <button class="nav-tab" data-section="radio">SETTINGS</button>
+            </div>
+            
+            <!-- Screen Content -->
+            <div class="pipboy-screen">
+                <!-- STATS Section -->
+                <div class="screen-section active" id="stats">
+                    <div class="data-panel">
+                        <div class="data-header">SYSTEM STATUS</div>
+                        <div class="data-row">
+                            <span class="data-label">Current Epoch:</span>
+                            <span class="data-value" id="current-epoch">1</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Time Remaining:</span>
+                            <span class="data-value" id="time-remaining">7:23:45</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Total Players:</span>
+                            <span class="data-value" id="total-players">1,337</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Total Pool:</span>
+                            <span class="data-value" id="total-pool">50,000 COLD</span>
+                        </div>
+                    </div>
+                    
+                    <div class="data-panel">
+                        <div class="data-header">PLAYER STATUS</div>
+                        <div class="data-row">
+                            <span class="data-label">Wallet Balance:</span>
+                            <span class="data-value" id="wallet-balance">1,000 COLD</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Win Streak:</span>
+                            <span class="data-value" id="win-streak">3</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Treasury Fee:</span>
+                            <span class="data-value" id="treasury-fee">10%</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Security Status:</span>
+                            <span class="data-value" id="security-status">CLEAN</span>
+                    </div>
+                </div>
+            </div>
+            
+                <!-- FORECAST SECTION (with TradingView chart just below header, forecast boxes higher) -->
+                <div class="screen-section" id="forecast">
+                  <!-- TradingView Chart Widget (default candle colors) -->
+                  <div id="tradingview-chart-container" style="width:100%;height:340px;margin:0;">
+                    <!-- TradingView Widget BEGIN -->
+                    <iframe src="https://www.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=15&hidesidetoolbar=1&theme=dark&style=1&timezone=Etc/UTC&withdateranges=1&hideideas=1&studies=[]" style="width:100%;height:100%;border:none;"></iframe>
+                    <!-- TradingView Widget END -->
+                  </div>
+                  <!-- Forecast Vaults/Boxes (DOWN left, UP right) -->
+                  <div class="vaults-forecast-columns" style="margin-top:0;">
+                    <div class="vaults-forecast-col">
+                      <div class="vaults-forecast-header">DOWN FORECAST</div>
+                      <div class="data-row"><span class="data-label">Current Price:</span> <span class="data-value" id="current-price-down">$0.0245</span></div>
+                      <div class="data-row"><span class="data-label">Prediction:</span> <span class="data-value" id="prediction-down">NONE</span></div>
+                      <div class="data-row"><span class="data-label">Amount:</span> <input type="number" id="bet-amount-down" value="100" class="pip-input" style="width: 120px;"></div>
+                      <button class="pip-button" id="predict-down">Deposit to DOWN</button>
+                    </div>
+                    <div class="vaults-forecast-col">
+                      <div class="vaults-forecast-header">UP FORECAST</div>
+                      <div class="data-row"><span class="data-label">Current Price:</span> <span class="data-value" id="current-price-up">$0.0245</span></div>
+                      <div class="data-row"><span class="data-label">Prediction:</span> <span class="data-value" id="prediction-up">NONE</span></div>
+                      <div class="data-row"><span class="data-label">Amount:</span> <input type="number" id="bet-amount-up" value="100" class="pip-input" style="width: 120px;"></div>
+                      <button class="pip-button" id="predict-up">Deposit to UP</button>
+                    </div>
+                  </div>
+                </div>
+                    
+                <!-- DATA Section -->
+                <div class="screen-section" id="vaults">
+                    <div class="vaults-forecast-columns">
+                        <div class="vaults-forecast-col">
+                            <div class="vaults-forecast-header">UP POOL</div>
+                            <div class="data-row"><span class="data-label">Vault:</span> <span class="data-value" id="up-vault">25,000 COLD (50%)</span></div>
+                            <div class="data-row"><span class="data-label">Your Position:</span> <span class="data-value" id="your-up-position">100 COLD (UP)</span></div>
+                            <div class="data-row"><span class="data-label">Potential Payout:</span> <span class="data-value" id="up-payout">190 COLD</span></div>
+                        </div>
+                        <div class="vaults-forecast-col">
+                            <div class="vaults-forecast-header">DOWN POOL</div>
+                            <div class="data-row"><span class="data-label">Vault:</span> <span class="data-value" id="down-vault">25,000 COLD (50%)</span></div>
+                            <div class="data-row"><span class="data-label">Your Position:</span> <span class="data-value" id="your-down-position">0 COLD (DOWN)</span></div>
+                            <div class="data-row"><span class="data-label">Potential Payout:</span> <span class="data-value" id="down-payout">0 COLD</span></div>
+                        </div>
+                    </div>
+
+                    <div class="data-panel">
+                        <div class="data-header">COOLDOWN STATUS</div>
+                        <div class="data-row">
+                            <span class="data-label">Cooldown Timer:</span>
+                            <span class="data-value" id="cooldown-timer">INACTIVE</span>
+                            </div>
+                        <div class="data-row">
+                            <span class="data-label">Bypass Fee:</span>
+                            <span class="data-value" id="bypass-fee">5%</span>
+                            </div>
+                        <button class="pip-button" id="start-cooldown">START COOLDOWN</button>
+                        </div>
+            </div>
+            
+                <!-- SETTINGS Section -->
+                <div class="screen-section" id="radio">
+                    <div class="settings-grid">
+                        <!-- Color Themes -->
+                        <div class="settings-section">
+                            <div class="settings-title">COLOR THEMES</div>
+                            <div class="theme-grid">
+                                <div class="theme-btn green active" onclick="changeTheme('green')" title="Green">GRN</div>
+                                <div class="theme-btn blue" onclick="changeTheme('blue')" title="Blue">BLU</div>
+                                <div class="theme-btn purple" onclick="changeTheme('purple')" title="Purple">PUR</div>
+                        </div>
+                    </div>
+                    
+                        <!-- Screen Effects -->
+                        <div class="settings-section">
+                            <div class="settings-title">SCREEN EFFECTS</div>
+                            <div class="setting-control">
+                                <span>Screen Glow:</span>
+                                                    <button class="setting-toggle active" id="glow-toggle-o" onclick="toggleEffect('glow', 'glow-toggle-o')">ON</button>
+                            </div>
+                            <div class="setting-control">
+                                <span>VHS Noise:</span>
+                                                    <button class="setting-toggle active" id="vhs-toggle-o" onclick="toggleEffect('vhs', 'vhs-toggle-o')">ON</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terminal Interface -->
+                    <div class="data-panel">
+                        <div class="data-header">SYSTEM TERMINAL</div>
+                        <div id="system-log" style="height: 200px; overflow-y: auto; font-size: 14px; line-height: 1.6;">
+                            <div>[12:34:56] O-BOY 8000 initialized...</div>
+                            <div>[12:34:57] Connecting to COLD L3 network...</div>
+                            <div>[12:34:58] Network connection established</div>
+                            <div>[12:35:00] Mining system online</div>
+                            <div>[12:35:01] Trading interface ready</div>
+                            <div>[12:35:02] Settings panel loaded</div>
+                            <div>[12:35:03] Type 'help' for commands</div>
+                    </div>
+                        
+                        <div class="terminal-input-line">
+                            <span class="terminal-prompt">root@oboy8000:~$</span>
+                            <input type="text" class="terminal-input" id="terminal-command" placeholder="Enter command...">
+                            <span class="cursor"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- O MODE CONTENT END -->
+                </div>
+                <div class="back" id="heatModePanel">
+                    <!-- HEAT MODE CONTENT START -->
+                    <div id="mainContentHEAT">
+                        <div class="pipboy-container">
+                            <!-- Screen Effects -->
+                            <div class="glow-effect" id="glow-overlay-h"></div>
+                            <div class="vhs-effect" id="vhs-overlay-h"></div>
+                            <!-- O-Boy Header -->
+                            <div class="pipboy-header">
+                                <button id="modeToggleH" class="pipboy-title mode-toggle-btn">HEAT-BOY 8000</button>
+                                <div class="pipboy-status">
+                                    <div class="status-item">
+                                        <div class="status-dot"></div>
+                                        <span>ONLINE</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <div class="status-dot"></div>
+                                        <span>HEAT L3</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <div class="status-dot"></div>
+                                        <span>ACTIVE</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Main Content -->
+                            <div class="pipboy-main">
+                                <!-- Navigation -->
+                                <div class="pipboy-nav">
+                                    <button class="nav-tab active" data-section="stats">STATS</button>
+                                    <button class="nav-tab" data-section="vaults">VAULTS</button>
+                                    <button class="nav-tab" data-section="forecast">FORECAST</button>
+                                    <button class="nav-tab" data-section="radio">SETTINGS</button>
+                                </div>
+                                <!-- Screen Content -->
+                                <div class="pipboy-screen">
+                                    <!-- STATS Section -->
+                                    <div class="screen-section active" id="stats">
+                                        <div class="data-panel">
+                                            <div class="data-header">SYSTEM STATUS</div>
+                        <div class="data-row">
+                                                <span class="data-label">Current Epoch:</span>
+                                                <span class="data-value" id="current-epoch">1</span>
+                        </div>
+                                            <div class="data-row">
+                                                <span class="data-label">Time Remaining:</span>
+                                                <span class="data-value" id="time-remaining">7:23:45</span>
+                        </div>
+                                            <div class="data-row">
+                                                <span class="data-label">Total Players:</span>
+                                                <span class="data-value" id="total-players">1,337</span>
+                    </div>
+                                            <div class="data-row">
+                                                <span class="data-label">Total Pool:</span>
+                                                <span class="data-value" id="total-pool">50,000 HEAT</span>
+                                            </div>
+                                        </div>
+                    <div class="data-panel">
+                                            <div class="data-header">PLAYER STATUS</div>
+                        <div class="data-row">
+                                                <span class="data-label">Wallet Balance:</span>
+                                                <span class="data-value" id="wallet-balance">1,000 HEAT</span>
+                        </div>
+                        <div class="data-row">
+                                                <span class="data-label">Win Streak:</span>
+                                                <span class="data-value" id="win-streak">3</span>
+                        </div>
+                        <div class="data-row">
+                                                <span class="data-label">Treasury Fee:</span>
+                                                <span class="data-value" id="treasury-fee">10%</span>
+                        </div>
+                        <div class="data-row">
+                                                <span class="data-label">Security Status:</span>
+                                                <span class="data-value" id="security-status">CLEAN</span>
+                        </div>
+                    </div>
+                                    </div>
+                                    <!-- FORECAST Section -->
+                                    <div class="screen-section" id="forecast">
+                                        <div class="vaults-forecast-columns">
+                                            <div class="vaults-forecast-col">
+                                                <div class="vaults-forecast-header">DOWN FORECAST</div>
+                                                <div class="data-row"><span class="data-label">Current Price:</span> <span class="data-value" id="current-price-down">$0.0245</span></div>
+                                                <div class="data-row"><span class="data-label">Prediction:</span> <span class="data-value" id="prediction-down">NONE</span></div>
+                                                <div class="data-row"><span class="data-label">Amount:</span> <input type="number" id="bet-amount-down" value="100" class="pip-input" style="width: 120px;"></div>
+                                                <button class="pip-button" id="predict-down">Deposit to DOWN</button>
+                                            </div>
+                                            <div class="vaults-forecast-col">
+                                                <div class="vaults-forecast-header">UP FORECAST</div>
+                                                <div class="data-row"><span class="data-label">Current Price:</span> <span class="data-value" id="current-price-up">$0.0245</span></div>
+                                                <div class="data-row"><span class="data-label">Prediction:</span> <span class="data-value" id="prediction-up">NONE</span></div>
+                                                <div class="data-row"><span class="data-label">Amount:</span> <input type="number" id="bet-amount-up" value="100" class="pip-input" style="width: 120px;"></div>
+                                                <button class="pip-button" id="predict-up">Deposit to UP</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- DATA Section -->
+                                    <div class="screen-section" id="vaults">
+                                        <div class="vaults-forecast-columns">
+                                            <div class="vaults-forecast-col">
+                                                <div class="vaults-forecast-header">UP POOL</div>
+                                                <div class="data-row"><span class="data-label">Vault:</span> <span class="data-value" id="up-vault">25,000 HEAT (50%)</span></div>
+                                                <div class="data-row"><span class="data-label">Your Position:</span> <span class="data-value" id="your-up-position">100 HEAT (UP)</span></div>
+                                                <div class="data-row"><span class="data-label">Potential Payout:</span> <span class="data-value" id="up-payout">190 HEAT</span></div>
+                                            </div>
+                                            <div class="vaults-forecast-col">
+                                                <div class="vaults-forecast-header">DOWN POOL</div>
+                                                <div class="data-row"><span class="data-label">Vault:</span> <span class="data-value" id="down-vault">25,000 HEAT (50%)</span></div>
+                                                <div class="data-row"><span class="data-label">Your Position:</span> <span class="data-value" id="your-down-position">0 HEAT (DOWN)</span></div>
+                                                <div class="data-row"><span class="data-label">Potential Payout:</span> <span class="data-value" id="down-payout">0 HEAT</span></div>
+                                            </div>
+                                        </div>
+                    <div class="data-panel">
+                        <div class="data-header">COOLDOWN STATUS</div>
+                        <div class="data-row">
+                            <span class="data-label">Cooldown Timer:</span>
+                            <span class="data-value" id="cooldown-timer">INACTIVE</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Bypass Fee:</span>
+                            <span class="data-value" id="bypass-fee">5%</span>
+                        </div>
+                        <button class="pip-button" id="start-cooldown">START COOLDOWN</button>
+                </div>
+            </div>
+                <!-- SETTINGS Section -->
+                <div class="screen-section" id="radio">
+                    <div class="settings-grid">
+                        <!-- Color Themes -->
+                        <div class="settings-section">
+                            <div class="settings-title">COLOR THEMES</div>
+                            <div class="theme-grid">
+                                <div class="theme-btn green active" onclick="changeTheme('green')" title="Green">GRN</div>
+                                <div class="theme-btn amber" onclick="changeTheme('amber')" title="Amber">AMB</div>
+                                <div class="theme-btn red" onclick="changeTheme('red')" title="Red">RED</div>
+                            </div>
+                        </div>
+
+                        <!-- Screen Effects -->
+                        <div class="settings-section">
+                            <div class="settings-title">SCREEN EFFECTS</div>
+                            <div class="setting-control">
+                                <span>Screen Glow:</span>
+                                                    <button class="setting-toggle active" id="glow-toggle-h" onclick="toggleEffect('glow', 'glow-toggle-h')">ON</button>
+                            </div>
+                            <div class="setting-control">
+                                <span>VHS Noise:</span>
+                                                    <button class="setting-toggle active" id="vhs-toggle-h" onclick="toggleEffect('vhs', 'vhs-toggle-h')">ON</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terminal Interface -->
+                    <div class="data-panel">
+                        <div class="data-header">SYSTEM TERMINAL</div>
+                        <div id="system-log" style="height: 200px; overflow-y: auto; font-size: 14px; line-height: 1.6;">
+                                                <div>[12:34:56] HEAT-BOY 8000 initialized...</div>
+                                                <div>[12:34:57] Connecting to HEAT L3 network...</div>
+                            <div>[12:34:58] Network connection established</div>
+                            <div>[12:35:00] Mining system online</div>
+                            <div>[12:35:01] Trading interface ready</div>
+                            <div>[12:35:02] Settings panel loaded</div>
+                            <div>[12:35:03] Type 'help' for commands</div>
+                        </div>
+                        <div class="terminal-input-line">
+                                                <span class="terminal-prompt">root@heatboy8000:~$</span>
+                            <input type="text" class="terminal-input" id="terminal-command" placeholder="Enter command...">
+                            <span class="cursor"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+                    </div>
+                    <!-- HEAT MODE CONTENT END -->
+                </div>
+            </div>
+        </div>
+        <!-- (Theme buttons now only in SETTINGS section) -->
+        <script>
+        // --- FLIP LOGIC ---
+        const modeToggleO = document.getElementById('modeToggleO');
+        const modeToggleH = document.getElementById('modeToggleH');
+        const flipContainer = document.getElementById('flipContainer');
+        let isHeat = false;
+        let userTheme = null;
+        function setTheme(theme) {
+            document.body.classList.remove('theme-green','theme-amber','theme-red','theme-blue','theme-purple');
+            document.body.classList.add('theme-' + theme);
+            localStorage.setItem('oboy-theme', theme);
+        }
+        function autoThemeOnFlip() {
+            // If user has selected green, always use green
+            if (userTheme === 'green') { setTheme('green'); return; }
+            if (userTheme) { setTheme(userTheme); return; }
+            if (isHeat) {
+                // Randomly pick amber or red
+                setTheme(Math.random() < 0.5 ? 'amber' : 'red');
+            } else {
+                // Randomly pick blue or purple
+                setTheme(Math.random() < 0.5 ? 'blue' : 'purple');
+            }
+        }
+        modeToggleO.onclick = function() {
+            isHeat = true;
+            flipContainer.classList.add('flipped');
+            // If user selected green, keep it; else auto-theme
+            if (userTheme === 'green') {
+                setTheme('green');
+            } else {
+                userTheme = null;
+                autoThemeOnFlip();
+            }
+        };
+        modeToggleH.onclick = function() {
+            isHeat = false;
+            flipContainer.classList.remove('flipped');
+            // If user selected green, keep it; else auto-theme
+            if (userTheme === 'green') {
+                setTheme('green');
+            } else {
+                userTheme = null;
+                autoThemeOnFlip();
+            }
+        };
+        // Theme button click logic
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.onclick = function() {
+                const t = btn.classList.contains('green') ? 'green' :
+                          btn.classList.contains('amber') ? 'amber' :
+                          btn.classList.contains('red') ? 'red' :
+                          btn.classList.contains('blue') ? 'blue' :
+                          btn.classList.contains('purple') ? 'purple' : null;
+                if (!t) return;
+                setTheme(t);
+                if (t === 'green') {
+                    userTheme = 'green';
+                } else {
+                    userTheme = t;
+                }
+            };
+        });
+        // Init
+        let savedTheme = localStorage.getItem('oboy-theme');
+        if (savedTheme === 'green') {
+            userTheme = 'green';
+            setTheme('green');
+        } else {
+            // Default to blue or purple for O side
+            userTheme = null;
+            setTheme(Math.random() < 0.5 ? 'blue' : 'purple');
+        }
+        </script>
+    <script>
+        // Theme switching functionality
+        function changeTheme(theme) {
+            document.body.className = `theme-${theme}`;
+            localStorage.setItem('oboy-theme', theme);
+            
+            // Update active theme button
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.theme-btn.${theme}`).classList.add('active');
+            
+            // Force screen effects to update their colors by toggling their display
+            const effects = ['scanlines-overlay', 'glow-overlay', 'vhs-overlay'];
+            effects.forEach(effectId => {
+                const element = document.getElementById(effectId);
+                if (element && element.style.display !== 'none') {
+                    element.style.display = 'none';
+                    setTimeout(() => {
+                        element.style.display = 'block';
+                    }, 10);
+                }
+            });
+            
+            // Add glitch effect when changing themes
+            document.querySelector('.pipboy-container').style.animation = 'subtleFlicker 0.3s';
+            setTimeout(() => {
+                document.querySelector('.pipboy-container').style.animation = 'subtleFlicker 4s infinite linear';
+            }, 300);
+            
+            addSystemLogEntry(`[SYSTEM] Theme changed to ${theme.toUpperCase()}`, isHeat ? 'heat' : 'o');
+        }
+
+        // Screen effects functionality
+        function toggleEffect(effectName, toggleId) {
+            const btn = document.getElementById(toggleId);
+            if (!btn) return;
+            // Determine side (O or H) from toggleId
+            const side = toggleId.endsWith('-h') ? 'h' : 'o';
+            const overlayId = `${effectName}-overlay-${side}`;
+            const overlay = document.getElementById(overlayId);
+            const isActive = btn.classList.contains('active');
+            if (isActive) {
+                btn.classList.remove('active');
+                btn.textContent = 'OFF';
+                if (overlay) overlay.style.display = 'none';
+            } else {
+                btn.classList.add('active');
+                btn.textContent = 'ON';
+                if (overlay) overlay.style.display = 'block';
+            }
+            localStorage.setItem(`oboy-${effectName}-${toggleId}`, !isActive);
+            addSystemLogEntry(`[SYSTEM] ${effectName.toUpperCase()} ${isActive ? 'disabled' : 'enabled'}`, isHeat ? 'heat' : 'o');
+        }
+
+        // Initialize settings
+        function initializeSettings() {
+            console.log('Initializing O-BOY 8000 settings...');
+            
+            // Load saved theme
+            const savedTheme = localStorage.getItem('oboy-theme') || 'green';
+            changeTheme(savedTheme);
+            
+            // Ensure all effect overlays exist
+            const effectOverlays = [
+                { id: 'glow-overlay-o', class: 'glow-effect' },
+                { id: 'vhs-overlay-o', class: 'vhs-effect' },
+                { id: 'glow-overlay-h', class: 'glow-effect' },
+                { id: 'vhs-overlay-h', class: 'vhs-effect' }
+            ];
+            
+            effectOverlays.forEach(overlay => {
+                let element = document.getElementById(overlay.id);
+                if (!element) {
+                    console.log(`Creating missing ${overlay.id}`);
+                    element = document.createElement('div');
+                    element.id = overlay.id;
+                    element.className = overlay.class;
+                    document.querySelector('.pipboy-container').appendChild(element);
+                }
+            });
+            
+            // Load saved effects
+            const effects = ['glow', 'vhs'];
+            effects.forEach(effect => {
+                const saved = localStorage.getItem(`oboy-${effect}-glow-toggle-o`);
+                console.log(`Effect ${effect}: saved state = ${saved}`);
+                if (saved === 'false') {
+                    toggleEffect(effect, 'glow-toggle-o');
+                }
+                const savedVHS = localStorage.getItem(`oboy-vhs-vhs-toggle-o`);
+                console.log(`Effect VHS: saved state = ${savedVHS}`);
+                if (savedVHS === 'false') {
+                    toggleEffect('vhs', 'vhs-toggle-o');
+                }
+                const savedVHSHeat = localStorage.getItem(`oboy-vhs-glow-toggle-h`);
+                console.log(`Effect VHS (Heat): saved state = ${savedVHSHeat}`);
+                if (savedVHSHeat === 'false') {
+                    toggleEffect('vhs', 'glow-toggle-h');
+                }
+                const savedVHSVHSHeat = localStorage.getItem(`oboy-vhs-vhs-toggle-h`);
+                console.log(`Effect VHS (Heat): saved state = ${savedVHSVHSHeat}`);
+                if (savedVHSVHSHeat === 'false') {
+                    toggleEffect('vhs', 'vhs-toggle-h');
+                }
+            });
+            
+            console.log('Settings initialization complete');
+        }
+
+        // Add event listeners for effect toggles
+        function setupEventListeners() {
+            setTimeout(() => {
+                // O side
+                const glowToggleO = document.getElementById('glow-toggle-o');
+                const vhsToggleO = document.getElementById('vhs-toggle-o');
+                if (glowToggleO) {
+                    glowToggleO.addEventListener('click', () => toggleEffect('glow', 'glow-toggle-o'));
+                }
+                if (vhsToggleO) {
+                    vhsToggleO.addEventListener('click', () => toggleEffect('vhs', 'vhs-toggle-o'));
+                }
+                // HEAT side
+                const glowToggleH = document.getElementById('glow-toggle-h');
+                const vhsToggleH = document.getElementById('vhs-toggle-h');
+                if (glowToggleH) {
+                    glowToggleH.addEventListener('click', () => toggleEffect('glow', 'glow-toggle-h'));
+                }
+                if (vhsToggleH) {
+                    vhsToggleH.addEventListener('click', () => toggleEffect('vhs', 'vhs-toggle-h'));
+                }
+                console.log('Event listeners attached');
+            }, 100);
+        }
+
+        // --- System Message Interval Management ---
+        let systemMessageIntervalO = null;
+        let systemMessageIntervalH = null;
+
+        function startSystemMessages(side) {
+            const intervalVar = side === 'heat' ? 'systemMessageIntervalH' : 'systemMessageIntervalO';
+            if (window[intervalVar]) clearInterval(window[intervalVar]);
+            window[intervalVar] = setInterval(() => {
+                const messages = [
+                    'Price data updated',
+                    'Network heartbeat',
+                    'Vault balances synchronized',
+                    'Player activity detected',
+                    'Security scan complete'
+                ];
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                addSystemLogEntry(randomMessage, side);
+            }, 5000);
+        }
+
+        function stopSystemMessages(side) {
+            const intervalVar = side === 'heat' ? 'systemMessageIntervalH' : 'systemMessageIntervalO';
+            if (window[intervalVar]) {
+                clearInterval(window[intervalVar]);
+                window[intervalVar] = null;
+            }
+        }
+
+        // --- Modified addSystemLogEntry to support both sides ---
+        function addSystemLogEntry(message, side) {
+            let log;
+            if (side === 'heat') {
+                log = document.querySelector('#heatModePanel #system-log');
+            } else {
+                log = document.querySelector('#oModePanel #system-log');
+            }
+            if (!log) log = document.getElementById('system-log');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.textContent = `[${time}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSettings();
+            setupEventListeners();
+            startSystemMessages('o');
+            startSystemMessages('heat');
+        });
+
+        // Terminal command handling
+        // Terminal logic for both O and HEAT sides
+        document.querySelectorAll('.terminal-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const command = this.value.trim();
+                    if (command) {
+                        const logPanel = this.closest('.data-panel').querySelector('#system-log');
+                        addLogEntry(`[USER] ${command}`, logPanel, 'cli-output', true);
+                        processCommand(command, logPanel, this);
+                        this.value = '';
+                    }
+                }
+            });
+        });
+
+        function addLogEntry(message, logPanel, className, noTimestamp) {
+            const entry = document.createElement('div');
+            entry.textContent = noTimestamp ? message : `[${new Date().toLocaleTimeString()}] ${message}`;
+            if (className) entry.className = className;
+            if (logPanel) {
+                logPanel.appendChild(entry);
+                logPanel.scrollTop = logPanel.scrollHeight;
+            }
+        }
+
+        function processCommand(command, logPanel, inputEl) {
+            const cmd = command.toLowerCase();
+            // Determine which side and theme is active for output color
+            const isHeat = inputEl && inputEl.closest('#heatModePanel');
+            let theme = document.body.className.match(/theme-([a-z]+)/);
+            theme = theme ? theme[1] : 'green';
+            let cliClass = '';
+            if (isHeat) {
+                if (theme === 'amber') cliClass = 'cli-output-amber';
+                else if (theme === 'red') cliClass = 'cli-output-red';
+                else cliClass = 'cli-output-green-h';
+            } else {
+                if (theme === 'blue') cliClass = 'cli-output-blue';
+                else if (theme === 'purple') cliClass = 'cli-output-purple';
+                else cliClass = 'cli-output-green-o';
+            }
+            switch(cmd) {
+                case 'help':
+                    addLogEntry('[HELP] FUEGO FORECAST CLI', logPanel, cliClass, true);
+                    addLogEntry('Purpose: Stake tokens in price pools to predict asset direction for each epoch.', logPanel, cliClass, true);
+                    addLogEntry('Directions:', logPanel, cliClass, true);
+                    addLogEntry('- Use the UI or CLI to stake in UP or DOWN pools before epoch ends.', logPanel, cliClass, true);
+                    addLogEntry('- Epochs last 8 minutes. At epoch end, the pool with correct prediction wins.', logPanel, cliClass, true);
+                    addLogEntry('- Rewards are distributed to winners, minus a treasury fee.', logPanel, cliClass, true);
+                    addLogEntry('Commands:', logPanel, cliClass, true);
+                    addLogEntry('  help      Show this help message', logPanel, cliClass, true);
+                    addLogEntry('  info      Platform usage and rules', logPanel, cliClass, true);
+                    addLogEntry('  status    Show system status', logPanel, cliClass, true);
+                    addLogEntry('  balance   Show your wallet balance', logPanel, cliClass, true);
+                    addLogEntry('  clear     Clear the terminal log', logPanel, cliClass, true);
+                    addLogEntry('  stop      Stop system messages', logPanel, cliClass, true);
+                    addLogEntry('Type info for platform details.', logPanel, cliClass, true);
+                    break;
+                case 'info':
+                    addLogEntry('[INFO] FUEGO FORECAST PLATFORM', logPanel, cliClass, true);
+                    addLogEntry('Fuego Forecast is a prediction market where you stake O or HEAT tokens to forecast asset price direction for each epoch.', logPanel, cliClass, true);
+                    addLogEntry('How to Play:', logPanel, cliClass, true);
+                    addLogEntry('- Stake O or HEAT in the UP or DOWN pool before the epoch ends.', logPanel, cliClass, true);
+                    addLogEntry('- If your prediction is correct, you win your vault share of the take. If incorrect, 80% of your stake is forfeited (2% to protocol, 8% to treasury, and 70% to winning pool).', logPanel, cliClass, true);
+                    addLogEntry('- Epochs last 8 minutes. You can only stake or withdraw between epochs. If you leave it in your earnings will continue to grow, but if incorrect after any epoch during that time you will forfeit stake and earnings (80%) you can only withdraw once per epoch.', logPanel, cliClass, true);
+                    addLogEntry('Cooldown:', logPanel, cliClass, true);
+                    addLogEntry('- After staking or withdrawing, a cooldown period may apply before you can act again.', logPanel, cliClass, true);
+                    addLogEntry('- This ensures fair play and prevents last-second sniping.', logPanel, cliClass, true);
+                    addLogEntry('Use the UI or CLI to interact with pools and view your stats.', logPanel, cliClass, true);
+                    break;
+                case 'status':
+                    addLogEntry('[STATUS] System operational. Epoch active.', logPanel, cliClass, true);
+                    break;
+                case 'balance':
+                    addLogEntry(`[BALANCE] Wallet: 1,000 ${isHeat ? 'HEAT' : 'COLD'}`, logPanel, cliClass, true);
+                    break;
+                // 'mine' and 'trade' commands removed
+                case 'clear':
+                    if (logPanel) logPanel.innerHTML = '';
+                    break;
+                case 'stop':
+                    stopSystemMessages(isHeat ? 'heat' : 'o');
+                    addLogEntry('[SYSTEM] System messages stopped.', logPanel, cliClass, true);
+                    break;
+                default:
+                    addLogEntry(`[ERROR] Unknown command: ${command}`, logPanel, cliClass, true);
+            }
+        }
+
+        // Navigation functionality
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Find the closest .pipboy-main container (O or HEAT side)
+                const pipboyMain = tab.closest('.pipboy-main');
+                if (!pipboyMain) return;
+                // Only affect nav-tabs and screen-sections within this mode
+                pipboyMain.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                pipboyMain.querySelectorAll('.screen-section').forEach(s => s.classList.remove('active'));
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                // Show corresponding section (by id, but only within this mode)
+                const sectionId = tab.getAttribute('data-section');
+                const section = pipboyMain.querySelector('.screen-section#' + sectionId);
+                if (section) section.classList.add('active');
+                // If switching to settings tab, setup event listeners
+                if (sectionId === 'radio') {
+                    setupEventListeners();
+                }
+            });
+        });
+
+        // Prediction buttons
+        document.getElementById('predict-up').addEventListener('click', () => {
+            document.getElementById('predict-up').classList.add('active');
+            document.getElementById('predict-down').classList.remove('active');
+            document.getElementById('prediction').textContent = 'UP';
+        });
+
+        document.getElementById('predict-down').addEventListener('click', () => {
+            document.getElementById('predict-down').classList.add('active');
+            document.getElementById('predict-up').classList.remove('active');
+            document.getElementById('prediction').textContent = 'DOWN';
+        });
+
+        // Update timer
+        function updateTimer() {
+            const timer = document.getElementById('time-remaining');
+            const current = timer.textContent.split(':');
+            let hours = parseInt(current[0]);
+            let minutes = parseInt(current[1]);
+            let seconds = parseInt(current[2]);
+            
+            seconds--;
+            if (seconds < 0) {
+                seconds = 59;
+                minutes--;
+                if (minutes < 0) {
+                    minutes = 59;
+                    hours--;
+                    if (hours < 0) {
+                        hours = 7;
+                        minutes = 59;
+                        seconds = 59;
+                    }
+                }
+            }
+            
+            timer.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html> 

@@ -256,7 +256,8 @@ jobs:
 
       - name: Download and Build Boost for ARM64
         run: |
-               wget --max-redirect=20 -O boost_1_72_0.tar.bz2 https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2
+               wget --max-redirect=20 -O boost_1_72_0.tar.bz2 https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2 || \
+               wget -O boost_1_72_0.tar.bz2 https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.bz2/download
                file boost_1_72_0.tar.bz2 | grep 'bzip2 compressed data'
                if [ $? -ne 0 ]; then
                echo "Downloaded file is not a valid bzip2 archive"; cat boost_1_72_0.tar.bz2; exit 1;

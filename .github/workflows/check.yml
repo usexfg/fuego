@@ -221,7 +221,7 @@ jobs:
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.release_name }}
+          name: ${{ steps.build.outputs.release_name }}-${{ matrix.arch }}
           path: ${{ steps.build.outputs.artifact_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

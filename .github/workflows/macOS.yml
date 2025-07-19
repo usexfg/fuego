@@ -19,7 +19,7 @@ jobs:
             arch: apple
             arch_flag: arm64
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Build
         id: build

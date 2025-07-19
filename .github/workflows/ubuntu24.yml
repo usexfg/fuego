@@ -10,7 +10,7 @@ jobs:
     name: Ubuntu 24.04
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Build
         id: build

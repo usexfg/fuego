@@ -1,7 +1,6 @@
 <img title="The Long Night Is Coming" src="https://github.com/usexfg/fuego-data/blob/master/fuego-images/fuegoline.gif?raw=true"><img/>
 ### Fuego is open-source decentralized P2P privacy cryptocurrency built by advocates for freedom thru sound money.
 
-
 Based upon the CryptoNote protocol & philosophy.
 
 #### Resources

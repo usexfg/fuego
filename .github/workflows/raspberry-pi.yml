@@ -10,7 +10,7 @@ jobs:
     name: Raspberry Pi ARM64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Install ARM64 Cross-Compilation Tools
         run: |

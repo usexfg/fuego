@@ -2,7 +2,10 @@
 
 Run your own Fuego blockchain node completely **FREE** using cloud providers' free tiers!
 
-## 🏆 Best Option: Oracle Cloud Always Free
+## Oracle Cloud Always Free
+
+<sup>⚠️ important - using the method described below only works if the 'region' you select as home has 'available' free resources. Regions US east/west/mid are likely unavailable. Supposedly, Germany Central (Frankfurt), UK South (London), and Canada Southeast (Montreal) have greater possibilities for available free resources, but also likely 'exhausted' by now.  YOU CANNOT CHANGE HOME REGIONS ONCE SIGNED UP. If anyone has any new info please add a PR or comment below.</sup>
+
 
 ### Why Oracle Cloud?
 - ✅ **Permanent free** (not a trial)
@@ -33,7 +36,7 @@ chmod +x oracle-cloud-setup.sh
 
 4. **Access Your Node**:
    - Web Dashboard: `http://YOUR_IP:8080`
-   - RPC Endpoint: `http://YOUR_IP:28180/json_rpc`
+   - RPC Endpoint: `http://YOUR_IP:18180/json_rpc`
 
 ---
 
@@ -74,13 +77,14 @@ mkdir fuego-data
 
 # Run mainnet node
 docker run -d --name fuego-node \
-  -p 20808:20808 -p 28180:28180 \
+  -p 10808:10808 -p 18180:18180 \
+
   -v $(pwd)/fuego-data:/home/fuego/.fuego \
   ghcr.io/usexfg/fuego:latest
 
 # Run testnet node
 docker run -d --name fuego-testnet \
-  -p 20809:20808 -p 28181:28180 \
+  -p 10809:20808 -p 28282:28282 \
   -v $(pwd)/fuego-testnet-data:/home/fuego/.fuego \
   ghcr.io/usexfg/fuego:latest \
   fuegod --testnet --data-dir=/home/fuego/.fuego
@@ -124,8 +128,9 @@ docker-compose up -d
 ```bash
 # Mainnet with custom ports
 docker run -d \
-  -e FUEGO_P2P_PORT=20808 \
-  -e FUEGO_RPC_PORT=28180 \
+  -e FUEGO_P2P_PORT=10808 \
+  -e FUEGO_RPC_PORT=18180 \
+
   -e FUEGO_DATA_DIR=/data \
   ghcr.io/usexfg/fuego:latest
 
@@ -190,7 +195,7 @@ fetch('/json_rpc', {
 # Allow only necessary ports
 sudo ufw allow ssh
 sudo ufw allow 8080   # Web interface
-sudo ufw allow 20808  # P2P port
+sudo ufw allow 10808  # P2P port
 sudo ufw enable
 ```
 
@@ -213,7 +218,7 @@ docker logs -f fuego-node
 docker stats fuego-node
 
 # Health check
-curl http://localhost:28180/json_rpc \
+curl http://localhost:18180/json_rpc \
   -d '{"jsonrpc":"2.0","id":"1","method":"getinfo"}'
 ```
 
@@ -264,7 +269,7 @@ docker volume prune
 
 ### Getting Help
 - 💬 **Discord**: [Fuego Community](https://discord.usexfg.org)
-- 📖 **Documentation**: [docs.fuego.network](https://docs.fuego.network)
+- 📖 **Documentation**: [docs.fuego.network](https://docs.usexfg.org)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/usexfg/fuego/issues)
 
 ---
@@ -281,4 +286,5 @@ docker volume prune
 
 **🔥 Start hosting your free Fuego node today!**
 
-*Total setup time: ~5 minutes | Total cost: $0 | Network contribution: Priceless* 
+*Total setup time: ~5 minutes | Total cost: $0 | Network contribution: Priceless🏴‍☠️* 
+

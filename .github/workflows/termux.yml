@@ -17,7 +17,7 @@ jobs:
           - arch: arm
             api: 16
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1

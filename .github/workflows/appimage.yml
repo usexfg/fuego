@@ -10,7 +10,9 @@ jobs:
     name: AppImage Linux
     runs-on: ubuntu-20.04  # Older base for better compatibility
     steps:
-      - uses: actions/checkout@master
+
+      - uses: actions/checkout@v4
+
 
       - name: Install Dependencies
         run: |

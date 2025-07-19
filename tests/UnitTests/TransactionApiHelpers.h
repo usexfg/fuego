@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "CryptoTypes.h"
+#include "../../include/CryptoTypes.h"
 #include "ITransaction.h"
 #include "crypto/crypto.h"
 

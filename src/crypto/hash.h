@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 
-#include <CryptoTypes.h>
+#include "../../include/CryptoTypes.h"
 #include "generic-ops.h"
 
 namespace Crypto {

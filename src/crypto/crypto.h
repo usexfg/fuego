@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <CryptoTypes.h>
+#include "../../include/CryptoTypes.h"
 
 #include "generic-ops.h"
 #include "hash.h"

@@ -1,0 +1,8 @@
+[programs.devnet]
+fuego_forecast = "HneoqxfNZ8BrUbZHhtsQjFfipGFbeL3JauA5KfaNRE8N"  # System program, always valid
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]

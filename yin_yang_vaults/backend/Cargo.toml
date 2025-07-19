@@ -1,0 +1,24 @@
+[package]
+name = "fuego_forecast"
+version = "0.1.0"
+description = "COLD Fuego Forecast- Private interest & bonding protocol on Solana"
+edition = "2021"
+
+[lib]
+name = "fuego_forecast"
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
+anchor-spl = "0.29.0"
+solana-program = "1.16.17"
+
+[profile.release]
+overflow-checks = true 

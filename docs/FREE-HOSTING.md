@@ -6,6 +6,7 @@ Run your own Fuego blockchain node completely **FREE** using cloud providers' fr
 
 <sup>⚠️ important - using the method described below only works if the 'region' you select as home has 'available' free resources. Regions US east/west/mid are likely unavailable. Supposedly, Germany Central (Frankfurt), UK South (London), and Canada Southeast (Montreal) have greater possibilities for available free resources, but also likely 'exhausted' by now.  YOU CANNOT CHANGE HOME REGIONS ONCE SIGNED UP. If anyone has any new info please add a PR or comment below.</sup>
 
+
 ### Why Oracle Cloud?
 - ✅ **Permanent free** (not a trial)
 - ✅ **4 ARM CPUs + 24GB RAM** available
@@ -77,6 +78,7 @@ mkdir fuego-data
 # Run mainnet node
 docker run -d --name fuego-node \
   -p 10808:10808 -p 18180:18180 \
+
   -v $(pwd)/fuego-data:/home/fuego/.fuego \
   ghcr.io/usexfg/fuego:latest
 
@@ -128,6 +130,7 @@ docker-compose up -d
 docker run -d \
   -e FUEGO_P2P_PORT=10808 \
   -e FUEGO_RPC_PORT=18180 \
+
   -e FUEGO_DATA_DIR=/data \
   ghcr.io/usexfg/fuego:latest
 
@@ -284,3 +287,4 @@ docker volume prune
 **🔥 Start hosting your free Fuego node today!**
 
 *Total setup time: ~5 minutes | Total cost: $0 | Network contribution: Priceless🏴‍☠️* 
+

@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
+          submodules: recursive
+        
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
         
@@ -31,7 +31,8 @@ jobs:
         id: build
         run: |
           $build_folder = "build"
-          $xfg_ver = "${{ github.ref }}" -replace 'refs/tags/'
+          $sha = "${{ github.sha }}"
+          $xfg_ver = $sha.SubString(0,7)
           $release_name = "fuego-cli-win64-v$xfg_ver"
           mkdir "$build_folder"
           cd "$build_folder"

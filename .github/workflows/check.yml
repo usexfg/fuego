@@ -71,41 +71,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-ubuntu20:
-    name: Ubuntu 20.04
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build
-        id: build
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libboost-all-dev
-          build_folder="build/debug"
-          xfg_ver=${GITHUB_SHA::7}
-          xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fuego-cli-ubuntu-2404-dev"$xfg_ver"
-          mkdir -p "$build_folder"
-          cd "$build_folder"
-          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-          make -j4
-          mkdir -p "$release_name"
-          exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
-          strip "${exeFiles[@]}"
-          cp "${exeFiles[@]}" "$release_name/"
-          echo "release_name=${release_name}.tar.gz" >> $GITHUB_OUTPUT
-          echo "artifact_path=$build_folder/$release_name" >> $GITHUB_OUTPUT
-
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.build.outputs.release_name }}
-          path: ${{ steps.build.outputs.artifact_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-ubuntu22:
     name: Ubuntu 22.04
     runs-on: ubuntu-22.04

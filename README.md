@@ -7,8 +7,8 @@ Based upon the CryptoNote protocol & philosophy.
 
 -   Web: <https://usexfg.org>
 -   Explorer: <http://fuego.spaceportx.net>
--   Explorer: [http://radioactive.sytes.net](http://radioactive.sytes.net:8000/index.html)
 -   Explorer: <https://explore-xfg.loudmining.com>
+-   Explorer: [http://radioactive.sytes.net](http://radioactive.sytes.net:8000/index.html)
 -   Discord: <https://discord.gg/5UJcJJg>
 -   Twitter: <https://twitter.com/useXFG>
 -   Medium: <https://medium.com/@usexfg>

@@ -1,7 +1,5 @@
-// Copyright (c) 2017-2022 Fuego Developers
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2016-2019 The Karbowanec developers
-// Copyright (c) 2012-2018 The CryptoNote developers
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2014-2024 The Monero Project
 //
 // This file is part of Fuego.
 //
@@ -14,6 +12,7 @@
 // by third parties. See file labeled LICENSE for more details.
 // You should have received a copy of the GNU General Public License
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
+
 
 #include "subaddress.h"
 #include "crypto.h"

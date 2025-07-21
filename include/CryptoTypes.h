@@ -35,13 +35,13 @@ struct EllipticCurveScalar
   uint8_t data[32];
 };
 
-struct PublicKey : public EllipticCurvePoint
-{
-};
-
-struct SecretKey : public EllipticCurveScalar
-{
-};
+#ifdef __cplusplus
+struct PublicKey : public EllipticCurvePoint {};
+struct SecretKey : public EllipticCurveScalar {};
+#else
+typedef struct EllipticCurvePoint PublicKey;
+typedef struct EllipticCurveScalar SecretKey;
+#endif
 
 struct KeyDerivation {
   uint8_t data[32];
@@ -57,5 +57,6 @@ struct Signature {
 
 const struct EllipticCurveScalar I = {{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} };
 
-}
-
+#ifdef __cplusplus
+} // namespace Crypto
+#endif

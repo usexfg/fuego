@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Elder Node Council
+// Copyright (c) 2017-2025 Fuego Elder Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -19,8 +19,16 @@
 
 #include <stddef.h>
 
+#if defined(__cplusplus)
 #include <CryptoTypes.h>
 #include "generic-ops.h"
+#else
+#include <stdint.h>
+#define HASH_SIZE 32
+typedef struct {
+  uint8_t data[HASH_SIZE];
+} Hash;
+#endif
 
 namespace Crypto {
 

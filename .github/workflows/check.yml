@@ -11,7 +11,7 @@ on:
 jobs:
   build-windows:
     name: Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
     env:
 
       BOOST_ROOT: C:\thirdparties\boost-1.83.0

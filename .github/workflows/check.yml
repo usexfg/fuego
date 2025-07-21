@@ -240,6 +240,15 @@ jobs:
           ./b2 --user-config=user-config.jam toolset=gcc-arm target-os=linux architecture=arm address-model=64 --prefix=/tmp/boost-arm64 install
           cd ..
     
+      - name: Patch Boost to fix PTHREAD_STACK_MIN preprocessor issue
+        run: |
+          BOOST_HEADER="boost/context/posix/stack_traits.hpp"
+          if grep -q '#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)' $BOOST_HEADER; then
+            sed -i 's/#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)/#if defined(PTHREAD_STACK_MIN)\
+#if (PTHREAD_STACK_MIN > 0)/g' $BOOST_HEADER
+            sed -i '/#if (PTHREAD_STACK_MIN > 0)/a #endif' $BOOST_HEADER
+          fi
+
       - name: Build
         id: build
         run: |
@@ -273,3 +282,4 @@ jobs:
           path: ${{ steps.build.outputs.artifact_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

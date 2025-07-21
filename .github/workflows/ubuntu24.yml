@@ -10,7 +10,7 @@ jobs:
     name: Ubuntu 24.04
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Build
         id: build
@@ -20,7 +20,7 @@ jobs:
           sudo mkswap /swapfile
           sudo swapon /swapfile
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++-dev libboost-all-dev
+          sudo apt-get install -y build-essential libstdc++-11-dev libboost-all-dev
           build_folder="build/debug"
           xfg_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')

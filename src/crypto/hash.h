@@ -19,8 +19,17 @@
 
 #include <stddef.h>
 
+#if defined(__cplusplus)
 #include <CryptoTypes.h>
 #include "generic-ops.h"
+#else
+// C-compatible definitions for when compiling C code
+#include <stdint.h>
+#define HASH_SIZE 32
+typedef struct {
+  uint8_t data[HASH_SIZE];
+} Hash;
+#endif
 
 namespace Crypto {
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2018 The CryptoNote developers
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Elder Council
 //
 // This file is part of Fuego.
 //
@@ -17,7 +17,9 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
 namespace Crypto {
+#endif
 
 struct Hash {
   uint8_t data[32];

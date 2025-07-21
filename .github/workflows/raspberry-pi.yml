@@ -36,13 +36,18 @@ jobs:
 
       - name: Download and Build Boost for ARM64
         run: |
-          wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2
-          tar -xjf boost_1_72_0.tar.bz2
-          cd boost_1_72_0
-          echo "using gcc : arm : aarch64-linux-gnu-g++ ;" > user-config.jam
-          ./bootstrap.sh
-          ./b2 --user-config=user-config.jam toolset=gcc-arm target-os=linux architecture=arm address-model=64 --prefix=/tmp/boost-arm64 install
-          cd ..
+         wget -O boost_1_72_0.tar.bz2 https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2
+         file boost_1_72_0.tar.bz2
+         if ! file boost_1_72_0.tar.bz2 | grep -q 'bzip2 compressed data'; then
+         echo "Downloaded file is not a valid bzip2 archive."
+         exit 1
+         fi
+         tar -xjf boost_1_72_0.tar.bz2
+         cd boost_1_72_0
+         echo "using gcc : arm : aarch64-linux-gnu-g++ ;" > user-config.jam
+         ./bootstrap.sh
+         ./b2 --user-config=user-config.jam toolset=gcc-arm target-os=linux architecture=arm address-model=64 --prefix=/tmp/boost-arm64 install
+         cd ..
 
       - name: Build
         id: build

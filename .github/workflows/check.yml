@@ -11,7 +11,7 @@ on:
 jobs:
   build-windows:
     name: Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
     env:
 
       BOOST_ROOT: C:\thirdparties\boost-1.83.0
@@ -165,13 +165,21 @@ jobs:
         run: |
           build_folder="build/"
           xfg_ver=${GITHUB_SHA::7}
-          xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
           release_name=fuego-cli-macos-${{ matrix.arch }}-dev"$xfg_ver"
-          brew install gcc boost
+
+          brew install gcc boost ccache
+          export CCACHE_DIR="$HOME/.cache/ccache"
+          export CC="ccache clang"
+          export CXX="ccache clang++"
+
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..
-          make -j4
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} \
+            -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" \
+            -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12 -Wno-unknown-warning-option"
+          make -j2
           mkdir "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" ); done
@@ -190,7 +198,7 @@ jobs:
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.release_name }}-${{ matrix.arch }}-${{ github.run_attempt }}-${{ github.job }}
+          name: ${{ steps.build.outputs.release_name }}-${{ matrix.os }}-${{ matrix.arch }}-${{ github.run_attempt }}-${{ github.job }}
           path: ${{ steps.build.outputs.artifact_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -224,24 +232,32 @@ jobs:
           EOF
 
       - name: Download and Build Boost for ARM64
-    run: |
-      BOOST_VERSION=1.72.0
-      BOOST_VERSION_UNDERSCORE=${BOOST_VERSION//./_}
-      BOOST_URL="https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2"
-      ALT_URL="https://boost.sourceforge.net/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2"
-      wget --retry-connrefused --waitretry=5 --timeout=30 --tries=5 -O boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 $BOOST_URL || \
-      wget --retry-connrefused --waitretry=5 --timeout=30 --tries=5 -O boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 $ALT_URL
-      file boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 | grep 'bzip2 compressed data'
-      if [ $? -ne 0 ]; then
-      echo "Downloaded file is not a valid bzip2 archive"; head boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2; exit 1;
-      fi
-      tar -xjf boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
-      cd boost_${BOOST_VERSION_UNDERSCORE}
-      echo "using gcc : arm : aarch64-linux-gnu-g++ ;" > user-config.jam
-      ./bootstrap.sh
-      ./b2 --user-config=user-config.jam toolset=gcc-arm target-os=linux architecture=arm address-model=64 --prefix=/tmp/boost-arm64 install
-      cd ..
+        run: |
+          BOOST_VERSION=1.72.0
+          BOOST_VERSION_UNDERSCORE=${BOOST_VERSION//./_}
+          BOOST_URL="https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2/download"
+          wget -c --timeout=30 --waitretry=5 --retry-connrefused \
+               --retry-on-http-error=429,500,502,503,504 \
+               -O boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 \
+               "https://downloads.sourceforge.net/project/boost/boost/${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2"
+          file boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 | grep 'bzip2 compressed data'
+          if [ $? -ne 0 ]; then
+            echo "Downloaded file is not a valid bzip2 archive"; head boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2; exit 1;
+          fi
+          tar -xjf boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
+          cd boost_${BOOST_VERSION_UNDERSCORE}
+          echo "using gcc : arm : aarch64-linux-gnu-g++ ;" > user-config.jam
+          ./bootstrap.sh
+          ./b2 --user-config=user-config.jam toolset=gcc-arm target-os=linux architecture=arm address-model=64 --prefix=/tmp/boost-arm64 install
+          cd ..
     
+      - name: Patch Boost to fix PTHREAD_STACK_MIN preprocessor issue
+        run: |
+          BOOST_HEADER="boost/context/posix/stack_traits.hpp"
+          if grep -q '#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)' $BOOST_HEADER; then
+            sed -i 's/#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)/#if defined(PTHREAD_STACK_MIN)/' $BOOST_HEADER
+          fi
+
       - name: Build
         id: build
         run: |

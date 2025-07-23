@@ -151,9 +151,9 @@ jobs:
           files: ${{ steps.docker-info.outputs.instructions_file }}
           name: Fuego CLI Suite v${{ steps.meta.outputs.version }}
           body: |
-            **Docker Images Published**
+            🐳 [Docker instructions](../../releases/download/${{ steps.meta.outputs.version }}/docker-instructions.md) for **Fuego CLI Docker ${{ steps.meta.outputs.version }}**
             
-            Multi-architecture Docker images available:
+            Multi-architecture images:
             - `fuego/fuego:${{ steps.meta.outputs.version }}`
             - `ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}`
             

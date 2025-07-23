@@ -1,18 +1,18 @@
 <img title="The Long Night Is Coming" src="https://github.com/usexfg/fuego-data/blob/master/fuego-images/fuegoline.gif?raw=true"><img/>
-### Fuego is open-source decentralized P2P privacy cryptocurrency built by advocates for freedom thru sound money.
+### Fuego is open-source peer-to-peer decentralized private cryptocurrency built by advocates of freedom thru sound money and free open-source software .
 
 Based upon the CryptoNote protocol & philosophy.
 
 #### Resources
 
--   Web: <https://usexfg.org>
+-   [Website](https://usexfg.org)
 -   Explorer: <http://fuego.spaceportx.net>
 -   Explorer: <https://explore-xfg.loudmining.com>
 -   Explorer: [http://radioactive.sytes.net](http://radioactive.sytes.net:8000/index.html)
--   Discord: <https://discord.gg/5UJcJJg>
--   Twitter: <https://twitter.com/useXFG>
--   Medium: <https://medium.com/@usexfg>
--   Bitcoin Talk: <https://bitcointalk.org/index.php?topic=2712001>
+-   [Discord](https://discord.gg/5UJcJJg)
+-   [Twitter](https://twitter.com/useXFG)
+-   [Medium](https://medium.com/@usexfg)
+-   [Bitcoin Talk](https://bitcointalk.org/index.php?topic=2712001)
 
  ______________________________
  

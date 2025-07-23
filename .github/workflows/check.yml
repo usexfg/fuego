@@ -1,4 +1,4 @@
-name: Build check
+ name: Build check
 
 on:
   push:
@@ -291,3 +291,4 @@ jobs:
           path: ${{ steps.build.outputs.artifact_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

@@ -1,4 +1,4 @@
-name: Build check
+ name: Build check
 
 on:
   push:
@@ -245,7 +245,7 @@ jobs:
           BOOST_HEADER="boost/context/posix/stack_traits.hpp"
           if grep -q '#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)' $BOOST_HEADER; then
             sed -i 's/#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)/#if defined(PTHREAD_STACK_MIN)\
-#if (PTHREAD_STACK_MIN > 0)/g' $BOOST_HEADER
+            #if (PTHREAD_STACK_MIN > 0)/g' $BOOST_HEADER
             sed -i '/#if (PTHREAD_STACK_MIN > 0)/a #endif' $BOOST_HEADER
           fi
 

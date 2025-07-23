@@ -17,11 +17,14 @@ Based upon the CryptoNote protocol & philosophy.
  ______________________________
  
 
+<sup>"Working software is the primary measure of progress." [‣]</sup>
 
 ##### Master Status   
 [![Build check](https://github.com/usexfg/fuego/actions/workflows/check.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/check.yml)
 
 [![macOS](https://github.com/usexfg/fuego/actions/workflows/macOS.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/macOS.yml)
+
+[![AppImage Linux](https://github.com/usexfg/fuego/actions/workflows/appimage.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/appimage.yml)
 
 [![Ubuntu 24.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml)
 
@@ -29,8 +32,11 @@ Based upon the CryptoNote protocol & philosophy.
 
 [![Windows](https://github.com/usexfg/fuego/actions/workflows/windows.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/windows.yml)
 
-<sup>"Working software is the primary measure of progress." [‣]</sup>
+[![Docker Images](https://github.com/usexfg/fuego/actions/workflows/docker.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/docker.yml)
 
+[![Android (Termux)](https://github.com/usexfg/fuego/actions/workflows/termux.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/termux.yml)
+
+[![Raspberry Pi (ARM64)](https://github.com/usexfg/fuego/actions/workflows/raspberry-pi.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/raspberry-pi.yml)
 
 [‣]:http://agilemanifesto.org/
 

@@ -118,10 +118,14 @@ jobs:
           files: ${{ steps.build.outputs.asset_path }}
           name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}
           body: |
-            **${{ steps.build.outputs.release_name }}**
-            ${{ steps.build.outputs.sha256 }}
+            📱 [Download for Termux](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
             
-            For Termux: Download, extract, and run `./install.sh`
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
+            
+            After download:
+            1. `tar -xzf ${{ steps.build.outputs.release_name }}`
+            2. `cd $(basename -s .tar.gz ${{ steps.build.outputs.release_name }})`
+            3. `./install.sh`
           append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

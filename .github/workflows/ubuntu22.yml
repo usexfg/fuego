@@ -48,7 +48,8 @@ jobs:
           files: ${{ steps.build.outputs.asset_path }}
           name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}
           body: |
-            [Download for Ubuntu 22.04](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            🐧 [Download for Ubuntu 22.04](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            
             `SHA256 : ${{ steps.build.outputs.sha256 }}`
           append_body: true
         env:

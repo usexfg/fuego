@@ -291,3 +291,104 @@ jobs:
           path: ${{ steps.build.outputs.artifact_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-termux:
+    name: Android Termux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            api: 24
+            abi: arm64-v8a
+          - arch: arm
+            api: 21
+            abi: armeabi-v7a
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential wget
+
+      - name: Download and Build Boost for Android
+        run: |
+          BOOST_VERSION=1.72.0
+          BOOST_VERSION_UNDERSCORE=${BOOST_VERSION//./_}
+          BOOST_URL="https://github.com/boostorg/boost/releases/download/boost_${BOOST_VERSION_UNDERSCORE}/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz"
+          wget --retry-connrefused --waitretry=5 --timeout=30 --tries=5 -O boost_${BOOST_VERSION_UNDERSCORE}.tar.gz "$BOOST_URL"
+          tar -xzf boost_${BOOST_VERSION_UNDERSCORE}.tar.gz
+          cd boost_${BOOST_VERSION_UNDERSCORE}
+
+          cat > user-config.jam << EOF
+          using clang : android
+          : $ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/${{ matrix.arch }}-linux-android${{ matrix.api }}-clang++
+          : <compileflags>-fPIC <compileflags>-frtti <compileflags>-fexceptions
+            <archiver>$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+            <ranlib>$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib ;
+          EOF
+
+          ./bootstrap.sh
+          ./b2 --user-config=user-config.jam toolset=clang-android target-os=android \
+               architecture=arm address-model=$([[ "${{ matrix.arch }}" == "aarch64" ]] && echo 64 || echo 32) \
+               --prefix=/tmp/boost-android-${{ matrix.arch }} install
+          cd ..
+
+      - name: Create Android Toolchain File
+        run: |
+          mkdir -p cmake
+          cat > cmake/android-${{ matrix.arch }}-toolchain.cmake << EOF
+          set(CMAKE_SYSTEM_NAME Android)
+          set(CMAKE_SYSTEM_VERSION ${{ matrix.api }})
+          set(CMAKE_ANDROID_ARCH_ABI ${{ matrix.abi }})
+          set(CMAKE_ANDROID_NDK $ENV{ANDROID_NDK_ROOT})
+          set(CMAKE_ANDROID_STL_TYPE c++_shared)
+          EOF
+
+      - name: Build
+        id: build
+        run: |
+          build_folder="build-android-${{ matrix.arch }}"
+          xfg_ver=${GITHUB_SHA::7}
+          release_name="fuego-cli-android-${{ matrix.arch }}-dev$xfg_ver"
+
+          mkdir "$build_folder"
+          cd "$build_folder"
+          cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/android-${{ matrix.arch }}-toolchain.cmake \
+                -DBOOST_ROOT=/tmp/boost-android-${{ matrix.arch }} \
+                -DCMAKE_BUILD_TYPE=Release ..
+          make -j$(nproc)
+
+          mkdir "$release_name"
+          exeFiles=()
+          for f in src/*; do
+            if [[ -x $f && -f $f ]]; then
+              $ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip "$f"
+              exeFiles+=( "$f" )
+            fi
+          done
+          cp "${exeFiles[@]}" "$release_name/"
+          tar -czf "$release_name".tar.gz "$release_name"
+          sha256=$(sha256sum "$release_name".tar.gz | awk '{print toupper($1)}')
+          artifact_path="$build_folder/$release_name"
+          asset_path="./$build_folder/$release_name.tar.gz"
+          echo "sha256=${sha256}" >> $GITHUB_OUTPUT
+          echo "release_name=${release_name}.tar.gz" >> $GITHUB_OUTPUT
+          echo "asset_path=${asset_path}" >> $GITHUB_OUTPUT
+          echo "xfg_version=${xfg_ver}" >> $GITHUB_OUTPUT
+          echo "artifact_path=${artifact_path}" >> $GITHUB_OUTPUT
+
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.release_name }}-${{ matrix.arch }}
+          path: ${{ steps.build.outputs.artifact_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -44,7 +44,7 @@ typedef enum { PortMappingEltNone,
 struct PortMapping;
 
 struct PortMappingParserData {
-        LIST_HEAD(portmappinglisthead, PortMapping) head;
+        LIST_HEAD(PortMappingHead, PortMapping) head;
         portMappingElt curelt;
 };
 

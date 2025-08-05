@@ -31,7 +31,6 @@ jobs:
 
       - name: Download and Build Boost for Android
         run: |
-          wget https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz
           wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz
           echo "<SHA256SUM>  boost_1_72_0.tar.gz" | sha256sum -c -
           tar -xjf boost_1_72_0.tar.gz

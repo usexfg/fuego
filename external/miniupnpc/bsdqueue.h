@@ -1,22 +1,3 @@
-Request ID: c02cb5e4-d286-4a06-ba7a-c71f4f6cad3d
-{"error":"ERROR_USER_ABORTED_REQUEST","details":{"title":"User aborted request.","detail":"Tool call ended before result was received","isRetryable":false,"additionalInfo":{},"buttons":[]},"isExpected":true}
-ConnectError: [aborted] Error
-    at BWa.$endAiConnectTransportReportError (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:4846:224431)
-    at wsr.S (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:495:17762)
-    at wsr.Q (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:495:17540)
-    at wsr.M (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:495:16628)
-    at wsr.L (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:495:15729)
-    at Wyt.value (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:495:14521)
-    at we.B (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:49:2398)
-    at we.fire (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:49:2617)
-    at Ynt.fire (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:4833:10379)
-    at u.onmessage (vscode-file://vscode-app/Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/workbench.desktop.main.js:7043:13881)/*	$OpenBSD: queue.h,v 1.31 2005/11/25 08:06:25 otto Exp $	*/
-/*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
-
-/*
- * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:

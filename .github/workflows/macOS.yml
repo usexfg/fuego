@@ -28,16 +28,20 @@ jobs:
           xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
           release_name="fuego-cli-macOS-${{ matrix.arch }}-v$xfg_ver"
           brew install gcc boost
-          # Disable ccache to avoid --D option error
+          # Completely disable ccache to avoid --D option error
           export CCACHE_DISABLE=1
           export CCACHE_DIR=""
+          export CCACHE_PREFIX=""
+          export CCACHE_PREFIX_CPP=""
           export CC="clang"
           export CXX="clang++"
+          # Remove any ccache wrapper from PATH temporarily
+          export PATH=$(echo $PATH | tr ':' '\n' | grep -v ccache | tr '\n' ':' | sed 's/:$//')
           # Ensure no ccache wrapper is used
           which ccache >/dev/null 2>&1 && echo "ccache found but disabled" || echo "ccache not found"
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} -DCMAKE_C_COMPILER_LAUNCHER="" -DCMAKE_CXX_COMPILER_LAUNCHER="" ..
           make -j4
           mkdir "$release_name"
           exeFiles=()

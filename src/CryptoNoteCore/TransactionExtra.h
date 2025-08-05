@@ -33,8 +33,13 @@
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
 #define TX_EXTRA_MESSAGE_TAG                0x04
 #define TX_EXTRA_TTL                        0x05
+<<<<<<< Updated upstream
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
+=======
+#define TX_EXTRA_YIELD_COMMITMENT           0x07
+#define TX_EXTRA_HEAT_COMMITMENT            0x08
+>>>>>>> Stashed changes
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 

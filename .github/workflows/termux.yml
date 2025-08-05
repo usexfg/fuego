@@ -31,9 +31,9 @@ jobs:
 
       - name: Download and Build Boost for Android
         run: |
-          wget -O boost_1_72_0.tar.bz2 https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2
-          echo "<SHA256SUM>  boost_1_72_0.tar.bz2" | sha256sum -c -
-          tar -xjf boost_1_72_0.tar.bz2
+          wget -O boost_1_72_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.gz
+          echo "<SHA256SUM>  boost_1_72_0.tar.gz" | sha256sum -c -
+          tar -xjf boost_1_72_0.tar.gz
           cd boost_1_72_0
           
           # Configure for Android

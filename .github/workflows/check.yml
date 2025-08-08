@@ -168,9 +168,9 @@ jobs:
           release_name=fuego-cli-macos-${{ matrix.arch }}-dev"$xfg_ver"
 
           brew install gcc boost ccache
-          export CCACHE_DIR="$HOME/.cache/ccache"
-          export CC="ccache clang"
-          export CXX="ccache clang++"
+          export CC=clang
+          export CXX=clang++
+          export PATH="/usr/local/opt/ccache/libexec:$PATH"
 
           mkdir "$build_folder"
           cd "$build_folder"

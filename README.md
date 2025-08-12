@@ -24,8 +24,6 @@ Based upon the CryptoNote protocol & philosophy.
 
 [![macOS](https://github.com/usexfg/fuego/actions/workflows/macOS.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/macOS.yml)
 
-[![AppImage Linux](https://github.com/usexfg/fuego/actions/workflows/appimage.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/appimage.yml)
-
 [![Ubuntu 24.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml)
 
 [![Ubuntu 22.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml)

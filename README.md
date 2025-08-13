@@ -1,40 +1,35 @@
-<img title="The Long Night Is Coming" src="https://github.com/usexfg/fuego-data/blob/master/fuego-images/fuegoline.gif?raw=true"><img/>
-### Fuego is open-source peer-to-peer decentralized privacy cryptocurrency built by advocates for freedom thru sound money and free open-source software.
+<img title="Unlock the Power of Fandom" src="https://raw.githubusercontent.com/usexfg/fuego-data/master/images/fuegoline.gif"><img/>
+### Fuego is an open-source decentralized P2P blockchain network and privacy cryptocurrency built by advocates for freedom thru sound money.
 
 Based upon the CryptoNote protocol & philosophy.
 
 #### Resources
 
--   [Website](https://usexfg.org)
+-   Web: <https://usexfg.org>
 -   Explorer: <http://fuego.spaceportx.net>
--   Explorer: <https://explore-xfg.loudmining.com>
 -   Explorer: [http://radioactive.sytes.net](http://radioactive.sytes.net:8000/index.html)
--   [Discord](https://discord.gg/5UJcJJg)
--   [Twitter](https://twitter.com/useXFG)
--   [Medium](https://medium.com/@usexfg)
--   [Bitcoin Talk](https://bitcointalk.org/index.php?topic=2712001)
+-   Explorer: <https://explore-xfg.loudmining.com>
+-   Discord: <https://discord.gg/5UJcJJg>
+-   Twitter: <https://twitter.com/useXFG>
+-   Medium: <https://medium.com/@usexfg>
+-   Bitcoin Talk: <https://bitcointalk.org/index.php?topic=2712001>
 
  ______________________________
  
 
-<sup>"Working software is the primary measure of progress." [‣]</sup>
 
 ##### Master Status   
-[![Build check](https://github.com/usexfg/fuego/actions/workflows/check.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/check.yml)
 
 [![macOS](https://github.com/usexfg/fuego/actions/workflows/macOS.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/macOS.yml)
 
-[![Ubuntu 24.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu24.yml)
+[![Ubuntu 20.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu20.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu20.yml)
 
 [![Ubuntu 22.04](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/ubuntu22.yml)
 
 [![Windows](https://github.com/usexfg/fuego/actions/workflows/windows.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/windows.yml)
 
-[![Docker Images](https://github.com/usexfg/fuego/actions/workflows/docker.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/docker.yml)
+<sup>"Working software is the primary measure of progress." [‣]</sup>
 
-[![Android (Termux)](https://github.com/usexfg/fuego/actions/workflows/termux.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/termux.yml)
-
-[![Raspberry Pi (ARM64)](https://github.com/usexfg/fuego/actions/workflows/raspberry-pi.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/raspberry-pi.yml)
 
 [‣]:http://agilemanifesto.org/
 

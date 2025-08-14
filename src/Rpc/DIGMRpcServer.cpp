@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Privacy Council
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
 // This file is part of Fuego.
@@ -16,6 +16,7 @@
 #include "DIGMRpcServer.h"
 #include <sstream>
 #include <iostream>
+#include <memory>
 
 namespace CryptoNote {
 
@@ -34,14 +35,14 @@ void DIGMRpcServer::initialize() {
 void DIGMRpcServer::start() {
     if (!m_is_running) {
         m_is_running = true;
-        // In a real implementation, this would start the RPC server
+        // todo start the RPC server
     }
 }
 
 void DIGMRpcServer::stop() {
     if (m_is_running) {
         m_is_running = false;
-        // In a real implementation, this would stop the RPC server
+        // todo stop the RPC server
     }
 }
 
@@ -70,8 +71,8 @@ bool DIGMRpcServer::isRunning() const {
 DIGMRpcRequest DIGMRpcServer::parseRequest(const std::string& request) {
     DIGMRpcRequest parsedRequest;
     
-    // Simplified JSON parsing - in practice, you'd use a proper JSON library
-    // This is a basic implementation for demonstration
+    // Simplified JSON parsing - 
+    // todo use a proper JSON library
     
     // Extract method from request
     size_t methodPos = request.find("\"method\":\"");

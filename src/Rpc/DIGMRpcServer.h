@@ -123,6 +123,13 @@ private:
     // Utility functions
     std::string createErrorResponse(const std::string& requestId, const std::string& error);
     std::string createSuccessResponse(const std::string& requestId, const std::string& result);
+    
+    // Parameter extraction helpers
+    std::string extractAddressFromParams(const std::string& params);
+    std::string extractSourceAddressFromParams(const std::string& params);
+    std::string extractDestinationAddressFromParams(const std::string& params);
+    uint64_t extractAmountFromParams(const std::string& params);
+    uint64_t extractFeeFromParams(const std::string& params);
 };
 
 // Factory function to create DIGM RPC server

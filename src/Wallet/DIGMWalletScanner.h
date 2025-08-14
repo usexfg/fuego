@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2024 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Privacy Council
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
 // This file is part of Fuego.

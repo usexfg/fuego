@@ -88,11 +88,6 @@ bool DIGMTokenManager::isValidDIGMTransaction(const DIGMTransaction& transaction
         return output_sum <= DIGMConstants::DIGM_TOTAL_SUPPLY;
     }
     
-    // For burn transactions, outputs can be 0
-    if (transaction.is_burn) {
-        return input_sum >= output_sum;
-    }
-    
     // For regular transfers, input must equal output (minus fee)
     return input_sum >= output_sum;
 }
@@ -137,21 +132,7 @@ bool DIGMTokenManager::mintDIGMTokens(uint64_t amount, uint32_t height, const Cr
     return true;
 }
 
-bool DIGMTokenManager::burnDIGMTokens(uint64_t amount) {
-    if (!m_is_initialized) {
-        return false;
-    }
-    
-    if (!validateDIGMAmount(amount)) {
-        return false;
-    }
-    
-    // Remove outputs from the available pool
-    // This is a simplified implementation
-    // In a real implementation, you'd need to track which outputs are spent
-    
-    return true;
-}
+
 
 bool DIGMTokenManager::transferDIGMTokens(const std::vector<DIGMOutput>& inputs, 
                                          const std::vector<DIGMOutput>& outputs) {
@@ -259,23 +240,7 @@ bool DIGMTokenManager::validateDIGMTransferTransaction(const std::vector<uint8_t
     return false;
 }
 
-bool DIGMTokenManager::validateDIGMBurnTransaction(const std::vector<uint8_t>& tx_extra) {
-    if (tx_extra.size() < 2) {
-        return false;
-    }
-    
-    if (tx_extra[0] != DIGMConstants::DIGM_TX_EXTRA_TAG) {
-        return false;
-    }
-    
-    // Check if it's a burn transaction
-    if (tx_extra.size() >= 3 && tx_extra[1] == 0x03) { // Burn flag
-        uint64_t amount = parseDIGMAmount(tx_extra);
-        return validateDIGMAmount(amount);
-    }
-    
-    return false;
-}
+
 
 bool DIGMTokenManager::isDIGMTransaction(const std::vector<uint8_t>& tx_extra) {
     if (tx_extra.size() < 1) {

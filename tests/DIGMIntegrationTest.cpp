@@ -17,8 +17,8 @@
 #include <string>
 #include <vector>
 #include <cassert>
-#include "../../src/CryptoNoteCore/DIGMToken.h"
-#include "../../src/Wallet/DIGMWalletIntegration.h"
+#include "../src/CryptoNoteCore/DIGMToken.h"
+#include "../src/Wallet/DIGMWalletIntegration.h"
 
 using namespace CryptoNote;
 

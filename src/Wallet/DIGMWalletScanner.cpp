@@ -165,7 +165,10 @@ public:
         // Find and mark the output as spent
         for (auto& addressOutputs : m_address_outputs) {
             for (auto& output : addressOutputs.second) {
-                if (output.transaction_hash == transactionHash && output.output_index == outputIndex) {
+                // Convert Crypto::Hash to string for comparison
+                std::string outputHashStr = std::string(reinterpret_cast<const char*>(output.transaction_hash.data), sizeof(Crypto::Hash));
+                std::string inputHashStr = std::string(reinterpret_cast<const char*>(transactionHash.data), sizeof(Crypto::Hash));
+                if (outputHashStr == inputHashStr && output.output_index == outputIndex) {
                     output.is_spent = true;
                     updateBalances(addressOutputs.first);
                     break;

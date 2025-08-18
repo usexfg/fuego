@@ -77,6 +77,7 @@ void GetStatus::Response::serialize(CryptoNote::ISerializer &serializer)
   serializer(depositCount, "depositCount");
   serializer(transactionCount, "transactionCount");
   serializer(addressCount, "addressCount");
+  serializer(networkId, "networkId");
 }
 
 void CreateDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
@@ -556,6 +557,176 @@ void GetMoneySupplyStats::Response::serialize(CryptoNote::ISerializer &serialize
   serializer(supplyIncreasePercentage, "supplyIncreasePercentage");
 }
 
+// Burn Deposit RPC serialization
+void CreateBurnDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(amount, "amount");
+  serializer(sourceAddress, "sourceAddress");
+  serializer(metadata, "metadata");
+}
 
+void CreateBurnDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+  serializer(term, "term");
+  serializer(heatAmount, "heatAmount");
+}
+
+void CreateBurnDepositWithProof::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(amount, "amount");
+  serializer(sourceAddress, "sourceAddress");
+  serializer(recipientAddress, "recipientAddress");
+  serializer(metadata, "metadata");
+}
+
+void CreateBurnDepositWithProof::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+  serializer(term, "term");
+  serializer(heatAmount, "heatAmount");
+  serializer(burnProofDataFile, "burnProofDataFile");
+  serializer(networkId, "networkId");
+}
+
+void CreateBurnDeposit8000::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(sourceAddress, "sourceAddress");
+  serializer(metadata, "metadata");
+}
+
+void CreateBurnDeposit8000::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+  serializer(term, "term");
+  serializer(heatAmount, "heatAmount");
+}
+
+void CreateBurnDeposit8000WithProof::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(sourceAddress, "sourceAddress");
+  serializer(recipientAddress, "recipientAddress");
+  serializer(metadata, "metadata");
+}
+
+void CreateBurnDeposit8000WithProof::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+  serializer(term, "term");
+  serializer(heatAmount, "heatAmount");
+  serializer(burnProofDataFile, "burnProofDataFile");
+  serializer(networkId, "networkId");
+}
+
+// BPDF RPC serialization
+void GenerateBurnProofDataFile::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+  serializer(recipientAddress, "recipientAddress");
+  serializer(outputPath, "outputPath");
+}
+
+void GenerateBurnProofDataFile::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(burnProofDataFile, "burnProofDataFile");
+  serializer(success, "success");
+  serializer(errorMessage, "errorMessage");
+  serializer(networkId, "networkId");
+}
+
+void GenerateBurnProofDataFileAuto::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+  serializer(recipientAddress, "recipientAddress");
+  serializer(outputPath, "outputPath");
+}
+
+void GenerateBurnProofDataFileAuto::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(burnProofDataFile, "burnProofDataFile");
+  serializer(success, "success");
+  serializer(errorMessage, "errorMessage");
+  serializer(networkId, "networkId");
+}
+
+// Dynamic Supply RPC serialization
+void GetBaseTotalSupply::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void GetBaseTotalSupply::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(baseTotalSupply, "baseTotalSupply");
+  serializer(formattedAmount, "formattedAmount");
+}
+
+void GetRealTotalSupply::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void GetRealTotalSupply::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(baseTotalSupply, "baseTotalSupply");
+  serializer(totalBurnedXfg, "totalBurnedXfg");
+  serializer(realTotalSupply, "realTotalSupply");
+  serializer(formattedAmount, "formattedAmount");
+}
+
+void GetTotalDepositAmount::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void GetTotalDepositAmount::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(currentDepositAmount, "currentDepositAmount");
+  serializer(totalBurnedXfg, "totalBurnedXfg");
+  serializer(totalDepositAmount, "totalDepositAmount");
+  serializer(formattedAmount, "formattedAmount");
+}
+
+void GetCirculatingSupply::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void GetCirculatingSupply::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(realTotalSupply, "realTotalSupply");
+  serializer(totalDepositAmount, "totalDepositAmount");
+  serializer(circulatingSupply, "circulatingSupply");
+  serializer(formattedAmount, "formattedAmount");
+}
+
+void GetTotalBurnedXfg::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void GetTotalBurnedXfg::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(totalBurnedXfg, "totalBurnedXfg");
+  serializer(formattedAmount, "formattedAmount");
+}
+
+void GetDynamicSupplyOverview::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void GetDynamicSupplyOverview::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(baseTotalSupply, "baseTotalSupply");
+  serializer(baseTotalSupplyFormatted, "baseTotalSupplyFormatted");
+  serializer(realTotalSupply, "realTotalSupply");
+  serializer(realTotalSupplyFormatted, "realTotalSupplyFormatted");
+  serializer(totalDepositAmount, "totalDepositAmount");
+  serializer(totalDepositAmountFormatted, "totalDepositAmountFormatted");
+  serializer(circulatingSupply, "circulatingSupply");
+  serializer(circulatingSupplyFormatted, "circulatingSupplyFormatted");
+  serializer(totalBurnedXfg, "totalBurnedXfg");
+  serializer(totalBurnedXfgFormatted, "totalBurnedXfgFormatted");
+  serializer(currentDepositAmount, "currentDepositAmount");
+  serializer(currentDepositAmountFormatted, "currentDepositAmountFormatted");
+  serializer(burnPercentage, "burnPercentage");
+  serializer(depositPercentage, "depositPercentage");
+  serializer(circulatingPercentage, "circulatingPercentage");
+}
 
 } // namespace PaymentService

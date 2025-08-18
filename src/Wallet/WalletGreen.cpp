@@ -4669,7 +4669,7 @@ namespace CryptoNote
   // Burn deposit secret management implementation
   void WalletGreen::addBurnDepositSecret(const std::string& transactionHash, const Crypto::SecretKey& secret, uint64_t amount, const std::vector<uint8_t>& metadata) {
     // Store burn deposit secret locally (never on blockchain)
-    BurnDepositInfo burnInfo(transactionHash, secret, amount, metadata);
+    WalletGreen::BurnDepositInfo burnInfo(transactionHash, secret, amount, metadata);
     burnInfo.timestamp = static_cast<uint64_t>(std::time(nullptr));
     
     m_burnDepositSecrets[transactionHash] = burnInfo;
@@ -4684,7 +4684,7 @@ namespace CryptoNote
       return false;  // Secret not found
     }
     
-    const BurnDepositInfo& burnInfo = it->second;
+    const WalletGreen::BurnDepositInfo& burnInfo = it->second;
     secret = burnInfo.secret;
     amount = burnInfo.amount;
     metadata = burnInfo.metadata;
@@ -4704,7 +4704,7 @@ namespace CryptoNote
   }
 
   std::vector<WalletGreen::BurnDepositInfo> WalletGreen::getAllBurnDeposits() {
-    std::vector<BurnDepositInfo> result;
+    std::vector<WalletGreen::BurnDepositInfo> result;
     for (const auto& pair : m_burnDepositSecrets) {
       result.push_back(pair.second);
     }

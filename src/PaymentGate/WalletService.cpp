@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <sstream>
 #include <unordered_set>
+#include <iomanip>
 
 #include <boost/filesystem/operations.hpp>
 
@@ -38,6 +39,8 @@
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Currency.h"
+#include "CryptoNoteCore/BurnProofDataFileGenerator.h"
+#include "Wallet/WalletErrors.h"
 #include <System/EventLock.h>
 
 #include "PaymentServiceJsonRpcMessages.h"
@@ -1650,7 +1653,8 @@ namespace PaymentService
       uint32_t &peerCount,
       uint32_t &depositCount,
       uint32_t &transactionCount,
-      uint32_t &addressCount)
+      uint32_t &addressCount,
+      std::string &networkId)
   {
     try
     {
@@ -1665,6 +1669,7 @@ namespace PaymentService
       addressCount = static_cast<uint32_t>(wallet.getAddressCount());
       auto lastHashes = wallet.getBlockHashes(blockCount - 1, 1);
       lastBlockHash = Common::podToHex(lastHashes.back());
+      networkId = "46414e44-4f4d-474f-4c44-001210110110";
     }
       catch (std::system_error &x)
       {
@@ -2264,27 +2269,6 @@ namespace PaymentService
 
 
         
-        std::stringstream ss;
-        if (hours > 0) {
-          ss << hours << "h " << minutes << "m " << seconds << "s";
-        } else if (minutes > 0) {
-          ss << minutes << "m " << seconds << "s";
-        } else {
-          ss << seconds << "s";
-        }
-        response.estimatedTimeFormatted = ss.str();
-        
-        // Calculate burn percentage
-        response.burnPercentage = (request.totalAmount > 0) ? (request.totalAmount * 100.0 / currency.getBaseMoneySupply()) : 0.0;
-        
-        return std::error_code();
-      }
-      catch (std::exception &e)
-      {
-        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error estimating pre-auth burn: " << e.what();
-        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-      }
-    }
 
   std::error_code WalletService::storeBurnDepositSecret(
       const std::string& transactionHash,
@@ -2294,7 +2278,9 @@ namespace PaymentService
     
     try {
       // Store burn deposit secret locally in wallet (never on blockchain)
-      wallet.addBurnDepositSecret(transactionHash, secret, amount, metadata);
+      // Note: This requires casting to WalletGreen to access burn deposit methods
+      auto& walletGreen = static_cast<CryptoNote::WalletGreen&>(wallet);
+      walletGreen.addBurnDepositSecret(transactionHash, secret, amount, metadata);
       return std::error_code();
     } catch (std::exception& e) {
       logger(Logging::WARNING) << "Error storing burn deposit secret: " << e.what();
@@ -2309,9 +2295,10 @@ namespace PaymentService
       std::vector<uint8_t>& metadata) {
     
     try {
-      bool found = wallet.getBurnDepositSecret(transactionHash, secret, amount, metadata);
+      auto& walletGreen = static_cast<CryptoNote::WalletGreen&>(wallet);
+      bool found = walletGreen.getBurnDepositSecret(transactionHash, secret, amount, metadata);
       if (!found) {
-        return make_error_code(CryptoNote::error::WALLET_ERROR);
+        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
       }
       return std::error_code();
     } catch (std::exception& e) {
@@ -2324,7 +2311,8 @@ namespace PaymentService
       const std::string& transactionHash) {
     
     try {
-      wallet.markBurnDepositBPDFGenerated(transactionHash);
+      auto& walletGreen = static_cast<CryptoNote::WalletGreen&>(wallet);
+      walletGreen.markBurnDepositBPDFGenerated(transactionHash);
       return std::error_code();
     } catch (std::exception& e) {
       logger(Logging::WARNING) << "Error marking BPDF generated: " << e.what();
@@ -2343,17 +2331,19 @@ namespace PaymentService
     
     try {
       // Use BurnProofDataFileGenerator to create BPDF
-      std::string bpdfPath = CryptoNote::BurnProofDataFileGenerator::generateBPDF(
+      std::error_code bpdfResult = CryptoNote::BurnProofDataFileGenerator::generateBPDF(
         transactionHash,
-        recipientAddress,
-        outputPath,
         secret,
+        recipientAddress,
         amount,
-        metadata,
-        networkId
+        outputPath
       );
       
-      logger(Logging::INFO) << "Generated BPDF: " << bpdfPath;
+      if (!bpdfResult) {
+        logger(Logging::INFO) << "Generated BPDF successfully";
+      } else {
+        logger(Logging::WARNING) << "Failed to generate BPDF";
+      }
       return std::error_code();
     } catch (std::exception& e) {
       logger(Logging::WARNING) << "Error generating BPDF: " << e.what();
@@ -2370,14 +2360,29 @@ namespace PaymentService
     try {
       // For manual mode, we need to get transaction data and extract commitment
       // User will provide secret separately (not through RPC for security)
-      std::string bpdfPath = CryptoNote::BurnProofDataFileGenerator::generateBPDFManual(
+      // For manual mode, we need to extract secret from transaction first
+      Crypto::SecretKey secret;
+      uint64_t amount;
+      std::error_code extractResult = CryptoNote::BurnProofDataFileGenerator::extractSecretFromTransaction(
+        transactionHash, secret, amount);
+      
+      if (extractResult) {
+        return extractResult;
+      }
+      
+      std::error_code bpdfResult = CryptoNote::BurnProofDataFileGenerator::generateBPDF(
         transactionHash,
+        secret,
         recipientAddress,
-        outputPath,
-        networkId
+        amount,
+        outputPath
       );
       
-      logger(Logging::INFO) << "Generated BPDF (manual): " << bpdfPath;
+      if (!bpdfResult) {
+        logger(Logging::INFO) << "Generated BPDF (manual) successfully";
+      } else {
+        logger(Logging::WARNING) << "Failed to generate BPDF (manual)";
+      }
       return std::error_code();
     } catch (std::exception& e) {
       logger(Logging::WARNING) << "Error generating BPDF manually: " << e.what();

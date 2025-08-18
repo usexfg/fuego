@@ -77,6 +77,7 @@ namespace CryptoNote
 
 		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;    // 800 XFG (8,000,000,000 atomic units)
 		const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
+		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 atomic units)
 		const uint64_t BURN_DEPOSIT_8000_AMOUNT = 8000 * COIN;  // 8000 XFG (80,000,000,000 atomic units)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
                 const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 

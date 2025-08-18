@@ -125,7 +125,7 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code getRebornPercentage(double &rebornPercentage);
   std::error_code getSupplyIncreasePercentage(double &supplyIncreasePercentage);
 
-
+  std::string formatAmount(uint64_t amount);
 
   std::error_code getMessagesFromExtra(const std::string &extra, std::vector<std::string> &messges);
   std::error_code estimateFusion(uint64_t threshold, const std::vector<std::string> &addresses, uint32_t &fusionReadyCount, uint32_t &totalOutputCount);

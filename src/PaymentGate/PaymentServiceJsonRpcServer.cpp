@@ -260,7 +260,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetViewKey(const GetViewKey::
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetStatus(const GetStatus::Request& request, GetStatus::Response& response) {
-  return service.getStatus(response.blockCount, response.knownBlockCount, response.lastBlockHash, response.peerCount, response.depositCount, response.transactionCount, response.addressCount);
+  return service.getStatus(response.blockCount, response.knownBlockCount, response.lastBlockHash, response.peerCount, response.depositCount, response.transactionCount, response.addressCount, response.networkId);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response) {
@@ -282,7 +282,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDep
   // Generate commitment based on deposit type
   if (isBurnDeposit) {
     commitment = CryptoNote::DepositCommitmentGenerator::generateHeatCommitment(
-      request.sourceAddress, request.amount, commitment.metadata);
+      request.amount, commitment.metadata);
   } else {
     commitment = CryptoNote::DepositCommitmentGenerator::generateYieldCommitment(
       request.term, request.amount, commitment.metadata);
@@ -303,7 +303,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit(const Creat
   
   // Generate HEAT commitment with secret for local storage
   auto [commitment, secret] = CryptoNote::DepositCommitmentGenerator::generateHeatCommitmentWithSecret(
-    request.amount, enhancedMetadata);
+    request.amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   
   std::error_code result = service.createDeposit(request.amount, term, request.sourceAddress, response.transactionHash, commitment);
   
@@ -312,7 +312,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit(const Creat
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(request.amount);  // 0.8 XFG = 8M HEAT
     
     // 🔥 ADD: Store secret locally (never on blockchain)
-    service.storeBurnDepositSecret(response.transactionHash, secret, request.amount, enhancedMetadata);
+    service.storeBurnDepositSecret(response.transactionHash, secret, request.amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   }
   
   return result;
@@ -328,9 +328,9 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDepositWithProof(co
       "network_id:" + networkId : 
       request.metadata + "|network_id:" + networkId;
   
-  // Generate HEAT commitment with enhanced metadata
-  CryptoNote::DepositCommitment commitment = CryptoNote::DepositCommitmentGenerator::generateHeatCommitment(
-    request.sourceAddress, request.amount, enhancedMetadata);
+  // Generate HEAT commitment with enhanced metadata and also get secret
+  auto [commitment, secret] = CryptoNote::DepositCommitmentGenerator::generateHeatCommitmentWithSecret(
+    request.amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   
   std::error_code result = service.createDeposit(request.amount, term, request.sourceAddress, response.transactionHash, commitment);
   
@@ -339,14 +339,20 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDepositWithProof(co
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(request.amount);  // 0.8 XFG = 8M HEAT
     
     // 🔥 ADD: Generate BPDF with network ID
-    std::string bpdfPath = generateBurnProofDataFile(
+    std::string outputPath = service.getDefaultWalletPath() + "/bpdf/" + response.transactionHash + ".json";
+    std::error_code bpdfResult = service.generateBurnProofDataFile(
       response.transactionHash, 
       request.recipientAddress, 
-      request.outputPath,
+      outputPath,
+      secret,
+      request.amount,
+      std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()),
       networkId
     );
     
-    response.burnProofDataFile = bpdfPath;
+    if (!bpdfResult) {
+      response.burnProofDataFile = outputPath;
+    }
     response.networkId = networkId;
   }
   
@@ -366,7 +372,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000(const C
   
   // Generate HEAT commitment with secret for local storage
   auto [commitment, secret] = CryptoNote::DepositCommitmentGenerator::generateHeatCommitmentWithSecret(
-    amount, enhancedMetadata);
+    amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   
   std::error_code result = service.createDeposit(amount, term, request.sourceAddress, response.transactionHash, commitment);
   
@@ -375,7 +381,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000(const C
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 8000 XFG = 80,000,000,000 HEAT
     
     // 🔥 ADD: Store secret locally (never on blockchain)
-    service.storeBurnDepositSecret(response.transactionHash, secret, amount, enhancedMetadata);
+    service.storeBurnDepositSecret(response.transactionHash, secret, amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   }
   
   return result;
@@ -394,7 +400,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000WithProo
   
   // Generate HEAT commitment with enhanced metadata
   CryptoNote::DepositCommitment commitment = CryptoNote::DepositCommitmentGenerator::generateHeatCommitment(
-    request.sourceAddress, amount, enhancedMetadata);
+    amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   
   std::error_code result = service.createDeposit(amount, term, request.sourceAddress, response.transactionHash, commitment);
   
@@ -403,14 +409,19 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000WithProo
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 8000 XFG = 80,000,000,000 HEAT
     
     // 🔥 ADD: Generate BPDF with network ID
-    std::string bpdfPath = generateBurnProofDataFile(
+    std::error_code bpdfResult = service.generateBurnProofDataFile(
       response.transactionHash, 
       request.recipientAddress, 
       request.outputPath,
+      secret,
+      amount,
+      std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()),
       networkId
     );
     
-    response.burnProofDataFile = bpdfPath;
+    if (!bpdfResult) {
+      response.burnProofDataFile = request.outputPath;
+    }
     response.networkId = networkId;
   }
   
@@ -430,7 +441,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFile(con
     
     // For manual mode, we need to get transaction data and extract commitment
     // User will provide secret separately (not through RPC for security)
-    std::string bpdfPath = service.generateBurnProofDataFileManual(
+    std::error_code bpdfResult = service.generateBurnProofDataFile(
       request.transactionHash,
       request.recipientAddress,
       outputPath,
@@ -472,7 +483,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFileAuto
     }
     
     // Generate BPDF using local secret
-    std::string bpdfPath = service.generateBurnProofDataFile(
+    std::error_code bpdfResult = service.generateBurnProofDataFile(
       request.transactionHash,
       request.recipientAddress,
       outputPath,
@@ -482,7 +493,9 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFileAuto
       networkId
     );
     
-    response.burnProofDataFile = bpdfPath;
+    if (!bpdfResult) {
+      response.burnProofDataFile = outputPath;
+    }
     response.success = true;
     response.networkId = networkId;
     
@@ -566,30 +579,5 @@ std::error_code PaymentServiceJsonRpcServer::handleGetDynamicSupplyOverview(cons
   return service.getDynamicSupplyOverview(response);
 }
 
-// Batch Burn Pre-Authorization RPC Handlers
-std::error_code PaymentServiceJsonRpcServer::handleCreatePreAuthBurn(const CreatePreAuthBurn::Request& request, CreatePreAuthBurn::Response& response)
-{
-  return service.createPreAuthBurn(request, response);
-}
-
-std::error_code PaymentServiceJsonRpcServer::handleExecutePreAuthBurn(const ExecutePreAuthBurn::Request& request, ExecutePreAuthBurn::Response& response)
-{
-  return service.executePreAuthBurn(request, response);
-}
-
-std::error_code PaymentServiceJsonRpcServer::handleGetPreAuthBurnStatus(const GetPreAuthBurnStatus::Request& request, GetPreAuthBurnStatus::Response& response)
-{
-  return service.getPreAuthBurnStatus(request, response);
-}
-
-std::error_code PaymentServiceJsonRpcServer::handleCancelPreAuthBurn(const CancelPreAuthBurn::Request& request, CancelPreAuthBurn::Response& response)
-{
-  return service.cancelPreAuthBurn(request, response);
-}
-
-std::error_code PaymentServiceJsonRpcServer::handleEstimatePreAuthBurn(const EstimatePreAuthBurn::Request& request, EstimatePreAuthBurn::Response& response)
-{
-  return service.estimatePreAuthBurn(request, response);
-}
 
 }

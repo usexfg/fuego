@@ -84,12 +84,17 @@ void CreateDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
   serializer(amount, "amount");
   serializer(term, "term");
   serializer(sourceAddress, "sourceAddress");
+  serializer(heatCommitment, "heatCommitment");
+  serializer(metadata, "metadata");
 }
 
 void CreateDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(transactionHash, "transactionHash");
+  serializer(isBurnDeposit, "isBurnDeposit");
 }
+
+
 
 void WithdrawDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
 {
@@ -534,5 +539,23 @@ void SendFusionTransaction::Response::serialize(CryptoNote::ISerializer &seriali
 {
   serializer(transactionHash, "transactionHash");
 }
+
+void GetMoneySupplyStats::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void GetMoneySupplyStats::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(baseMoneySupply, "baseMoneySupply");
+  serializer(totalBurnedXfg, "totalBurnedXfg");
+  serializer(totalRebornXfg, "totalRebornXfg");
+  serializer(adjustedMoneySupply, "adjustedMoneySupply");
+  serializer(circulatingSupply, "circulatingSupply");
+  serializer(burnPercentage, "burnPercentage");
+  serializer(rebornPercentage, "rebornPercentage");
+  serializer(supplyIncreasePercentage, "supplyIncreasePercentage");
+}
+
+
 
 } // namespace PaymentService

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -180,6 +180,11 @@ namespace CryptoNote
     bool operator()(const TransactionExtraYieldCommitment &t)
     {
       return addYieldCommitmentToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraCDDepositSecret &t)
+    {
+      return addCDDepositSecretToExtra(extra, t);
     }
   };
 
@@ -462,7 +467,7 @@ namespace CryptoNote
   // HEAT commitment serialization
   bool TransactionExtraHeatCommitment::serialize(ISerializer &s)
   {
-    s(commitment, "commitment");
+    s(commitment, "commitment");   // 🔒 SECURE: Only commitment hash
     s(amount, "amount");
     s(metadata, "metadata");
     return true;
@@ -508,7 +513,7 @@ namespace CryptoNote
   bool createTxExtraWithHeatCommitment(const Crypto::Hash &commitment, uint64_t amount, const std::vector<uint8_t> &metadata, std::vector<uint8_t> &extra)
   {
     TransactionExtraHeatCommitment heatCommitment;
-    heatCommitment.commitment = commitment;
+    heatCommitment.commitment = commitment;       //  Only commitment hash
     heatCommitment.amount = amount;
     heatCommitment.metadata = metadata;
     
@@ -517,8 +522,8 @@ namespace CryptoNote
 
   bool getHeatCommitmentFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraHeatCommitment &commitment)
   {
-    // Implementation would parse the extra field to extract HEAT commitment
-    // This is a placeholder - full implementation would need proper parsing logic
+    // CODL3 implementation will parse the extra field to extract HEAT commitment
+    // This is a placeholder until CODL3 merge-mining is implemented - full implementation needss parsing logic
     return false;
   }
 
@@ -575,6 +580,68 @@ namespace CryptoNote
   bool getYieldCommitmentFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraYieldCommitment &commitment)
   {
     // Implementation would parse the extra field to extract yield commitment
+    // This is a placeholder - full implementation would need proper parsing logic
+    return false;
+  }
+
+  // CD Deposit Secret helper functions
+  bool addCDDepositSecretToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraCDDepositSecret &deposit_secret)
+  {
+    tx_extra.push_back(TX_EXTRA_CD_DEPOSIT_SECRET);
+    
+    // Serialize secret key (32 bytes)
+    if (deposit_secret.secret_key.size() != 32) {
+      return false; // Invalid secret key size
+    }
+    tx_extra.insert(tx_extra.end(), deposit_secret.secret_key.begin(), deposit_secret.secret_key.end());
+    
+    // Serialize XFG amount (8 bytes, little-endian)
+    uint64_t xfg_amount = deposit_secret.xfg_amount;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(xfg_amount & 0xFF));
+      xfg_amount >>= 8;
+    }
+    
+    // Serialize APR basis points (4 bytes, little-endian)
+    uint32_t apr_basis_points = deposit_secret.apr_basis_points;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(apr_basis_points & 0xFF));
+      apr_basis_points >>= 8;
+    }
+    
+    // Serialize term code (1 byte)
+    tx_extra.push_back(deposit_secret.term_code);
+    
+    // Serialize chain code (1 byte)
+    tx_extra.push_back(deposit_secret.chain_code);
+    
+    // Serialize metadata size and data
+    uint8_t metadataSize = static_cast<uint8_t>(deposit_secret.metadata.size());
+    tx_extra.push_back(metadataSize);
+    
+    if (metadataSize > 0) {
+      tx_extra.insert(tx_extra.end(), deposit_secret.metadata.begin(), deposit_secret.metadata.end());
+    }
+    
+    return true;
+  }
+
+  bool createTxExtraWithCDDepositSecret(const std::vector<uint8_t> &secret_key, uint64_t xfg_amount, uint32_t apr_basis_points, uint8_t term_code, uint8_t chain_code, const std::vector<uint8_t> &metadata, std::vector<uint8_t> &extra)
+  {
+    TransactionExtraCDDepositSecret depositSecret;
+    depositSecret.secret_key = secret_key;
+    depositSecret.xfg_amount = xfg_amount;
+    depositSecret.apr_basis_points = apr_basis_points;
+    depositSecret.term_code = term_code;
+    depositSecret.chain_code = chain_code;
+    depositSecret.metadata = metadata;
+    
+    return addCDDepositSecretToExtra(extra, depositSecret);
+  }
+
+  bool getCDDepositSecretFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraCDDepositSecret &deposit_secret)
+  {
+    // Implementation would parse the extra field to extract CD deposit secret
     // This is a placeholder - full implementation would need proper parsing logic
     return false;
   }

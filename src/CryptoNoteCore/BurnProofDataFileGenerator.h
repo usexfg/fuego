@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <system_error>
 #include "CryptoNote.h"
 
 namespace CryptoNote {

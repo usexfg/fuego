@@ -202,6 +202,43 @@ public:
   bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint32_t height) const;
   bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t &amountPowerOfTen, uint32_t height) const;
 
+  // Burn deposit validation methods
+  bool isValidBurnDepositAmount(uint64_t amount) const;
+  bool isValidBurnDepositTerm(uint32_t term) const;
+  bool isBurnDeposit(uint32_t term) const;
+  uint64_t getBurnDepositMinAmount() const { return m_burnDepositMinAmount; }
+  uint64_t getBurnDepositStandardAmount() const { return m_burnDepositStandardAmount; }
+  uint64_t getBurnDeposit8000Amount() const { return m_burnDeposit8000Amount; }
+  uint32_t getDepositTermForever() const { return m_depositTermForever; }
+  uint32_t getDepositTermBurn() const { return m_depositTermForever; }  // Alias for compatibility
+
+  // HEAT token conversion methods
+  uint64_t convertXfgToHeat(uint64_t xfgAmount) const;
+  uint64_t convertHeatToXfg(uint64_t heatAmount) const;
+  uint64_t getHeatConversionRate() const { return m_heatConversionRate; }
+
+  // Dynamic money supply methods
+  uint64_t getBaseMoneySupply() const { return m_baseMoneySupply; }
+  uint64_t getAdjustedMoneySupply() const;
+  uint64_t getCirculatingSupply() const;
+  uint64_t getTotalBurnedXfg() const { return m_totalBurnedXfg; }
+  uint64_t getTotalRebornXfg() const { return m_totalRebornXfg; }
+  void addBurnedXfg(uint64_t amount);
+  void addRebornXfg(uint64_t amount);
+  double getBurnPercentage() const;
+  double getRebornPercentage() const;
+  double getSupplyIncreasePercentage() const;
+
+  // Network validation
+  uint64_t getFuegoNetworkId() const { return m_fuegoNetworkId; }
+  bool validateNetworkId(uint64_t networkId) const;
+
+  // Burn proof data methods
+  Crypto::Hash calculateBurnNullifier(const Crypto::SecretKey& secret) const;
+  Crypto::Hash calculateBurnCommitment(const Crypto::SecretKey& secret, uint64_t amount) const;
+  Crypto::Hash calculateBurnRecipientHash(const std::string& recipientAddress) const;
+  bool validateBurnProofData(const std::string& secret, uint64_t amount, const std::string& commitment, const std::string& nullifier) const;
+
   std::string accountAddressAsString(const AccountBase &account) const;
   std::string accountAddressAsString(const AccountPublicAddress &accountPublicAddress) const;
   bool parseAccountAddressString(const std::string &str, AccountPublicAddress &addr) const;
@@ -275,6 +312,25 @@ private:
   uint32_t m_depositMaxTerm;
     uint64_t m_depositMinTotalRateFactor;
     uint64_t m_depositMaxTotalRate;
+
+  // Burn deposit configuration
+  uint64_t m_burnDepositMinAmount;
+  uint64_t m_burnDepositStandardAmount;
+  uint64_t m_burnDeposit8000Amount;
+  uint32_t m_depositTermForever;  
+
+  // HEAT token conversion
+  uint64_t m_heatConversionRate;
+
+  // Dynamic money supply
+  uint64_t m_baseMoneySupply;
+  uint64_t m_totalBurnedXfg;
+  uint64_t m_totalRebornXfg;
+  uint64_t m_adjustedMoneySupply;
+  uint64_t m_circulatingSupply;
+
+  // Network validation
+  uint64_t m_fuegoNetworkId;
 
   size_t m_maxBlockSizeInitial;
   uint64_t m_maxBlockSizeGrowthSpeedNumerator;
@@ -394,6 +450,25 @@ public:
   CurrencyBuilder& depositMinAmount(uint64_t val) { m_currency.m_depositMinAmount = val; return *this; }
   CurrencyBuilder& depositMinTerm(uint32_t val)   { m_currency.m_depositMinTerm = val; return *this;  }
   CurrencyBuilder& depositMaxTerm(uint32_t val)   { m_currency.m_depositMaxTerm = val; return *this; }
+
+  // Burn deposit configuration builders
+  CurrencyBuilder& burnDepositMinAmount(uint64_t val) { m_currency.m_burnDepositMinAmount = val; return *this; }
+  CurrencyBuilder& burnDepositStandardAmount(uint64_t val) { m_currency.m_burnDepositStandardAmount = val; return *this; }
+  CurrencyBuilder& burnDeposit8000Amount(uint64_t val) { m_currency.m_burnDeposit8000Amount = val; return *this; }
+  CurrencyBuilder& depositTermForever(uint32_t val) { m_currency.m_depositTermForever = val; return *this; }
+
+  // HEAT conversion builder
+  CurrencyBuilder& heatConversionRate(uint64_t val) { m_currency.m_heatConversionRate = val; return *this; }
+
+  // Dynamic money supply builders
+  CurrencyBuilder& baseMoneySupply(uint64_t val) { m_currency.m_baseMoneySupply = val; return *this; }
+  CurrencyBuilder& totalBurnedXfg(uint64_t val) { m_currency.m_totalBurnedXfg = val; return *this; }
+  CurrencyBuilder& totalRebornXfg(uint64_t val) { m_currency.m_totalRebornXfg = val; return *this; }
+  CurrencyBuilder& adjustedMoneySupply(uint64_t val) { m_currency.m_adjustedMoneySupply = val; return *this; }
+  CurrencyBuilder& circulatingSupply(uint64_t val) { m_currency.m_circulatingSupply = val; return *this; }
+
+  // Network validation builder
+  CurrencyBuilder& fuegoNetworkId(uint64_t val) { m_currency.m_fuegoNetworkId = val; return *this; }
 
   CurrencyBuilder& mempoolTxLiveTime(uint64_t val) { m_currency.m_mempoolTxLiveTime = val; return *this; }
   CurrencyBuilder& mempoolTxFromAltBlockLiveTime(uint64_t val) { m_currency.m_mempoolTxFromAltBlockLiveTime = val; return *this; }

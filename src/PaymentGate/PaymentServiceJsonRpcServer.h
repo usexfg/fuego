@@ -102,6 +102,23 @@ private:
   std::error_code handleGetMessagesFromExtra(const GetMessagesFromExtra::Request& request, GetMessagesFromExtra::Response& response);
   std::error_code handleEstimateFusion(const EstimateFusion::Request& request, EstimateFusion::Response& response);
   std::error_code handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response);
+
+  // Burn deposit handlers
+  std::error_code handleCreateBurnDeposit(const CreateBurnDeposit::Request& request, CreateBurnDeposit::Response& response);
+  std::error_code handleCreateBurnDepositWithProof(const CreateBurnDepositWithProof::Request& request, CreateBurnDepositWithProof::Response& response);
+  std::error_code handleCreateBurnDeposit8000(const CreateBurnDeposit8000::Request& request, CreateBurnDeposit8000::Response& response);
+  std::error_code handleCreateBurnDeposit8000WithProof(const CreateBurnDeposit8000WithProof::Request& request, CreateBurnDeposit8000WithProof::Response& response);
+  std::error_code handleGenerateBurnProofDataFile(const GenerateBurnProofDataFile::Request& request, GenerateBurnProofDataFile::Response& response);
+  std::error_code handleGenerateBurnProofDataFileAuto(const GenerateBurnProofDataFileAuto::Request& request, GenerateBurnProofDataFileAuto::Response& response);
+
+  // Money supply and statistics handlers
+  std::error_code handleGetMoneySupplyStats(const GetMoneySupplyStats::Request& request, GetMoneySupplyStats::Response& response);
+  std::error_code handleGetBaseTotalSupply(const GetBaseTotalSupply::Request& request, GetBaseTotalSupply::Response& response);
+  std::error_code handleGetRealTotalSupply(const GetRealTotalSupply::Request& request, GetRealTotalSupply::Response& response);
+  std::error_code handleGetTotalDepositAmount(const GetTotalDepositAmount::Request& request, GetTotalDepositAmount::Response& response);
+  std::error_code handleGetCirculatingSupply(const GetCirculatingSupply::Request& request, GetCirculatingSupply::Response& response);
+  std::error_code handleGetTotalBurnedXfg(const GetTotalBurnedXfg::Request& request, GetTotalBurnedXfg::Response& response);
+  std::error_code handleGetDynamicSupplyOverview(const GetDynamicSupplyOverview::Request& request, GetDynamicSupplyOverview::Response& response);
 };
 
 }//namespace PaymentService

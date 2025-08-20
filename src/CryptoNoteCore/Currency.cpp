@@ -31,6 +31,9 @@
 #include "CryptoNoteTools.h"
 #include "TransactionExtra.h"
 #include "UpgradeDetector.h"
+#include "../crypto/hash.h"
+#include "../crypto/keccak.h"
+#include <algorithm>
 
 #undef ERROR
 
@@ -1269,6 +1272,25 @@ namespace CryptoNote
     depositMinTerm(parameters::DEPOSIT_MIN_TERM);
     depositMaxTerm(parameters::DEPOSIT_MAX_TERM);
 
+    // Burn deposit configuration
+    burnDepositMinAmount(parameters::BURN_DEPOSIT_MIN_AMOUNT);
+    burnDepositStandardAmount(parameters::BURN_DEPOSIT_STANDARD_AMOUNT);
+    burnDeposit8000Amount(parameters::BURN_DEPOSIT_8000_AMOUNT);
+    depositTermForever(parameters::DEPOSIT_TERM_FOREVER);
+
+    // HEAT conversion rate (0.8 XFG = 8M HEAT)
+    heatConversionRate(10000000);
+
+    // Dynamic money supply initialization
+    baseMoneySupply(parameters::MONEY_SUPPLY);
+    totalBurnedXfg(0);
+    totalRebornXfg(0);
+    adjustedMoneySupply(parameters::MONEY_SUPPLY);
+    circulatingSupply(parameters::MONEY_SUPPLY);
+
+    // Fuego network ID
+    fuegoNetworkId(93385046440755750514194170694064996624ULL);
+
     maxBlockSizeInitial(parameters::MAX_BLOCK_SIZE_INITIAL);
     maxBlockSizeGrowthSpeedNumerator(parameters::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR);
     maxBlockSizeGrowthSpeedDenominator(parameters::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR);
@@ -1380,6 +1402,150 @@ namespace CryptoNote
 
 		m_currency.m_upgradeWindow = static_cast<uint32_t>(val);
 		return *this;
+	}
+
+	/* ---------------------------------------------------------------------------------------------------- */
+	/* Burn Deposit and Dynamic Money Supply Methods */
+	/* ---------------------------------------------------------------------------------------------------- */
+
+	bool Currency::isValidBurnDepositAmount(uint64_t amount) const {
+		// Valid burn amounts: 0.8 XFG (8,000,000) or 8000 XFG (80,000,000,000)
+		return (amount == m_burnDepositMinAmount || 
+				amount == m_burnDepositStandardAmount || 
+				amount == m_burnDeposit8000Amount);
+	}
+
+	bool Currency::isValidBurnDepositTerm(uint32_t term) const {
+		// Valid burn terms: DEPOSIT_TERM_FOREVER (4294967295)
+		return (term == m_depositTermForever);
+	}
+
+	bool Currency::isBurnDeposit(uint32_t term) const {
+		// Check if this is a burn deposit (FOREVER term)
+		return isValidBurnDepositTerm(term);
+	}
+
+	uint64_t Currency::convertXfgToHeat(uint64_t xfgAmount) const {
+		// Convert XFG to HEAT: 0.8 XFG = 8M HEAT
+		// Formula: (xfgAmount * 10000000) / 800000000
+		return (xfgAmount * 10000000) / 800000000;
+	}
+
+	uint64_t Currency::convertHeatToXfg(uint64_t heatAmount) const {
+		// Convert HEAT to XFG: 8M HEAT = 0.8 XFG
+		// Formula: (heatAmount * 800000000) / 10000000
+		return (heatAmount * 800000000) / 10000000;
+	}
+
+	uint64_t Currency::getAdjustedMoneySupply() const {
+		// Calculate theoretical adjusted supply
+		uint64_t theoreticalSupply = m_baseMoneySupply + m_totalRebornXfg;
+		
+		// Cap at original money supply to prevent exceeding base supply
+		return std::min(theoreticalSupply, m_baseMoneySupply);
+	}
+
+	uint64_t Currency::getCirculatingSupply() const {
+		// Circulating supply is the same as adjusted supply (capped)
+		return getAdjustedMoneySupply();
+	}
+
+	void Currency::addBurnedXfg(uint64_t amount) {
+		if (amount == 0) return;
+		
+		m_totalBurnedXfg += amount;
+		addRebornXfg(amount); // Automatically add as reborn XFG
+		
+		// Recalculate adjusted supply
+		m_adjustedMoneySupply = getAdjustedMoneySupply();
+		m_circulatingSupply = getCirculatingSupply();
+	}
+
+	void Currency::addRebornXfg(uint64_t amount) {
+		if (amount == 0) return;
+		
+		m_totalRebornXfg += amount;
+		
+		// Recalculate adjusted supply
+		m_adjustedMoneySupply = getAdjustedMoneySupply();
+		m_circulatingSupply = getCirculatingSupply();
+	}
+
+	double Currency::getBurnPercentage() const {
+		if (m_baseMoneySupply == 0) return 0.0;
+		return (static_cast<double>(m_totalBurnedXfg) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+	}
+
+	double Currency::getRebornPercentage() const {
+		if (m_baseMoneySupply == 0) return 0.0;
+		return (static_cast<double>(m_totalRebornXfg) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+	}
+
+	double Currency::getSupplyIncreasePercentage() const {
+		if (m_baseMoneySupply == 0) return 0.0;
+		uint64_t adjustedSupply = getAdjustedMoneySupply();
+		return (static_cast<double>(adjustedSupply - m_baseMoneySupply) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+	}
+
+	bool Currency::validateNetworkId(uint64_t networkId) const {
+		// Validate against Fuego network ID: 93385046440755750514194170694064996624
+		return (networkId == m_fuegoNetworkId);
+	}
+
+	Crypto::Hash Currency::calculateBurnNullifier(const Crypto::SecretKey& secret) const {
+		// Calculate nullifier using Keccak256: hash(secret + "nullifier")
+		std::vector<uint8_t> data;
+		data.insert(data.end(), secret.data, secret.data + sizeof(secret.data));
+		data.insert(data.end(), (uint8_t*)"nullifier", (uint8_t*)"nullifier" + 9);
+		
+		Crypto::Hash nullifier;
+		keccak(data.data(), data.size(), nullifier.data, sizeof(nullifier.data));
+		return nullifier;
+	}
+
+	Crypto::Hash Currency::calculateBurnCommitment(const Crypto::SecretKey& secret, uint64_t amount) const {
+		// Calculate commitment using Keccak256: hash(secret + "commitment")
+		std::vector<uint8_t> data;
+		data.insert(data.end(), secret.data, secret.data + sizeof(secret.data));
+		data.insert(data.end(), (uint8_t*)"commitment", (uint8_t*)"commitment" + 10);
+		
+		Crypto::Hash commitment;
+		keccak(data.data(), data.size(), commitment.data, sizeof(commitment.data));
+		return commitment;
+	}
+
+	Crypto::Hash Currency::calculateBurnRecipientHash(const std::string& recipientAddress) const {
+		// Calculate recipient hash using Keccak256
+		Crypto::Hash recipientHash;
+		keccak(recipientAddress.data(), recipientAddress.size(), recipientHash.data, sizeof(recipientHash.data));
+		return recipientHash;
+	}
+
+	bool Currency::validateBurnProofData(const std::string& secret, uint64_t amount, const std::string& commitment, const std::string& nullifier) const {
+		// Validate secret format (hex encoded)
+		if (secret.empty() || secret.length() != 64) {
+			return false;
+		}
+		
+		// Validate amount
+		if (!isValidBurnDepositAmount(amount)) {
+			return false;
+		}
+		
+		// Validate commitment and nullifier format (hex encoded)
+		if (commitment.empty() || commitment.length() != 64) {
+			return false;
+		}
+		
+		if (nullifier.empty() || nullifier.length() != 64) {
+			return false;
+		}
+		
+		// TODO: Add more comprehensive validation logic here
+		// This could include verifying the cryptographic relationships
+		// between secret, commitment, and nullifier
+		
+		return true;
 	}
 
 } // namespace CryptoNote

@@ -35,7 +35,7 @@ DepositCommitment DepositCommitmentGenerator::generateHeatCommitment(
     
     // 🔥 ADD: Include network ID in HEAT commitment metadata
     std::vector<uint8_t> enhancedMetadata = metadata;
-    std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+    std::string networkId = "93385046440755750514194170694064996624";
     enhancedMetadata.insert(enhancedMetadata.end(), networkId.begin(), networkId.end());
     
     // Calculate HEAT commitment components (match xfgwinter)
@@ -64,7 +64,7 @@ std::pair<DepositCommitment, Crypto::SecretKey> DepositCommitmentGenerator::gene
     
     // 🔥 ADD: Include network ID in HEAT commitment metadata
     std::vector<uint8_t> enhancedMetadata = metadata;
-    std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+    std::string networkId = "93385046440755750514194170694064996624";
     enhancedMetadata.insert(enhancedMetadata.end(), networkId.begin(), networkId.end());
     
     // Calculate HEAT commitment components (match xfgwinter)

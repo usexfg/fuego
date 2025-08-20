@@ -1669,7 +1669,7 @@ namespace PaymentService
       addressCount = static_cast<uint32_t>(wallet.getAddressCount());
       auto lastHashes = wallet.getBlockHashes(blockCount - 1, 1);
       lastBlockHash = Common::podToHex(lastHashes.back());
-      networkId = "46414e44-4f4d-474f-4c44-001210110110";
+              networkId = "93385046440755750514194170694064996624";
     }
       catch (std::system_error &x)
       {

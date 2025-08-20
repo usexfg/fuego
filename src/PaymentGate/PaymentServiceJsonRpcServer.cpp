@@ -303,7 +303,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit(const Creat
   }
   
   // 🔥 ADD: Include network ID in metadata for STARK validation
-  std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+  std::string networkId = "93385046440755750514194170694064996624";
   std::string enhancedMetadata = request.metadata.empty() ? 
       "network_id:" + networkId : 
       request.metadata + "|network_id:" + networkId;
@@ -337,7 +337,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDepositWithProof(co
   }
   
   // 🔥 ADD: Include network ID in metadata for STARK validation
-  std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+  std::string networkId = "93385046440755750514194170694064996624";
   std::string enhancedMetadata = request.metadata.empty() ? 
       "network_id:" + networkId : 
       request.metadata + "|network_id:" + networkId;
@@ -379,7 +379,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000(const C
   uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_8000_AMOUNT;  // 8000 XFG
   
   // 🔥 ADD: Include network ID in metadata for STARK validation
-  std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+  std::string networkId = "93385046440755750514194170694064996624";
   std::string enhancedMetadata = request.metadata.empty() ? 
       "network_id:" + networkId : 
       request.metadata + "|network_id:" + networkId;
@@ -407,7 +407,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000WithProo
   uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_8000_AMOUNT;  // 8000 XFG
   
   // 🔥 ADD: Include network ID in metadata for STARK validation
-  std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+  std::string networkId = "93385046440755750514194170694064996624";
   std::string enhancedMetadata = request.metadata.empty() ? 
       "network_id:" + networkId : 
       request.metadata + "|network_id:" + networkId;
@@ -446,7 +446,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000WithProo
 std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFile(const GenerateBurnProofDataFile::Request& request, GenerateBurnProofDataFile::Response& response) {
   try {
     // 🔥 MANUAL: Generate BPDF manually (user provides secret separately)
-    std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+    std::string networkId = "93385046440755750514194170694064996624";
     
     // 🔥 ADD: Use default wallet path if outputPath is empty
     std::string outputPath = request.outputPath;
@@ -480,7 +480,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFile(con
 std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFileAuto(const GenerateBurnProofDataFileAuto::Request& request, GenerateBurnProofDataFileAuto::Response& response) {
   try {
     // 🔥 AUTO: Generate BPDF automatically with local secret retrieval
-    std::string networkId = "46414e44-4f4d-474f-4c44-001210110110";
+    std::string networkId = "93385046440755750514194170694064996624";
     
     // Retrieve secret from local storage
     Crypto::SecretKey secret;

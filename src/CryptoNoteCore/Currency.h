@@ -231,7 +231,9 @@ public:
 
   // Network validation
   uint64_t getFuegoNetworkId() const { return m_fuegoNetworkId; }
+  const std::string& getFuegoNetworkIdString() const { return m_fuegoNetworkIdString; }
   bool validateNetworkId(uint64_t networkId) const;
+  bool validateNetworkIdString(const std::string& networkId) const;
 
   // Burn proof data methods
   Crypto::Hash calculateBurnNullifier(const Crypto::SecretKey& secret) const;
@@ -329,8 +331,9 @@ private:
   uint64_t m_adjustedMoneySupply;
   uint64_t m_circulatingSupply;
 
-  // Network validation
+  // Network validation - using hash of the full network ID
   uint64_t m_fuegoNetworkId;
+  std::string m_fuegoNetworkIdString;  // Full network ID as string
 
   size_t m_maxBlockSizeInitial;
   uint64_t m_maxBlockSizeGrowthSpeedNumerator;
@@ -469,6 +472,7 @@ public:
 
   // Network validation builder
   CurrencyBuilder& fuegoNetworkId(uint64_t val) { m_currency.m_fuegoNetworkId = val; return *this; }
+  CurrencyBuilder& fuegoNetworkIdString(const std::string& val) { m_currency.m_fuegoNetworkIdString = val; return *this; }
 
   CurrencyBuilder& mempoolTxLiveTime(uint64_t val) { m_currency.m_mempoolTxLiveTime = val; return *this; }
   CurrencyBuilder& mempoolTxFromAltBlockLiveTime(uint64_t val) { m_currency.m_mempoolTxFromAltBlockLiveTime = val; return *this; }

@@ -1288,8 +1288,15 @@ namespace CryptoNote
     adjustedMoneySupply(parameters::MONEY_SUPPLY);
     circulatingSupply(parameters::MONEY_SUPPLY);
 
-    // Fuego network ID
-    fuegoNetworkId(93385046440755750514194170694064996624ULL);
+    // Fuego network ID - using hash of the full network ID for uint64_t compatibility
+    fuegoNetworkIdString("93385046440755750514194170694064996624");
+    // Calculate hash of the full network ID for uint64_t storage
+    std::string networkIdStr = "93385046440755750514194170694064996624";
+    Crypto::Hash networkIdHash;
+    keccak(reinterpret_cast<const uint8_t*>(networkIdStr.data()), networkIdStr.size(), networkIdHash.data, sizeof(networkIdHash.data));
+    // Use first 8 bytes of hash as uint64_t
+    uint64_t networkIdUint64 = *reinterpret_cast<uint64_t*>(networkIdHash.data);
+    fuegoNetworkId(networkIdUint64);
 
     maxBlockSizeInitial(parameters::MAX_BLOCK_SIZE_INITIAL);
     maxBlockSizeGrowthSpeedNumerator(parameters::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR);
@@ -1488,8 +1495,13 @@ namespace CryptoNote
 	}
 
 	bool Currency::validateNetworkId(uint64_t networkId) const {
-		// Validate against Fuego network ID: 93385046440755750514194170694064996624
+		// Validate against hashed Fuego network ID
 		return (networkId == m_fuegoNetworkId);
+	}
+
+	bool Currency::validateNetworkIdString(const std::string& networkId) const {
+		// Validate against full Fuego network ID string
+		return (networkId == m_fuegoNetworkIdString);
 	}
 
 	Crypto::Hash Currency::calculateBurnNullifier(const Crypto::SecretKey& secret) const {
@@ -1517,7 +1529,7 @@ namespace CryptoNote
 	Crypto::Hash Currency::calculateBurnRecipientHash(const std::string& recipientAddress) const {
 		// Calculate recipient hash using Keccak256
 		Crypto::Hash recipientHash;
-		keccak(recipientAddress.data(), recipientAddress.size(), recipientHash.data, sizeof(recipientHash.data));
+		keccak(reinterpret_cast<const uint8_t*>(recipientAddress.data()), recipientAddress.size(), recipientHash.data, sizeof(recipientHash.data));
 		return recipientHash;
 	}
 

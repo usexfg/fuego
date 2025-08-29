@@ -30,6 +30,7 @@
 #include "CryptoNoteCore/Checkpoints.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/DynamicMoneySupply.h"
 #include "CryptoNoteCore/IBlockchainStorageObserver.h"
 #include "CryptoNoteCore/ITransactionValidator.h"
 #include "CryptoNoteCore/SwappedVector.h"
@@ -125,8 +126,27 @@ namespace CryptoNote {
     bool getBlockIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<Crypto::Hash>& hashes, uint32_t& blocksNumberWithinTimestamps);
     bool getTransactionIdsByPaymentId(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes);
     bool isBlockInMainChain(const Crypto::Hash& blockId);
-    uint64_t fullDepositAmount() const;
-    uint64_t depositAmountAtHeight(size_t height) const;
+      uint64_t fullDepositAmount() const;
+  uint64_t depositAmountAtHeight(size_t height) const;
+  
+  // Burned XFG tracking
+  uint64_t getTotalBurnedXfg() const;
+  uint64_t getBurnedXfgAtHeight(size_t height) const;
+  uint64_t getActualTotalSupply() const;
+  uint64_t getBlockRewardAdjustment() const;
+  
+  // New methods for dynamic money supply
+  void addBurnedXfg(uint64_t amount);
+  void removeBurnedXfg(uint64_t amount);
+  uint64_t getMoneySupply() const;
+  uint64_t getBaseMoneySupply() const;
+  uint64_t getAdjustedMoneySupply() const;
+  uint64_t getCirculatingSupply() const;
+  uint64_t getTotalRebornXfg() const;
+  double getBurnPercentage() const;
+  double getRebornPercentage() const;
+  double getSupplyIncreasePercentage() const;
+  void updateMoneySupplyFromDeposits();
     uint64_t depositInterestAtHeight(size_t height) const;
     uint64_t coinsEmittedAtHeight(uint64_t height);
     uint64_t difficultyAtHeight(uint64_t height);
@@ -278,6 +298,9 @@ namespace CryptoNote {
     CryptoNote::BlockIndex m_blockIndex;
     CryptoNote::DepositIndex m_depositIndex;
     TransactionMap m_transactionMap;
+    
+    // Dynamic money supply management
+    mutable DynamicMoneySupply m_dynamicMoneySupply;
     MultisignatureOutputsContainer m_multisignatureOutputs;
     UpgradeDetector m_upgradeDetectorV2;
     UpgradeDetector m_upgradeDetectorV3;

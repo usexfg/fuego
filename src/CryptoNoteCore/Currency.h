@@ -26,6 +26,7 @@
 #include "../Logging/LoggerRef.h"
 #include "CryptoNoteBasic.h"
 #include "Difficulty.h"
+#include "DynamicMoneySupply.h"
 
 namespace CryptoNote {
 
@@ -190,6 +191,18 @@ public:
     uint64_t getTransactionAllInputsAmount(const Transaction &tx, uint32_t height) const;
     bool getTransactionFee(const Transaction &tx, uint64_t &fee, uint32_t height) const;
     uint64_t getTransactionFee(const Transaction &tx, uint32_t height) const;
+    
+    // New methods for dynamic money supply
+    uint64_t getMoneySupply() const;
+    uint64_t getBaseMoneySupply() const;
+    uint64_t getAdjustedMoneySupply() const;
+    uint64_t getCirculatingSupply() const;
+    uint64_t getTotalBurnedXfg() const;
+    uint64_t getTotalRebornXfg() const;
+    double getBurnPercentage() const;
+    double getRebornPercentage() const;
+    double getSupplyIncreasePercentage() const;
+    void updateMoneySupplyFromDeposits(const class DepositIndex& depositIndex);
   size_t maxBlockCumulativeSize(uint64_t height) const;
 
   bool constructMinerTx(uint8_t blockMajorVersion, uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins, size_t currentBlockSize,
@@ -317,6 +330,9 @@ private:
   Crypto::Hash m_genesisBlockHash;
 
   Logging::LoggerRef logger;
+  
+  // Dynamic money supply management
+  mutable DynamicMoneySupply m_dynamicMoneySupply;
 
   friend class CurrencyBuilder;
 };

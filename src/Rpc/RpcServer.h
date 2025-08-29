@@ -37,6 +37,12 @@ public:
   bool setFeeAddress(const std::string& fee_address, const AccountPublicAddress& fee_acc);
   bool setViewKey(const std::string& view_key);
   bool restrictRPC(const bool is_resctricted);
+  
+  // Elderfier Service Methods (STARK verification with stake requirement)
+  bool initializeElderfierService(const std::string& feeAddress, const std::string& viewKey, 
+                                 const std::string& configPath, const std::string& registryUrl);
+  bool isElderfierServiceEnabled() const;
+  std::string getElderfierStatistics() const;
   bool k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request& req, K_COMMAND_RPC_CHECK_TX_PROOF::response& res);
   bool k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF::request& req, K_COMMAND_RPC_CHECK_RESERVE_PROOF::response& res);  
   bool enableCors(const std::string domain);  
@@ -105,7 +111,11 @@ private:
   std::string m_cors_domain;
   std::string m_fee_address;
   Crypto::SecretKey m_view_key = NULL_SECRET_KEY;
-  AccountPublicAddress m_fee_acc; 
+  AccountPublicAddress m_fee_acc;
+  
+  // Elderfier Service Members (STARK verification with stake requirement)
+  bool m_elderfierEnabled;
+  std::unique_ptr<class ElderfierService> m_elderfierService; 
 };
 
 }

@@ -75,11 +75,19 @@ namespace CryptoNote
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;
+		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;    // 800 XFG (8,000,000,000 atomic units)
+		const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
+		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 atomic units)
+		const uint64_t BURN_DEPOSIT_8000_AMOUNT = 8000 * COIN;  // 8000 XFG (80,000,000,000 atomic units)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
                 const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
                 const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
                 const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
+                const uint32_t DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
+                
+                // User-friendly deposit term constants
+                const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+                const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");

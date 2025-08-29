@@ -95,13 +95,35 @@ private:
   std::error_code handleGetViewKey(const GetViewKey::Request& request, GetViewKey::Response& response);
   std::error_code handleGetStatus(const GetStatus::Request& request, GetStatus::Response& response);
   std::error_code handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response);
+  std::error_code handleCreateBurnDeposit(const CreateBurnDeposit::Request& request, CreateBurnDeposit::Response& response);
+  std::error_code handleCreateBurnDepositWithProof(const CreateBurnDepositWithProof::Request& request, CreateBurnDepositWithProof::Response& response);
+  std::error_code handleCreateBurnDeposit8000(const CreateBurnDeposit8000::Request& request, CreateBurnDeposit8000::Response& response);
+  std::error_code handleCreateBurnDeposit8000WithProof(const CreateBurnDeposit8000WithProof::Request& request, CreateBurnDeposit8000WithProof::Response& response);
+  std::error_code handleGenerateBurnProofDataFile(const GenerateBurnProofDataFile::Request& request, GenerateBurnProofDataFile::Response& response);
+  std::error_code handleGenerateBurnProofDataFileAuto(const GenerateBurnProofDataFileAuto::Request& request, GenerateBurnProofDataFileAuto::Response& response);
+
   std::error_code handleSendDeposit(const SendDeposit::Request& request, SendDeposit::Response& response);
   std::error_code handleWithdrawDeposit(const WithdrawDeposit::Request &request, WithdrawDeposit::Response &response);
   std::error_code handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response);
+  std::error_code handleGetMoneySupplyStats(const GetMoneySupplyStats::Request& request, GetMoneySupplyStats::Response& response);
+  std::error_code handleGetBaseTotalSupply(const GetBaseTotalSupply::Request& request, GetBaseTotalSupply::Response& response);
+  std::error_code handleGetRealTotalSupply(const GetRealTotalSupply::Request& request, GetRealTotalSupply::Response& response);
+  std::error_code handleGetTotalDepositAmount(const GetTotalDepositAmount::Request& request, GetTotalDepositAmount::Response& response);
+  std::error_code handleGetCirculatingSupply(const GetCirculatingSupply::Request& request, GetCirculatingSupply::Response& response);
+  std::error_code handleGetTotalBurnedXfg(const GetTotalBurnedXfg::Request& request, GetTotalBurnedXfg::Response& response);
+  std::error_code handleGetDynamicSupplyOverview(const GetDynamicSupplyOverview::Request& request, GetDynamicSupplyOverview::Response& response);
   std::error_code handleGetAddresses(const GetAddresses::Request& request, GetAddresses::Response& response);
   std::error_code handleGetMessagesFromExtra(const GetMessagesFromExtra::Request& request, GetMessagesFromExtra::Response& response);
   std::error_code handleEstimateFusion(const EstimateFusion::Request& request, EstimateFusion::Response& response);
   std::error_code handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response);
+  
+  // ELDERNODE RELAYER HANDLERS
+  std::error_code handleStartEldernodeMonitoring(const StartEldernodeMonitoring::Request& request, StartEldernodeMonitoring::Response& response);
+  std::error_code handleStopEldernodeMonitoring(const StopEldernodeMonitoring::Request& request, StopEldernodeMonitoring::Response& response);
+  std::error_code handleGetEldernodeStatistics(const GetEldernodeStatistics::Request& request, GetEldernodeStatistics::Response& response);
+  std::error_code handleGenerateMerkleProof(const GenerateMerkleProof::Request& request, GenerateMerkleProof::Response& response);
+  std::error_code handleGetValidationProof(const GetValidationProof::Request& request, GetValidationProof::Response& response);
+  std::error_code handleSubmitToBridge(const SubmitToBridge::Request& request, SubmitToBridge::Response& response);
 };
 
 }//namespace PaymentService

@@ -178,7 +178,9 @@ namespace CryptoNote
     assert(alreadyGeneratedCoins <= m_moneySupply);
     assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));
 
-    uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
+    // Use actual total supply (total supply minus burned XFG) for block reward calculation
+    uint64_t actualTotalSupply = m_moneySupply; // TODO: Get from blockchain
+    uint64_t baseReward = (actualTotalSupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
     size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
     medianSize = std::max(medianSize, blockGrantedFullRewardZone);
     if (currentBlockSize > UINT64_C(2) * medianSize)
@@ -1381,5 +1383,46 @@ namespace CryptoNote
 		m_currency.m_upgradeWindow = static_cast<uint32_t>(val);
 		return *this;
 	}
+
+// Add new getter methods
+uint64_t Currency::getMoneySupply() const {
+    return m_dynamicMoneySupply.getCirculatingSupply();
+}
+
+uint64_t Currency::getBaseMoneySupply() const {
+    return m_dynamicMoneySupply.getBaseMoneySupply();
+}
+
+uint64_t Currency::getAdjustedMoneySupply() const {
+    return m_dynamicMoneySupply.getAdjustedMoneySupply();
+}
+
+uint64_t Currency::getCirculatingSupply() const {
+    return m_dynamicMoneySupply.getCirculatingSupply();
+}
+
+uint64_t Currency::getTotalBurnedXfg() const {
+    return m_dynamicMoneySupply.getTotalBurnedXfg();
+}
+
+uint64_t Currency::getTotalRebornXfg() const {
+    return m_dynamicMoneySupply.getTotalRebornXfg();
+}
+
+double Currency::getBurnPercentage() const {
+    return m_dynamicMoneySupply.getBurnPercentage();
+}
+
+double Currency::getRebornPercentage() const {
+    return m_dynamicMoneySupply.getRebornPercentage();
+}
+
+double Currency::getSupplyIncreasePercentage() const {
+    return m_dynamicMoneySupply.getSupplyIncreasePercentage();
+}
+
+void Currency::updateMoneySupplyFromDeposits(const DepositIndex& depositIndex) {
+    m_dynamicMoneySupply.updateFromDepositIndex(depositIndex);
+}
 
 } // namespace CryptoNote

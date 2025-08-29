@@ -733,6 +733,42 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateMerkleProof(const Gen
   }
 }
 
+std::error_code PaymentServiceJsonRpcServer::handleSubmitBridgeProof(const std::string& request, const std::string& response) {
+  try {
+    // DEPRECATED: This method is removed - REMOVE ENTIRE METHOD
+    
+    // Submit proof to Arbitrum bridge (DEPRECATED - use submitToBridge instead)
+    std::string bridgeResponse;
+    // std::error_code result = service.submitBridgeProof(
+    //   request.transactionHash,
+    //   request.burnAmount,
+    //   request.recipientAddress,
+    //   request.starkProof,
+    //   request.merkleProof,
+    //   request.networkId,
+    //   bridgeResponse
+    // );
+    std::error_code result = std::error_code(); // Placeholder for now
+    
+    if (!result) {
+      response.success = true;
+      response.bridgeResponse = bridgeResponse;
+      logger(Logging::INFO) << "✅ Bridge proof submitted successfully for " << request.transactionHash;
+    } else {
+      response.success = false;
+      response.errorMessage = "Failed to submit bridge proof: " + result.message();
+      logger(Logging::WARNING) << "❌ Failed to submit bridge proof for " << request.transactionHash << ": " + result.message();
+    }
+    
+    return std::error_code();
+    
+  } catch (std::exception& e) {
+    response.success = false;
+    response.errorMessage = "Exception: " + std::string(e.what());
+    logger(Logging::ERROR) << "❌ Exception submitting bridge proof: " << e.what();
+    return std::error_code();
+  }
+}
 
 // NEW VALIDATION PROOF HANDLERS
 

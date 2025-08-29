@@ -1,0 +1,192 @@
+// Copyright (c) 2017-2025 Elderfire Privacy Council
+//
+// This file is part of Fuego.
+//
+// Fuego is free & open source software distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You may redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fuego includes elements written
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
+
+#pragma once
+
+#include <string>
+#include <vector>
+#include <cstdint>
+#include <functional>
+#include "IObservable.h"
+
+namespace CryptoNote {
+
+// Forward declarations
+struct BurnDeposit;
+struct MerkleProof;
+struct ValidationProof;
+struct BridgeProof;
+
+/**
+ * @brief Interface for Eldernode relayer operations
+ * 
+ * This interface defines the operations that Eldernodes can perform
+ * to support cross-chain bridging between Fuego and Arbitrum.
+ */
+class IEldernodeRelayer {
+public:
+    virtual ~IEldernodeRelayer() = default;
+
+    /**
+     * @brief Start monitoring for new burn deposits
+     * @param callback Function called when new burn deposit is detected
+     */
+    virtual void startMonitoring(std::function<void(const BurnDeposit&)> callback) = 0;
+
+    /**
+     * @brief Stop monitoring for burn deposits
+     */
+    virtual void stopMonitoring() = 0;
+
+    /**
+     * @brief Generate Merkle proof for a transaction
+     * @param txnHash Transaction hash to prove
+     * @param blockHeight Block height containing the transaction
+     * @return Merkle proof data
+     */
+    virtual MerkleProof generateMerkleProof(const std::string& txnHash, uint64_t blockHeight) = 0;
+
+    /**
+     * @brief Generate validation proof for a burn deposit
+     * @param txnHash Transaction hash to validate
+     * @return Validation proof data
+     */
+    virtual ValidationProof generateValidationProof(const std::string& txnHash) = 0;
+
+    /**
+     * @brief Get current monitoring status
+     * @return True if monitoring is active
+     */
+    virtual bool isMonitoring() const = 0;
+
+    /**
+     * @brief Get statistics about processed proofs
+     * @return Statistics string
+     */
+    virtual std::string getStatistics() const = 0;
+    
+    /**
+     * @brief Discover available Eldernodes in the network
+     * @param minCount Minimum number of Eldernodes to discover
+     * @return Vector of Eldernode URLs
+     */
+    virtual std::vector<std::string> discoverEldernodes(uint64_t minCount = 5) = 0;
+    
+    /**
+     * @brief Generate consensus proof from multiple Eldernodes
+     * @param txnHash Transaction hash to validate
+     * @param consensusThreshold Required consensus threshold (e.g., 3 for 3/5)
+     * @return Consensus validation proof
+     */
+    virtual ValidationProof generateConsensusProof(const std::string& txnHash, uint64_t consensusThreshold = 3) = 0;
+    
+    /**
+     * @brief Verify response from a specific Eldernode
+     * @param eldernodeUrl URL of the Eldernode to verify
+     * @param txnHash Transaction hash to verify
+     * @param proof Output validation proof
+     * @return True if verification successful
+     */
+    virtual bool verifyEldernodeResponse(const std::string& eldernodeUrl, const std::string& txnHash, ValidationProof& proof) = 0;
+    
+    /**
+     * @brief Collect proofs from multiple Eldernodes
+     * @param txnHash Transaction hash to validate
+     * @param eldernodeUrls Vector of Eldernode URLs to query
+     * @return Vector of validation proofs
+     */
+    virtual std::vector<ValidationProof> collectEldernodeProofs(const std::string& txnHash, const std::vector<std::string>& eldernodeUrls) = 0;
+    
+    /**
+     * @brief Merge multiple proofs into consensus proof
+     * @param proofs Vector of individual proofs
+     * @param consensusThreshold Required consensus threshold
+     * @return Merged consensus proof
+     */
+    virtual ValidationProof mergeConsensusProofs(const std::vector<ValidationProof>& proofs, uint64_t consensusThreshold) = 0;
+};
+
+/**
+ * @brief Burn deposit information
+ */
+struct BurnDeposit {
+    std::string transactionHash;
+    uint64_t amount;
+    uint64_t blockHeight;
+    std::string blockHash;
+    std::string sourceAddress;
+    std::string recipientAddress;
+    std::vector<uint8_t> secret;
+    std::vector<uint8_t> metadata;
+    uint64_t timestamp;
+    bool isLargeBurn; // true for 8000 XFG, false for 0.8 XFG
+};
+
+/**
+ * @brief Merkle proof data
+ */
+struct MerkleProof {
+    std::string transactionHash;
+    uint64_t blockHeight;
+    std::string blockHash;
+    std::vector<std::string> proof; // Merkle path
+    std::string root; // Merkle root
+    uint64_t position; // Position in the tree
+};
+
+/**
+ * @brief Validation proof generated by Eldernode
+ */
+struct ValidationProof {
+    std::string transactionHash;
+    uint64_t burnAmount;
+    uint64_t blockHeight;
+    uint64_t confirmations;
+    bool isLargeBurn;
+    std::string blockHash;
+    MerkleProof merkleProof;
+    
+    // Multi-Eldernode consensus fields
+    std::vector<std::string> eldernodePublicKeys;     // Multiple public keys
+    std::vector<std::string> eldernodeSignatures;     // Multiple signatures
+    std::vector<std::string> eldernodeIds;            // Multiple Eldernode IDs
+    std::vector<std::string> eldernodeVersions;       // Multiple versions
+    uint64_t consensusThreshold;                      // Required consensus (e.g., 2/3, 3/5)
+    uint64_t totalEldernodes;                         // Total Eldernodes queried
+    uint64_t timestamp;
+    bool isValid;
+    
+    // Convert to JSON string
+    std::string toJson() const;
+    
+    // Verify consensus signatures
+    bool verifyConsensusSignatures() const;
+    
+    // Check if consensus threshold is met
+    bool hasConsensus() const;
+};
+
+/**
+ * @brief Complete bridge proof for Arbitrum
+ */
+struct BridgeProof {
+    std::string transactionHash;
+    uint64_t burnAmount;
+    std::string recipientAddress;
+    std::string starkProof; // Base64 encoded STARK proof
+    ValidationProof validationProof; // Eldernode validation proof
+    uint64_t timestamp;
+};
+
+} // namespace CryptoNote

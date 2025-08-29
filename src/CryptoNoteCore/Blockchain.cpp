@@ -1923,9 +1923,21 @@ bool Blockchain::check_tx_outputs(const Transaction& tx, uint32_t height) const 
           if (multisignatureOutput.term < m_currency.depositMinTerm() || multisignatureOutput.term > m_currency.depositMaxTerm()) {
             logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output has invalid term: " << multisignatureOutput.term;
             return false;
-          } else if (out.amount < m_currency.depositMinAmount()) {
-            logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output is a deposit output, but it has too small amount: " << out.amount;
-            return false;
+          } else {
+            /* Determine minimum amount based on deposit type */
+            uint64_t minAmount;
+            if (multisignatureOutput.term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER) {
+              /* Burn deposits (FOREVER term) use lower minimum: 0.8 XFG */
+              minAmount = CryptoNote::parameters::BURN_DEPOSIT_MIN_AMOUNT;
+            } else {
+              /* Regular yield deposits use standard minimum: 800 XFG */
+              minAmount = CryptoNote::parameters::DEPOSIT_MIN_AMOUNT;
+            }
+            
+            if (out.amount < minAmount) {
+              logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output is a deposit output, but it has too small amount: " << out.amount << " (minimum: " << minAmount << ")";
+              return false;
+            }
           }
         }
       }
@@ -2919,6 +2931,51 @@ bool Blockchain::isBlockInMainChain(const Crypto::Hash& blockId) {
 
 bool Blockchain::isInCheckpointZone(const uint32_t height) {
   return m_checkpoints.is_in_checkpoint_zone(height);
+}
+
+// Add new getter methods for dynamic money supply
+uint64_t Blockchain::getMoneySupply() const {
+    return m_dynamicMoneySupply.getCirculatingSupply();
+}
+
+uint64_t Blockchain::getBaseMoneySupply() const {
+    return m_dynamicMoneySupply.getBaseMoneySupply();
+}
+
+uint64_t Blockchain::getAdjustedMoneySupply() const {
+    return m_dynamicMoneySupply.getAdjustedMoneySupply();
+}
+
+uint64_t Blockchain::getCirculatingSupply() const {
+    return m_dynamicMoneySupply.getCirculatingSupply();
+}
+
+uint64_t Blockchain::getTotalRebornXfg() const {
+    return m_dynamicMoneySupply.getTotalRebornXfg();
+}
+
+double Blockchain::getBurnPercentage() const {
+    return m_dynamicMoneySupply.getBurnPercentage();
+}
+
+double Blockchain::getRebornPercentage() const {
+    return m_dynamicMoneySupply.getRebornPercentage();
+}
+
+double Blockchain::getSupplyIncreasePercentage() const {
+    return m_dynamicMoneySupply.getSupplyIncreasePercentage();
+}
+
+void Blockchain::addBurnedXfg(uint64_t amount) {
+    m_dynamicMoneySupply.addBurnedXfg(amount);
+}
+
+void Blockchain::removeBurnedXfg(uint64_t amount) {
+    m_dynamicMoneySupply.removeBurnedXfg(amount);
+}
+
+void Blockchain::updateMoneySupplyFromDeposits() {
+    m_dynamicMoneySupply.updateFromDepositIndex(m_depositIndex);
 }
 
 }

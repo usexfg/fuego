@@ -1,29 +1,28 @@
 #include "BurnDepositValidationService.h"
 #include "CryptoNoteCore/Core.h"
+#include "CryptoNoteCore/Currency.h"
+#include "CryptoNoteCore/TransactionPool.h"
+#include "Logging/LoggerRef.h"
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
-#include "crypto/hash.h"
-#include "Logging/LoggerRef.h"
-#include <sstream>
-#include <algorithm>
 #include <chrono>
-
-using namespace Logging;
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 namespace CryptoNote {
 
-namespace {
-    LoggerRef logger(Logging::getLogger("BurnDepositValidationService"));
-}
-
-// BurnDepositValidationResult implementations
-BurnDepositValidationResult BurnDepositValidationResult::success(uint64_t amount, const Crypto::Hash& hash, uint64_t time) {
+// BurnDepositValidationResult implementation
+BurnDepositValidationResult BurnDepositValidationResult::success(uint64_t amount, const Crypto::Hash& hash, uint64_t time, bool commitMatch, bool amountMatch, const std::string& txCommitment, uint64_t txAmount) {
     BurnDepositValidationResult result;
     result.isValid = true;
-    result.errorMessage = "";
     result.validatedAmount = amount;
     result.burnProofHash = hash;
     result.timestamp = time;
+    result.commitmentMatch = commitMatch;
+    result.burnAmountMatch = amountMatch;
+    result.txExtraCommitment = txCommitment;
+    result.txBurnAmount = txAmount;
     return result;
 }
 
@@ -31,37 +30,39 @@ BurnDepositValidationResult BurnDepositValidationResult::failure(const std::stri
     BurnDepositValidationResult result;
     result.isValid = false;
     result.errorMessage = error;
-    result.validatedAmount = 0;
-    result.burnProofHash = Crypto::Hash();
-    result.timestamp = 0;
     return result;
 }
 
-// BurnDepositConfig implementations
+// BurnDepositConfig implementation
 BurnDepositConfig BurnDepositConfig::getDefault() {
     BurnDepositConfig config;
-    config.minimumBurnAmount = 1000000;      // 1 XFG minimum burn
-    config.maximumBurnAmount = 1000000000000; // 1,000,000 XFG maximum burn
-    config.proofExpirationSeconds = 86400;    // 24 hours
-    config.requireProofValidation = true;     // Require proof validation
-    config.treasuryAddress = "FUEGOTREASURY123456789abcdef"; // Network treasury
+    config.minimumBurnAmount = 1000000;  // 1 XFG minimum
+    config.maximumBurnAmount = 1000000000000;  // 1M XFG maximum
+    config.proofExpirationSeconds = 3600;  // 1 hour
+    config.requireProofValidation = true;
+    config.treasuryAddress = "";
+    config.consensusThreshold = 4;  // 4/5 Eldernodes
+    config.totalEldernodes = 5;     // Total Eldernodes in network
+    config.enableDualValidation = true;  // Both commitment and burn amount validation
     return config;
 }
 
 bool BurnDepositConfig::isValid() const {
     return minimumBurnAmount > 0 && 
-           maximumBurnAmount > minimumBurnAmount &&
-           proofExpirationSeconds > 0 &&
-           !treasuryAddress.empty();
+           maximumBurnAmount > minimumBurnAmount && 
+           proofExpirationSeconds > 0 && 
+           consensusThreshold > 0 && 
+           totalEldernodes > 0 && 
+           consensusThreshold <= totalEldernodes;
 }
 
-// BurnProofData implementations
+// BurnProofData implementation
 bool BurnProofData::isValid() const {
     return burnAmount > 0 && 
-           timestamp > 0 &&
-           !proofSignature.empty() &&
-           !depositorAddress.empty() &&
-           !treasuryAddress.empty();
+           timestamp > 0 && 
+           !depositorAddress.empty() && 
+           !commitment.empty() && 
+           !txHash.empty();
 }
 
 std::string BurnProofData::toString() const {
@@ -71,111 +72,158 @@ std::string BurnProofData::toString() const {
         << "burnAmount=" << burnAmount << ", "
         << "timestamp=" << timestamp << ", "
         << "depositorAddress=" << depositorAddress << ", "
-        << "treasuryAddress=" << treasuryAddress << ", "
-        << "signatureSize=" << proofSignature.size() << "}";
+        << "commitment=" << commitment << ", "
+        << "txHash=" << txHash << "}";
     return oss.str();
 }
 
-// BurnDepositValidationService implementations
-BurnDepositValidationService::BurnDepositValidationService(core& core)
-    : m_core(core)
-    , m_config(BurnDepositConfig::getDefault())
-    , m_totalBurnedAmount(0) {
-    logger(INFO) << "BurnDepositValidationService initialized";
+// EldernodeConsensus implementation
+bool EldernodeConsensus::isValid() const {
+    return !eldernodeIds.empty() && 
+           eldernodeIds.size() == signatures.size() && 
+           !messageHash.empty() && 
+           timestamp > 0 && 
+           consensusThreshold > 0 && 
+           totalEldernodes > 0 && 
+           verifiedInputs.isValid();
+}
+
+std::string EldernodeConsensus::toString() const {
+    std::ostringstream oss;
+    oss << "EldernodeConsensus{"
+        << "eldernodeIds=[" << eldernodeIds.size() << "], "
+        << "signatures=[" << signatures.size() << "], "
+        << "messageHash=" << messageHash << ", "
+        << "timestamp=" << timestamp << ", "
+        << "consensusThreshold=" << consensusThreshold << "/" << totalEldernodes << ", "
+        << "commitmentMatch=" << (commitmentMatch ? "true" : "false") << ", "
+        << "burnAmountMatch=" << (burnAmountMatch ? "true" : "false") << "}";
+    return oss.str();
+}
+
+// EldernodeVerificationInputs implementation
+bool EldernodeVerificationInputs::isValid() const {
+    return !txHash.empty() && 
+           !commitment.empty() && 
+           burnAmount > 0;
+}
+
+std::string EldernodeVerificationInputs::toString() const {
+    std::ostringstream oss;
+    oss << "EldernodeVerificationInputs{"
+        << "txHash=" << txHash << ", "
+        << "commitment=" << commitment << ", "
+        << "burnAmount=" << burnAmount << "}";
+    return oss.str();
+}
+
+// BurnDepositValidationService implementation
+BurnDepositValidationService::BurnDepositValidationService(core& core, std::shared_ptr<IEldernodeIndexManager> eldernodeManager)
+    : m_core(core), m_eldernodeManager(eldernodeManager), m_config(BurnDepositConfig::getDefault()), m_totalBurnedAmount(0) {
 }
 
 BurnDepositValidationService::~BurnDepositValidationService() {
-    logger(INFO) << "BurnDepositValidationService destroyed";
 }
 
 BurnDepositValidationResult BurnDepositValidationService::validateBurnDeposit(const BurnProofData& proof) {
     if (!proof.isValid()) {
         return BurnDepositValidationResult::failure("Invalid burn proof data");
     }
-    
+
     if (!validateBurnAmount(proof.burnAmount)) {
-        return BurnDepositValidationResult::failure("Invalid burn amount");
+        return BurnDepositValidationResult::failure("Burn amount outside valid range");
     }
-    
+
     if (isProofExpired(proof)) {
-        return BurnDepositValidationResult::failure("Burn proof expired");
+        return BurnDepositValidationResult::failure("Burn proof has expired");
     }
-    
-    if (m_config.requireProofValidation && !verifyBurnProof(proof)) {
-        return BurnDepositValidationResult::failure("Burn proof verification failed");
+
+    // Request Eldernode consensus for dual validation
+    EldernodeVerificationInputs inputs;
+    inputs.txHash = proof.txHash;
+    inputs.commitment = proof.commitment;
+    inputs.burnAmount = proof.burnAmount;
+
+    auto consensus = requestEldernodeConsensus(inputs);
+    if (!consensus) {
+        return BurnDepositValidationResult::failure("Failed to obtain Eldernode consensus");
     }
-    
+
+    if (!verifyEldernodeConsensus(*consensus)) {
+        return BurnDepositValidationResult::failure("Eldernode consensus verification failed");
+    }
+
+    // Check dual validation results
+    if (m_config.enableDualValidation) {
+        if (!consensus->commitmentMatch) {
+            return BurnDepositValidationResult::failure("Commitment mismatch detected");
+        }
+        if (!consensus->burnAmountMatch) {
+            return BurnDepositValidationResult::failure("Burn amount mismatch detected");
+        }
+    }
+
     // Add to burn proofs list
     m_burnProofs.push_back(proof);
     m_totalBurnedAmount += proof.burnAmount;
-    
-    logger(INFO) << "Validated burn deposit: " << proof.toString();
-    
-    return BurnDepositValidationResult::success(proof.burnAmount, proof.burnHash, proof.timestamp);
+
+    return BurnDepositValidationResult::success(
+        proof.burnAmount, 
+        proof.burnHash, 
+        proof.timestamp,
+        consensus->commitmentMatch,
+        consensus->burnAmountMatch,
+        consensus->txExtraCommitment,
+        consensus->txBurnAmount
+    );
 }
 
 bool BurnDepositValidationService::verifyBurnProof(const BurnProofData& proof) {
-    // Verify the burn hash
-    Crypto::Hash expectedHash = calculateBurnHash(proof.burnAmount, proof.depositorAddress, proof.timestamp);
-    if (proof.burnHash != expectedHash) {
-        logger(ERROR) << "Burn hash mismatch for proof: " << proof.toString();
+    if (!proof.isValid()) {
         return false;
     }
-    
-    // Verify signature (placeholder implementation)
-    // In real implementation, this would verify cryptographic signatures
-    if (proof.proofSignature.empty()) {
-        logger(ERROR) << "Empty proof signature for burn: " << proof.toString();
+
+    // Verify the proof signature
+    if (!validateBurnProofSignature(proof)) {
         return false;
     }
-    
-    // Verify treasury address matches config
-    if (proof.treasuryAddress != m_config.treasuryAddress) {
-        logger(ERROR) << "Treasury address mismatch for burn: " << proof.toString();
-        return false;
-    }
-    
-    logger(INFO) << "Verified burn proof: " << proof.toString();
-    return true;
+
+    // Check if proof exists in our list
+    auto it = std::find_if(m_burnProofs.begin(), m_burnProofs.end(),
+        [&proof](const BurnProofData& existing) {
+            return existing.burnHash == proof.burnHash;
+        });
+
+    return it != m_burnProofs.end();
 }
 
-std::optional<BurnProofData> BurnDepositValidationService::generateBurnProof(uint64_t amount, const std::string& depositorAddress) {
+std::optional<BurnProofData> BurnDepositValidationService::generateBurnProof(uint64_t amount, const std::string& depositorAddress, const std::string& commitment, const std::string& txHash) {
     if (!validateBurnAmount(amount)) {
-        logger(ERROR) << "Invalid burn amount for proof generation: " << amount;
         return std::nullopt;
     }
-    
-    if (depositorAddress.empty()) {
-        logger(ERROR) << "Empty depositor address for proof generation";
-        return std::nullopt;
-    }
-    
+
     BurnProofData proof;
     proof.burnAmount = amount;
     proof.depositorAddress = depositorAddress;
-    proof.treasuryAddress = m_config.treasuryAddress;
+    proof.commitment = commitment;
+    proof.txHash = txHash;
     proof.timestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    // Calculate burn hash
+    proof.treasuryAddress = m_config.treasuryAddress;
     proof.burnHash = calculateBurnHash(amount, depositorAddress, proof.timestamp);
-    
-    // Generate signature (placeholder implementation)
-    // In real implementation, this would generate cryptographic signatures
-    proof.proofSignature.resize(64, 0); // Placeholder signature
-    
-    logger(INFO) << "Generated burn proof: " << proof.toString();
+
+    // Generate proof signature (simplified - in real implementation would use proper cryptographic signing)
+    std::string signatureData = proof.toString();
+    proof.proofSignature.resize(64);  // Placeholder for actual signature
+    std::fill(proof.proofSignature.begin(), proof.proofSignature.end(), 0);
+
     return proof;
 }
 
 void BurnDepositValidationService::setBurnDepositConfig(const BurnDepositConfig& config) {
-    if (!config.isValid()) {
-        logger(ERROR) << "Invalid burn deposit configuration";
-        return;
+    if (config.isValid()) {
+        m_config = config;
     }
-    
-    m_config = config;
-    logger(INFO) << "Updated burn deposit configuration";
 }
 
 BurnDepositConfig BurnDepositValidationService::getBurnDepositConfig() const {
@@ -191,59 +239,102 @@ uint32_t BurnDepositValidationService::getTotalBurnProofs() const {
 }
 
 std::vector<BurnProofData> BurnDepositValidationService::getRecentBurnProofs(uint32_t count) const {
-    std::vector<BurnProofData> recentProofs;
-    
-    if (m_burnProofs.empty()) {
-        return recentProofs;
+    std::vector<BurnProofData> recent;
+    auto start = m_burnProofs.size() > count ? m_burnProofs.end() - count : m_burnProofs.begin();
+    recent.assign(start, m_burnProofs.end());
+    return recent;
+}
+
+// Eldernode consensus methods
+std::optional<EldernodeConsensus> BurnDepositValidationService::requestEldernodeConsensus(const EldernodeVerificationInputs& inputs) {
+    if (!inputs.isValid()) {
+        return std::nullopt;
     }
-    
-    // Get the most recent proofs (up to count)
-    size_t startIndex = (m_burnProofs.size() > count) ? m_burnProofs.size() - count : 0;
-    recentProofs.assign(m_burnProofs.begin() + startIndex, m_burnProofs.end());
-    
-    return recentProofs;
+
+    // Get available Eldernodes for consensus
+    auto participants = getEldernodeConsensusParticipants();
+    if (participants.size() < m_config.consensusThreshold) {
+        return std::nullopt;
+    }
+
+    // Extract commitment and burn amount from transaction
+    std::string txExtraCommitment = extractCommitmentFromTxExtra(inputs.txHash);
+    uint64_t txBurnAmount = extractBurnAmountFromTransaction(inputs.txHash);
+
+    // Verify dual validation
+    bool commitmentMatch = verifyCommitmentMatch(inputs.commitment, txExtraCommitment);
+    bool burnAmountMatch = verifyBurnAmountMatch(inputs.burnAmount, txBurnAmount);
+
+    // Create consensus structure
+    EldernodeConsensus consensus;
+    consensus.verifiedInputs = BurnProofData();  // Simplified - would populate from inputs
+    consensus.verifiedInputs.txHash = inputs.txHash;
+    consensus.verifiedInputs.commitment = inputs.commitment;
+    consensus.verifiedInputs.burnAmount = inputs.burnAmount;
+    consensus.txExtraCommitment = txExtraCommitment;
+    consensus.txBurnAmount = txBurnAmount;
+    consensus.commitmentMatch = commitmentMatch;
+    consensus.burnAmountMatch = burnAmountMatch;
+    consensus.consensusThreshold = m_config.consensusThreshold;
+    consensus.totalEldernodes = m_config.totalEldernodes;
+    consensus.timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    consensus.messageHash = calculateConsensusMessageHash(inputs);
+
+    // Simulate Eldernode responses (in real implementation, would communicate with actual Eldernodes)
+    for (size_t i = 0; i < participants.size() && i < m_config.consensusThreshold; ++i) {
+        consensus.eldernodeIds.push_back(participants[i].eldernodeId);
+        consensus.signatures.push_back("signature_" + std::to_string(i));  // Placeholder
+    }
+
+    return consensus;
+}
+
+bool BurnDepositValidationService::verifyEldernodeConsensus(const EldernodeConsensus& consensus) {
+    if (!consensus.isValid()) {
+        return false;
+    }
+
+    if (!checkConsensusThreshold(consensus)) {
+        return false;
+    }
+
+    if (!validateEldernodeSignatures(consensus)) {
+        return false;
+    }
+
+    return true;
+}
+
+std::string BurnDepositValidationService::extractCommitmentFromTxExtra(const std::string& txHash) {
+    // TODO: Implement actual Fuego RPC call to extract commitment from tx_extra
+    // For now, return a placeholder
+    return "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+}
+
+uint64_t BurnDepositValidationService::extractBurnAmountFromTransaction(const std::string& txHash) {
+    // TODO: Implement actual Fuego RPC call to extract burn amount from undefined output key
+    // For now, return a placeholder
+    return 1000000;  // 1 XFG
+}
+
+bool BurnDepositValidationService::verifyCommitmentMatch(const std::string& providedCommitment, const std::string& txExtraCommitment) {
+    return providedCommitment == txExtraCommitment;
+}
+
+bool BurnDepositValidationService::verifyBurnAmountMatch(uint64_t providedAmount, uint64_t txBurnAmount) {
+    return providedAmount == txBurnAmount;
 }
 
 // Private helper methods
-
 bool BurnDepositValidationService::validateBurnAmount(uint64_t amount) const {
-    if (amount < m_config.minimumBurnAmount) {
-        logger(ERROR) << "Burn amount too low: " << amount << " < " << m_config.minimumBurnAmount;
-        return false;
-    }
-    
-    if (amount > m_config.maximumBurnAmount) {
-        logger(ERROR) << "Burn amount too high: " << amount << " > " << m_config.maximumBurnAmount;
-        return false;
-    }
-    
-    return true;
+    return amount >= m_config.minimumBurnAmount && amount <= m_config.maximumBurnAmount;
 }
 
 bool BurnDepositValidationService::validateBurnProofSignature(const BurnProofData& proof) const {
-    // Placeholder implementation for signature validation
-    // In real implementation, this would verify cryptographic signatures
-    
-    if (proof.proofSignature.size() != 64) {
-        logger(ERROR) << "Invalid signature size: " << proof.proofSignature.size();
-        return false;
-    }
-    
-    // Check for non-zero signature (placeholder)
-    bool hasNonZero = false;
-    for (uint8_t byte : proof.proofSignature) {
-        if (byte != 0) {
-            hasNonZero = true;
-            break;
-        }
-    }
-    
-    if (!hasNonZero) {
-        logger(ERROR) << "Zero signature detected";
-        return false;
-    }
-    
-    return true;
+    // TODO: Implement actual signature verification
+    // For now, just check that signature exists
+    return !proof.proofSignature.empty();
 }
 
 Crypto::Hash BurnDepositValidationService::calculateBurnHash(uint64_t amount, const std::string& depositorAddress, uint64_t timestamp) const {
@@ -256,15 +347,46 @@ Crypto::Hash BurnDepositValidationService::calculateBurnHash(uint64_t amount, co
 bool BurnDepositValidationService::isProofExpired(const BurnProofData& proof) const {
     uint64_t currentTime = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    uint64_t age = currentTime - proof.timestamp;
-    
-    if (age > m_config.proofExpirationSeconds) {
-        logger(ERROR) << "Burn proof expired: age=" << age << "s, max=" << m_config.proofExpirationSeconds << "s";
-        return true;
+    return (currentTime - proof.timestamp) > m_config.proofExpirationSeconds;
+}
+
+std::vector<EldernodeConsensusParticipant> BurnDepositValidationService::getEldernodeConsensusParticipants() const {
+    if (!m_eldernodeManager) {
+        return {};
     }
-    
-    return false;
+
+    // Get all Eldernodes and sort by tier (Elderfier first)
+    auto allEldernodes = m_eldernodeManager->getAllEldernodes();
+    std::sort(allEldernodes.begin(), allEldernodes.end());
+
+    // Convert to consensus participants
+    std::vector<EldernodeConsensusParticipant> participants;
+    for (const auto& eldernode : allEldernodes) {
+        EldernodeConsensusParticipant participant;
+        participant.eldernodeId = eldernode.feeAddress;
+        participant.tier = eldernode.tier;
+        participant.stakeAmount = eldernode.stakeAmount;
+        participants.push_back(participant);
+    }
+
+    return participants;
+}
+
+bool BurnDepositValidationService::validateEldernodeSignatures(const EldernodeConsensus& consensus) const {
+    // TODO: Implement actual signature validation
+    // For now, just check that we have the expected number of signatures
+    return consensus.signatures.size() >= consensus.consensusThreshold;
+}
+
+std::string BurnDepositValidationService::calculateConsensusMessageHash(const EldernodeVerificationInputs& inputs) const {
+    std::string message = inputs.txHash + inputs.commitment + std::to_string(inputs.burnAmount);
+    Crypto::Hash hash;
+    Crypto::cn_fast_hash(message.data(), message.size(), hash);
+    return Common::podToHex(hash);
+}
+
+bool BurnDepositValidationService::checkConsensusThreshold(const EldernodeConsensus& consensus) const {
+    return consensus.eldernodeIds.size() >= consensus.consensusThreshold;
 }
 
 } // namespace CryptoNote

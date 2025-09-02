@@ -14,4 +14,5 @@ target_link_libraries(BurnDepositValidationService
     Common
     Crypto
     Logging
+    EldernodeIndexManager
 )

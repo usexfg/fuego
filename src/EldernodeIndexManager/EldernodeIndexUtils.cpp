@@ -20,14 +20,24 @@ bool ElderfierServiceId::isValid() const {
             return identifier.length() >= 10 && identifier.length() <= 100;
             
         case ServiceIdType::CUSTOM_NAME:
-            return identifier.length() >= 1 && identifier.length() <= 8 &&
-                   std::all_of(identifier.begin(), identifier.end(), 
-                              [](char c) { return std::isalnum(c) || c == '_' || c == '-'; });
+            // Must be exactly 8 letters, all caps
+            if (identifier.length() != 8) {
+                return false;
+            }
+            if (!std::all_of(identifier.begin(), identifier.end(), ::isupper)) {
+                return false;
+            }
+            if (!std::all_of(identifier.begin(), identifier.end(), ::isalpha)) {
+                return false;
+            }
+            // Must have linked address for custom names
+            return !linkedAddress.empty();
             
         case ServiceIdType::HASHED_ADDRESS:
             return identifier.length() == 64 && // SHA256 hash length
                    std::all_of(identifier.begin(), identifier.end(), 
-                              [](char c) { return std::isxdigit(c); });
+                              [](char c) { return std::isxdigit(c); }) &&
+                   !linkedAddress.empty(); // Must have linked address
             
         default:
             return false;
@@ -52,7 +62,8 @@ std::string ElderfierServiceId::toString() const {
     }
     
     oss << ", identifier=\"" << identifier << "\""
-        << ", displayName=\"" << displayName << "\"}";
+        << ", displayName=\"" << displayName << "\""
+        << ", linkedAddress=\"" << linkedAddress << "\"}";
     return oss.str();
 }
 
@@ -61,14 +72,28 @@ ElderfierServiceId ElderfierServiceId::createStandardAddress(const std::string& 
     serviceId.type = ServiceIdType::STANDARD_ADDRESS;
     serviceId.identifier = address;
     serviceId.displayName = address;
+    serviceId.linkedAddress = address; // Same as identifier for standard addresses
     return serviceId;
 }
 
-ElderfierServiceId ElderfierServiceId::createCustomName(const std::string& name) {
+ElderfierServiceId ElderfierServiceId::createCustomName(const std::string& name, const std::string& walletAddress) {
     ElderfierServiceId serviceId;
     serviceId.type = ServiceIdType::CUSTOM_NAME;
-    serviceId.identifier = name;
-    serviceId.displayName = name;
+    
+    // Convert to uppercase and ensure exactly 8 letters
+    std::string upperName = name;
+    std::transform(upperName.begin(), upperName.end(), upperName.begin(), ::toupper);
+    
+    // Pad or truncate to exactly 8 characters
+    if (upperName.length() < 8) {
+        upperName.resize(8, 'X'); // Pad with X
+    } else if (upperName.length() > 8) {
+        upperName = upperName.substr(0, 8); // Truncate to 8
+    }
+    
+    serviceId.identifier = upperName;
+    serviceId.displayName = upperName;
+    serviceId.linkedAddress = walletAddress; // Link to actual wallet address
     return serviceId;
 }
 
@@ -88,6 +113,7 @@ ElderfierServiceId ElderfierServiceId::createHashedAddress(const std::string& ad
         serviceId.displayName = "***" + address.substr(address.length() - 2);
     }
     
+    serviceId.linkedAddress = address; // Link to actual wallet address
     return serviceId;
 }
 
@@ -224,26 +250,48 @@ StakeVerificationResult StakeVerificationResult::failure(const std::string& erro
 // ElderfierServiceConfig implementations
 ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
     ElderfierServiceConfig config;
-    config.minimumStakeAmount = 5000000;      // 5 FUEGO minimum for Elderfier (vs 1 for basic)
-    config.maximumCustomNameLength = 8;        // Max 8 characters for custom names
-    config.allowHashedAddresses = true;        // Allow hashed addresses for privacy
+    config.minimumStakeAmount = 800000000;      // 800 XFG minimum for Elderfier (800 * 1,000,000)
+    config.customNameLength = 8;                 // Exactly 8 letters for custom names
+    config.allowHashedAddresses = true;         // Allow hashed addresses for privacy
     config.reservedNames = {
-        "admin", "root", "system", "fuego", "elder", "node", "test", "dev", "main", "prod"
+        "ADMIN", "ROOT", "SYSTEM", "FUEGO", "ELDER", "NODE", "TEST", "DEV", "MAIN", "PROD",
+        "SERVER", "CLIENT", "MASTER", "SLAVE", "BACKUP", "CACHE", "DB", "API", "WEB", "APP"
     };
     return config;
 }
 
 bool ElderfierServiceConfig::isValid() const {
     return minimumStakeAmount > 0 && 
-           maximumCustomNameLength > 0 && 
-           maximumCustomNameLength <= 16; // Reasonable upper limit
+           customNameLength == 8; // Must be exactly 8
 }
 
 bool ElderfierServiceConfig::isCustomNameReserved(const std::string& name) const {
-    std::string lowerName = name;
-    std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+    std::string upperName = name;
+    std::transform(upperName.begin(), upperName.end(), upperName.begin(), ::toupper);
     
-    return std::find(reservedNames.begin(), reservedNames.end(), lowerName) != reservedNames.end();
+    return std::find(reservedNames.begin(), reservedNames.end(), upperName) != reservedNames.end();
+}
+
+bool ElderfierServiceConfig::isValidCustomName(const std::string& name) const {
+    // Must be exactly 8 letters, all caps, alphabetic only
+    if (name.length() != 8) {
+        return false;
+    }
+    
+    if (!std::all_of(name.begin(), name.end(), ::isupper)) {
+        return false;
+    }
+    
+    if (!std::all_of(name.begin(), name.end(), ::isalpha)) {
+        return false;
+    }
+    
+    // Must not be reserved
+    if (isCustomNameReserved(name)) {
+        return false;
+    }
+    
+    return true;
 }
 
 } // namespace CryptoNote

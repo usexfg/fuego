@@ -47,6 +47,14 @@ bool EldernodeIndexManager::addEldernode(const ENindexEntry& entry) {
             logger(ERROR) << "Service ID conflict for Elderfier node: " << entry.serviceId.toString();
             return false;
         }
+        
+        // Verify that linked address matches fee address for custom/hashed types
+        if (entry.serviceId.type != ServiceIdType::STANDARD_ADDRESS) {
+            if (entry.serviceId.linkedAddress != entry.feeAddress) {
+                logger(ERROR) << "Linked address mismatch for Elderfier node: " << Common::podToHex(entry.eldernodePublicKey);
+                return false;
+            }
+        }
     }
     
     m_eldernodes[entry.eldernodePublicKey] = entry;
@@ -107,6 +115,14 @@ bool EldernodeIndexManager::updateEldernode(const ENindexEntry& entry) {
         if (hasServiceIdConflict(entry.serviceId, entry.eldernodePublicKey)) {
             logger(ERROR) << "Service ID conflict for Elderfier update: " << entry.serviceId.toString();
             return false;
+        }
+        
+        // Verify that linked address matches fee address for custom/hashed types
+        if (entry.serviceId.type != ServiceIdType::STANDARD_ADDRESS) {
+            if (entry.serviceId.linkedAddress != entry.feeAddress) {
+                logger(ERROR) << "Linked address mismatch for Elderfier update: " << Common::podToHex(entry.eldernodePublicKey);
+                return false;
+            }
         }
     }
     
@@ -403,6 +419,9 @@ bool EldernodeIndexManager::saveToStorage() {
                 uint32_t displayNameSize = static_cast<uint32_t>(entry.serviceId.displayName.size());
                 file.write(reinterpret_cast<const char*>(&displayNameSize), sizeof(displayNameSize));
                 file.write(entry.serviceId.displayName.c_str(), displayNameSize);
+                uint32_t linkedAddressSize = static_cast<uint32_t>(entry.serviceId.linkedAddress.size());
+                file.write(reinterpret_cast<const char*>(&linkedAddressSize), sizeof(linkedAddressSize));
+                file.write(entry.serviceId.linkedAddress.c_str(), linkedAddressSize);
             }
         }
         
@@ -453,6 +472,10 @@ bool EldernodeIndexManager::loadFromStorage() {
                 file.read(reinterpret_cast<char*>(&displayNameSize), sizeof(displayNameSize));
                 entry.serviceId.displayName.resize(displayNameSize);
                 file.read(&entry.serviceId.displayName[0], displayNameSize);
+                uint32_t linkedAddressSize;
+                file.read(reinterpret_cast<char*>(&linkedAddressSize), sizeof(linkedAddressSize));
+                entry.serviceId.linkedAddress.resize(linkedAddressSize);
+                file.read(&entry.serviceId.linkedAddress[0], linkedAddressSize);
             }
             
             m_eldernodes[entry.eldernodePublicKey] = entry;
@@ -549,10 +572,6 @@ bool EldernodeIndexManager::regenerateAllProofs() {
 // Private helper methods
 
 bool EldernodeIndexManager::validateEldernodeEntry(const ENindexEntry& entry) const {
-    if (entry.stakeAmount == 0) {
-        return false;
-    }
-    
     if (entry.feeAddress.empty()) {
         return false;
     }
@@ -561,7 +580,13 @@ bool EldernodeIndexManager::validateEldernodeEntry(const ENindexEntry& entry) co
     if (entry.tier == EldernodeTier::ELDERFIER) {
         if (entry.stakeAmount < m_elderfierConfig.minimumStakeAmount) {
             logger(ERROR) << "Elderfier node stake too low: " << entry.stakeAmount 
-                         << " < " << m_elderfierConfig.minimumStakeAmount;
+                         << " < " << m_elderfierConfig.minimumStakeAmount << " (800 XFG)";
+            return false;
+        }
+    } else if (entry.tier == EldernodeTier::BASIC) {
+        // Basic Eldernodes have no stake requirement (--set-fee-address only)
+        if (entry.stakeAmount != 0) {
+            logger(ERROR) << "Basic Eldernode should have no stake: " << entry.stakeAmount;
             return false;
         }
     }
@@ -570,10 +595,6 @@ bool EldernodeIndexManager::validateEldernodeEntry(const ENindexEntry& entry) co
 }
 
 bool EldernodeIndexManager::validateStakeProof(const EldernodeStakeProof& proof) const {
-    if (proof.stakeAmount == 0) {
-        return false;
-    }
-    
     if (proof.feeAddress.empty()) {
         return false;
     }
@@ -588,6 +609,11 @@ bool EldernodeIndexManager::validateStakeProof(const EldernodeStakeProof& proof)
             return false;
         }
         if (!proof.serviceId.isValid()) {
+            return false;
+        }
+    } else if (proof.tier == EldernodeTier::BASIC) {
+        // Basic Eldernodes have no stake requirement
+        if (proof.stakeAmount != 0) {
             return false;
         }
     }
@@ -608,6 +634,10 @@ bool EldernodeIndexManager::validateElderfierServiceId(const ElderfierServiceId&
     
     switch (serviceId.type) {
         case ServiceIdType::CUSTOM_NAME:
+            if (!m_elderfierConfig.isValidCustomName(serviceId.identifier)) {
+                logger(ERROR) << "Invalid custom name: " << serviceId.identifier;
+                return false;
+            }
             if (m_elderfierConfig.isCustomNameReserved(serviceId.identifier)) {
                 logger(ERROR) << "Custom name is reserved: " << serviceId.identifier;
                 return false;

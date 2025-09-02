@@ -11,11 +11,11 @@ void testBasicEldernode() {
     
     EldernodeIndexManager manager;
     
-    // Test 1: Add Basic Eldernode
+    // Test 1: Add Basic Eldernode (no stake required)
     ENindexEntry basicEntry;
     Crypto::generate_keys(basicEntry.eldernodePublicKey, basicEntry.eldernodeSecretKey);
     basicEntry.feeAddress = "FUEGO123456789abcdef";
-    basicEntry.stakeAmount = 1000000; // 1 FUEGO minimum for basic
+    basicEntry.stakeAmount = 0; // No stake for basic Eldernodes (--set-fee-address only)
     basicEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     basicEntry.isActive = true;
@@ -23,12 +23,13 @@ void testBasicEldernode() {
     
     bool added = manager.addEldernode(basicEntry);
     assert(added);
-    std::cout << "✓ Added Basic Eldernode successfully" << std::endl;
+    std::cout << "✓ Added Basic Eldernode successfully (no stake)" << std::endl;
     
     // Test 2: Get Basic Eldernode
     auto retrieved = manager.getEldernode(basicEntry.eldernodePublicKey);
     assert(retrieved.has_value());
     assert(retrieved->tier == EldernodeTier::BASIC);
+    assert(retrieved->stakeAmount == 0);
     std::cout << "✓ Retrieved Basic Eldernode successfully" << std::endl;
     
     // Test 3: Basic Eldernode statistics
@@ -43,26 +44,26 @@ void testElderfierServiceNode() {
     
     EldernodeIndexManager manager;
     
-    // Test 1: Add Elderfier with Custom Name
+    // Test 1: Add Elderfier with Custom Name (exactly 8 letters, all caps)
     ENindexEntry elderfierEntry;
     Crypto::generate_keys(elderfierEntry.eldernodePublicKey, elderfierEntry.eldernodeSecretKey);
     elderfierEntry.feeAddress = "FUEGO987654321fedcba";
-    elderfierEntry.stakeAmount = 5000000; // 5 FUEGO minimum for Elderfier
+    elderfierEntry.stakeAmount = 800000000; // 800 XFG minimum for Elderfier
     elderfierEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     elderfierEntry.isActive = true;
     elderfierEntry.tier = EldernodeTier::ELDERFIER;
-    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FuegoNode");
+    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FUEGONODE", "FUEGO987654321fedcba");
     
     bool added = manager.addEldernode(elderfierEntry);
     assert(added);
-    std::cout << "✓ Added Elderfier with custom name successfully" << std::endl;
+    std::cout << "✓ Added Elderfier with custom name successfully (8 letters, all caps)" << std::endl;
     
     // Test 2: Add Elderfier with Hashed Address
     ENindexEntry elderfierHashed;
     Crypto::generate_keys(elderfierHashed.eldernodePublicKey, elderfierHashed.eldernodeSecretKey);
     elderfierHashed.feeAddress = "FUEGO555666777888999";
-    elderfierHashed.stakeAmount = 10000000; // 10 FUEGO
+    elderfierHashed.stakeAmount = 1000000000; // 1000 XFG
     elderfierHashed.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     elderfierHashed.isActive = true;
@@ -77,7 +78,7 @@ void testElderfierServiceNode() {
     ENindexEntry elderfierStandard;
     Crypto::generate_keys(elderfierStandard.eldernodePublicKey, elderfierStandard.eldernodeSecretKey);
     elderfierStandard.feeAddress = "FUEGO111222333444555";
-    elderfierStandard.stakeAmount = 7500000; // 7.5 FUEGO
+    elderfierStandard.stakeAmount = 800000000; // 800 XFG minimum
     elderfierStandard.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     elderfierStandard.isActive = true;
@@ -99,7 +100,12 @@ void testElderfierServiceNode() {
     assert(byServiceId->eldernodePublicKey == elderfierEntry.eldernodePublicKey);
     std::cout << "✓ Retrieved Elderfier by service ID successfully" << std::endl;
     
-    // Test 6: Elderfier statistics
+    // Test 6: Verify linked addresses
+    assert(elderfierEntry.serviceId.linkedAddress == elderfierEntry.feeAddress);
+    assert(elderfierHashed.serviceId.linkedAddress == elderfierHashed.feeAddress);
+    std::cout << "✓ Service IDs properly linked to wallet addresses" << std::endl;
+    
+    // Test 7: Elderfier statistics
     assert(manager.getTotalEldernodeCount() == 3);
     assert(manager.getActiveEldernodeCount() == 3);
     assert(manager.getElderfierNodeCount() == 3);
@@ -111,50 +117,80 @@ void testServiceIdValidation() {
     
     EldernodeIndexManager manager;
     
-    // Test 1: Invalid custom name (too long)
+    // Test 1: Invalid custom name (wrong length)
     ENindexEntry invalidEntry;
     Crypto::generate_keys(invalidEntry.eldernodePublicKey, invalidEntry.eldernodeSecretKey);
     invalidEntry.feeAddress = "FUEGO123456789abcdef";
-    invalidEntry.stakeAmount = 5000000;
+    invalidEntry.stakeAmount = 800000000;
     invalidEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     invalidEntry.isActive = true;
     invalidEntry.tier = EldernodeTier::ELDERFIER;
-    invalidEntry.serviceId = ElderfierServiceId::createCustomName("TooLongName123"); // > 8 chars
+    invalidEntry.serviceId = ElderfierServiceId::createCustomName("SHORT", "FUEGO123456789abcdef"); // Wrong length
     
     bool added = manager.addEldernode(invalidEntry);
     assert(!added); // Should fail
-    std::cout << "✓ Rejected invalid custom name (too long)" << std::endl;
+    std::cout << "✓ Rejected invalid custom name (wrong length)" << std::endl;
     
-    // Test 2: Reserved custom name
+    // Test 2: Invalid custom name (not all caps)
+    ENindexEntry invalidCapsEntry;
+    Crypto::generate_keys(invalidCapsEntry.eldernodePublicKey, invalidCapsEntry.eldernodeSecretKey);
+    invalidCapsEntry.feeAddress = "FUEGO123456789abcdef";
+    invalidCapsEntry.stakeAmount = 800000000;
+    invalidCapsEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    invalidCapsEntry.isActive = true;
+    invalidCapsEntry.tier = EldernodeTier::ELDERFIER;
+    invalidCapsEntry.serviceId = ElderfierServiceId::createCustomName("fuegonode", "FUEGO123456789abcdef"); // Not all caps
+    
+    bool addedCaps = manager.addEldernode(invalidCapsEntry);
+    assert(!addedCaps); // Should fail
+    std::cout << "✓ Rejected invalid custom name (not all caps)" << std::endl;
+    
+    // Test 3: Reserved custom name
     ENindexEntry reservedEntry;
     Crypto::generate_keys(reservedEntry.eldernodePublicKey, reservedEntry.eldernodeSecretKey);
     reservedEntry.feeAddress = "FUEGO123456789abcdef";
-    reservedEntry.stakeAmount = 5000000;
+    reservedEntry.stakeAmount = 800000000;
     reservedEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     reservedEntry.isActive = true;
     reservedEntry.tier = EldernodeTier::ELDERFIER;
-    reservedEntry.serviceId = ElderfierServiceId::createCustomName("admin"); // Reserved name
+    reservedEntry.serviceId = ElderfierServiceId::createCustomName("ADMIN", "FUEGO123456789abcdef"); // Reserved name
     
     bool addedReserved = manager.addEldernode(reservedEntry);
     assert(!addedReserved); // Should fail
     std::cout << "✓ Rejected reserved custom name" << std::endl;
     
-    // Test 3: Valid custom name
+    // Test 4: Valid custom name (exactly 8 letters, all caps)
     ENindexEntry validEntry;
     Crypto::generate_keys(validEntry.eldernodePublicKey, validEntry.eldernodeSecretKey);
     validEntry.feeAddress = "FUEGO123456789abcdef";
-    validEntry.stakeAmount = 5000000;
+    validEntry.stakeAmount = 800000000;
     validEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     validEntry.isActive = true;
     validEntry.tier = EldernodeTier::ELDERFIER;
-    validEntry.serviceId = ElderfierServiceId::createCustomName("MyNode");
+    validEntry.serviceId = ElderfierServiceId::createCustomName("MYNODE", "FUEGO123456789abcdef");
     
     bool addedValid = manager.addEldernode(validEntry);
     assert(addedValid); // Should succeed
-    std::cout << "✓ Accepted valid custom name" << std::endl;
+    std::cout << "✓ Accepted valid custom name (8 letters, all caps)" << std::endl;
+    
+    // Test 5: Insufficient stake for Elderfier
+    ENindexEntry lowStakeEntry;
+    Crypto::generate_keys(lowStakeEntry.eldernodePublicKey, lowStakeEntry.eldernodeSecretKey);
+    lowStakeEntry.feeAddress = "FUEGO999888777666555";
+    lowStakeEntry.stakeAmount = 100000000; // Only 100 XFG (less than 800 XFG required)
+    lowStakeEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    lowStakeEntry.isActive = true;
+    lowStakeEntry.tier = EldernodeTier::ELDERFIER;
+    lowStakeEntry.serviceId = ElderfierServiceId::createCustomName("LOWSTAKE", "FUEGO999888777666555");
+    
+    bool addedLowStake = manager.addEldernode(lowStakeEntry);
+    assert(!addedLowStake); // Should fail
+    std::cout << "✓ Rejected Elderfier with insufficient stake (less than 800 XFG)" << std::endl;
 }
 
 void testTierPrioritization() {
@@ -162,11 +198,11 @@ void testTierPrioritization() {
     
     EldernodeIndexManager manager;
     
-    // Add Basic Eldernode
+    // Add Basic Eldernode (no stake)
     ENindexEntry basicEntry;
     Crypto::generate_keys(basicEntry.eldernodePublicKey, basicEntry.eldernodeSecretKey);
     basicEntry.feeAddress = "FUEGO123456789abcdef";
-    basicEntry.stakeAmount = 1000000;
+    basicEntry.stakeAmount = 0; // No stake for basic
     basicEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     basicEntry.isActive = true;
@@ -175,16 +211,16 @@ void testTierPrioritization() {
     bool addedBasic = manager.addEldernode(basicEntry);
     assert(addedBasic);
     
-    // Add Elderfier with lower stake
+    // Add Elderfier with minimum stake
     ENindexEntry elderfierEntry;
     Crypto::generate_keys(elderfierEntry.eldernodePublicKey, elderfierEntry.eldernodeSecretKey);
     elderfierEntry.feeAddress = "FUEGO987654321fedcba";
-    elderfierEntry.stakeAmount = 5000000; // Higher than basic minimum
+    elderfierEntry.stakeAmount = 800000000; // 800 XFG minimum
     elderfierEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     elderfierEntry.isActive = true;
     elderfierEntry.tier = EldernodeTier::ELDERFIER;
-    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("Priority");
+    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("PRIORITY", "FUEGO987654321fedcba");
     
     bool addedElderfier = manager.addEldernode(elderfierEntry);
     assert(addedElderfier);

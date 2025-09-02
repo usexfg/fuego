@@ -12,7 +12,7 @@ namespace CryptoNote {
 // Service ID types for Elderfier nodes
 enum class ServiceIdType : uint8_t {
     STANDARD_ADDRESS = 0,    // Standard fee address (like basic Eldernodes)
-    CUSTOM_NAME = 1,         // Custom name (up to 8 characters)
+    CUSTOM_NAME = 1,         // Custom name (exactly 8 letters, all caps)
     HASHED_ADDRESS = 2       // Hashed public fee address (for privacy)
 };
 
@@ -21,18 +21,19 @@ struct ElderfierServiceId {
     ServiceIdType type;
     std::string identifier;  // Raw identifier (address, name, or hash)
     std::string displayName; // Human-readable display name
+    std::string linkedAddress; // Actual wallet address (for custom/hashed types)
     
     bool isValid() const;
     std::string toString() const;
     static ElderfierServiceId createStandardAddress(const std::string& address);
-    static ElderfierServiceId createCustomName(const std::string& name);
+    static ElderfierServiceId createCustomName(const std::string& name, const std::string& walletAddress);
     static ElderfierServiceId createHashedAddress(const std::string& address);
 };
 
 // Eldernode tier levels
 enum class EldernodeTier : uint8_t {
-    BASIC = 0,           // Basic Eldernode
-    ELDERFIER = 1        // Elderfier service node (higher tier)
+    BASIC = 0,           // Basic Eldernode (no stake required)
+    ELDERFIER = 1        // Elderfier service node (800 XFG stake required)
 };
 
 // Eldernode stake proof structure
@@ -117,14 +118,15 @@ struct StakeVerificationResult {
 
 // Elderfier service configuration
 struct ElderfierServiceConfig {
-    uint64_t minimumStakeAmount;      // Higher stake requirement for Elderfier
-    uint64_t maximumCustomNameLength; // Max length for custom names
+    uint64_t minimumStakeAmount;      // 800 XFG minimum for Elderfier
+    uint64_t customNameLength;        // Exactly 8 letters for custom names
     bool allowHashedAddresses;        // Whether to allow hashed addresses
     std::vector<std::string> reservedNames; // Reserved custom names
     
     static ElderfierServiceConfig getDefault();
     bool isValid() const;
     bool isCustomNameReserved(const std::string& name) const;
+    bool isValidCustomName(const std::string& name) const;
 };
 
 } // namespace CryptoNote

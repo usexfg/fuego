@@ -48,12 +48,16 @@ bool EldernodeIndexManager::addEldernode(const ENindexEntry& entry) {
             return false;
         }
         
-        // Verify that linked address matches fee address for custom/hashed types
-        if (entry.serviceId.type != ServiceIdType::STANDARD_ADDRESS) {
-            if (entry.serviceId.linkedAddress != entry.feeAddress) {
-                logger(ERROR) << "Linked address mismatch for Elderfier node: " << Common::podToHex(entry.eldernodePublicKey);
-                return false;
-            }
+        // Verify that linked address matches fee address for all Elderfier types
+        if (entry.serviceId.linkedAddress != entry.feeAddress) {
+            logger(ERROR) << "Linked address mismatch for Elderfier node: " << Common::podToHex(entry.eldernodePublicKey);
+            return false;
+        }
+        
+        // Verify that hashed address is present for all Elderfier nodes
+        if (entry.serviceId.hashedAddress.empty()) {
+            logger(ERROR) << "Missing hashed address for Elderfier node: " << Common::podToHex(entry.eldernodePublicKey);
+            return false;
         }
     }
     
@@ -117,12 +121,16 @@ bool EldernodeIndexManager::updateEldernode(const ENindexEntry& entry) {
             return false;
         }
         
-        // Verify that linked address matches fee address for custom/hashed types
-        if (entry.serviceId.type != ServiceIdType::STANDARD_ADDRESS) {
-            if (entry.serviceId.linkedAddress != entry.feeAddress) {
-                logger(ERROR) << "Linked address mismatch for Elderfier update: " << Common::podToHex(entry.eldernodePublicKey);
-                return false;
-            }
+        // Verify that linked address matches fee address for all Elderfier types
+        if (entry.serviceId.linkedAddress != entry.feeAddress) {
+            logger(ERROR) << "Linked address mismatch for Elderfier update: " << Common::podToHex(entry.eldernodePublicKey);
+            return false;
+        }
+        
+        // Verify that hashed address is present for all Elderfier nodes
+        if (entry.serviceId.hashedAddress.empty()) {
+            logger(ERROR) << "Missing hashed address for Elderfier update: " << Common::podToHex(entry.eldernodePublicKey);
+            return false;
         }
     }
     
@@ -422,6 +430,9 @@ bool EldernodeIndexManager::saveToStorage() {
                 uint32_t linkedAddressSize = static_cast<uint32_t>(entry.serviceId.linkedAddress.size());
                 file.write(reinterpret_cast<const char*>(&linkedAddressSize), sizeof(linkedAddressSize));
                 file.write(entry.serviceId.linkedAddress.c_str(), linkedAddressSize);
+                uint32_t hashedAddressSize = static_cast<uint32_t>(entry.serviceId.hashedAddress.size());
+                file.write(reinterpret_cast<const char*>(&hashedAddressSize), sizeof(hashedAddressSize));
+                file.write(entry.serviceId.hashedAddress.c_str(), hashedAddressSize);
             }
         }
         
@@ -476,6 +487,10 @@ bool EldernodeIndexManager::loadFromStorage() {
                 file.read(reinterpret_cast<char*>(&linkedAddressSize), sizeof(linkedAddressSize));
                 entry.serviceId.linkedAddress.resize(linkedAddressSize);
                 file.read(&entry.serviceId.linkedAddress[0], linkedAddressSize);
+                uint32_t hashedAddressSize;
+                file.read(reinterpret_cast<char*>(&hashedAddressSize), sizeof(hashedAddressSize));
+                entry.serviceId.hashedAddress.resize(hashedAddressSize);
+                file.read(&entry.serviceId.hashedAddress[0], hashedAddressSize);
             }
             
             m_eldernodes[entry.eldernodePublicKey] = entry;
@@ -567,6 +582,63 @@ bool EldernodeIndexManager::regenerateAllProofs() {
     
     logger(INFO) << "Regenerated proofs for all Eldernodes, success: " << success;
     return success;
+}
+
+// Slashing functionality
+bool EldernodeIndexManager::slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (!m_elderfierConfig.slashingConfig.enableSlashing) {
+        logger(WARNING) << "Slashing is disabled";
+        return false;
+    }
+    
+    auto it = m_eldernodes.find(publicKey);
+    if (it == m_eldernodes.end()) {
+        logger(ERROR) << "Eldernode not found for slashing: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    const auto& entry = it->second;
+    if (entry.tier != EldernodeTier::ELDERFIER) {
+        logger(ERROR) << "Cannot slash Basic Eldernode: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    uint64_t slashedAmount = (entry.stakeAmount * m_elderfierConfig.slashingConfig.slashingPercentage) / 100;
+    
+    // Update the Eldernode entry with reduced stake
+    ENindexEntry updatedEntry = entry;
+    updatedEntry.stakeAmount -= slashedAmount;
+    
+    // Handle slashed amount based on destination
+    switch (m_elderfierConfig.slashingConfig.destination) {
+        case SlashingDestination::BURN:
+            logger(INFO) << "Burned " << slashedAmount << " XFG from Eldernode: " << Common::podToHex(publicKey);
+            break;
+            
+        case SlashingDestination::TREASURY:
+            logger(INFO) << "Sent " << slashedAmount << " XFG to treasury from Eldernode: " << Common::podToHex(publicKey);
+            break;
+            
+        case SlashingDestination::REDISTRIBUTE:
+            redistributeSlashedStake(slashedAmount);
+            logger(INFO) << "Redistributed " << slashedAmount << " XFG to other Eldernodes from: " << Common::podToHex(publicKey);
+            break;
+            
+        case SlashingDestination::CHARITY:
+            logger(INFO) << "Sent " << slashedAmount << " XFG to charity from Eldernode: " << Common::podToHex(publicKey);
+            break;
+    }
+    
+    // Update the Eldernode
+    it->second = updatedEntry;
+    m_lastUpdate = std::chrono::system_clock::now();
+    
+    logger(INFO) << "Slashed Eldernode: " << Common::podToHex(publicKey) 
+                << " amount: " << slashedAmount << " reason: " << reason;
+    
+    return true;
 }
 
 // Private helper methods
@@ -683,6 +755,37 @@ std::vector<uint8_t> EldernodeIndexManager::aggregateSignatures(const std::vecto
         result.insert(result.end(), sig.begin(), sig.end());
     }
     return result;
+}
+
+void EldernodeIndexManager::redistributeSlashedStake(uint64_t slashedAmount) {
+    // Simple redistribution to active Elderfier nodes
+    std::vector<ENindexEntry> activeElderfierNodes;
+    for (const auto& pair : m_eldernodes) {
+        if (pair.second.tier == EldernodeTier::ELDERFIER && pair.second.isActive) {
+            activeElderfierNodes.push_back(pair.second);
+        }
+    }
+    
+    if (activeElderfierNodes.empty()) {
+        logger(WARNING) << "No active Elderfier nodes for stake redistribution";
+        return;
+    }
+    
+    uint64_t amountPerNode = slashedAmount / activeElderfierNodes.size();
+    uint64_t remainder = slashedAmount % activeElderfierNodes.size();
+    
+    for (size_t i = 0; i < activeElderfierNodes.size(); ++i) {
+        uint64_t bonus = (i < remainder) ? 1 : 0;
+        uint64_t totalBonus = amountPerNode + bonus;
+        
+        // Update the Eldernode's stake
+        auto it = m_eldernodes.find(activeElderfierNodes[i].eldernodePublicKey);
+        if (it != m_eldernodes.end()) {
+            it->second.stakeAmount += totalBonus;
+        }
+    }
+    
+    logger(INFO) << "Redistributed " << slashedAmount << " XFG to " << activeElderfierNodes.size() << " active Elderfier nodes";
 }
 
 } // namespace CryptoNote

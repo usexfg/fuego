@@ -53,7 +53,7 @@ void testElderfierServiceNode() {
         std::chrono::system_clock::now().time_since_epoch()).count();
     elderfierEntry.isActive = true;
     elderfierEntry.tier = EldernodeTier::ELDERFIER;
-    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FUEGONODE", "FUEGO987654321fedcba");
+    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FUEGONOD", "FUEGO987654321fedcba"); // Fixed: 8 chars
     
     bool added = manager.addEldernode(elderfierEntry);
     assert(added);
@@ -100,10 +100,13 @@ void testElderfierServiceNode() {
     assert(byServiceId->eldernodePublicKey == elderfierEntry.eldernodePublicKey);
     std::cout << "✓ Retrieved Elderfier by service ID successfully" << std::endl;
     
-    // Test 6: Verify linked addresses
+    // Test 6: Verify linked addresses and hashed addresses
     assert(elderfierEntry.serviceId.linkedAddress == elderfierEntry.feeAddress);
     assert(elderfierHashed.serviceId.linkedAddress == elderfierHashed.feeAddress);
-    std::cout << "✓ Service IDs properly linked to wallet addresses" << std::endl;
+    assert(!elderfierEntry.serviceId.hashedAddress.empty());
+    assert(!elderfierHashed.serviceId.hashedAddress.empty());
+    assert(!elderfierStandard.serviceId.hashedAddress.empty());
+    std::cout << "✓ Service IDs properly linked to wallet addresses and have hashed addresses" << std::endl;
     
     // Test 7: Elderfier statistics
     assert(manager.getTotalEldernodeCount() == 3);
@@ -141,7 +144,7 @@ void testServiceIdValidation() {
         std::chrono::system_clock::now().time_since_epoch()).count();
     invalidCapsEntry.isActive = true;
     invalidCapsEntry.tier = EldernodeTier::ELDERFIER;
-    invalidCapsEntry.serviceId = ElderfierServiceId::createCustomName("fuegonode", "FUEGO123456789abcdef"); // Not all caps
+    invalidCapsEntry.serviceId = ElderfierServiceId::createCustomName("fuegonod", "FUEGO123456789abcdef"); // Not all caps
     
     bool addedCaps = manager.addEldernode(invalidCapsEntry);
     assert(!addedCaps); // Should fail
@@ -261,6 +264,61 @@ void testTierPrioritization() {
     std::cout << "✓ Elderfier nodes prioritized in consensus" << std::endl;
 }
 
+void testSlashingFunctionality() {
+    std::cout << "Testing Slashing Functionality..." << std::endl;
+    
+    EldernodeIndexManager manager;
+    
+    // Add Elderfier node for slashing test
+    ENindexEntry elderfierEntry;
+    Crypto::generate_keys(elderfierEntry.eldernodePublicKey, elderfierEntry.eldernodeSecretKey);
+    elderfierEntry.feeAddress = "FUEGO987654321fedcba";
+    elderfierEntry.stakeAmount = 1000000000; // 1000 XFG
+    elderfierEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    elderfierEntry.isActive = true;
+    elderfierEntry.tier = EldernodeTier::ELDERFIER;
+    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("SLASHNODE", "FUEGO987654321fedcba");
+    
+    bool added = manager.addEldernode(elderfierEntry);
+    assert(added);
+    
+    // Test 1: Slash Elderfier node
+    uint64_t originalStake = elderfierEntry.stakeAmount;
+    bool slashed = manager.slashEldernode(elderfierEntry.eldernodePublicKey, "Test slashing");
+    assert(slashed);
+    
+    // Verify stake was reduced
+    auto updatedEntry = manager.getEldernode(elderfierEntry.eldernodePublicKey);
+    assert(updatedEntry.has_value());
+    assert(updatedEntry->stakeAmount < originalStake);
+    std::cout << "✓ Successfully slashed Elderfier node" << std::endl;
+    
+    // Test 2: Try to slash Basic Eldernode (should fail)
+    ENindexEntry basicEntry;
+    Crypto::generate_keys(basicEntry.eldernodePublicKey, basicEntry.eldernodeSecretKey);
+    basicEntry.feeAddress = "FUEGO123456789abcdef";
+    basicEntry.stakeAmount = 0;
+    basicEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    basicEntry.isActive = true;
+    basicEntry.tier = EldernodeTier::BASIC;
+    
+    bool addedBasic = manager.addEldernode(basicEntry);
+    assert(addedBasic);
+    
+    bool slashBasic = manager.slashEldernode(basicEntry.eldernodePublicKey, "Test slashing basic");
+    assert(!slashBasic); // Should fail
+    std::cout << "✓ Correctly rejected slashing Basic Eldernode" << std::endl;
+    
+    // Test 3: Try to slash non-existent Eldernode
+    Crypto::PublicKey fakeKey;
+    Crypto::generate_keys(fakeKey, fakeKey); // Generate random key
+    bool slashFake = manager.slashEldernode(fakeKey, "Test slashing fake");
+    assert(!slashFake); // Should fail
+    std::cout << "✓ Correctly rejected slashing non-existent Eldernode" << std::endl;
+}
+
 void testEldernodeIndexManager() {
     std::cout << "Running comprehensive Eldernode Index Manager tests..." << std::endl;
     
@@ -268,6 +326,7 @@ void testEldernodeIndexManager() {
     testElderfierServiceNode();
     testServiceIdValidation();
     testTierPrioritization();
+    testSlashingFunctionality();
     
     std::cout << "All tests passed! ✓" << std::endl;
 }

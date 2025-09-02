@@ -47,6 +47,9 @@ public:
     virtual bool saveToStorage() = 0;
     virtual bool loadFromStorage() = 0;
     virtual bool clearStorage() = 0;
+    
+    // Slashing functionality
+    virtual bool slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) = 0;
 };
 
 class EldernodeIndexManager : public IEldernodeIndexManager {
@@ -98,6 +101,9 @@ public:
     // Auto-generation of fresh proofs
     bool generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress);
     bool regenerateAllProofs();
+    
+    // Slashing functionality
+    bool slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) override;
 
 private:
     mutable std::mutex m_mutex;
@@ -115,6 +121,7 @@ private:
     bool hasServiceIdConflict(const ElderfierServiceId& serviceId, const Crypto::PublicKey& excludeKey) const;
     Crypto::Hash calculateStakeHash(const Crypto::PublicKey& publicKey, uint64_t amount, uint64_t timestamp) const;
     std::vector<uint8_t> aggregateSignatures(const std::vector<std::vector<uint8_t>>& signatures) const;
+    void redistributeSlashedStake(uint64_t slashedAmount);
 };
 
 } // namespace CryptoNote

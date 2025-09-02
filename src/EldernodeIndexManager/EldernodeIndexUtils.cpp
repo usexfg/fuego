@@ -30,14 +30,14 @@ bool ElderfierServiceId::isValid() const {
             if (!std::all_of(identifier.begin(), identifier.end(), ::isalpha)) {
                 return false;
             }
-            // Must have linked address for custom names
-            return !linkedAddress.empty();
+            // Must have linked address and hashed address for custom names
+            return !linkedAddress.empty() && !hashedAddress.empty();
             
         case ServiceIdType::HASHED_ADDRESS:
             return identifier.length() == 64 && // SHA256 hash length
                    std::all_of(identifier.begin(), identifier.end(), 
                               [](char c) { return std::isxdigit(c); }) &&
-                   !linkedAddress.empty(); // Must have linked address
+                   !linkedAddress.empty() && !hashedAddress.empty();
             
         default:
             return false;
@@ -63,7 +63,8 @@ std::string ElderfierServiceId::toString() const {
     
     oss << ", identifier=\"" << identifier << "\""
         << ", displayName=\"" << displayName << "\""
-        << ", linkedAddress=\"" << linkedAddress << "\"}";
+        << ", linkedAddress=\"" << linkedAddress << "\""
+        << ", hashedAddress=\"" << hashedAddress << "\"}";
     return oss.str();
 }
 
@@ -73,6 +74,12 @@ ElderfierServiceId ElderfierServiceId::createStandardAddress(const std::string& 
     serviceId.identifier = address;
     serviceId.displayName = address;
     serviceId.linkedAddress = address; // Same as identifier for standard addresses
+    
+    // Generate hashed address for all Elderfier nodes
+    Crypto::Hash hash;
+    Crypto::cn_fast_hash(address.data(), address.size(), hash);
+    serviceId.hashedAddress = Common::podToHex(hash);
+    
     return serviceId;
 }
 
@@ -94,6 +101,12 @@ ElderfierServiceId ElderfierServiceId::createCustomName(const std::string& name,
     serviceId.identifier = upperName;
     serviceId.displayName = upperName;
     serviceId.linkedAddress = walletAddress; // Link to actual wallet address
+    
+    // Generate hashed address for all Elderfier nodes
+    Crypto::Hash hash;
+    Crypto::cn_fast_hash(walletAddress.data(), walletAddress.size(), hash);
+    serviceId.hashedAddress = Common::podToHex(hash);
+    
     return serviceId;
 }
 
@@ -114,13 +127,14 @@ ElderfierServiceId ElderfierServiceId::createHashedAddress(const std::string& ad
     }
     
     serviceId.linkedAddress = address; // Link to actual wallet address
+    serviceId.hashedAddress = serviceId.identifier; // Same as identifier for hashed type
+    
     return serviceId;
 }
 
 // EldernodeStakeProof implementations
 bool EldernodeStakeProof::isValid() const {
-    return stakeAmount > 0 && 
-           !feeAddress.empty() && 
+    return !feeAddress.empty() && 
            !proofSignature.empty() &&
            timestamp > 0 &&
            (tier == EldernodeTier::BASIC || serviceId.isValid());
@@ -247,6 +261,21 @@ StakeVerificationResult StakeVerificationResult::failure(const std::string& erro
     return result;
 }
 
+// SlashingConfig implementations
+SlashingConfig SlashingConfig::getDefault() {
+    SlashingConfig config;
+    config.destination = SlashingDestination::TREASURY;
+    config.destinationAddress = "FUEGOTREASURY123456789abcdef"; // Network treasury address
+    config.slashingPercentage = 50; // 50% of stake slashed for misbehavior
+    config.enableSlashing = true;
+    return config;
+}
+
+bool SlashingConfig::isValid() const {
+    return slashingPercentage > 0 && slashingPercentage <= 100 &&
+           (destination == SlashingDestination::BURN || !destinationAddress.empty());
+}
+
 // ElderfierServiceConfig implementations
 ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
     ElderfierServiceConfig config;
@@ -257,12 +286,14 @@ ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
         "ADMIN", "ROOT", "SYSTEM", "FUEGO", "ELDER", "NODE", "TEST", "DEV", "MAIN", "PROD",
         "SERVER", "CLIENT", "MASTER", "SLAVE", "BACKUP", "CACHE", "DB", "API", "WEB", "APP"
     };
+    config.slashingConfig = SlashingConfig::getDefault();
     return config;
 }
 
 bool ElderfierServiceConfig::isValid() const {
     return minimumStakeAmount > 0 && 
-           customNameLength == 8; // Must be exactly 8
+           customNameLength == 8 && // Must be exactly 8
+           slashingConfig.isValid();
 }
 
 bool ElderfierServiceConfig::isCustomNameReserved(const std::string& name) const {

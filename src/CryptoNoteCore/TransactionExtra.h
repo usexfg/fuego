@@ -156,4 +156,26 @@ bool createTxExtraWithCDDepositSecret(const std::vector<uint8_t>& secret_key, ui
 bool addCDDepositSecretToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraCDDepositSecret& deposit_secret);
 bool getCDDepositSecretFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraCDDepositSecret& deposit_secret);
 
+// Helper APIs for wallet integration
+// Computes Keccak256(address || "recipient") into out_hash
+bool computeHeatRecipientHash(const std::string& eth_address, Crypto::Hash& out_hash);
+// Computes Keccak256(secret || le64(amount) || tx_prefix_hash || recipient_hash || network_id || target_chain_id || version)
+Crypto::Hash computeHeatCommitment(const std::array<uint8_t, 32>& secret,
+                                   uint64_t amount_atomic,
+                                   const Crypto::Hash& tx_prefix_hash,
+                                   const std::string& eth_address,
+                                   uint32_t network_id,
+                                   uint32_t target_chain_id,
+                                   uint32_t commitment_version);
+// Builds tx.extra with TX_EXTRA_HEAT_COMMITMENT (0x08) given inputs
+bool buildHeatExtra(const std::array<uint8_t, 32>& secret,
+                    uint64_t amount_atomic,
+                    const Crypto::Hash& tx_prefix_hash,
+                    const std::string& eth_address,
+                    uint32_t network_id,
+                    uint32_t target_chain_id,
+                    uint32_t commitment_version,
+                    const std::vector<uint8_t>& metadata,
+                    std::vector<uint8_t>& extra);
+
 }

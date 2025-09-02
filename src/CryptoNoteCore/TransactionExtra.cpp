@@ -25,6 +25,7 @@
 #include "CryptoNoteTools.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
+#include "crypto/keccak.h"
 
 using namespace Crypto;
 using namespace Common;
@@ -584,6 +585,123 @@ namespace CryptoNote
     return false;
   }
 
+  // ---------------- HEAT wallet helpers ----------------
+  // Computes Keccak256(address || "recipient") into out_hash
+  bool computeHeatRecipientHash(const std::string &eth_address, Crypto::Hash &out_hash)
+  {
+    // Normalize and decode 0x-prefixed hex address
+    std::string addr = eth_address;
+    if (addr.size() >= 2 && (addr[0] == '0') && (addr[1] == 'x' || addr[1] == 'X')) {
+      addr = addr.substr(2);
+    }
+    std::vector<uint8_t> addr_bytes;
+    try {
+      if (!Common::fromHex(addr, addr_bytes)) {
+        return false;
+      }
+    } catch (...) {
+      return false;
+    }
+    if (addr_bytes.size() != 20) {
+      return false;
+    }
+
+    // Compute Keccak256(address || "recipient")
+    uint8_t md[32];
+    std::vector<uint8_t> preimage;
+    preimage.reserve(20 + 9);
+    preimage.insert(preimage.end(), addr_bytes.begin(), addr_bytes.end());
+    static const char tag[] = "recipient";
+    preimage.insert(preimage.end(), reinterpret_cast<const uint8_t*>(tag), reinterpret_cast<const uint8_t*>(tag) + sizeof(tag) - 1);
+    keccak(preimage.data(), static_cast<int>(preimage.size()), md, sizeof(md));
+    memcpy(&out_hash, md, sizeof(out_hash));
+    return true;
+  }
+
+  // Computes Keccak256(secret || le64(amount) || tx_prefix_hash || recipient_hash || network_id || target_chain_id || version)
+  Crypto::Hash computeHeatCommitment(const std::array<uint8_t, 32> &secret,
+                                     uint64_t amount_atomic,
+                                     const Crypto::Hash &tx_prefix_hash,
+                                     const std::string &eth_address,
+                                     uint32_t network_id,
+                                     uint32_t target_chain_id,
+                                     uint32_t commitment_version)
+  {
+    Crypto::Hash recipient_hash = {};
+    if (!computeHeatRecipientHash(eth_address, recipient_hash)) {
+      return Crypto::Hash{};
+    }
+
+    std::vector<uint8_t> preimage;
+    preimage.reserve(32 + 8 + 32 + 32 + 4 + 4 + 4); // secret + amount + tx_prefix_hash + recipient_hash + network_id + target_chain_id + version
+
+    // Secret (32 bytes)
+    preimage.insert(preimage.end(), secret.begin(), secret.end());
+
+    // Amount (8 bytes, LE)
+    uint64_t amt = amount_atomic;
+    for (int i = 0; i < 8; ++i) {
+      preimage.push_back(static_cast<uint8_t>(amt & 0xFF));
+      amt >>= 8;
+    }
+
+    // Tx prefix hash (32 bytes)
+    preimage.insert(preimage.end(), reinterpret_cast<const uint8_t*>(&tx_prefix_hash), reinterpret_cast<const uint8_t*>(&tx_prefix_hash) + sizeof(tx_prefix_hash));
+
+    // Recipient hash (32 bytes)
+    preimage.insert(preimage.end(), reinterpret_cast<const uint8_t*>(&recipient_hash), reinterpret_cast<const uint8_t*>(&recipient_hash) + sizeof(recipient_hash));
+
+    // Network ID (4 bytes, LE)
+    uint32_t net_id = network_id;
+    for (int i = 0; i < 4; ++i) {
+      preimage.push_back(static_cast<uint8_t>(net_id & 0xFF));
+      net_id >>= 8;
+    }
+
+    // Target chain ID (4 bytes, LE)
+    uint32_t target_id = target_chain_id;
+    for (int i = 0; i < 4; ++i) {
+      preimage.push_back(static_cast<uint8_t>(target_id & 0xFF));
+      target_id >>= 8;
+    }
+
+    // Commitment version (4 bytes, LE)
+    uint32_t version = commitment_version;
+    for (int i = 0; i < 4; ++i) {
+      preimage.push_back(static_cast<uint8_t>(version & 0xFF));
+      version >>= 8;
+    }
+
+    uint8_t md[32];
+    keccak(preimage.data(), static_cast<int>(preimage.size()), md, sizeof(md));
+    Crypto::Hash out{};
+    memcpy(&out, md, sizeof(out));
+    return out;
+  }
+
+  // Builds tx.extra with TX_EXTRA_HEAT_COMMITMENT (0x08)
+  bool buildHeatExtra(const std::array<uint8_t, 32> &secret,
+                      uint64_t amount_atomic,
+                      const Crypto::Hash &tx_prefix_hash,
+                      const std::string &eth_address,
+                      uint32_t network_id,
+                      uint32_t target_chain_id,
+                      uint32_t commitment_version,
+                      const std::vector<uint8_t> &metadata,
+                      std::vector<uint8_t> &extra)
+  {
+    // Compute commitment with full domain separation
+    Crypto::Hash commitment = computeHeatCommitment(secret, amount_atomic, tx_prefix_hash, eth_address, network_id, target_chain_id, commitment_version);
+
+    // If commitment is zero (failed), bail
+    const Crypto::Hash zero = {};
+    if (!memcmp(&commitment, &zero, sizeof(zero))) {
+      return false;
+    }
+
+    return createTxExtraWithHeatCommitment(commitment, amount_atomic, metadata, extra);
+  }
+ 
   // CD Deposit Secret helper functions
   bool addCDDepositSecretToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraCDDepositSecret &deposit_secret)
   {

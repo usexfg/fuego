@@ -18,6 +18,7 @@ namespace {
 
 EldernodeIndexManager::EldernodeIndexManager() 
     : m_consensusThresholds(ConsensusThresholds::getDefault())
+    , m_elderfierConfig(ElderfierServiceConfig::getDefault())
     , m_lastUpdate(std::chrono::system_clock::now()) {
 }
 
@@ -35,11 +36,30 @@ bool EldernodeIndexManager::addEldernode(const ENindexEntry& entry) {
         return false;
     }
     
+    // Check for service ID conflicts for Elderfier nodes
+    if (entry.tier == EldernodeTier::ELDERFIER) {
+        if (!validateElderfierServiceId(entry.serviceId)) {
+            logger(ERROR) << "Invalid Elderfier service ID for public key: " << Common::podToHex(entry.eldernodePublicKey);
+            return false;
+        }
+        
+        if (hasServiceIdConflict(entry.serviceId, entry.eldernodePublicKey)) {
+            logger(ERROR) << "Service ID conflict for Elderfier node: " << entry.serviceId.toString();
+            return false;
+        }
+    }
+    
     m_eldernodes[entry.eldernodePublicKey] = entry;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    logger(INFO) << "Added Eldernode: " << Common::podToHex(entry.eldernodePublicKey) 
+    std::string tierName = (entry.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    logger(INFO) << "Added " << tierName << " Eldernode: " << Common::podToHex(entry.eldernodePublicKey) 
                 << " with stake: " << entry.stakeAmount;
+    
+    if (entry.tier == EldernodeTier::ELDERFIER) {
+        logger(INFO) << "Elderfier service ID: " << entry.serviceId.toString();
+    }
+    
     return true;
 }
 
@@ -52,12 +72,14 @@ bool EldernodeIndexManager::removeEldernode(const Crypto::PublicKey& publicKey) 
         return false;
     }
     
+    std::string tierName = (it->second.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    logger(INFO) << "Removing " << tierName << " Eldernode: " << Common::podToHex(publicKey);
+    
     m_eldernodes.erase(it);
     m_stakeProofs.erase(publicKey);
     m_consensusParticipants.erase(publicKey);
     m_lastUpdate = std::chrono::system_clock::now();
     
-    logger(INFO) << "Removed Eldernode: " << Common::podToHex(publicKey);
     return true;
 }
 
@@ -75,10 +97,25 @@ bool EldernodeIndexManager::updateEldernode(const ENindexEntry& entry) {
         return false;
     }
     
+    // Check for service ID conflicts for Elderfier nodes (excluding self)
+    if (entry.tier == EldernodeTier::ELDERFIER) {
+        if (!validateElderfierServiceId(entry.serviceId)) {
+            logger(ERROR) << "Invalid Elderfier service ID for update: " << Common::podToHex(entry.eldernodePublicKey);
+            return false;
+        }
+        
+        if (hasServiceIdConflict(entry.serviceId, entry.eldernodePublicKey)) {
+            logger(ERROR) << "Service ID conflict for Elderfier update: " << entry.serviceId.toString();
+            return false;
+        }
+    }
+    
     it->second = entry;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    logger(INFO) << "Updated Eldernode: " << Common::podToHex(entry.eldernodePublicKey);
+    std::string tierName = (entry.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    logger(INFO) << "Updated " << tierName << " Eldernode: " << Common::podToHex(entry.eldernodePublicKey);
+    
     return true;
 }
 
@@ -121,6 +158,34 @@ std::vector<ENindexEntry> EldernodeIndexManager::getActiveEldernodes() const {
     return result;
 }
 
+std::vector<ENindexEntry> EldernodeIndexManager::getElderfierNodes() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    std::vector<ENindexEntry> result;
+    result.reserve(m_eldernodes.size());
+    
+    for (const auto& pair : m_eldernodes) {
+        if (pair.second.tier == EldernodeTier::ELDERFIER && pair.second.isActive) {
+            result.push_back(pair.second);
+        }
+    }
+    
+    return result;
+}
+
+std::optional<ENindexEntry> EldernodeIndexManager::getEldernodeByServiceId(const ElderfierServiceId& serviceId) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    for (const auto& pair : m_eldernodes) {
+        if (pair.second.tier == EldernodeTier::ELDERFIER && 
+            pair.second.serviceId.identifier == serviceId.identifier) {
+            return pair.second;
+        }
+    }
+    
+    return std::nullopt;
+}
+
 bool EldernodeIndexManager::addStakeProof(const EldernodeStakeProof& proof) {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -133,8 +198,14 @@ bool EldernodeIndexManager::addStakeProof(const EldernodeStakeProof& proof) {
     proofs.push_back(proof);
     m_lastUpdate = std::chrono::system_clock::now();
     
-    logger(INFO) << "Added stake proof for Eldernode: " << Common::podToHex(proof.eldernodePublicKey)
+    std::string tierName = (proof.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    logger(INFO) << "Added stake proof for " << tierName << " Eldernode: " << Common::podToHex(proof.eldernodePublicKey)
                 << " amount: " << proof.stakeAmount;
+    
+    if (proof.tier == EldernodeTier::ELDERFIER) {
+        logger(INFO) << "Elderfier service ID: " << proof.serviceId.toString();
+    }
+    
     return true;
 }
 
@@ -160,7 +231,9 @@ bool EldernodeIndexManager::addConsensusParticipant(const EldernodeConsensusPart
     m_consensusParticipants[participant.publicKey] = participant;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    logger(INFO) << "Added consensus participant: " << Common::podToHex(participant.publicKey);
+    std::string tierName = (participant.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    logger(INFO) << "Added " << tierName << " consensus participant: " << Common::podToHex(participant.publicKey);
+    
     return true;
 }
 
@@ -202,7 +275,7 @@ EldernodeConsensusResult EldernodeIndexManager::reachConsensus(const std::vector
     result.consensusTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     
-    // Get active participants
+    // Get active participants (prioritize Elderfier nodes)
     std::vector<EldernodeConsensusParticipant> activeParticipants;
     for (const auto& pair : m_consensusParticipants) {
         if (pair.second.isActive) {
@@ -210,13 +283,16 @@ EldernodeConsensusResult EldernodeIndexManager::reachConsensus(const std::vector
         }
     }
     
+    // Sort by tier (Elderfier first) and stake amount
+    std::sort(activeParticipants.begin(), activeParticipants.end());
+    
     if (activeParticipants.size() < thresholds.minimumEldernodes) {
         logger(WARNING) << "Insufficient active Eldernodes for consensus: " 
                        << activeParticipants.size() << "/" << thresholds.minimumEldernodes;
         return result;
     }
     
-    // Simulate consensus voting (in real implementation, this would involve actual communication)
+    // Simulate consensus voting (prioritize Elderfier nodes)
     std::vector<std::vector<uint8_t>> signatures;
     for (const auto& participant : activeParticipants) {
         // Simulate signature generation
@@ -255,6 +331,19 @@ uint32_t EldernodeIndexManager::getActiveEldernodeCount() const {
     uint32_t count = 0;
     for (const auto& pair : m_eldernodes) {
         if (pair.second.isActive) {
+            count++;
+        }
+    }
+    
+    return count;
+}
+
+uint32_t EldernodeIndexManager::getElderfierNodeCount() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    uint32_t count = 0;
+    for (const auto& pair : m_eldernodes) {
+        if (pair.second.tier == EldernodeTier::ELDERFIER && pair.second.isActive) {
             count++;
         }
     }
@@ -303,6 +392,18 @@ bool EldernodeIndexManager::saveToStorage() {
             file.write(reinterpret_cast<const char*>(&entry.stakeAmount), sizeof(entry.stakeAmount));
             file.write(reinterpret_cast<const char*>(&entry.registrationTimestamp), sizeof(entry.registrationTimestamp));
             file.write(reinterpret_cast<const char*>(&entry.isActive), sizeof(entry.isActive));
+            file.write(reinterpret_cast<const char*>(&entry.tier), sizeof(entry.tier));
+            
+            // Write Elderfier service ID if applicable
+            if (entry.tier == EldernodeTier::ELDERFIER) {
+                file.write(reinterpret_cast<const char*>(&entry.serviceId.type), sizeof(entry.serviceId.type));
+                uint32_t identifierSize = static_cast<uint32_t>(entry.serviceId.identifier.size());
+                file.write(reinterpret_cast<const char*>(&identifierSize), sizeof(identifierSize));
+                file.write(entry.serviceId.identifier.c_str(), identifierSize);
+                uint32_t displayNameSize = static_cast<uint32_t>(entry.serviceId.displayName.size());
+                file.write(reinterpret_cast<const char*>(&displayNameSize), sizeof(displayNameSize));
+                file.write(entry.serviceId.displayName.c_str(), displayNameSize);
+            }
         }
         
         logger(INFO) << "Saved " << eldernodeCount << " Eldernodes to storage";
@@ -339,6 +440,20 @@ bool EldernodeIndexManager::loadFromStorage() {
             file.read(reinterpret_cast<char*>(&entry.stakeAmount), sizeof(entry.stakeAmount));
             file.read(reinterpret_cast<char*>(&entry.registrationTimestamp), sizeof(entry.registrationTimestamp));
             file.read(reinterpret_cast<char*>(&entry.isActive), sizeof(entry.isActive));
+            file.read(reinterpret_cast<char*>(&entry.tier), sizeof(entry.tier));
+            
+            // Read Elderfier service ID if applicable
+            if (entry.tier == EldernodeTier::ELDERFIER) {
+                file.read(reinterpret_cast<char*>(&entry.serviceId.type), sizeof(entry.serviceId.type));
+                uint32_t identifierSize;
+                file.read(reinterpret_cast<char*>(&identifierSize), sizeof(identifierSize));
+                entry.serviceId.identifier.resize(identifierSize);
+                file.read(&entry.serviceId.identifier[0], identifierSize);
+                uint32_t displayNameSize;
+                file.read(reinterpret_cast<char*>(&displayNameSize), sizeof(displayNameSize));
+                entry.serviceId.displayName.resize(displayNameSize);
+                file.read(&entry.serviceId.displayName[0], displayNameSize);
+            }
             
             m_eldernodes[entry.eldernodePublicKey] = entry;
         }
@@ -373,6 +488,16 @@ ConsensusThresholds EldernodeIndexManager::getConsensusThresholds() const {
     return m_consensusThresholds;
 }
 
+void EldernodeIndexManager::setElderfierConfig(const ElderfierServiceConfig& config) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_elderfierConfig = config;
+}
+
+ElderfierServiceConfig EldernodeIndexManager::getElderfierConfig() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_elderfierConfig;
+}
+
 bool EldernodeIndexManager::generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress) {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -391,6 +516,8 @@ bool EldernodeIndexManager::generateFreshProof(const Crypto::PublicKey& publicKe
     proof.stakeAmount = entry.stakeAmount;
     proof.timestamp = timestamp;
     proof.feeAddress = feeAddress;
+    proof.tier = entry.tier;
+    proof.serviceId = entry.serviceId;
     proof.stakeHash = calculateStakeHash(publicKey, entry.stakeAmount, timestamp);
     
     // Generate signature (placeholder for now)
@@ -399,7 +526,9 @@ bool EldernodeIndexManager::generateFreshProof(const Crypto::PublicKey& publicKe
     m_stakeProofs[publicKey].push_back(proof);
     m_lastUpdate = std::chrono::system_clock::now();
     
-    logger(INFO) << "Generated fresh proof for Eldernode: " << Common::podToHex(publicKey);
+    std::string tierName = (entry.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    logger(INFO) << "Generated fresh proof for " << tierName << " Eldernode: " << Common::podToHex(publicKey);
+    
     return true;
 }
 
@@ -428,6 +557,15 @@ bool EldernodeIndexManager::validateEldernodeEntry(const ENindexEntry& entry) co
         return false;
     }
     
+    // Check tier-specific requirements
+    if (entry.tier == EldernodeTier::ELDERFIER) {
+        if (entry.stakeAmount < m_elderfierConfig.minimumStakeAmount) {
+            logger(ERROR) << "Elderfier node stake too low: " << entry.stakeAmount 
+                         << " < " << m_elderfierConfig.minimumStakeAmount;
+            return false;
+        }
+    }
+    
     return true;
 }
 
@@ -444,6 +582,16 @@ bool EldernodeIndexManager::validateStakeProof(const EldernodeStakeProof& proof)
         return false;
     }
     
+    // Check tier-specific requirements
+    if (proof.tier == EldernodeTier::ELDERFIER) {
+        if (proof.stakeAmount < m_elderfierConfig.minimumStakeAmount) {
+            return false;
+        }
+        if (!proof.serviceId.isValid()) {
+            return false;
+        }
+    }
+    
     // Verify stake hash
     Crypto::Hash expectedHash = calculateStakeHash(proof.eldernodePublicKey, proof.stakeAmount, proof.timestamp);
     if (proof.stakeHash != expectedHash) {
@@ -451,6 +599,44 @@ bool EldernodeIndexManager::validateStakeProof(const EldernodeStakeProof& proof)
     }
     
     return true;
+}
+
+bool EldernodeIndexManager::validateElderfierServiceId(const ElderfierServiceId& serviceId) const {
+    if (!serviceId.isValid()) {
+        return false;
+    }
+    
+    switch (serviceId.type) {
+        case ServiceIdType::CUSTOM_NAME:
+            if (m_elderfierConfig.isCustomNameReserved(serviceId.identifier)) {
+                logger(ERROR) << "Custom name is reserved: " << serviceId.identifier;
+                return false;
+            }
+            break;
+            
+        case ServiceIdType::HASHED_ADDRESS:
+            if (!m_elderfierConfig.allowHashedAddresses) {
+                logger(ERROR) << "Hashed addresses not allowed";
+                return false;
+            }
+            break;
+            
+        default:
+            break;
+    }
+    
+    return true;
+}
+
+bool EldernodeIndexManager::hasServiceIdConflict(const ElderfierServiceId& serviceId, const Crypto::PublicKey& excludeKey) const {
+    for (const auto& pair : m_eldernodes) {
+        if (pair.first != excludeKey && 
+            pair.second.tier == EldernodeTier::ELDERFIER &&
+            pair.second.serviceId.identifier == serviceId.identifier) {
+            return true;
+        }
+    }
+    return false;
 }
 
 Crypto::Hash EldernodeIndexManager::calculateStakeHash(const Crypto::PublicKey& publicKey, uint64_t amount, uint64_t timestamp) const {

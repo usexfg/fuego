@@ -21,6 +21,10 @@ public:
     virtual std::vector<ENindexEntry> getAllEldernodes() const = 0;
     virtual std::vector<ENindexEntry> getActiveEldernodes() const = 0;
     
+    // Elderfier-specific management
+    virtual std::vector<ENindexEntry> getElderfierNodes() const = 0;
+    virtual std::optional<ENindexEntry> getEldernodeByServiceId(const ElderfierServiceId& serviceId) const = 0;
+    
     // Stake proof management
     virtual bool addStakeProof(const EldernodeStakeProof& proof) = 0;
     virtual bool verifyStakeProof(const EldernodeStakeProof& proof) const = 0;
@@ -35,6 +39,7 @@ public:
     // Statistics and monitoring
     virtual uint32_t getTotalEldernodeCount() const = 0;
     virtual uint32_t getActiveEldernodeCount() const = 0;
+    virtual uint32_t getElderfierNodeCount() const = 0;
     virtual uint64_t getTotalStakeAmount() const = 0;
     virtual std::chrono::system_clock::time_point getLastUpdate() const = 0;
     
@@ -57,6 +62,10 @@ public:
     std::vector<ENindexEntry> getAllEldernodes() const override;
     std::vector<ENindexEntry> getActiveEldernodes() const override;
     
+    // Elderfier-specific management
+    std::vector<ENindexEntry> getElderfierNodes() const override;
+    std::optional<ENindexEntry> getEldernodeByServiceId(const ElderfierServiceId& serviceId) const override;
+    
     // Stake proof management
     bool addStakeProof(const EldernodeStakeProof& proof) override;
     bool verifyStakeProof(const EldernodeStakeProof& proof) const override;
@@ -71,6 +80,7 @@ public:
     // Statistics and monitoring
     uint32_t getTotalEldernodeCount() const override;
     uint32_t getActiveEldernodeCount() const override;
+    uint32_t getElderfierNodeCount() const override;
     uint64_t getTotalStakeAmount() const override;
     std::chrono::system_clock::time_point getLastUpdate() const override;
     
@@ -82,6 +92,8 @@ public:
     // Configuration
     void setConsensusThresholds(const ConsensusThresholds& thresholds);
     ConsensusThresholds getConsensusThresholds() const;
+    void setElderfierConfig(const ElderfierServiceConfig& config);
+    ElderfierServiceConfig getElderfierConfig() const;
     
     // Auto-generation of fresh proofs
     bool generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress);
@@ -93,11 +105,14 @@ private:
     std::unordered_map<Crypto::PublicKey, std::vector<EldernodeStakeProof>> m_stakeProofs;
     std::unordered_map<Crypto::PublicKey, EldernodeConsensusParticipant> m_consensusParticipants;
     ConsensusThresholds m_consensusThresholds;
+    ElderfierServiceConfig m_elderfierConfig;
     std::chrono::system_clock::time_point m_lastUpdate;
     
     // Helper methods
     bool validateEldernodeEntry(const ENindexEntry& entry) const;
     bool validateStakeProof(const EldernodeStakeProof& proof) const;
+    bool validateElderfierServiceId(const ElderfierServiceId& serviceId) const;
+    bool hasServiceIdConflict(const ElderfierServiceId& serviceId, const Crypto::PublicKey& excludeKey) const;
     Crypto::Hash calculateStakeHash(const Crypto::PublicKey& publicKey, uint64_t amount, uint64_t timestamp) const;
     std::vector<uint8_t> aggregateSignatures(const std::vector<std::vector<uint8_t>>& signatures) const;
 };

@@ -41,9 +41,11 @@ BurnDepositConfig BurnDepositConfig::getDefault() {
     config.proofExpirationSeconds = 3600;  // 1 hour
     config.requireProofValidation = true;
     config.treasuryAddress = "";
-    config.consensusThreshold = 4;  // 4/5 Eldernodes
+    config.fastPassConsensusThreshold = 2;  // 2/2 fast pass Eldernodes
+    config.fallbackConsensusThreshold = 4;  // 4/5 fallback Eldernodes
     config.totalEldernodes = 5;     // Total Eldernodes in network
     config.enableDualValidation = true;  // Both commitment and burn amount validation
+    config.enableFastPass = true;   // Enable 2/2 fast pass consensus
     return config;
 }
 
@@ -51,9 +53,12 @@ bool BurnDepositConfig::isValid() const {
     return minimumBurnAmount > 0 && 
            maximumBurnAmount > minimumBurnAmount && 
            proofExpirationSeconds > 0 && 
-           consensusThreshold > 0 && 
+           fastPassConsensusThreshold > 0 && 
+           fallbackConsensusThreshold > 0 && 
            totalEldernodes > 0 && 
-           consensusThreshold <= totalEldernodes;
+           fastPassConsensusThreshold <= totalEldernodes &&
+           fallbackConsensusThreshold <= totalEldernodes &&
+           fastPassConsensusThreshold <= fallbackConsensusThreshold;
 }
 
 // BurnProofData implementation
@@ -83,7 +88,8 @@ bool EldernodeConsensus::isValid() const {
            eldernodeIds.size() == signatures.size() && 
            !messageHash.empty() && 
            timestamp > 0 && 
-           consensusThreshold > 0 && 
+           fastPassConsensusThreshold > 0 && 
+           fallbackConsensusThreshold > 0 && 
            totalEldernodes > 0 && 
            verifiedInputs.isValid();
 }
@@ -95,7 +101,10 @@ std::string EldernodeConsensus::toString() const {
         << "signatures=[" << signatures.size() << "], "
         << "messageHash=" << messageHash << ", "
         << "timestamp=" << timestamp << ", "
-        << "consensusThreshold=" << consensusThreshold << "/" << totalEldernodes << ", "
+        << "fastPassThreshold=" << fastPassConsensusThreshold << "/" << totalEldernodes << ", "
+        << "fallbackThreshold=" << fallbackConsensusThreshold << "/" << totalEldernodes << ", "
+        << "fastPassUsed=" << (fastPassUsed ? "true" : "false") << ", "
+        << "fallbackPathUsed=" << (fallbackPathUsed ? "true" : "false") << ", "
         << "commitmentMatch=" << (commitmentMatch ? "true" : "false") << ", "
         << "burnAmountMatch=" << (burnAmountMatch ? "true" : "false") << "}";
     return oss.str();
@@ -253,7 +262,7 @@ std::optional<EldernodeConsensus> BurnDepositValidationService::requestEldernode
 
     // Get available Eldernodes for consensus
     auto participants = getEldernodeConsensusParticipants();
-    if (participants.size() < m_config.consensusThreshold) {
+    if (participants.size() < m_config.fastPassConsensusThreshold) {
         return std::nullopt;
     }
 
@@ -275,19 +284,42 @@ std::optional<EldernodeConsensus> BurnDepositValidationService::requestEldernode
     consensus.txBurnAmount = txBurnAmount;
     consensus.commitmentMatch = commitmentMatch;
     consensus.burnAmountMatch = burnAmountMatch;
-    consensus.consensusThreshold = m_config.consensusThreshold;
+    consensus.fastPassConsensusThreshold = m_config.fastPassConsensusThreshold;
+    consensus.fallbackConsensusThreshold = m_config.fallbackConsensusThreshold;
     consensus.totalEldernodes = m_config.totalEldernodes;
     consensus.timestamp = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     consensus.messageHash = calculateConsensusMessageHash(inputs);
 
-    // Simulate Eldernode responses (in real implementation, would communicate with actual Eldernodes)
-    for (size_t i = 0; i < participants.size() && i < m_config.consensusThreshold; ++i) {
-        consensus.eldernodeIds.push_back(participants[i].eldernodeId);
-        consensus.signatures.push_back("signature_" + std::to_string(i));  // Placeholder
+    // Try fast pass consensus first (2/2)
+    if (m_config.enableFastPass && participants.size() >= m_config.fastPassConsensusThreshold) {
+        consensus.fastPassUsed = true;
+        consensus.fallbackPathUsed = false;
+        
+        // Simulate fast pass Eldernode responses
+        for (size_t i = 0; i < participants.size() && i < m_config.fastPassConsensusThreshold; ++i) {
+            consensus.eldernodeIds.push_back(participants[i].eldernodeId);
+            consensus.signatures.push_back("fast_pass_signature_" + std::to_string(i));  // Placeholder
+        }
+        
+        return consensus;
+    }
+    
+    // Fallback to robust consensus (4/5)
+    if (participants.size() >= m_config.fallbackConsensusThreshold) {
+        consensus.fastPassUsed = false;
+        consensus.fallbackPathUsed = true;
+        
+        // Simulate fallback Eldernode responses
+        for (size_t i = 0; i < participants.size() && i < m_config.fallbackConsensusThreshold; ++i) {
+            consensus.eldernodeIds.push_back(participants[i].eldernodeId);
+            consensus.signatures.push_back("fallback_signature_" + std::to_string(i));  // Placeholder
+        }
+        
+        return consensus;
     }
 
-    return consensus;
+    return std::nullopt;
 }
 
 bool BurnDepositValidationService::verifyEldernodeConsensus(const EldernodeConsensus& consensus) {
@@ -375,7 +407,12 @@ std::vector<EldernodeConsensusParticipant> BurnDepositValidationService::getElde
 bool BurnDepositValidationService::validateEldernodeSignatures(const EldernodeConsensus& consensus) const {
     // TODO: Implement actual signature validation
     // For now, just check that we have the expected number of signatures
-    return consensus.signatures.size() >= consensus.consensusThreshold;
+    if (consensus.fastPassUsed) {
+        return consensus.signatures.size() >= consensus.fastPassConsensusThreshold;
+    } else if (consensus.fallbackPathUsed) {
+        return consensus.signatures.size() >= consensus.fallbackConsensusThreshold;
+    }
+    return false;
 }
 
 std::string BurnDepositValidationService::calculateConsensusMessageHash(const EldernodeVerificationInputs& inputs) const {
@@ -386,7 +423,12 @@ std::string BurnDepositValidationService::calculateConsensusMessageHash(const El
 }
 
 bool BurnDepositValidationService::checkConsensusThreshold(const EldernodeConsensus& consensus) const {
-    return consensus.eldernodeIds.size() >= consensus.consensusThreshold;
+    if (consensus.fastPassUsed) {
+        return consensus.eldernodeIds.size() >= consensus.fastPassConsensusThreshold;
+    } else if (consensus.fallbackPathUsed) {
+        return consensus.eldernodeIds.size() >= consensus.fallbackConsensusThreshold;
+    }
+    return false;
 }
 
 } // namespace CryptoNote

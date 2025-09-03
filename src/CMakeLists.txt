@@ -23,6 +23,10 @@ file(GLOB_RECURSE JsonRpcServer JsonRpcServer/*)
 file(GLOB_RECURSE PaymentGate PaymentGate/*)
 file(GLOB_RECURSE PaymentGateService PaymentGateService/*)
 
+# Add Eldernode services
+add_subdirectory(EldernodeIndexManager)
+add_subdirectory(BurnDepositValidationService)
+
 if(MSVC)
   file(GLOB_RECURSE System System/* Platform/Windows/System/*)
 elseif(APPLE)

@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "crypto/hash.h"
 #include "crypto/crypto.h"
+#include "Common/StringTools.h"
 #include "EldernodeIndexTypes.h"
 
 namespace CryptoNote {

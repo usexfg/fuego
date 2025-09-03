@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <chrono>
 #include "EldernodeIndexTypes.h"
 
 namespace CryptoNote {

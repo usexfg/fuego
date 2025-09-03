@@ -32,9 +32,11 @@ struct BurnDepositConfig {
     uint32_t proofExpirationSeconds;
     bool requireProofValidation;
     std::string treasuryAddress;
-    uint32_t consensusThreshold;  // e.g., 4/5 Eldernodes
+    uint32_t fastPassConsensusThreshold;  // 2/2 fast pass threshold
+    uint32_t fallbackConsensusThreshold;  // 4/5 fallback threshold
     uint32_t totalEldernodes;     // Total number of Eldernodes in network
     bool enableDualValidation;    // Both commitment and burn amount validation
+    bool enableFastPass;          // Enable 2/2 fast pass consensus
     static BurnDepositConfig getDefault();
     bool isValid() const;
 };
@@ -57,8 +59,11 @@ struct EldernodeConsensus {
     std::vector<std::string> signatures;
     std::string messageHash;
     uint64_t timestamp;
-    uint32_t consensusThreshold;
+    uint32_t fastPassConsensusThreshold;     // 2/2 fast pass threshold
+    uint32_t fallbackConsensusThreshold; // 4/5 fallback threshold
     uint32_t totalEldernodes;
+    bool fastPassUsed;                   // Whether fast pass (2/2) was used
+    bool fallbackPathUsed;               // Whether fallback path (4/5) was used
     BurnProofData verifiedInputs;
     std::string txExtraCommitment;  // Commitment extracted from tx_extra
     uint64_t txBurnAmount;          // Burn amount from transaction (undefined output key)

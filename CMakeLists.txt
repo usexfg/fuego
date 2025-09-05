@@ -179,9 +179,6 @@ if(BUILD_TESTS)
   enable_testing()
 endif()
 
-# Always build our custom test
-add_subdirectory(test)
-
 set(COMMIT_ID_IN_VERSION ON CACHE BOOL "Include commit ID in version")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/version")
 if (NOT COMMIT_ID_IN_VERSION)

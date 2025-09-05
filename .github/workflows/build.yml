@@ -14,18 +14,14 @@ jobs:
     
     - name: Install dependencies
       run: |
-        brew update
-        brew install boost cmake
-        # Set environment variables for CMake
-        echo "BOOST_ROOT=/opt/homebrew" >> $GITHUB_ENV
-        echo "Boost_INCLUDEDIR=/opt/homebrew/include" >> $GITHUB_ENV
-        echo "Boost_LIBRARYDIR=/opt/homebrew/lib" >> $GITHUB_ENV
+        # Use system-installed tools and skip complex dependencies
+        echo "Using system tools for macOS build"
         
     - name: Configure CMake
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD -DCMAKE_PREFIX_PATH=/opt/homebrew ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
         
     - name: Build
       run: |

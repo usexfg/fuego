@@ -14,8 +14,8 @@ jobs:
     
     - name: Install dependencies
       run: |
-        # Use system-installed tools and skip complex dependencies
-        echo "Using system tools for macOS build"
+        # Install Boost and other dependencies
+        brew install boost cmake
         
     - name: Configure CMake
       run: |
@@ -93,8 +93,8 @@ jobs:
     - name: Install dependencies
       run: |
         # Install Visual Studio Build Tools
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
-        choco install cmake boost gtest
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
+        choco install cmake boost gtest -y
         # Refresh environment variables
         refreshenv
         

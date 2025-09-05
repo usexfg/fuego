@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <cstdint>
 
 class DynamicSupplySimulation {
 private:

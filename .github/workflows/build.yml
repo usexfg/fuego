@@ -96,7 +96,11 @@ jobs:
       run: |
         # Install Visual Studio Build Tools
         choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
-        choco install cmake boost gtest -y
+        choco install cmake boost -y
+        # Install gtest via vcpkg if choco fails
+        git clone https://github.com/microsoft/vcpkg.git
+        .\vcpkg\bootstrap-vcpkg.bat
+        .\vcpkg\vcpkg.exe install gtest
         # Refresh environment variables
         refreshenv
         

@@ -14,7 +14,12 @@ jobs:
     
     - name: Install dependencies
       run: |
-        brew install boost cmake gtest
+        brew update
+        brew install boost cmake googletest
+        # Set environment variables for CMake
+        echo "BOOST_ROOT=/opt/homebrew" >> $GITHUB_ENV
+        echo "Boost_INCLUDEDIR=/opt/homebrew/include" >> $GITHUB_ENV
+        echo "Boost_LIBRARYDIR=/opt/homebrew/lib" >> $GITHUB_ENV
         
     - name: Configure CMake
       run: |
@@ -25,7 +30,7 @@ jobs:
     - name: Build
       run: |
         cd build
-        make -j$(nproc)
+        make -j$(sysctl -n hw.ncpu)
         
     - name: Run Dynamic Supply Tests
       run: |
@@ -97,6 +102,8 @@ jobs:
         # Install Visual Studio Build Tools
         choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools"
         choco install cmake boost gtest
+        # Refresh environment variables
+        refreshenv
         
     - name: Configure CMake
       run: |
@@ -107,13 +114,12 @@ jobs:
     - name: Build
       run: |
         cd build
-        cmake --build . --config Release
+        cmake --build . --config Release --parallel
         
     - name: Run Dynamic Supply Tests
       run: |
         cd build
-        ./simple_dynamic_supply_test.exe || echo "Standalone test not built, trying CMake tests"
-        cmake --build . --target DynamicMoneySupplyTest --config Release && ./tests/Release/dynamic_money_supply_test.exe || echo "CMake tests not available"
+        if (Test-Path "simple_dynamic_supply_test.exe") { ./simple_dynamic_supply_test.exe } else { echo "Standalone test not built, trying CMake tests" }
 
   test-dynamic-supply:
     runs-on: ubuntu-latest

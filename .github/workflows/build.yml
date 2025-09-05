@@ -15,7 +15,7 @@ jobs:
     - name: Install dependencies
       run: |
         brew update
-        brew install boost cmake googletest
+        brew install boost cmake
         # Set environment variables for CMake
         echo "BOOST_ROOT=/opt/homebrew" >> $GITHUB_ENV
         echo "Boost_INCLUDEDIR=/opt/homebrew/include" >> $GITHUB_ENV

@@ -338,7 +338,7 @@ struct GetMoneySupplyStats
     uint64_t baseMoneySupply;
     uint64_t totalBurnedXfg;
     uint64_t totalRebornXfg;
-    uint64_t adjustedMoneySupply;
+    	uint64_t totalMoneySupply;
     uint64_t circulatingSupply;
     double burnPercentage;
     double rebornPercentage;

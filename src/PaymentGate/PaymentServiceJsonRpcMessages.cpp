@@ -550,7 +550,7 @@ void GetMoneySupplyStats::Response::serialize(CryptoNote::ISerializer &serialize
   serializer(baseMoneySupply, "baseMoneySupply");
   serializer(totalBurnedXfg, "totalBurnedXfg");
   serializer(totalRebornXfg, "totalRebornXfg");
-  serializer(adjustedMoneySupply, "adjustedMoneySupply");
+  		serializer(totalMoneySupply, "totalMoneySupply");
   serializer(circulatingSupply, "circulatingSupply");
   serializer(burnPercentage, "burnPercentage");
   serializer(rebornPercentage, "rebornPercentage");

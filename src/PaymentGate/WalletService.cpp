@@ -2154,7 +2154,7 @@ namespace PaymentService
         response.baseMoneySupply = currency.getBaseMoneySupply();
         response.totalBurnedXfg = currency.getTotalBurnedXfg();
         response.totalRebornXfg = currency.getTotalRebornXfg();
-        response.adjustedMoneySupply = currency.getAdjustedMoneySupply();
+        		response.totalMoneySupply = currency.getTotalSupply();
         response.circulatingSupply = currency.getCirculatingSupply();
         response.burnPercentage = currency.getBurnPercentage();
         response.rebornPercentage = currency.getRebornPercentage();

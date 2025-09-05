@@ -30,11 +30,12 @@ public:
     using RebornAmount = uint64_t;
     
     struct MoneySupplyState {
-        uint64_t baseMoneySupply;      // Original: 80000088000008
+        uint64_t baseMoneySupply;      // Increases with each burn
         BurnedAmount totalBurnedXfg;   // Total XFG burned through FOREVER deposits
-        RebornAmount totalRebornXfg;   // Total XFG added back to supply
-        uint64_t adjustedMoneySupply;  // min(baseMoneySupply, baseMoneySupply + totalRebornXfg)
-        uint64_t circulatingSupply;    // Actual circulating supply (never exceeds baseMoneySupply)
+        RebornAmount totalRebornXfg;   // Always equals totalBurnedXfg
+        uint64_t totalSupply;          // baseMoneySupply - totalBurnedXfg
+        uint64_t circulatingSupply;    // totalSupply - lockedDeposits (excluding burn deposits)
+        uint64_t blockRewardSupply;    // baseMoneySupply (for mining rewards)
     };
     
     DynamicMoneySupply();
@@ -42,8 +43,9 @@ public:
     
     // Core money supply management
     uint64_t getBaseMoneySupply() const;
-    uint64_t getAdjustedMoneySupply() const;
+    uint64_t getTotalSupply() const;
     uint64_t getCirculatingSupply() const;
+    uint64_t getBlockRewardSupply() const;
     BurnedAmount getTotalBurnedXfg() const;
     RebornAmount getTotalRebornXfg() const;
     
@@ -77,7 +79,7 @@ private:
     static const uint64_t BASE_MONEY_SUPPLY = 80000088000008ULL;
     
     // Helper functions
-    void recalculateAdjustedSupply();
+    void recalculateSupply();
     void validateAmounts() const;
     void ensureSupplyCap();
 };

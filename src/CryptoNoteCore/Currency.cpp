@@ -1285,8 +1285,9 @@ namespace CryptoNote
     baseMoneySupply(parameters::MONEY_SUPPLY);
     totalBurnedXfg(0);
     totalRebornXfg(0);
-    adjustedMoneySupply(parameters::MONEY_SUPPLY);
+    totalSupply(parameters::MONEY_SUPPLY);
     circulatingSupply(parameters::MONEY_SUPPLY);
+    blockRewardSupply(parameters::MONEY_SUPPLY);
 
     // Fuego network ID - using hash of the full network ID for uint64_t compatibility
     fuegoNetworkIdString("93385046440755750514194170694064996624");
@@ -1444,17 +1445,21 @@ namespace CryptoNote
 		return (heatAmount * 800000000) / 10000000;
 	}
 
-	uint64_t Currency::getAdjustedMoneySupply() const {
-		// Calculate theoretical adjusted supply
-		uint64_t theoreticalSupply = m_baseMoneySupply + m_totalRebornXfg;
-		
-		// Cap at original money supply to prevent exceeding base supply
-		return std::min(theoreticalSupply, m_baseMoneySupply);
+	uint64_t Currency::getTotalSupply() const {
+		// Total supply = Base money supply - Burned XFG
+		return m_baseMoneySupply - m_totalBurnedXfg;
 	}
 
 	uint64_t Currency::getCirculatingSupply() const {
-		// Circulating supply is the same as adjusted supply (capped)
-		return getAdjustedMoneySupply();
+		// Circulating supply = Total supply - Locked deposits (excluding burn deposits)
+		// Note: Locked deposits calculation is handled separately in DepositIndex
+		return getTotalSupply();
+	}
+
+	uint64_t Currency::getBlockRewardSupply() const {
+		// Block reward supply = Base money supply (includes all reborn amounts)
+		// This allows burned XFG to be redistributed through mining rewards
+		return m_baseMoneySupply;
 	}
 
 	void Currency::addBurnedXfg(uint64_t amount) {
@@ -1463,9 +1468,17 @@ namespace CryptoNote
 		m_totalBurnedXfg += amount;
 		addRebornXfg(amount); // Automatically add as reborn XFG
 		
-		// Recalculate adjusted supply
-		m_adjustedMoneySupply = getAdjustedMoneySupply();
+		// Increase base money supply by the burned amount
+		m_baseMoneySupply += amount;
+		
+		// Recalculate supplies
+		m_totalSupply = getTotalSupply();
 		m_circulatingSupply = getCirculatingSupply();
+		m_blockRewardSupply = getBlockRewardSupply();
+		
+		// Set money supply for block rewards to base money supply (includes reborn amounts)
+		// This allows burned XFG to be redistributed through mining rewards
+		m_moneySupply = m_blockRewardSupply;
 	}
 
 	void Currency::addRebornXfg(uint64_t amount) {
@@ -1473,9 +1486,14 @@ namespace CryptoNote
 		
 		m_totalRebornXfg += amount;
 		
-		// Recalculate adjusted supply
-		m_adjustedMoneySupply = getAdjustedMoneySupply();
+		// Recalculate supplies
+		m_totalSupply = getTotalSupply();
 		m_circulatingSupply = getCirculatingSupply();
+		m_blockRewardSupply = getBlockRewardSupply();
+		
+		// Set money supply for block rewards to base money supply (includes reborn amounts)
+		// This allows burned XFG to be redistributed through mining rewards
+		m_moneySupply = m_blockRewardSupply;
 	}
 
 	double Currency::getBurnPercentage() const {
@@ -1490,8 +1508,8 @@ namespace CryptoNote
 
 	double Currency::getSupplyIncreasePercentage() const {
 		if (m_baseMoneySupply == 0) return 0.0;
-		uint64_t adjustedSupply = getAdjustedMoneySupply();
-		return (static_cast<double>(adjustedSupply - m_baseMoneySupply) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+		uint64_t totalSupply = getTotalSupply();
+		return (static_cast<double>(totalSupply - m_baseMoneySupply) / static_cast<double>(m_baseMoneySupply)) * 100.0;
 	}
 
 	bool Currency::validateNetworkId(uint64_t networkId) const {

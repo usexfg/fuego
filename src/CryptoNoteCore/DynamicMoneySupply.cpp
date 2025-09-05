@@ -31,7 +31,7 @@ DynamicMoneySupply::DynamicMoneySupply() {
     m_state.baseMoneySupply = BASE_MONEY_SUPPLY;
     m_state.totalBurnedXfg = 0;
     m_state.totalRebornXfg = 0;
-    m_state.adjustedMoneySupply = BASE_MONEY_SUPPLY;
+    	m_state.totalSupply = BASE_MONEY_SUPPLY;
     m_state.circulatingSupply = BASE_MONEY_SUPPLY;
 }
 
@@ -39,8 +39,8 @@ uint64_t DynamicMoneySupply::getBaseMoneySupply() const {
     return m_state.baseMoneySupply;
 }
 
-uint64_t DynamicMoneySupply::getAdjustedMoneySupply() const {
-    return m_state.adjustedMoneySupply;
+uint64_t DynamicMoneySupply::getTotalSupply() const {
+	return m_state.totalSupply;
 }
 
 uint64_t DynamicMoneySupply::getCirculatingSupply() const {
@@ -61,7 +61,10 @@ void DynamicMoneySupply::addBurnedXfg(BurnedAmount amount) {
     m_state.totalBurnedXfg += amount;
     addRebornXfg(amount); // Automatically add as reborn XFG
     
-    recalculateAdjustedSupply();
+    // Increase base money supply by the burned amount
+    m_state.baseMoneySupply += amount;
+    
+    recalculateSupply();
     validateAmounts();
 }
 
@@ -76,7 +79,12 @@ void DynamicMoneySupply::removeBurnedXfg(BurnedAmount amount) {
     
     removeRebornXfg(amount); // Automatically remove from reborn XFG
     
-    recalculateAdjustedSupply();
+    // Decrease base money supply by the removed amount
+    if (amount <= m_state.baseMoneySupply - BASE_MONEY_SUPPLY) {
+        m_state.baseMoneySupply -= amount;
+    }
+    
+    recalculateSupply();
     validateAmounts();
 }
 
@@ -84,7 +92,7 @@ void DynamicMoneySupply::addRebornXfg(RebornAmount amount) {
     if (amount == 0) return;
     
     m_state.totalRebornXfg += amount;
-    recalculateAdjustedSupply();
+    recalculateSupply();
     validateAmounts();
 }
 
@@ -97,7 +105,7 @@ void DynamicMoneySupply::removeRebornXfg(RebornAmount amount) {
         m_state.totalRebornXfg -= amount;
     }
     
-    recalculateAdjustedSupply();
+    recalculateSupply();
     validateAmounts();
 }
 
@@ -146,57 +154,64 @@ void DynamicMoneySupply::loadState(const std::string& filename) {
 void DynamicMoneySupply::clearState() {
     m_state.totalBurnedXfg = 0;
     m_state.totalRebornXfg = 0;
-    m_state.adjustedMoneySupply = m_state.baseMoneySupply;
-    m_state.circulatingSupply = m_state.baseMoneySupply;
+    m_state.baseMoneySupply = BASE_MONEY_SUPPLY;
+    m_state.totalSupply = BASE_MONEY_SUPPLY;
+    m_state.circulatingSupply = BASE_MONEY_SUPPLY;
+    m_state.blockRewardSupply = BASE_MONEY_SUPPLY;
 }
 
-void DynamicMoneySupply::recalculateAdjustedSupply() {
-    // Calculate theoretical adjusted supply
-    uint64_t theoreticalSupply = m_state.baseMoneySupply + m_state.totalRebornXfg;
+void DynamicMoneySupply::recalculateSupply() {
+    // Total supply = Base money supply - Burned XFG
+    m_state.totalSupply = m_state.baseMoneySupply - m_state.totalBurnedXfg;
     
-    // Cap at original money supply to prevent exceeding 8M8.8M8
-    m_state.adjustedMoneySupply = std::min(theoreticalSupply, m_state.baseMoneySupply);
+    // Block reward supply = Base money supply (includes all reborn amounts)
+    // This allows burned XFG to be redistributed through mining rewards
+    m_state.blockRewardSupply = m_state.baseMoneySupply;
     
-    // Circulating supply is the same as adjusted supply (capped)
-    m_state.circulatingSupply = m_state.adjustedMoneySupply;
+    // Circulating supply = Total supply - Locked deposits (excluding burn deposits)
+    // Note: Locked deposits calculation is handled separately in DepositIndex
+    m_state.circulatingSupply = m_state.totalSupply;
 }
 
 void DynamicMoneySupply::validateAmounts() const {
-    // Ensure reborn XFG doesn't exceed burned XFG
-    if (m_state.totalRebornXfg > m_state.totalBurnedXfg) {
-        throw std::runtime_error("Reborn XFG cannot exceed burned XFG");
+    // Ensure reborn XFG equals burned XFG
+    if (m_state.totalRebornXfg != m_state.totalBurnedXfg) {
+        throw std::runtime_error("Reborn XFG must equal burned XFG");
     }
     
-    // Ensure adjusted supply is reasonable
-    if (m_state.adjustedMoneySupply < m_state.baseMoneySupply) {
-        throw std::runtime_error("Adjusted money supply cannot be less than base supply");
+    // Ensure base money supply never goes below original
+    if (m_state.baseMoneySupply < BASE_MONEY_SUPPLY) {
+        throw std::runtime_error("Base money supply cannot be less than original supply");
     }
     
-    // Ensure circulating supply never exceeds base money supply
-    if (m_state.circulatingSupply > m_state.baseMoneySupply) {
-        throw std::runtime_error("Circulating supply cannot exceed base money supply (8M8.8M8)");
+    // Ensure total supply is reasonable
+    if (m_state.totalSupply > m_state.baseMoneySupply) {
+        throw std::runtime_error("Total supply cannot exceed base money supply");
     }
     
-    // Ensure adjusted and circulating supply are equal (both capped)
-    if (m_state.adjustedMoneySupply != m_state.circulatingSupply) {
-        throw std::runtime_error("Adjusted and circulating supply must be equal");
+    // Ensure block reward supply equals base money supply
+    if (m_state.blockRewardSupply != m_state.baseMoneySupply) {
+        throw std::runtime_error("Block reward supply must equal base money supply");
     }
 }
 
 void DynamicMoneySupply::ensureSupplyCap() {
-    // Ensure circulating supply never exceeds base money supply
-    if (m_state.circulatingSupply > m_state.baseMoneySupply) {
-        m_state.circulatingSupply = m_state.baseMoneySupply;
-        m_state.adjustedMoneySupply = m_state.baseMoneySupply;
+    // Ensure base money supply never goes below original
+    if (m_state.baseMoneySupply < BASE_MONEY_SUPPLY) {
+        m_state.baseMoneySupply = BASE_MONEY_SUPPLY;
     }
+    
+    // Recalculate all supplies
+    recalculateSupply();
 }
 
 void DynamicMoneySupply::serialize(ISerializer& s) {
     s(m_state.baseMoneySupply, "baseMoneySupply");
     s(m_state.totalBurnedXfg, "totalBurnedXfg");
     s(m_state.totalRebornXfg, "totalRebornXfg");
-    s(m_state.adjustedMoneySupply, "adjustedMoneySupply");
+    s(m_state.totalSupply, "totalSupply");
     s(m_state.circulatingSupply, "circulatingSupply");
+    s(m_state.blockRewardSupply, "blockRewardSupply");
 }
 
 }

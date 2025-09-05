@@ -219,8 +219,9 @@ public:
 
   // Dynamic money supply methods
   uint64_t getBaseMoneySupply() const { return m_baseMoneySupply; }
-  uint64_t getAdjustedMoneySupply() const;
-  uint64_t getCirculatingSupply() const;
+  	uint64_t getTotalSupply() const;
+	uint64_t getCirculatingSupply() const;
+	uint64_t getBlockRewardSupply() const;
   uint64_t getTotalBurnedXfg() const { return m_totalBurnedXfg; }
   uint64_t getTotalRebornXfg() const { return m_totalRebornXfg; }
   void addBurnedXfg(uint64_t amount);
@@ -328,8 +329,9 @@ private:
   uint64_t m_baseMoneySupply;
   uint64_t m_totalBurnedXfg;
   uint64_t m_totalRebornXfg;
-  uint64_t m_adjustedMoneySupply;
+  	uint64_t m_totalSupply;
   uint64_t m_circulatingSupply;
+  uint64_t m_blockRewardSupply;
 
   // Network validation - using hash of the full network ID
   uint64_t m_fuegoNetworkId;
@@ -467,8 +469,9 @@ public:
   CurrencyBuilder& baseMoneySupply(uint64_t val) { m_currency.m_baseMoneySupply = val; return *this; }
   CurrencyBuilder& totalBurnedXfg(uint64_t val) { m_currency.m_totalBurnedXfg = val; return *this; }
   CurrencyBuilder& totalRebornXfg(uint64_t val) { m_currency.m_totalRebornXfg = val; return *this; }
-  CurrencyBuilder& adjustedMoneySupply(uint64_t val) { m_currency.m_adjustedMoneySupply = val; return *this; }
+  	CurrencyBuilder& totalSupply(uint64_t val) { m_currency.m_totalSupply = val; return *this; }
   CurrencyBuilder& circulatingSupply(uint64_t val) { m_currency.m_circulatingSupply = val; return *this; }
+  CurrencyBuilder& blockRewardSupply(uint64_t val) { m_currency.m_blockRewardSupply = val; return *this; }
 
   // Network validation builder
   CurrencyBuilder& fuegoNetworkId(uint64_t val) { m_currency.m_fuegoNetworkId = val; return *this; }

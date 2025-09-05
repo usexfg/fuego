@@ -10,13 +10,9 @@ using namespace Logging;
 
 namespace CryptoNote {
 
-namespace {
-    LoggerRef logger(Logging::getLogger("EldernodeStakeVerifier"));
-}
-
 class EldernodeStakeVerifier {
 public:
-    EldernodeStakeVerifier() = default;
+    EldernodeStakeVerifier(Logging::ILogger& log) : logger(log, "EldernodeStakeVerifier") {}
     ~EldernodeStakeVerifier() = default;
     
     // Core stake verification
@@ -42,6 +38,7 @@ public:
     bool canGenerateFreshProof(const EldernodeStakeProof& existingProof) const;
     
 private:
+    Logging::LoggerRef logger;
     uint64_t m_minimumStakeAmount = 1000000;  // 1 FUEGO minimum
     uint64_t m_maximumStakeAmount = 1000000000; // 1 billion FUEGO maximum
     uint64_t m_proofValidityPeriod = 86400;   // 24 hours in seconds

@@ -16,7 +16,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <cstring>
+#include <string.h>
 
 #ifdef __cplusplus
 namespace Crypto {
@@ -39,7 +39,7 @@ struct EllipticCurveScalar
 #ifdef __cplusplus
 struct PublicKey : public EllipticCurvePoint {
   bool operator<(const PublicKey& other) const {
-    return std::memcmp(data, other.data, sizeof(data)) < 0;
+    return memcmp(data, other.data, sizeof(data)) < 0;
   }
 };
 struct SecretKey : public EllipticCurveScalar {};

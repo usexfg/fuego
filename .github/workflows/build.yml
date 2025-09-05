@@ -96,13 +96,13 @@ jobs:
       run: |
         # Install Visual Studio Build Tools
         choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
-        choco install cmake boost -y
-        # Install gtest via vcpkg if choco fails
+        choco install cmake -y
+        # Install boost and gtest via vcpkg for reliability
         git clone https://github.com/microsoft/vcpkg.git
         .\vcpkg\bootstrap-vcpkg.bat
-        .\vcpkg\vcpkg.exe install gtest
-        # Refresh environment variables
-        refreshenv
+        .\vcpkg\vcpkg.exe install boost gtest
+        # Refresh environment variables using PowerShell
+        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
         
     - name: Configure CMake
       run: |

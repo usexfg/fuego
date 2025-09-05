@@ -12,12 +12,9 @@ using namespace Logging;
 
 namespace CryptoNote {
 
-namespace {
-    LoggerRef logger(Logging::getLogger("EldernodeIndexManager"));
-}
-
-EldernodeIndexManager::EldernodeIndexManager() 
-    : m_consensusThresholds(ConsensusThresholds::getDefault())
+EldernodeIndexManager::EldernodeIndexManager(Logging::ILogger& log)
+    : logger(log)
+    , m_consensusThresholds(ConsensusThresholds::getDefault())
     , m_elderfierConfig(ElderfierServiceConfig::getDefault())
     , m_lastUpdate(std::chrono::system_clock::now()) {
 }

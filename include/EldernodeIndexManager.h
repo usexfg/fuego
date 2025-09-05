@@ -7,6 +7,8 @@
 #include <optional>
 #include <chrono>
 #include "EldernodeIndexTypes.h"
+#include "Logging/ILogger.h"
+#include "Logging/LoggerRef.h"
 
 namespace CryptoNote {
 
@@ -55,7 +57,7 @@ public:
 
 class EldernodeIndexManager : public IEldernodeIndexManager {
 public:
-    EldernodeIndexManager();
+    EldernodeIndexManager(Logging::ILogger& logger);
     ~EldernodeIndexManager() override = default;
     
     // Core ENindex management
@@ -107,6 +109,7 @@ public:
     bool slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) override;
 
 private:
+    Logging::LoggerRef logger;
     mutable std::mutex m_mutex;
     std::unordered_map<Crypto::PublicKey, ENindexEntry> m_eldernodes;
     std::unordered_map<Crypto::PublicKey, std::vector<EldernodeStakeProof>> m_stakeProofs;

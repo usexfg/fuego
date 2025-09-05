@@ -154,7 +154,7 @@ if(APPLE)
   set(Boost_LIBRARYDIR /opt/homebrew/lib)
 endif()
 
-find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+find_package(Boost 1.55 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(MINGW)

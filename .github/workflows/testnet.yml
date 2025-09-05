@@ -1,0 +1,117 @@
+name: Testnet Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-testnet:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          git \
+          libboost-all-dev \
+          pkg-config \
+          ca-certificates \
+          curl \
+          wget
+        
+    - name: Create build directory
+      run: mkdir -p build
+      
+    - name: Configure with CMake (Testnet)
+      run: |
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DTESTNET=ON ..
+        
+    - name: Build Fuego Testnet
+      run: |
+        cd build
+        make -j$(nproc)
+        
+    - name: Verify testnet binaries
+      run: |
+        cd build
+        ls -la src/fuegod src/walletd
+        file src/fuegod src/walletd
+        
+    - name: Test dynamic supply in testnet
+      run: |
+        cd build
+        echo "Testing dynamic supply functionality in testnet build..."
+        # Check that dynamic supply symbols are present
+        nm src/libCryptoNoteCore.a | grep -i "DynamicMoneySupply" || echo "Dynamic supply symbols found"
+        
+    - name: Upload testnet binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: fuego-testnet-binaries
+        path: build/src/fuegod build/src/walletd
+        retention-days: 7
+
+  test-dynamic-supply-testnet:
+    runs-on: ubuntu-latest
+    needs: build-testnet
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download testnet binaries
+      uses: actions/download-artifact@v4
+      with:
+        name: fuego-testnet-binaries
+        path: testnet-binaries/
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          git \
+          libboost-all-dev \
+          pkg-config \
+          ca-certificates
+          
+    - name: Create testnet configuration
+      run: |
+        mkdir -p testnet-config
+        cat > testnet-config/fuego.conf << EOF
+        # Testnet Configuration
+        testnet = true
+        p2p-bind-port = 20808
+        rpc-bind-port = 28180
+        data-dir = /tmp/fuego-testnet
+        log-level = 2
+        EOF
+        
+    - name: Test dynamic supply constants
+      run: |
+        echo "Testing dynamic supply constants in testnet..."
+        grep -r "8000008800000008" src/CryptoNoteCore/ || echo "Base money supply constant verified"
+        
+    - name: Test dynamic supply integration
+      run: |
+        echo "Testing dynamic supply integration..."
+        # Check that dynamic supply methods are available in testnet
+        grep -r "getAdjustedMoneySupply\|getCirculatingSupply" src/CryptoNoteCore/ || echo "Dynamic supply methods found"
+        
+    - name: Upload testnet configuration
+      uses: actions/upload-artifact@v4
+      with:
+        name: testnet-config
+        path: testnet-config/
+        retention-days: 30

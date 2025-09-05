@@ -5,6 +5,7 @@
 #include "Logging/LoggerRef.h"
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
+#include "EldernodeIndexManager.h"
 #include <chrono>
 #include <algorithm>
 #include <sstream>
@@ -298,7 +299,7 @@ std::optional<EldernodeConsensus> BurnDepositValidationService::requestEldernode
         
         // Simulate fast pass Eldernode responses
         for (size_t i = 0; i < participants.size() && i < m_config.fastPassConsensusThreshold; ++i) {
-            consensus.eldernodeIds.push_back(participants[i].eldernodeId);
+            consensus.eldernodeIds.push_back(participants[i].address);
             consensus.signatures.push_back("fast_pass_signature_" + std::to_string(i));  // Placeholder
         }
         
@@ -312,7 +313,7 @@ std::optional<EldernodeConsensus> BurnDepositValidationService::requestEldernode
         
         // Simulate fallback Eldernode responses
         for (size_t i = 0; i < participants.size() && i < m_config.fallbackConsensusThreshold; ++i) {
-            consensus.eldernodeIds.push_back(participants[i].eldernodeId);
+            consensus.eldernodeIds.push_back(participants[i].address);
             consensus.signatures.push_back("fallback_signature_" + std::to_string(i));  // Placeholder
         }
         
@@ -395,7 +396,7 @@ std::vector<EldernodeConsensusParticipant> BurnDepositValidationService::getElde
     std::vector<EldernodeConsensusParticipant> participants;
     for (const auto& eldernode : allEldernodes) {
         EldernodeConsensusParticipant participant;
-        participant.eldernodeId = eldernode.feeAddress;
+        participant.address = eldernode.feeAddress;
         participant.tier = eldernode.tier;
         participant.stakeAmount = eldernode.stakeAmount;
         participants.push_back(participant);

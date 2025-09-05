@@ -238,8 +238,7 @@ bool ConsensusThresholds::isValid() const {
     return minimumEldernodes > 0 && 
            requiredAgreement > 0 && 
            requiredAgreement <= minimumEldernodes &&
-           timeoutSeconds > 0 && 
-           retryAttempts >= 0;
+           timeoutSeconds > 0;
 }
 
 // StakeVerificationResult implementations

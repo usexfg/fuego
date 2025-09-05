@@ -147,6 +147,13 @@ if(STATIC)
 endif()
 
 #set(Boost_DEBUG on)
+# Try to find Boost with different configurations
+if(APPLE)
+  set(BOOST_ROOT /opt/homebrew)
+  set(Boost_INCLUDEDIR /opt/homebrew/include)
+  set(Boost_LIBRARYDIR /opt/homebrew/lib)
+endif()
+
 find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 

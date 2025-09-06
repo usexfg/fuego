@@ -6,7 +6,7 @@ set(VERSION "0.2")
 set(COMMIT 72946d9)
 set(REFS " (HEAD -> master)")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -147,7 +147,21 @@ if(STATIC)
 endif()
 
 #set(Boost_DEBUG on)
-find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+# Try to find Boost with different configurations
+if(APPLE)
+  # Try multiple possible Homebrew locations
+  if(EXISTS /opt/homebrew)
+    set(BOOST_ROOT /opt/homebrew)
+    set(Boost_INCLUDEDIR /opt/homebrew/include)
+    set(Boost_LIBRARYDIR /opt/homebrew/lib)
+  elseif(EXISTS /usr/local)
+    set(BOOST_ROOT /usr/local)
+    set(Boost_INCLUDEDIR /usr/local/include)
+    set(Boost_LIBRARYDIR /usr/local/lib)
+  endif()
+endif()
+
+find_package(Boost 1.55 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(MINGW)

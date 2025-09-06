@@ -121,6 +121,7 @@ struct GetStatus
     uint32_t depositCount;
     uint32_t transactionCount;
     uint32_t addressCount;
+    std::string networkId;
 
     void serialize(CryptoNote::ISerializer &serializer);
   };
@@ -130,10 +131,11 @@ struct CreateDeposit
 {
   struct Request
   {
-
     uint64_t amount;
     uint64_t term;
     std::string sourceAddress;
+    std::string heatCommitment;  // Hex string of HEAT commitment (optional)
+    std::string metadata;        // Hex string of metadata (optional)
 
     void serialize(CryptoNote::ISerializer &serializer);
   };
@@ -141,10 +143,149 @@ struct CreateDeposit
   struct Response
   {
     std::string transactionHash;
+    bool isBurnDeposit;          // Indicates if this is a burn deposit
 
     void serialize(CryptoNote::ISerializer &serializer);
   };
 };
+
+struct CreateBurnDeposit
+{
+  struct Request
+  {
+    uint64_t amount;
+    std::string sourceAddress;
+    std::string metadata;        // Hex string of metadata (optional) - should include network_id for validation
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+    uint64_t term;               // Always 4294967295 (FOREVER)
+    uint64_t heatAmount;         // HEAT amount that will be minted
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct CreateBurnDepositWithProof
+{
+  struct Request
+  {
+    uint64_t amount;
+    std::string sourceAddress;
+    std::string recipientAddress;  // 🔥 ADD: Arbitrum recipient address
+    std::string metadata;          // Hex string of metadata (optional) - can include network_id
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+    uint64_t term;                 // Always 4294967295 (FOREVER)
+    uint64_t heatAmount;           // HEAT amount that will be minted
+    std::string burnProofDataFile; // 🔥 ADD: Path to generated BPDF
+    std::string networkId;         // 🔥 ADD: Network ID for validation
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct CreateBurnDeposit8000
+{
+  struct Request
+  {
+    std::string sourceAddress;
+    std::string metadata;        // Hex string of metadata (optional) - should include network_id for validation
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+    uint64_t term;               // Always 4294967295 (FOREVER)
+    uint64_t heatAmount;         // HEAT amount that will be minted (8000 XFG = 80,000,000,000 HEAT)
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct CreateBurnDeposit8000WithProof
+{
+  struct Request
+  {
+    std::string sourceAddress;
+    std::string recipientAddress;  // 🔥 ADD: Arbitrum recipient address
+    std::string metadata;          // Hex string of metadata (optional) - can include network_id
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+    uint64_t term;                 // Always 4294967295 (FOREVER)
+    uint64_t heatAmount;           // HEAT amount that will be minted (8000 XFG = 80,000,000,000 HEAT)
+    std::string burnProofDataFile; // 🔥 ADD: Path to generated BPDF
+    std::string networkId;         // 🔥 ADD: Network ID for validation
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GenerateBurnProofDataFile
+{
+  struct Request
+  {
+    std::string transactionHash;
+    std::string recipientAddress;  // 🔥 ADD: Arbitrum recipient address
+    std::string outputPath;        // 🔥 ADD: Where to save BPDF
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string burnProofDataFile; // 🔥 ADD: Path to generated BPDF
+    bool success;
+    std::string errorMessage;
+    std::string networkId;         // 🔥 ADD: Network ID for validation
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GenerateBurnProofDataFileAuto
+{
+  struct Request
+  {
+    std::string transactionHash;
+    std::string recipientAddress;  // 🔥 ADD: Arbitrum recipient address
+    std::string outputPath;        // 🔥 ADD: Where to save BPDF
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string burnProofDataFile; // 🔥 ADD: Path to generated BPDF
+    bool success;
+    std::string errorMessage;
+    std::string networkId;         // 🔥 ADD: Network ID for validation
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+
+
+
+
+
 
 struct WithdrawDeposit
 {
@@ -184,6 +325,149 @@ struct SendDeposit
     void serialize(CryptoNote::ISerializer &serializer);
   };
 };
+
+struct GetMoneySupplyStats
+{
+  struct Request
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t baseMoneySupply;
+    uint64_t totalBurnedXfg;
+    uint64_t totalRebornXfg;
+    	uint64_t totalMoneySupply;
+    uint64_t circulatingSupply;
+    double burnPercentage;
+    double rebornPercentage;
+    double supplyIncreasePercentage;
+    
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GetBaseTotalSupply
+{
+  struct Request
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t baseTotalSupply;    // All XFG created (base money supply)
+    std::string formattedAmount; // Human-readable format
+    
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GetRealTotalSupply
+{
+  struct Request
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t realTotalSupply;    // baseTotalSupply - totalBurnedXfg
+    uint64_t baseTotalSupply;    // All XFG created
+    uint64_t totalBurnedXfg;     // Total burned XFG
+    std::string formattedAmount; // Human-readable format
+    
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GetTotalDepositAmount
+{
+  struct Request
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t totalDepositAmount; // currentAmount in deposits - totalBurnedXfg
+    uint64_t currentDepositAmount; // Current amount in all deposits
+    uint64_t totalBurnedXfg;     // Total burned XFG
+    std::string formattedAmount; // Human-readable format
+    
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GetCirculatingSupply
+{
+  struct Request
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t circulatingSupply;  // realTotalSupply - totalDepositAmount
+    uint64_t realTotalSupply;    // actualTotalSupply - totalBurnedXfg
+    uint64_t totalDepositAmount; // currentAmount in deposits - totalBurnedXfg
+    std::string formattedAmount; // Human-readable format
+    
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GetTotalBurnedXfg
+{
+  struct Request
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t totalBurnedXfg;     // Total burned XFG
+    std::string formattedAmount; // Human-readable format
+    
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct GetDynamicSupplyOverview
+{
+  struct Request
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    uint64_t baseTotalSupply;    // All XFG created
+    uint64_t realTotalSupply;    // baseTotalSupply - totalBurnedXfg
+    uint64_t totalDepositAmount; // currentAmount in deposits - totalBurnedXfg
+    uint64_t circulatingSupply;  // realTotalSupply - totalDepositAmount
+    uint64_t totalBurnedXfg;     // Total burned XFG
+    uint64_t currentDepositAmount; // Current amount in all deposits
+    
+    // Formatted amounts for display
+    std::string baseTotalSupplyFormatted;
+    std::string realTotalSupplyFormatted;
+    std::string totalDepositAmountFormatted;
+    std::string circulatingSupplyFormatted;
+    std::string totalBurnedXfgFormatted;
+    std::string currentDepositAmountFormatted;
+    
+    // Percentages
+    double burnPercentage;       // (totalBurnedXfg / baseTotalSupply) * 100
+    double depositPercentage;    // (totalDepositAmount / realTotalSupply) * 100
+    double circulatingPercentage; // (circulatingSupply / realTotalSupply) * 100
+    
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+
 
 struct GetDeposit
 {

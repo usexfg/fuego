@@ -31,6 +31,9 @@
 #include "CryptoNoteTools.h"
 #include "TransactionExtra.h"
 #include "UpgradeDetector.h"
+#include "../crypto/hash.h"
+#include "../crypto/keccak.h"
+#include <algorithm>
 
 #undef ERROR
 
@@ -1269,6 +1272,33 @@ namespace CryptoNote
     depositMinTerm(parameters::DEPOSIT_MIN_TERM);
     depositMaxTerm(parameters::DEPOSIT_MAX_TERM);
 
+    // Burn deposit configuration
+    burnDepositMinAmount(parameters::BURN_DEPOSIT_MIN_AMOUNT);
+    burnDepositStandardAmount(parameters::BURN_DEPOSIT_STANDARD_AMOUNT);
+    burnDeposit8000Amount(parameters::BURN_DEPOSIT_8000_AMOUNT);
+    depositTermForever(parameters::DEPOSIT_TERM_FOREVER);
+
+    // HEAT conversion rate (0.8 XFG = 8M HEAT)
+    heatConversionRate(10000000);
+
+    // Dynamic money supply initialization
+    baseMoneySupply(parameters::MONEY_SUPPLY);
+    totalBurnedXfg(0);
+    totalRebornXfg(0);
+    totalSupply(parameters::MONEY_SUPPLY);
+    circulatingSupply(parameters::MONEY_SUPPLY);
+    blockRewardSupply(parameters::MONEY_SUPPLY);
+
+    // Fuego network ID - using hash of the full network ID for uint64_t compatibility
+    fuegoNetworkIdString("93385046440755750514194170694064996624");
+    // Calculate hash of the full network ID for uint64_t storage
+    std::string networkIdStr = "93385046440755750514194170694064996624";
+    Crypto::Hash networkIdHash;
+    keccak(reinterpret_cast<const uint8_t*>(networkIdStr.data()), networkIdStr.size(), networkIdHash.data, sizeof(networkIdHash.data));
+    // Use first 8 bytes of hash as uint64_t
+    uint64_t networkIdUint64 = *reinterpret_cast<uint64_t*>(networkIdHash.data);
+    fuegoNetworkId(networkIdUint64);
+
     maxBlockSizeInitial(parameters::MAX_BLOCK_SIZE_INITIAL);
     maxBlockSizeGrowthSpeedNumerator(parameters::MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR);
     maxBlockSizeGrowthSpeedDenominator(parameters::MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR);
@@ -1380,6 +1410,172 @@ namespace CryptoNote
 
 		m_currency.m_upgradeWindow = static_cast<uint32_t>(val);
 		return *this;
+	}
+
+	/* ---------------------------------------------------------------------------------------------------- */
+	/* Burn Deposit and Dynamic Money Supply Methods */
+	/* ---------------------------------------------------------------------------------------------------- */
+
+	bool Currency::isValidBurnDepositAmount(uint64_t amount) const {
+		// Valid burn amounts: 0.8 XFG (8,000,000) or 8000 XFG (80,000,000,000)
+		return (amount == m_burnDepositMinAmount || 
+				amount == m_burnDepositStandardAmount || 
+				amount == m_burnDeposit8000Amount);
+	}
+
+	bool Currency::isValidBurnDepositTerm(uint32_t term) const {
+		// Valid burn terms: DEPOSIT_TERM_FOREVER (4294967295)
+		return (term == m_depositTermForever);
+	}
+
+	bool Currency::isBurnDeposit(uint32_t term) const {
+		// Check if this is a burn deposit (FOREVER term)
+		return isValidBurnDepositTerm(term);
+	}
+
+	uint64_t Currency::convertXfgToHeat(uint64_t xfgAmount) const {
+		// Convert XFG to HEAT: 0.8 XFG = 8M HEAT
+		// Formula: (xfgAmount * 10000000) / 800000000
+		return (xfgAmount * 10000000) / 800000000;
+	}
+
+	uint64_t Currency::convertHeatToXfg(uint64_t heatAmount) const {
+		// Convert HEAT to XFG: 8M HEAT = 0.8 XFG
+		// Formula: (heatAmount * 800000000) / 10000000
+		return (heatAmount * 800000000) / 10000000;
+	}
+
+	uint64_t Currency::getTotalSupply() const {
+		// Total supply = Base money supply - Burned XFG
+		return m_baseMoneySupply - m_totalBurnedXfg;
+	}
+
+	uint64_t Currency::getCirculatingSupply() const {
+		// Circulating supply = Total supply - Locked deposits (excluding burn deposits)
+		// Note: Locked deposits calculation is handled separately in DepositIndex
+		return getTotalSupply();
+	}
+
+	uint64_t Currency::getBlockRewardSupply() const {
+		// Block reward supply = Base money supply (includes all reborn amounts)
+		// This allows burned XFG to be redistributed through mining rewards
+		return m_baseMoneySupply;
+	}
+
+	void Currency::addBurnedXfg(uint64_t amount) {
+		if (amount == 0) return;
+		
+		m_totalBurnedXfg += amount;
+		addRebornXfg(amount); // Automatically add as reborn XFG
+		
+		// Increase base money supply by the burned amount
+		m_baseMoneySupply += amount;
+		
+		// Recalculate supplies
+		m_totalSupply = getTotalSupply();
+		m_circulatingSupply = getCirculatingSupply();
+		m_blockRewardSupply = getBlockRewardSupply();
+		
+		// Set money supply for block rewards to base money supply (includes reborn amounts)
+		// This allows burned XFG to be redistributed through mining rewards
+		m_moneySupply = m_blockRewardSupply;
+	}
+
+	void Currency::addRebornXfg(uint64_t amount) {
+		if (amount == 0) return;
+		
+		m_totalRebornXfg += amount;
+		
+		// Recalculate supplies
+		m_totalSupply = getTotalSupply();
+		m_circulatingSupply = getCirculatingSupply();
+		m_blockRewardSupply = getBlockRewardSupply();
+		
+		// Set money supply for block rewards to base money supply (includes reborn amounts)
+		// This allows burned XFG to be redistributed through mining rewards
+		m_moneySupply = m_blockRewardSupply;
+	}
+
+	double Currency::getBurnPercentage() const {
+		if (m_baseMoneySupply == 0) return 0.0;
+		return (static_cast<double>(m_totalBurnedXfg) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+	}
+
+	double Currency::getRebornPercentage() const {
+		if (m_baseMoneySupply == 0) return 0.0;
+		return (static_cast<double>(m_totalRebornXfg) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+	}
+
+	double Currency::getSupplyIncreasePercentage() const {
+		if (m_baseMoneySupply == 0) return 0.0;
+		uint64_t totalSupply = getTotalSupply();
+		return (static_cast<double>(totalSupply - m_baseMoneySupply) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+	}
+
+	bool Currency::validateNetworkId(uint64_t networkId) const {
+		// Validate against hashed Fuego network ID
+		return (networkId == m_fuegoNetworkId);
+	}
+
+	bool Currency::validateNetworkIdString(const std::string& networkId) const {
+		// Validate against full Fuego network ID string
+		return (networkId == m_fuegoNetworkIdString);
+	}
+
+	Crypto::Hash Currency::calculateBurnNullifier(const Crypto::SecretKey& secret) const {
+		// Calculate nullifier using Keccak256: hash(secret + "nullifier")
+		std::vector<uint8_t> data;
+		data.insert(data.end(), secret.data, secret.data + sizeof(secret.data));
+		data.insert(data.end(), (uint8_t*)"nullifier", (uint8_t*)"nullifier" + 9);
+		
+		Crypto::Hash nullifier;
+		keccak(data.data(), data.size(), nullifier.data, sizeof(nullifier.data));
+		return nullifier;
+	}
+
+	Crypto::Hash Currency::calculateBurnCommitment(const Crypto::SecretKey& secret, uint64_t amount) const {
+		// Calculate commitment using Keccak256: hash(secret + "commitment")
+		std::vector<uint8_t> data;
+		data.insert(data.end(), secret.data, secret.data + sizeof(secret.data));
+		data.insert(data.end(), (uint8_t*)"commitment", (uint8_t*)"commitment" + 10);
+		
+		Crypto::Hash commitment;
+		keccak(data.data(), data.size(), commitment.data, sizeof(commitment.data));
+		return commitment;
+	}
+
+	Crypto::Hash Currency::calculateBurnRecipientHash(const std::string& recipientAddress) const {
+		// Calculate recipient hash using Keccak256
+		Crypto::Hash recipientHash;
+		keccak(reinterpret_cast<const uint8_t*>(recipientAddress.data()), recipientAddress.size(), recipientHash.data, sizeof(recipientHash.data));
+		return recipientHash;
+	}
+
+	bool Currency::validateBurnProofData(const std::string& secret, uint64_t amount, const std::string& commitment, const std::string& nullifier) const {
+		// Validate secret format (hex encoded)
+		if (secret.empty() || secret.length() != 64) {
+			return false;
+		}
+		
+		// Validate amount
+		if (!isValidBurnDepositAmount(amount)) {
+			return false;
+		}
+		
+		// Validate commitment and nullifier format (hex encoded)
+		if (commitment.empty() || commitment.length() != 64) {
+			return false;
+		}
+		
+		if (nullifier.empty() || nullifier.length() != 64) {
+			return false;
+		}
+		
+		// TODO: Add more comprehensive validation logic here
+		// This could include verifying the cryptographic relationships
+		// between secret, commitment, and nullifier
+		
+		return true;
 	}
 
 } // namespace CryptoNote

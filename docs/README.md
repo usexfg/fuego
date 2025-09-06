@@ -17,5 +17,4 @@ Fuego offers censorship-resistant encrypted communications.  A true decentralize
 Future releases may include web and mobile messaging applications.
 
 === Contact Us ===
-https://github.com/usexfg
-https://usexfg.org
+https://Fuego.money

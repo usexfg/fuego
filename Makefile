@@ -29,18 +29,8 @@ test-release: build-release
 
 all-release: build-release
 
-test-dynamic-supply:
-	g++ -std=c++17 -o simple_dynamic_supply_test simple_dynamic_supply_test.cpp
-	./simple_dynamic_supply_test
-
-build-with-tests:
-	mkdir -p build/test
-	cd build/test && cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ../..
-	cd build/test && $(MAKE)
-
 clean:
 	rm -rf build
-	rm -f simple_dynamic_supply_test
 
 tags:
 	ctags -R --sort=1 --c++-kinds=+p --fields=+iaS --extra=+q --language-force=C++ src contrib tests/gtest

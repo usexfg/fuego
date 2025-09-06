@@ -16,7 +16,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <string.h>
 
 #ifdef __cplusplus
 namespace Crypto {
@@ -37,11 +36,7 @@ struct EllipticCurveScalar
 };
 
 #ifdef __cplusplus
-struct PublicKey : public EllipticCurvePoint {
-  bool operator<(const PublicKey& other) const {
-    return memcmp(data, other.data, sizeof(data)) < 0;
-  }
-};
+struct PublicKey : public EllipticCurvePoint {};
 struct SecretKey : public EllipticCurveScalar {};
 #else
 typedef struct EllipticCurvePoint PublicKey;

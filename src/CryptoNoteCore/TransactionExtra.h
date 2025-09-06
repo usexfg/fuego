@@ -35,7 +35,6 @@
 #define TX_EXTRA_TTL                        0x05
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
-#define TX_EXTRA_CD_DEPOSIT_SECRET          0x09
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
@@ -74,7 +73,7 @@ struct TransactionExtraTTL {
 };
 
 struct TransactionExtraHeatCommitment {
-  Crypto::Hash commitment;       // 🔒 SECURE: Only commitment hash on blockchain
+  Crypto::Hash commitment;
   uint64_t amount;
   std::vector<uint8_t> metadata;
   
@@ -91,22 +90,11 @@ struct TransactionExtraYieldCommitment {
   bool serialize(ISerializer& serializer);
 };
 
-struct TransactionExtraCDDepositSecret {
-  std::vector<uint8_t> secret_key;  // 32-byte deposit secret key
-  uint64_t xfg_amount;              // XFG amount for CD conversion
-  uint32_t apr_basis_points;        // APR in basis points
-  uint8_t term_code;                // CD term code (1=30d, 2=90d, 3=180d)
-  uint8_t chain_code;               // Chain code (1=testnet, 2=mainnet)
-  std::vector<uint8_t> metadata;    // Additional metadata
-  
-  bool serialize(ISerializer& serializer);
-};
-
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCDDepositSecret> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment> TransactionExtraField;
 
 
 
@@ -150,32 +138,5 @@ bool getHeatCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, Transactio
 bool createTxExtraWithYieldCommitment(const Crypto::Hash& commitment, uint64_t amount, uint32_t term_months, const std::string& yield_scheme, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
 bool addYieldCommitmentToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraYieldCommitment& commitment);
 bool getYieldCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraYieldCommitment& commitment);
-
-// CD Deposit Secret helper functions
-bool createTxExtraWithCDDepositSecret(const std::vector<uint8_t>& secret_key, uint64_t xfg_amount, uint32_t apr_basis_points, uint8_t term_code, uint8_t chain_code, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
-bool addCDDepositSecretToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraCDDepositSecret& deposit_secret);
-bool getCDDepositSecretFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraCDDepositSecret& deposit_secret);
-
-// Helper APIs for wallet integration
-// Computes Keccak256(address || "recipient") into out_hash
-bool computeHeatRecipientHash(const std::string& eth_address, Crypto::Hash& out_hash);
-// Computes Keccak256(secret || le64(amount) || tx_prefix_hash || recipient_hash || network_id || target_chain_id || version)
-Crypto::Hash computeHeatCommitment(const std::array<uint8_t, 32>& secret,
-                                   uint64_t amount_atomic,
-                                   const Crypto::Hash& tx_prefix_hash,
-                                   const std::string& eth_address,
-                                   uint32_t network_id,
-                                   uint32_t target_chain_id,
-                                   uint32_t commitment_version);
-// Builds tx.extra with TX_EXTRA_HEAT_COMMITMENT (0x08) given inputs
-bool buildHeatExtra(const std::array<uint8_t, 32>& secret,
-                    uint64_t amount_atomic,
-                    const Crypto::Hash& tx_prefix_hash,
-                    const std::string& eth_address,
-                    uint32_t network_id,
-                    uint32_t target_chain_id,
-                    uint32_t commitment_version,
-                    const std::vector<uint8_t>& metadata,
-                    std::vector<uint8_t>& extra);
 
 }

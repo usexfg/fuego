@@ -140,6 +140,21 @@ bool EldernodeStakeProof::isValid() const {
            (tier == EldernodeTier::BASIC || serviceId.isValid());
 }
 
+bool EldernodeStakeProof::isConstantProof() const {
+    return constantProofType != ConstantStakeProofType::NONE;
+}
+
+bool EldernodeStakeProof::isConstantProofExpired() const {
+    if (!isConstantProof() || constantProofExpiry == 0) {
+        return false; // No expiry for non-constant proofs or never-expiring proofs
+    }
+    
+    uint64_t currentTime = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    return currentTime > constantProofExpiry;
+}
+
 std::string EldernodeStakeProof::toString() const {
     std::ostringstream oss;
     oss << "EldernodeStakeProof{"
@@ -153,6 +168,13 @@ std::string EldernodeStakeProof::toString() const {
     
     if (tier == EldernodeTier::ELDERFIER) {
         oss << ", serviceId=" << serviceId.toString();
+    }
+    
+    if (isConstantProof()) {
+        oss << ", constantProofType=" << static_cast<int>(constantProofType)
+            << ", crossChainAddress=" << crossChainAddress
+            << ", constantStakeAmount=" << constantStakeAmount
+            << ", constantProofExpiry=" << constantProofExpiry;
     }
     
     oss << "}";
@@ -206,7 +228,26 @@ bool ENindexEntry::operator==(const ENindexEntry& other) const {
            registrationTimestamp == other.registrationTimestamp &&
            isActive == other.isActive &&
            tier == other.tier &&
-           serviceId.identifier == other.serviceId.identifier;
+           serviceId.identifier == other.serviceId.identifier &&
+           constantProofType == other.constantProofType &&
+           crossChainAddress == other.crossChainAddress &&
+           constantStakeAmount == other.constantStakeAmount &&
+           constantProofExpiry == other.constantProofExpiry;
+}
+
+bool ENindexEntry::hasConstantProof() const {
+    return constantProofType != ConstantStakeProofType::NONE;
+}
+
+bool ENindexEntry::isConstantProofExpired() const {
+    if (!hasConstantProof() || constantProofExpiry == 0) {
+        return false; // No expiry for non-constant proofs or never-expiring proofs
+    }
+    
+    uint64_t currentTime = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    return currentTime > constantProofExpiry;
 }
 
 bool ENindexEntry::operator<(const ENindexEntry& other) const {
@@ -275,6 +316,33 @@ bool SlashingConfig::isValid() const {
            (destination == SlashingDestination::BURN || !destinationAddress.empty());
 }
 
+// ConstantStakeProofConfig implementations
+ConstantStakeProofConfig ConstantStakeProofConfig::getDefault() {
+    ConstantStakeProofConfig config;
+    config.enableElderadoC0DL3Validator = true;  // Enable Elderado validator stake for C0DL3
+    config.elderadoC0DL3StakeAmount = 8000000000; // 8000 XFG for Elderado validator (8000 * 1,000,000)
+    config.constantProofValidityPeriod = 0;      // 0 = never expires (constant proof)
+    config.c0dl3NetworkId = "C0DL3_MAINNET";     // C0DL3 network identifier
+    config.c0dl3ContractAddress = "0x0000000000000000000000000000000000000000"; // Placeholder contract address
+    config.allowConstantProofRenewal = true;      // Allow renewal of constant proofs
+    return config;
+}
+
+bool ConstantStakeProofConfig::isValid() const {
+    return elderadoC0DL3StakeAmount > 0 &&
+           !c0dl3NetworkId.empty() &&
+           !c0dl3ContractAddress.empty();
+}
+
+uint64_t ConstantStakeProofConfig::getRequiredStakeAmount(ConstantStakeProofType type) const {
+    switch (type) {
+        case ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR:
+            return elderadoC0DL3StakeAmount;
+        default:
+            return 0;
+    }
+}
+
 // ElderfierServiceConfig implementations
 ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
     ElderfierServiceConfig config;
@@ -286,13 +354,15 @@ ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
         "SERVER", "CLIENT", "MASTER", "SLAVE", "BACKUP", "CACHE", "DB", "API", "WEB", "APP"
     };
     config.slashingConfig = SlashingConfig::getDefault();
+    config.constantProofConfig = ConstantStakeProofConfig::getDefault();
     return config;
 }
 
 bool ElderfierServiceConfig::isValid() const {
     return minimumStakeAmount > 0 && 
            customNameLength == 8 && // Must be exactly 8
-           slashingConfig.isValid();
+           slashingConfig.isValid() &&
+           constantProofConfig.isValid();
 }
 
 bool ElderfierServiceConfig::isCustomNameReserved(const std::string& name) const {

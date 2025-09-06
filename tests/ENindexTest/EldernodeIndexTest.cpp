@@ -319,6 +319,130 @@ void testSlashingFunctionality() {
     std::cout << "✓ Correctly rejected slashing non-existent Eldernode" << std::endl;
 }
 
+void testConstantStakeProofFunctionality() {
+    std::cout << "Testing Constant Stake Proof Functionality..." << std::endl;
+    
+    EldernodeIndexManager manager;
+    
+    // Add Elderfier node with sufficient stake for constant proof
+    ENindexEntry elderfierEntry;
+    Crypto::generate_keys(elderfierEntry.eldernodePublicKey, elderfierEntry.eldernodeSecretKey);
+    elderfierEntry.feeAddress = "FUEGO987654321fedcba";
+    elderfierEntry.stakeAmount = 10000000000; // 10000 XFG (more than 8000 XFG required)
+    elderfierEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    elderfierEntry.isActive = true;
+    elderfierEntry.tier = EldernodeTier::ELDERFIER;
+    elderfierEntry.serviceId = ElderfierServiceId::createCustomName("CONSTANT", "FUEGO987654321fedcba");
+    
+    bool added = manager.addEldernode(elderfierEntry);
+    assert(added);
+    
+    // Test 1: Create Elderado C0DL3 Validator constant stake proof
+    std::string c0dl3Address = "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b7";
+    uint64_t constantStakeAmount = 8000000000; // 8000 XFG
+    
+    bool created = manager.createConstantStakeProof(
+        elderfierEntry.eldernodePublicKey,
+        ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR,
+        c0dl3Address,
+        constantStakeAmount
+    );
+    assert(created);
+    std::cout << "✓ Successfully created Elderado C0DL3 Validator constant stake proof" << std::endl;
+    
+    // Test 2: Verify constant proof exists
+    auto constantProofs = manager.getConstantStakeProofs(elderfierEntry.eldernodePublicKey);
+    assert(constantProofs.size() == 1);
+    assert(constantProofs[0].constantProofType == ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR);
+    assert(constantProofs[0].crossChainAddress == c0dl3Address);
+    assert(constantProofs[0].constantStakeAmount == constantStakeAmount);
+    assert(constantProofs[0].isConstantProof());
+    assert(!constantProofs[0].isConstantProofExpired());
+    std::cout << "✓ Constant proof verification successful" << std::endl;
+    
+    // Test 3: Get constant proofs by type
+    auto elderadoProofs = manager.getConstantStakeProofsByType(ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR);
+    assert(elderadoProofs.size() == 1);
+    assert(elderadoProofs[0].eldernodePublicKey == elderfierEntry.eldernodePublicKey);
+    std::cout << "✓ Retrieved constant proofs by type successfully" << std::endl;
+    
+    // Test 4: Try to create duplicate constant proof (should fail)
+    bool duplicateCreated = manager.createConstantStakeProof(
+        elderfierEntry.eldernodePublicKey,
+        ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR,
+        c0dl3Address,
+        constantStakeAmount
+    );
+    assert(!duplicateCreated); // Should fail
+    std::cout << "✓ Correctly rejected duplicate constant proof creation" << std::endl;
+    
+    // Test 5: Renew constant proof
+    bool renewed = manager.renewConstantStakeProof(
+        elderfierEntry.eldernodePublicKey,
+        ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR
+    );
+    assert(renewed);
+    std::cout << "✓ Successfully renewed constant stake proof" << std::endl;
+    
+    // Test 6: Revoke constant proof
+    bool revoked = manager.revokeConstantStakeProof(
+        elderfierEntry.eldernodePublicKey,
+        ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR
+    );
+    assert(revoked);
+    
+    // Verify constant proof is removed
+    auto proofsAfterRevoke = manager.getConstantStakeProofs(elderfierEntry.eldernodePublicKey);
+    assert(proofsAfterRevoke.empty());
+    std::cout << "✓ Successfully revoked constant stake proof" << std::endl;
+    
+    // Test 7: Try to create constant proof with insufficient stake (should fail)
+    ENindexEntry lowStakeEntry;
+    Crypto::generate_keys(lowStakeEntry.eldernodePublicKey, lowStakeEntry.eldernodeSecretKey);
+    lowStakeEntry.feeAddress = "FUEGO111222333444555";
+    lowStakeEntry.stakeAmount = 1000000000; // Only 1000 XFG (less than 8000 XFG required)
+    lowStakeEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    lowStakeEntry.isActive = true;
+    lowStakeEntry.tier = EldernodeTier::ELDERFIER;
+    lowStakeEntry.serviceId = ElderfierServiceId::createCustomName("LOWSTAKE", "FUEGO111222333444555");
+    
+    bool addedLowStake = manager.addEldernode(lowStakeEntry);
+    assert(addedLowStake);
+    
+    bool insufficientStake = manager.createConstantStakeProof(
+        lowStakeEntry.eldernodePublicKey,
+        ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR,
+        c0dl3Address,
+        constantStakeAmount
+    );
+    assert(!insufficientStake); // Should fail
+    std::cout << "✓ Correctly rejected constant proof creation with insufficient stake" << std::endl;
+    
+    // Test 8: Try to create constant proof for Basic Eldernode (should fail)
+    ENindexEntry basicEntry;
+    Crypto::generate_keys(basicEntry.eldernodePublicKey, basicEntry.eldernodeSecretKey);
+    basicEntry.feeAddress = "FUEGO999888777666555";
+    basicEntry.stakeAmount = 0; // No stake for basic
+    basicEntry.registrationTimestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    basicEntry.isActive = true;
+    basicEntry.tier = EldernodeTier::BASIC;
+    
+    bool addedBasic = manager.addEldernode(basicEntry);
+    assert(addedBasic);
+    
+    bool basicConstantProof = manager.createConstantStakeProof(
+        basicEntry.eldernodePublicKey,
+        ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR,
+        c0dl3Address,
+        constantStakeAmount
+    );
+    assert(!basicConstantProof); // Should fail
+    std::cout << "✓ Correctly rejected constant proof creation for Basic Eldernode" << std::endl;
+}
+
 void testEldernodeIndexManager() {
     std::cout << "Running comprehensive Eldernode Index Manager tests..." << std::endl;
     
@@ -327,6 +451,7 @@ void testEldernodeIndexManager() {
     testServiceIdValidation();
     testTierPrioritization();
     testSlashingFunctionality();
+    testConstantStakeProofFunctionality();
     
     std::cout << "All tests passed! ✓" << std::endl;
 }

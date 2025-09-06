@@ -37,6 +37,12 @@ enum class EldernodeTier : uint8_t {
     ELDERFIER = 1        // Elderfier service node (800 XFG stake required)
 };
 
+// Constant stake proof types for cross-chain validation
+enum class ConstantStakeProofType : uint8_t {
+    NONE = 0,                    // No constant stake proof
+    ELDERADO_C0DL3_VALIDATOR = 1 // Elderado validator stake for C0DL3 (zkSync) - 8000 XFG
+};
+
 // Eldernode stake proof structure
 struct EldernodeStakeProof {
     Crypto::Hash stakeHash;
@@ -47,9 +53,15 @@ struct EldernodeStakeProof {
     std::string feeAddress;
     EldernodeTier tier;
     ElderfierServiceId serviceId;  // Only used for ELDERFIER tier
+    ConstantStakeProofType constantProofType; // Constant stake proof type for cross-chain validation
+    std::string crossChainAddress; // Address on target chain (e.g., C0DL3/zkSync)
+    uint64_t constantStakeAmount;  // Amount locked for constant proof (e.g., 8000 XFG for Elderado)
+    uint64_t constantProofExpiry;  // Expiry timestamp for constant proof (0 = never expires)
     
     bool isValid() const;
     std::string toString() const;
+    bool isConstantProof() const;
+    bool isConstantProofExpired() const;
 };
 
 // Eldernode consensus participant
@@ -90,9 +102,15 @@ struct ENindexEntry {
     std::chrono::system_clock::time_point lastActivity;
     EldernodeTier tier;
     ElderfierServiceId serviceId;  // Only used for ELDERFIER tier
+    ConstantStakeProofType constantProofType; // Constant stake proof type for cross-chain validation
+    std::string crossChainAddress; // Address on target chain (e.g., C0DL3/zkSync)
+    uint64_t constantStakeAmount;  // Amount locked for constant proof (e.g., 8000 XFG for Elderado)
+    uint64_t constantProofExpiry;  // Expiry timestamp for constant proof (0 = never expires)
     
     bool operator==(const ENindexEntry& other) const;
     bool operator<(const ENindexEntry& other) const;
+    bool hasConstantProof() const;
+    bool isConstantProofExpired() const;
 };
 
 // Consensus thresholds configuration
@@ -135,6 +153,20 @@ struct SlashingConfig {
     bool isValid() const;
 };
 
+// Constant stake proof configuration
+struct ConstantStakeProofConfig {
+    bool enableElderadoC0DL3Validator; // Enable Elderado validator stake for C0DL3
+    uint64_t elderadoC0DL3StakeAmount; // Required stake amount for Elderado validator (8000 XFG)
+    uint64_t constantProofValidityPeriod; // Validity period for constant proofs (0 = never expires)
+    std::string c0dl3NetworkId; // C0DL3 network identifier
+    std::string c0dl3ContractAddress; // C0DL3 validator contract address
+    bool allowConstantProofRenewal; // Allow renewal of constant proofs
+    
+    static ConstantStakeProofConfig getDefault();
+    bool isValid() const;
+    uint64_t getRequiredStakeAmount(ConstantStakeProofType type) const;
+};
+
 // Elderfier service configuration
 struct ElderfierServiceConfig {
     uint64_t minimumStakeAmount;      // 800 XFG minimum for Elderfier
@@ -142,6 +174,7 @@ struct ElderfierServiceConfig {
     bool allowHashedAddresses;        // Whether to allow hashed addresses
     std::vector<std::string> reservedNames; // Reserved custom names
     SlashingConfig slashingConfig;    // Slashing configuration
+    ConstantStakeProofConfig constantProofConfig; // Constant stake proof configuration
     
     static ElderfierServiceConfig getDefault();
     bool isValid() const;

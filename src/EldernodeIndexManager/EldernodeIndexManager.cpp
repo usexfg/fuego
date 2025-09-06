@@ -207,40 +207,39 @@ std::optional<ENindexEntry> EldernodeIndexManager::getEldernodeByServiceId(const
     return std::nullopt;
 }
 
-bool EldernodeIndexManager::addStakeProof(const EldernodeStakeProof& proof) {
+bool EldernodeIndexManager::addElderfierDeposit(const ElderfierDepositData& deposit) {
     std::lock_guard<std::mutex> lock(m_mutex);
     
-    if (!validateStakeProof(proof)) {
-        logger(ERROR) << "Invalid stake proof for public key: " << Common::podToHex(proof.eldernodePublicKey);
+    if (!deposit.isValid()) {
+        logger(ERROR) << "Invalid Elderfier deposit for public key: " << Common::podToHex(deposit.elderfierPublicKey);
         return false;
     }
     
-    auto& proofs = m_stakeProofs[proof.eldernodePublicKey];
-    proofs.push_back(proof);
+    m_elderfierDeposits[deposit.elderfierPublicKey] = deposit;
+    m_addressToPublicKey[deposit.elderfierAddress] = deposit.elderfierPublicKey;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    std::string tierName = (proof.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
-    logger(INFO) << "Added stake proof for " << tierName << " Eldernode: " << Common::podToHex(proof.eldernodePublicKey)
-                << " amount: " << proof.stakeAmount;
+    logger(INFO) << "Added Elderfier deposit for: " << Common::podToHex(deposit.elderfierPublicKey)
+                << " amount: " << deposit.depositAmount
+                << " address: " << deposit.elderfierAddress;
     
-    if (proof.tier == EldernodeTier::ELDERFIER) {
-        logger(INFO) << "Elderfier service ID: " << proof.serviceId.toString();
-    }
+    logger(INFO) << "Elderfier service ID: " << deposit.serviceId.toString();
     
     return true;
 }
 
-bool EldernodeIndexManager::verifyStakeProof(const EldernodeStakeProof& proof) const {
+bool EldernodeIndexManager::verifyElderfierDeposit(const ElderfierDepositData& deposit) const {
     std::lock_guard<std::mutex> lock(m_mutex);
-    return validateStakeProof(proof);
+    return deposit.isValid();
 }
 
-std::vector<EldernodeStakeProof> EldernodeIndexManager::getStakeProofs(const Crypto::PublicKey& publicKey) const {
+ElderfierDepositData EldernodeIndexManager::getElderfierDeposit(const Crypto::PublicKey& publicKey) const {
     std::lock_guard<std::mutex> lock(m_mutex);
     
-    auto it = m_stakeProofs.find(publicKey);
-    if (it == m_stakeProofs.end()) {
-        return {};
+    auto it = m_elderfierDeposits.find(publicKey);
+    if (it == m_elderfierDeposits.end()) {
+        ElderfierDepositData invalidDeposit;
+        return invalidDeposit;
     }
     
     return it->second;

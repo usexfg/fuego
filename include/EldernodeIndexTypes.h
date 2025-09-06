@@ -33,30 +33,63 @@ struct ElderfierServiceId {
 
 // Eldernode tier levels
 enum class EldernodeTier : uint8_t {
-    BASIC = 0,           // Basic Eldernode (no stake required)
-    ELDERFIER = 1        // Elderfier service node (800 XFG stake required)
+    ELDERFIER = 1,       // Elderfier service node (800 XFG stake required)
+    ELDARADO = 2         // Eldarado validator (8000 XFG stake required)
 };
 
-// Eldernode stake proof structure
-struct EldernodeStakeProof {
-    Crypto::Hash stakeHash;
-    Crypto::PublicKey eldernodePublicKey;
-    uint64_t stakeAmount;
-    uint64_t timestamp;
-    std::vector<uint8_t> proofSignature;
-    std::string feeAddress;
-    EldernodeTier tier;
-    ElderfierServiceId serviceId;  // Only used for ELDERFIER tier
+// Elderfier deposit data structure
+struct ElderfierDepositData {
+    Crypto::Hash depositHash;
+    Crypto::PublicKey elderfierPublicKey;
+    uint64_t depositAmount;
+    uint64_t depositTimestamp;
+    uint64_t lastSeenTimestamp;
+    uint64_t totalUptimeSeconds;
+    uint32_t selectionMultiplier;
+    std::string elderfierAddress;
+    ElderfierServiceId serviceId;
+    bool isActive;
+    bool isSlashable;
     
+    // Methods
     bool isValid() const;
+    bool isOnline() const;
+    uint32_t calculateSelectionMultiplier() const;
+    void updateUptime(uint64_t currentTimestamp);
+    void markOffline(uint64_t currentTimestamp);
     std::string toString() const;
 };
+
+// Fee structure constants
+namespace EldernodeFees {
+    static const uint64_t LARGE_BURN_FEE = 8000000;      // 0.8 XFG for large burns (800 XFG+)
+    static const uint64_t DEFAULT_BURN_FEE = 80000;       // 0.008 XFG for default burns
+    static const uint64_t ELDERFIER_STAKE_AMOUNT = 8000000000;  // 800 XFG stake required
+    static const uint64_t ELDARADO_STAKE_AMOUNT = 80000000000;  // 8000 XFG stake required
+}
+
+// Selection multiplier mapping based on uptime duration
+namespace SelectionMultipliers {
+    static const uint64_t MONTH_1_SECONDS = 2592000;    // 30 days
+    static const uint64_t MONTH_3_SECONDS = 7776000;   // 90 days  
+    static const uint64_t MONTH_6_SECONDS = 15552000;   // 180 days
+    static const uint64_t YEAR_1_SECONDS = 31536000;    // 365 days
+    static const uint64_t YEAR_2_SECONDS = 63072000;    // 730 days
+    
+    static const uint32_t UPTIME_1_MONTH_MULTIPLIER = 1;   // 1x (0-1 month)
+    static const uint32_t UPTIME_3_MONTH_MULTIPLIER = 2;   // 2x (1-3 months)
+    static const uint32_t UPTIME_6_MONTH_MULTIPLIER = 4;   // 4x (3-6 months)
+    static const uint32_t UPTIME_1_YEAR_MULTIPLIER = 8;    // 8x (6-12 months)
+    static const uint32_t UPTIME_2_YEAR_MULTIPLIER = 16;   // 16x (1-2 years)
+    static const uint32_t MAX_MULTIPLIER = 16;             // Cap at 2 years
+}
 
 // Eldernode consensus participant
 struct EldernodeConsensusParticipant {
     Crypto::PublicKey publicKey;
     std::string address;
     uint64_t stakeAmount;
+    uint32_t selectionMultiplier;  // Selection probability multiplier
     bool isActive;
     std::chrono::system_clock::time_point lastSeen;
     EldernodeTier tier;
@@ -64,6 +97,18 @@ struct EldernodeConsensusParticipant {
     
     bool operator==(const EldernodeConsensusParticipant& other) const;
     bool operator<(const EldernodeConsensusParticipant& other) const;
+};
+
+// Random selection result for Elderfier verification
+struct ElderfierSelectionResult {
+    std::vector<EldernodeConsensusParticipant> selectedElderfiers;  // Exactly 2 Elderfiers
+    Crypto::Hash selectionHash;  // Provably fair random seed
+    uint64_t blockHeight;        // Block height used for selection
+    uint64_t totalWeight;        // Sum of all selection multipliers
+    std::vector<uint32_t> selectionWeights;  // Individual weights used in selection
+    
+    bool isValid() const;        // Verify exactly 2 Elderfiers selected
+    std::string toString() const;
 };
 
 // Consensus result structure
@@ -106,15 +151,15 @@ struct ConsensusThresholds {
     bool isValid() const;
 };
 
-// Stake verification result
-struct StakeVerificationResult {
+// Deposit validation result
+struct DepositValidationResult {
     bool isValid;
     std::string errorMessage;
-    uint64_t verifiedAmount;
-    Crypto::Hash verifiedStakeHash;
+    uint64_t validatedAmount;
+    Crypto::Hash validatedDepositHash;
     
-    static StakeVerificationResult success(uint64_t amount, const Crypto::Hash& hash);
-    static StakeVerificationResult failure(const std::string& error);
+    static DepositValidationResult success(uint64_t amount, const Crypto::Hash& hash);
+    static DepositValidationResult failure(const std::string& error);
 };
 
 // Slashing configuration

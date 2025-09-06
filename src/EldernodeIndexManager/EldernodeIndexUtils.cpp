@@ -241,22 +241,22 @@ bool ConsensusThresholds::isValid() const {
            timeoutSeconds > 0;
 }
 
-// StakeVerificationResult implementations
-StakeVerificationResult StakeVerificationResult::success(uint64_t amount, const Crypto::Hash& hash) {
-    StakeVerificationResult result;
+// DepositValidationResult implementations
+DepositValidationResult DepositValidationResult::success(uint64_t amount, const Crypto::Hash& hash) {
+    DepositValidationResult result;
     result.isValid = true;
     result.errorMessage = "";
-    result.verifiedAmount = amount;
-    result.verifiedStakeHash = hash;
+    result.validatedAmount = amount;
+    result.validatedDepositHash = hash;
     return result;
 }
 
-StakeVerificationResult StakeVerificationResult::failure(const std::string& error) {
-    StakeVerificationResult result;
+DepositValidationResult DepositValidationResult::failure(const std::string& error) {
+    DepositValidationResult result;
     result.isValid = false;
     result.errorMessage = error;
-    result.verifiedAmount = 0;
-    result.verifiedStakeHash = Crypto::Hash();
+    result.validatedAmount = 0;
+    result.validatedDepositHash = Crypto::Hash();
     return result;
 }
 

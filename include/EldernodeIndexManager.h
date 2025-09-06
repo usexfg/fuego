@@ -28,10 +28,10 @@ public:
     virtual std::vector<ENindexEntry> getElderfierNodes() const = 0;
     virtual std::optional<ENindexEntry> getEldernodeByServiceId(const ElderfierServiceId& serviceId) const = 0;
     
-    // Stake proof management
-    virtual bool addStakeProof(const EldernodeStakeProof& proof) = 0;
-    virtual bool verifyStakeProof(const EldernodeStakeProof& proof) const = 0;
-    virtual std::vector<EldernodeStakeProof> getStakeProofs(const Crypto::PublicKey& publicKey) const = 0;
+    // Elderfier deposit management
+    virtual bool addElderfierDeposit(const ElderfierDepositData& deposit) = 0;
+    virtual bool verifyElderfierDeposit(const ElderfierDepositData& deposit) const = 0;
+    virtual ElderfierDepositData getElderfierDeposit(const Crypto::PublicKey& publicKey) const = 0;
     
     // Consensus management
     virtual bool addConsensusParticipant(const EldernodeConsensusParticipant& participant) = 0;

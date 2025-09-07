@@ -1,4 +1,5 @@
 #include "EldernodeIndexTypes.h"
+#include "ElderfierDepositManager.h"
 #include "CryptoNoteCore/TransactionExtra.h"
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"

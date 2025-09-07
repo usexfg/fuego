@@ -1,5 +1,5 @@
 #include "EldernodeIndexTypes.h"
-#include "TransactionExtra.h"
+#include "CryptoNoteCore/TransactionExtra.h"
 #include "Common/StringTools.h"
 #include "crypto/crypto.h"
 #include "crypto/hash.h"
@@ -315,18 +315,6 @@ std::vector<uint8_t> ElderfierDepositManager::generateDepositSignature(const Tra
     std::copy(hash.data + 32, hash.data + 64, signature.begin() + 32);
     
     return signature;
-}
-
-bool ElderfierDepositManager::checkIfDepositOutputsSpent(const Crypto::Hash& depositHash) const {
-    // Placeholder implementation
-    // In real implementation, this would:
-    // 1. Find the deposit transaction by hash
-    // 2. Check if any of its outputs have been spent
-    // 3. Return true if any outputs are spent
-    
-    // For now, return false (not spent)
-    // This would be implemented with actual blockchain checking
-    return false;
 }
 
 } // namespace CryptoNote

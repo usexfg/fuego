@@ -58,6 +58,8 @@ struct EldernodeStakeProof {
     uint64_t constantStakeAmount;  // Amount locked for constant proof (e.g., 8000 XFG for Elderado)
     uint64_t constantProofExpiry;  // Expiry timestamp for constant proof (0 = never expires)
     
+    bool isValid() const;
+    std::string toString() const;
     bool isConstantProof() const;
     bool isConstantProofExpired() const;
 };
@@ -89,6 +91,13 @@ struct MempoolSecurityWindow {
     std::string toString() const;
     bool isConstantProof() const;
     bool isConstantProofExpired() const;
+};
+
+// Vote types for Elder Council decisions
+enum class ElderCouncilVoteType : uint8_t {
+    SLASH_ALL = 1,      // Slash/burn ALL of Elderfier's stake
+    SLASH_HALF = 2,      // Slash/burn HALF of Elderfier's stake  
+    SLASH_NONE = 3       // Slash/burn NONE of Elderfier's stake
 };
 
 // Elder Council voting system
@@ -126,13 +135,6 @@ struct ElderCouncilVotingMessage {
     bool hasQuorumReached() const;
     std::string getVotingStatus() const;
     std::string toString() const;
-};
-
-// Vote types for Elder Council decisions
-enum class ElderCouncilVoteType : uint8_t {
-    SLASH_ALL = 1,      // Slash/burn ALL of Elderfier's stake
-    SLASH_HALF = 2,      // Slash/burn HALF of Elderfier's stake  
-    SLASH_NONE = 3       // Slash/burn NONE of Elderfier's stake
 };
 
 // Misbehavior evidence for Elder Council voting

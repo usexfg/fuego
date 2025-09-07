@@ -137,7 +137,7 @@ bool EldernodeStakeProof::isValid() const {
     return !feeAddress.empty() && 
            !proofSignature.empty() &&
            timestamp > 0 &&
-           (tier == EldernodeTier::BASIC || serviceId.isValid());
+           (tier == EldernodeTier::ELDERFIER || serviceId.isValid());
 }
 
 bool EldernodeStakeProof::isConstantProof() const {
@@ -163,7 +163,7 @@ std::string EldernodeStakeProof::toString() const {
         << "amount=" << stakeAmount << ", "
         << "timestamp=" << timestamp << ", "
         << "feeAddress=" << feeAddress << ", "
-        << "tier=" << (tier == EldernodeTier::BASIC ? "BASIC" : "ELDERFIER") << ", "
+        << "tier=" << (tier == EldernodeTier::ELDERFIER ? "BASIC" : "ELDERFIER") << ", "
         << "signatureSize=" << proofSignature.size();
     
     if (tier == EldernodeTier::ELDERFIER) {

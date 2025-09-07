@@ -75,7 +75,7 @@ bool EldernodeIndexManager::addEldernode(const ENindexEntry& entry) {
     m_eldernodes[entry.eldernodePublicKey] = entry;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    std::string tierName = (entry.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    std::string tierName = (entry.tier == EldernodeTier::ELDERFIER) ? "Basic" : "Elderfier";
     logger(INFO) << "Added " << tierName << " Eldernode: " << Common::podToHex(entry.eldernodePublicKey) 
                 << " with stake: " << entry.stakeAmount;
     
@@ -95,7 +95,7 @@ bool EldernodeIndexManager::removeEldernode(const Crypto::PublicKey& publicKey) 
         return false;
     }
     
-    std::string tierName = (it->second.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    std::string tierName = (it->second.tier == EldernodeTier::ELDERFIER) ? "Basic" : "Elderfier";
     logger(INFO) << "Removing " << tierName << " Eldernode: " << Common::podToHex(publicKey);
     
     m_eldernodes.erase(it);
@@ -148,7 +148,7 @@ bool EldernodeIndexManager::updateEldernode(const ENindexEntry& entry) {
     it->second = entry;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    std::string tierName = (entry.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    std::string tierName = (entry.tier == EldernodeTier::ELDERFIER) ? "Basic" : "Elderfier";
     logger(INFO) << "Updated " << tierName << " Eldernode: " << Common::podToHex(entry.eldernodePublicKey);
     
     return true;
@@ -1572,10 +1572,9 @@ void EldernodeIndexManager::setMonitoringConfig(const ElderfierMonitoringConfig&
     }
     
     m_monitoringConfig = config;
-    logger(INFO) << "Monitoring configuration updated: interval=" << config.monitoringIntervalSeconds 
-                << "s, realtime=" << config.enableRealTimeMonitoring 
-                << ", periodic=" << config.enablePeriodicMonitoring
-                << ", event-driven=" << config.enableEventDrivenMonitoring;
+    logger(INFO) << "Monitoring configuration updated: block-based=" << config.enableBlockBasedMonitoring 
+                << ", mempool-buffer=" << config.enableMempoolBuffer 
+                << ", elder-council-voting=" << config.enableElderCouncilVoting;
 }
 
 ElderfierMonitoringConfig EldernodeIndexManager::getMonitoringConfig() const {
@@ -1591,8 +1590,8 @@ void EldernodeIndexManager::startMonitoring() {
         return;
     }
     
-    if (!m_monitoringConfig.enablePeriodicMonitoring) {
-        logger(INFO) << "Periodic monitoring is disabled in configuration";
+    if (!m_monitoringConfig.enableBlockBasedMonitoring) {
+        logger(INFO) << "Block-based monitoring is disabled in configuration";
         return;
     }
     
@@ -1601,8 +1600,7 @@ void EldernodeIndexManager::startMonitoring() {
     
     // Start monitoring thread
     m_monitoringThread = std::thread([this]() {
-        logger(INFO) << "Elderfier monitoring thread started with interval: " 
-                    << m_monitoringConfig.monitoringIntervalSeconds << " seconds";
+        logger(INFO) << "Elderfier monitoring thread started with block-based monitoring";
         
         while (!m_shouldStopMonitoring) {
             try {
@@ -1615,10 +1613,8 @@ void EldernodeIndexManager::startMonitoring() {
                     // broadcastENindexUpdate();
                 }
                 
-                // Sleep for the configured interval
-                std::this_thread::sleep_for(
-                    std::chrono::seconds(m_monitoringConfig.monitoringIntervalSeconds)
-                );
+                // Sleep for a reasonable interval (block-based monitoring doesn't need frequent polling)
+                std::this_thread::sleep_for(std::chrono::seconds(30));
                 
             } catch (const std::exception& e) {
                 logger(ERROR) << "Exception in monitoring thread: " << e.what();
@@ -1662,7 +1658,7 @@ bool EldernodeIndexManager::addConsensusParticipant(const EldernodeConsensusPart
     m_consensusParticipants[participant.publicKey] = participant;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    std::string tierName = (participant.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    std::string tierName = (participant.tier == EldernodeTier::ELDERFIER) ? "Basic" : "Elderfier";
     logger(INFO) << "Added " << tierName << " consensus participant: " << Common::podToHex(participant.publicKey);
     
     return true;
@@ -1988,7 +1984,7 @@ bool EldernodeIndexManager::generateFreshProof(const Crypto::PublicKey& publicKe
     m_stakeProofs[publicKey].push_back(proof);
     m_lastUpdate = std::chrono::system_clock::now();
     
-    std::string tierName = (entry.tier == EldernodeTier::BASIC) ? "Basic" : "Elderfier";
+    std::string tierName = (entry.tier == EldernodeTier::ELDERFIER) ? "Basic" : "Elderfier";
     logger(INFO) << "Generated fresh proof for " << tierName << " Eldernode: " << Common::podToHex(publicKey);
     
     return true;
@@ -2308,7 +2304,7 @@ bool EldernodeIndexManager::validateEldernodeEntry(const ENindexEntry& entry) co
                          << " < " << m_elderfierConfig.minimumStakeAmount << " (800 XFG)";
             return false;
         }
-    } else if (entry.tier == EldernodeTier::BASIC) {
+    } else if (entry.tier == EldernodeTier::ELDERFIER) {
         // Basic Eldernodes have no stake requirement (--set-fee-address only)
         if (entry.stakeAmount != 0) {
             logger(ERROR) << "Basic Eldernode should have no stake: " << entry.stakeAmount;
@@ -2336,7 +2332,7 @@ bool EldernodeIndexManager::validateStakeProof(const EldernodeStakeProof& proof)
         if (!proof.serviceId.isValid()) {
             return false;
         }
-    } else if (proof.tier == EldernodeTier::BASIC) {
+    } else if (proof.tier == EldernodeTier::ELDERFIER) {
         // Basic Eldernodes have no stake requirement
         if (proof.stakeAmount != 0) {
             return false;

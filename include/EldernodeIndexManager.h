@@ -202,6 +202,18 @@ public:
     bool generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress);
     bool regenerateAllProofs();
     
+    // Constant stake proof management for cross-chain validation
+    bool createConstantStakeProof(const Crypto::PublicKey& publicKey, 
+                                  ConstantStakeProofType proofType,
+                                  const std::string& crossChainAddress,
+                                  uint64_t stakeAmount);
+    bool renewConstantStakeProof(const Crypto::PublicKey& publicKey, 
+                                 ConstantStakeProofType proofType);
+    bool revokeConstantStakeProof(const Crypto::PublicKey& publicKey, 
+                                 ConstantStakeProofType proofType);
+    std::vector<EldernodeStakeProof> getConstantStakeProofs(const Crypto::PublicKey& publicKey) const;
+    std::vector<EldernodeStakeProof> getConstantStakeProofsByType(ConstantStakeProofType proofType) const;
+    
     // Slashing functionality
     bool slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) override;
 

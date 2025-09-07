@@ -1841,6 +1841,14 @@ bool EldernodeIndexManager::saveToStorage() {
                 file.write(reinterpret_cast<const char*>(&hashedAddressSize), sizeof(hashedAddressSize));
                 file.write(entry.serviceId.hashedAddress.c_str(), hashedAddressSize);
             }
+            
+            // Write constant stake proof data
+            file.write(reinterpret_cast<const char*>(&entry.constantProofType), sizeof(entry.constantProofType));
+            uint32_t crossChainAddressSize = static_cast<uint32_t>(entry.crossChainAddress.size());
+            file.write(reinterpret_cast<const char*>(&crossChainAddressSize), sizeof(crossChainAddressSize));
+            file.write(entry.crossChainAddress.c_str(), crossChainAddressSize);
+            file.write(reinterpret_cast<const char*>(&entry.constantStakeAmount), sizeof(entry.constantStakeAmount));
+            file.write(reinterpret_cast<const char*>(&entry.constantProofExpiry), sizeof(entry.constantProofExpiry));
         }
         
         logger(INFO) << "Saved " << eldernodeCount << " Eldernodes to storage";
@@ -1899,6 +1907,15 @@ bool EldernodeIndexManager::loadFromStorage() {
                 entry.serviceId.hashedAddress.resize(hashedAddressSize);
                 file.read(&entry.serviceId.hashedAddress[0], hashedAddressSize);
             }
+            
+            // Read constant stake proof data
+            file.read(reinterpret_cast<char*>(&entry.constantProofType), sizeof(entry.constantProofType));
+            uint32_t crossChainAddressSize;
+            file.read(reinterpret_cast<char*>(&crossChainAddressSize), sizeof(crossChainAddressSize));
+            entry.crossChainAddress.resize(crossChainAddressSize);
+            file.read(&entry.crossChainAddress[0], crossChainAddressSize);
+            file.read(reinterpret_cast<char*>(&entry.constantStakeAmount), sizeof(entry.constantStakeAmount));
+            file.read(reinterpret_cast<char*>(&entry.constantProofExpiry), sizeof(entry.constantProofExpiry));
             
             m_eldernodes[entry.eldernodePublicKey] = entry;
         }
@@ -1989,6 +2006,235 @@ bool EldernodeIndexManager::regenerateAllProofs() {
     
     logger(INFO) << "Regenerated proofs for all Eldernodes, success: " << success;
     return success;
+}
+
+// Constant stake proof management for cross-chain validation
+bool EldernodeIndexManager::createConstantStakeProof(const Crypto::PublicKey& publicKey, 
+                                                     ConstantStakeProofType proofType,
+                                                     const std::string& crossChainAddress,
+                                                     uint64_t stakeAmount) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_eldernodes.find(publicKey);
+    if (it == m_eldernodes.end()) {
+        logger(ERROR) << "Eldernode not found for constant proof creation: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    const auto& entry = it->second;
+    
+    // Only Elderfier nodes can create constant stake proofs
+    if (entry.tier != EldernodeTier::ELDERFIER) {
+        logger(ERROR) << "Only Elderfier nodes can create constant stake proofs: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    // Validate constant proof type
+    if (proofType == ConstantStakeProofType::NONE) {
+        logger(ERROR) << "Invalid constant proof type: NONE";
+        return false;
+    }
+    
+    // Check if constant proof type is enabled
+    if (proofType == ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR && 
+        !m_elderfierConfig.constantProofConfig.enableElderadoC0DL3Validator) {
+        logger(ERROR) << "Elderado C0DL3 validator constant proofs are disabled";
+        return false;
+    }
+    
+    // Validate stake amount
+    uint64_t requiredStake = m_elderfierConfig.constantProofConfig.getRequiredStakeAmount(proofType);
+    if (stakeAmount < requiredStake) {
+        logger(ERROR) << "Insufficient stake for constant proof: " << stakeAmount 
+                     << " < " << requiredStake << " required";
+        return false;
+    }
+    
+    // Check if Eldernode has sufficient total stake
+    if (entry.stakeAmount < stakeAmount) {
+        logger(ERROR) << "Eldernode total stake insufficient for constant proof: " 
+                     << entry.stakeAmount << " < " << stakeAmount;
+        return false;
+    }
+    
+    // Check for existing constant proof of same type
+    auto existingProofs = getConstantStakeProofs(publicKey);
+    for (const auto& existingProof : existingProofs) {
+        if (existingProof.constantProofType == proofType && !existingProof.isConstantProofExpired()) {
+            logger(ERROR) << "Constant proof of type " << static_cast<int>(proofType) 
+                         << " already exists for Eldernode: " << Common::podToHex(publicKey);
+            return false;
+        }
+    }
+    
+    // Create constant stake proof
+    uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    EldernodeStakeProof constantProof;
+    constantProof.eldernodePublicKey = publicKey;
+    constantProof.stakeAmount = stakeAmount;
+    constantProof.timestamp = timestamp;
+    constantProof.feeAddress = entry.feeAddress;
+    constantProof.tier = entry.tier;
+    constantProof.serviceId = entry.serviceId;
+    constantProof.constantProofType = proofType;
+    constantProof.crossChainAddress = crossChainAddress;
+    constantProof.constantStakeAmount = stakeAmount;
+    
+    // Set expiry based on configuration
+    if (m_elderfierConfig.constantProofConfig.constantProofValidityPeriod > 0) {
+        constantProof.constantProofExpiry = timestamp + m_elderfierConfig.constantProofConfig.constantProofValidityPeriod;
+    } else {
+        constantProof.constantProofExpiry = 0; // Never expires
+    }
+    
+    constantProof.stakeHash = calculateStakeHash(publicKey, stakeAmount, timestamp);
+    
+    // Generate signature
+    constantProof.proofSignature.resize(64, 0);
+    
+    // Add to stake proofs
+    m_stakeProofs[publicKey].push_back(constantProof);
+    m_lastUpdate = std::chrono::system_clock::now();
+    
+    std::string proofTypeName = (proofType == ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR) 
+                               ? "Elderado C0DL3 Validator" : "Unknown";
+    
+    logger(INFO) << "Created constant stake proof for " << proofTypeName 
+                << " - Eldernode: " << Common::podToHex(publicKey)
+                << " Amount: " << stakeAmount << " XFG"
+                << " Cross-chain address: " << crossChainAddress;
+    
+    return true;
+}
+
+bool EldernodeIndexManager::renewConstantStakeProof(const Crypto::PublicKey& publicKey, 
+                                                    ConstantStakeProofType proofType) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (!m_elderfierConfig.constantProofConfig.allowConstantProofRenewal) {
+        logger(ERROR) << "Constant proof renewal is disabled";
+        return false;
+    }
+    
+    auto it = m_eldernodes.find(publicKey);
+    if (it == m_eldernodes.end()) {
+        logger(ERROR) << "Eldernode not found for constant proof renewal: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    // Find existing constant proof
+    auto existingProofs = getConstantStakeProofs(publicKey);
+    EldernodeStakeProof* existingProof = nullptr;
+    
+    for (auto& proof : m_stakeProofs[publicKey]) {
+        if (proof.constantProofType == proofType) {
+            existingProof = &proof;
+            break;
+        }
+    }
+    
+    if (!existingProof) {
+        logger(ERROR) << "No existing constant proof of type " << static_cast<int>(proofType) 
+                     << " found for Eldernode: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    // Update timestamp and expiry
+    uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    existingProof->timestamp = timestamp;
+    existingProof->stakeHash = calculateStakeHash(publicKey, existingProof->stakeAmount, timestamp);
+    
+    if (m_elderfierConfig.constantProofConfig.constantProofValidityPeriod > 0) {
+        existingProof->constantProofExpiry = timestamp + m_elderfierConfig.constantProofConfig.constantProofValidityPeriod;
+    }
+    
+    m_lastUpdate = std::chrono::system_clock::now();
+    
+    std::string proofTypeName = (proofType == ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR) 
+                               ? "Elderado C0DL3 Validator" : "Unknown";
+    
+    logger(INFO) << "Renewed constant stake proof for " << proofTypeName 
+                << " - Eldernode: " << Common::podToHex(publicKey);
+    
+    return true;
+}
+
+bool EldernodeIndexManager::revokeConstantStakeProof(const Crypto::PublicKey& publicKey, 
+                                                     ConstantStakeProofType proofType) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_stakeProofs.find(publicKey);
+    if (it == m_stakeProofs.end()) {
+        logger(ERROR) << "No stake proofs found for Eldernode: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    // Find and remove constant proof
+    auto& proofs = it->second;
+    auto proofIt = proofs.begin();
+    bool found = false;
+    
+    while (proofIt != proofs.end()) {
+        if (proofIt->constantProofType == proofType) {
+            found = true;
+            std::string proofTypeName = (proofType == ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR) 
+                                       ? "Elderado C0DL3 Validator" : "Unknown";
+            
+            logger(INFO) << "Revoked constant stake proof for " << proofTypeName 
+                        << " - Eldernode: " << Common::podToHex(publicKey);
+            
+            proofIt = proofs.erase(proofIt);
+            break;
+        } else {
+            ++proofIt;
+        }
+    }
+    
+    if (!found) {
+        logger(ERROR) << "No constant proof of type " << static_cast<int>(proofType) 
+                     << " found for Eldernode: " << Common::podToHex(publicKey);
+        return false;
+    }
+    
+    m_lastUpdate = std::chrono::system_clock::now();
+    return true;
+}
+
+std::vector<EldernodeStakeProof> EldernodeIndexManager::getConstantStakeProofs(const Crypto::PublicKey& publicKey) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_stakeProofs.find(publicKey);
+    if (it == m_stakeProofs.end()) {
+        return {};
+    }
+    
+    std::vector<EldernodeStakeProof> constantProofs;
+    for (const auto& proof : it->second) {
+        if (proof.isConstantProof()) {
+            constantProofs.push_back(proof);
+        }
+    }
+    
+    return constantProofs;
+}
+
+std::vector<EldernodeStakeProof> EldernodeIndexManager::getConstantStakeProofsByType(ConstantStakeProofType proofType) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    std::vector<EldernodeStakeProof> constantProofs;
+    for (const auto& pair : m_stakeProofs) {
+        for (const auto& proof : pair.second) {
+            if (proof.constantProofType == proofType && proof.isConstantProof()) {
+                constantProofs.push_back(proof);
+            }
+        }
+    }
+    
+    return constantProofs;
 }
 
 // Slashing functionality
@@ -2093,6 +2339,31 @@ bool EldernodeIndexManager::validateStakeProof(const EldernodeStakeProof& proof)
     } else if (proof.tier == EldernodeTier::BASIC) {
         // Basic Eldernodes have no stake requirement
         if (proof.stakeAmount != 0) {
+            return false;
+        }
+    }
+    
+    // Validate constant proof if applicable
+    if (proof.isConstantProof()) {
+        // Check if constant proof type is enabled
+        if (proof.constantProofType == ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR && 
+            !m_elderfierConfig.constantProofConfig.enableElderadoC0DL3Validator) {
+            return false;
+        }
+        
+        // Validate constant stake amount
+        uint64_t requiredStake = m_elderfierConfig.constantProofConfig.getRequiredStakeAmount(proof.constantProofType);
+        if (proof.constantStakeAmount < requiredStake) {
+            return false;
+        }
+        
+        // Validate cross-chain address
+        if (proof.crossChainAddress.empty()) {
+            return false;
+        }
+        
+        // Check if constant proof is expired
+        if (proof.isConstantProofExpired()) {
             return false;
         }
     }

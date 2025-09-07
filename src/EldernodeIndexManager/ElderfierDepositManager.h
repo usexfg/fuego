@@ -23,12 +23,12 @@ struct SlashingRequest {
 
 // Slashing result structure
 struct SlashingResult {
-    bool success;
+    bool isSuccess;
     std::string message;
     uint64_t slashedAmount;
     
-    static SlashingResult success(const std::string& message, uint64_t amount = 0);
-    static SlashingResult failure(const std::string& message);
+    static SlashingResult createSuccess(const std::string& message, uint64_t amount = 0);
+    static SlashingResult createFailure(const std::string& message);
 };
 
 // Elderfier Deposit Manager

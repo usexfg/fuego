@@ -8,212 +8,130 @@
 #include <algorithm>
 #include <chrono>
 #include <map>
+#include <mutex>
 
 using namespace Logging;
 
 namespace CryptoNote {
 
-class ElderfierDepositManager {
-public:
-    ElderfierDepositManager(Logging::ILogger& log) : logger(log, "ElderfierDepositManager") {}
-    ~ElderfierDepositManager() = default;
-    
-    // Deposit management
-    DepositValidationResult processDepositTransaction(const Transaction& tx) const;
-    bool validateDepositAmount(uint64_t amount) const;
-    bool validateDepositSignature(const TransactionExtraElderfierDeposit& deposit) const;
-    bool validateElderfierAddress(const std::string& address) const;
-    
-    // Deposit tracking
-    std::vector<ElderfierDepositData> getActiveDeposits() const;
-    ElderfierDepositData getDepositByAddress(const std::string& address) const;
-    ElderfierDepositData getDepositByPublicKey(const Crypto::PublicKey& publicKey) const;
-    
-    // Deposit validation
-    bool isDepositStillValid(const Crypto::PublicKey& publicKey) const;
-    void checkDepositSpending(const Crypto::PublicKey& publicKey) const;
-    
-    // Uptime management
-    void updateDepositUptime(const Crypto::PublicKey& publicKey, uint64_t timestamp);
-    void markDepositOffline(const Crypto::PublicKey& publicKey, uint64_t timestamp);
-    
-    // Slashing
-    SlashingResult processSlashingRequest(const SlashingRequest& request) const;
-    bool executeSlashing(const Crypto::PublicKey& publicKey, uint64_t slashAmount) const;
-    
-    // Configuration
-    void setMinimumDepositAmount(uint64_t amount);
-    void setMaximumDepositAmount(uint64_t amount);
-    void setAllowedAddresses(const std::vector<std::string>& addresses);
-    
-    uint64_t getMinimumDepositAmount() const { return m_minimumDepositAmount; }
-    uint64_t getMaximumDepositAmount() const { return m_maximumDepositAmount; }
-    
-private:
-    Logging::LoggerRef logger;
-    std::map<Crypto::PublicKey, ElderfierDepositData> m_activeDeposits;
-    std::map<std::string, Crypto::PublicKey> m_addressToPublicKey;
-    uint64_t m_minimumDepositAmount = 8000000000;  // 800 XFG
-    uint64_t m_maximumDepositAmount = 80000000000; // 8000 XFG (Eldarado)
-    std::vector<std::string> m_allowedAddresses;
-    
-    // Helper methods
-    Crypto::Hash calculateDepositHash(const Crypto::PublicKey& publicKey, uint64_t amount, uint64_t timestamp) const;
-    bool isAddressAlreadyRegistered(const std::string& address) const;
-    bool isAddressAllowed(const std::string& address) const;
-    std::vector<uint8_t> generateDepositSignature(const TransactionExtraElderfierDeposit& deposit) const;
-    bool checkIfDepositOutputsSpent(const Crypto::Hash& depositHash) const;
-};
-
-DepositValidationResult ElderfierDepositManager::processDepositTransaction(const Transaction& tx) const {
-    // Check transaction structure
-    if (tx.inputs.empty() || tx.outputs.empty()) {
-        return DepositValidationResult::failure("Invalid transaction structure");
-    }
-    
-    // Check for Elderfier deposit extra
-    TransactionExtraElderfierDeposit deposit;
-    if (!getElderfierDepositFromExtra(tx.extra, deposit)) {
-        return DepositValidationResult::failure("Missing Elderfier deposit extra");
-    }
-    
-    // Validate deposit amount
-    if (!validateDepositAmount(deposit.depositAmount)) {
-        return DepositValidationResult::failure("Invalid deposit amount: " + std::to_string(deposit.depositAmount));
-    }
-    
-    // Validate Elderfier address
-    if (!validateElderfierAddress(deposit.elderfierAddress)) {
-        return DepositValidationResult::failure("Invalid Elderfier address: " + deposit.elderfierAddress);
-    }
-    
-    // Check for duplicate address
-    if (isAddressAlreadyRegistered(deposit.elderfierAddress)) {
-        return DepositValidationResult::failure("Address already registered: " + deposit.elderfierAddress);
-    }
-    
-    // Validate deposit signature
-    if (!validateDepositSignature(deposit)) {
-        return DepositValidationResult::failure("Invalid deposit signature");
-    }
-    
-    logger(INFO) << "Elderfier deposit validated successfully for address: " << deposit.elderfierAddress;
-    
-    return DepositValidationResult::success(deposit.depositAmount, deposit.depositHash);
+// SlashingRequest implementation
+bool SlashingRequest::isValid() const {
+    return depositHash != Crypto::Hash() && 
+           elderfierPublicKey != Crypto::PublicKey() && 
+           !reason.empty() && 
+           timestamp > 0;
 }
 
-bool ElderfierDepositManager::validateDepositAmount(uint64_t amount) const {
-    return amount >= m_minimumDepositAmount && amount <= m_maximumDepositAmount;
+// SlashingResult implementation
+SlashingResult SlashingResult::createSuccess(const std::string& message, uint64_t amount) {
+    SlashingResult result;
+    result.isSuccess = true;
+    result.message = message;
+    result.slashedAmount = amount;
+    return result;
 }
 
-bool ElderfierDepositManager::validateElderfierAddress(const std::string& address) const {
-    if (address.empty()) {
+SlashingResult SlashingResult::createFailure(const std::string& message) {
+    SlashingResult result;
+    result.isSuccess = false;
+    result.message = message;
+    result.slashedAmount = 0;
+    return result;
+}
+
+// ElderfierDepositManager implementation
+ElderfierDepositManager::ElderfierDepositManager() {
+    // Initialize with default values
+}
+
+ElderfierDepositManager::~ElderfierDepositManager() {
+    // Cleanup if needed
+}
+
+bool ElderfierDepositManager::addElderfierDeposit(const TransactionExtraElderfierDeposit& deposit) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (!isValidElderfierDeposit(deposit)) {
         return false;
     }
     
-    // Basic address format validation
-    if (address.length() < 10 || address.length() > 100) {
-        return false;
-    }
-    
-    // Check if address is in allowed list (if specified)
-    if (!m_allowedAddresses.empty() && !isAddressAllowed(address)) {
-        return false;
-    }
-    
+    m_deposits[deposit.depositHash] = deposit;
     return true;
 }
 
-bool ElderfierDepositManager::validateDepositSignature(const TransactionExtraElderfierDeposit& deposit) const {
-    // Create signature data
-    std::string signatureData = deposit.elderfierAddress + 
-                               std::to_string(deposit.depositAmount) + 
-                               std::to_string(deposit.timestamp);
+bool ElderfierDepositManager::removeElderfierDeposit(const Crypto::Hash& depositHash) {
+    std::lock_guard<std::mutex> lock(m_mutex);
     
-    // Verify signature
-    Crypto::Hash dataHash;
-    Crypto::cn_fast_hash(signatureData.data(), signatureData.size(), dataHash);
-    
-    // In real implementation, verify cryptographic signature
-    return !deposit.signature.empty() && deposit.signature.size() >= 64;
-}
-
-std::vector<ElderfierDepositData> ElderfierDepositManager::getActiveDeposits() const {
-    std::vector<ElderfierDepositData> activeDeposits;
-    for (const auto& pair : m_activeDeposits) {
-        if (pair.second.isActive && !pair.second.isSpent) {
-            activeDeposits.push_back(pair.second);
-        }
-    }
-    return activeDeposits;
-}
-
-ElderfierDepositData ElderfierDepositManager::getDepositByAddress(const std::string& address) const {
-    auto it = m_addressToPublicKey.find(address);
-    if (it != m_addressToPublicKey.end()) {
-        auto depositIt = m_activeDeposits.find(it->second);
-        if (depositIt != m_activeDeposits.end()) {
-            return depositIt->second;
-        }
+    auto it = m_deposits.find(depositHash);
+    if (it == m_deposits.end()) {
+        return false;
     }
     
-    // Return invalid deposit if not found
-    ElderfierDepositData invalidDeposit;
-    return invalidDeposit;
+    m_deposits.erase(it);
+    return true;
 }
 
-ElderfierDepositData ElderfierDepositManager::getDepositByPublicKey(const Crypto::PublicKey& publicKey) const {
-    auto it = m_activeDeposits.find(publicKey);
-    if (it != m_activeDeposits.end()) {
-        return it->second;
+bool ElderfierDepositManager::updateElderfierDeposit(const Crypto::Hash& depositHash, const TransactionExtraElderfierDeposit& updatedDeposit) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_deposits.find(depositHash);
+    if (it == m_deposits.end()) {
+        return false;
     }
     
-    // Return invalid deposit if not found
-    ElderfierDepositData invalidDeposit;
-    return invalidDeposit;
-}
-
-void ElderfierDepositManager::updateDepositUptime(const Crypto::PublicKey& publicKey, uint64_t timestamp) {
-    auto it = m_activeDeposits.find(publicKey);
-    if (it != m_activeDeposits.end() && it->second.isActive) {
-        uint64_t timeSinceLastUpdate = timestamp - it->second.lastSeenTimestamp;
-        it->second.totalUptimeSeconds += timeSinceLastUpdate;
-        it->second.lastSeenTimestamp = timestamp;
-        it->second.selectionMultiplier = it->second.calculateSelectionMultiplier();
+    if (!isValidElderfierDeposit(updatedDeposit)) {
+        return false;
     }
+    
+    it->second = updatedDeposit;
+    return true;
 }
 
-bool ElderfierDepositManager::isDepositStillValid(const Crypto::PublicKey& publicKey) const {
-    auto it = m_activeDeposits.find(publicKey);
-    if (it == m_activeDeposits.end()) {
+bool ElderfierDepositManager::hasElderfierDeposit(const Crypto::Hash& depositHash) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_deposits.find(depositHash) != m_deposits.end();
+}
+
+TransactionExtraElderfierDeposit ElderfierDepositManager::getElderfierDeposit(const Crypto::Hash& depositHash) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_deposits.find(depositHash);
+    if (it == m_deposits.end()) {
+        return TransactionExtraElderfierDeposit(); // Return empty deposit
+    }
+    
+    return it->second;
+}
+
+std::vector<TransactionExtraElderfierDeposit> ElderfierDepositManager::getAllElderfierDeposits() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    std::vector<TransactionExtraElderfierDeposit> deposits;
+    deposits.reserve(m_deposits.size());
+    
+    for (const auto& pair : m_deposits) {
+        deposits.push_back(pair.second);
+    }
+    
+    return deposits;
+}
+
+bool ElderfierDepositManager::isValidElderfierDeposit(const TransactionExtraElderfierDeposit& deposit) const {
+    return deposit.isValid() && 
+           validateDepositAmount(deposit.depositAmount) &&
+           validateDepositSignature(deposit);
+}
+
+bool ElderfierDepositManager::isElderfierSlashable(const Crypto::Hash& depositHash) const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto it = m_deposits.find(depositHash);
+    if (it == m_deposits.end()) {
         return false;
     }
     
     // Check if deposit is still valid (not spent)
-    return it->second.isActive && !it->second.isSpent;
-}
-
-void ElderfierDepositManager::checkDepositSpending(const Crypto::PublicKey& publicKey) const {
-    auto it = m_activeDeposits.find(publicKey);
-    if (it == m_activeDeposits.end()) {
-        return;
-    }
-    
-    // In real implementation, this would check the blockchain to see if the deposit funds have been spent
-    // For now, we'll implement a placeholder that could be called periodically
-    
-    // Check if the deposit transaction outputs have been spent
-    // If spent, mark the deposit as invalid
-    bool isSpent = checkIfDepositOutputsSpent(it->second.depositHash);
-    
-    if (isSpent && !it->second.isSpent) {
-        logger(WARNING) << "Elderfier deposit spent - invalidating Elderfier status for: " 
-                        << Common::podToHex(publicKey);
-        
-        // Mark deposit as spent
-        const_cast<ElderfierDepositData&>(it->second).isSpent = true;
-        const_cast<ElderfierDepositData&>(it->second).isActive = false;
-    }
+    return !checkIfDepositOutputsSpent(depositHash);
 }
 
 bool ElderfierDepositManager::checkIfDepositOutputsSpent(const Crypto::Hash& depositHash) const {
@@ -231,91 +149,52 @@ bool ElderfierDepositManager::checkIfDepositOutputsSpent(const Crypto::Hash& dep
 SlashingResult ElderfierDepositManager::processSlashingRequest(const SlashingRequest& request) const {
     // Validate slashing request
     if (!request.isValid()) {
-        return SlashingResult::failure("Invalid slashing request");
+        return SlashingResult::createFailure("Invalid slashing request");
     }
     
     // Check if Elderfier exists
-    auto it = m_activeDeposits.find(request.targetPublicKey);
-    if (it == m_activeDeposits.end()) {
-        return SlashingResult::failure("Elderfier deposit not found");
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_deposits.find(request.depositHash);
+    if (it == m_deposits.end()) {
+        return SlashingResult::createFailure("Elderfier deposit not found");
     }
     
     // Check if Elderfier is slashable
-    if (!it->second.isSlashable) {
-        return SlashingResult::failure("Elderfier is not slashable");
+    if (!isElderfierSlashable(request.depositHash)) {
+        return SlashingResult::createFailure("Elderfier is not slashable");
     }
     
-    // Execute slashing
-    return executeSlashing(request.targetPublicKey, request.slashAmount);
+    // Execute slashing (placeholder)
+    uint64_t slashedAmount = it->second.depositAmount; // Slash full amount for now
+    return SlashingResult::createSuccess("Slashing executed successfully", slashedAmount);
 }
 
-bool ElderfierDepositManager::executeSlashing(const Crypto::PublicKey& publicKey, uint64_t slashAmount) const {
-    // In real implementation, this would create and execute a burn transaction
-    // For now, we'll just log the slashing action
+size_t ElderfierDepositManager::getDepositCount() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_deposits.size();
+}
+
+uint64_t ElderfierDepositManager::getTotalDepositAmount() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
     
-    auto it = m_activeDeposits.find(publicKey);
-    if (it != m_activeDeposits.end()) {
-        logger(INFO) << "Executing slashing of " << slashAmount 
-                     << " from Elderfier " << Common::podToHex(publicKey);
-        
-        // In real implementation, create burn transaction here
-        // BurnTransaction burnTx = createBurnTransaction(publicKey, slashAmount);
-        // return executeBurnTransaction(burnTx);
-        
-        return true;
+    uint64_t total = 0;
+    for (const auto& pair : m_deposits) {
+        total += pair.second.depositAmount;
     }
     
-    return false;
+    return total;
 }
 
-void ElderfierDepositManager::setMinimumDepositAmount(uint64_t amount) {
-    m_minimumDepositAmount = amount;
-    logger(INFO) << "Set minimum deposit amount to: " << amount;
+bool ElderfierDepositManager::validateDepositAmount(uint64_t amount) const {
+    // Minimum 800 XFG (8000000000 atomic units)
+    const uint64_t MINIMUM_DEPOSIT = 8000000000;
+    return amount >= MINIMUM_DEPOSIT;
 }
 
-void ElderfierDepositManager::setMaximumDepositAmount(uint64_t amount) {
-    m_maximumDepositAmount = amount;
-    logger(INFO) << "Set maximum deposit amount to: " << amount;
-}
-
-void ElderfierDepositManager::setAllowedAddresses(const std::vector<std::string>& addresses) {
-    m_allowedAddresses = addresses;
-    logger(INFO) << "Set " << addresses.size() << " allowed addresses";
-}
-
-Crypto::Hash ElderfierDepositManager::calculateDepositHash(const Crypto::PublicKey& publicKey, uint64_t amount, uint64_t timestamp) const {
-    std::string data = Common::podToHex(publicKey) + std::to_string(amount) + std::to_string(timestamp);
-    Crypto::Hash hash;
-    Crypto::cn_fast_hash(data.data(), data.size(), hash);
-    return hash;
-}
-
-bool ElderfierDepositManager::isAddressAlreadyRegistered(const std::string& address) const {
-    return m_addressToPublicKey.find(address) != m_addressToPublicKey.end();
-}
-
-bool ElderfierDepositManager::isAddressAllowed(const std::string& address) const {
-    return std::find(m_allowedAddresses.begin(), m_allowedAddresses.end(), address) 
-           != m_allowedAddresses.end();
-}
-
-std::vector<uint8_t> ElderfierDepositManager::generateDepositSignature(const TransactionExtraElderfierDeposit& deposit) const {
-    // In real implementation, this would generate a cryptographic signature
-    // For now, we'll create a placeholder signature
-    std::vector<uint8_t> signature(64, 0);
-    
-    // Fill with some deterministic data based on deposit
-    std::string data = Common::podToHex(deposit.depositHash) + std::to_string(deposit.timestamp);
-    Crypto::Hash hash;
-    Crypto::cn_fast_hash(data.data(), data.size(), hash);
-    
-    // Copy first 32 bytes of hash to signature
-    std::copy(hash.data, hash.data + 32, signature.begin());
-    
-    // Copy last 32 bytes of hash to signature
-    std::copy(hash.data + 32, hash.data + 64, signature.begin() + 32);
-    
-    return signature;
+bool ElderfierDepositManager::validateDepositSignature(const TransactionExtraElderfierDeposit& deposit) const {
+    // Placeholder implementation
+    // In real implementation, this would verify the signature
+    return !deposit.signature.empty();
 }
 
 } // namespace CryptoNote

@@ -37,6 +37,118 @@ enum class EldernodeTier : uint8_t {
     ELDARADO = 2         // Eldarado validator (8000 XFG stake required)
 };
 
+// Security window configuration
+namespace SecurityWindow {
+    static const uint64_t DEFAULT_DURATION_SECONDS = 28800;      // 8 hours
+    static const uint64_t MINIMUM_SIGNATURE_INTERVAL = 3600;     // 1 hour minimum between signatures
+    static const uint64_t GRACE_PERIOD_SECONDS = 300;            // 5 minute grace period
+    static const uint64_t MAX_OFFLINE_TIME = 86400;              // 24 hours max offline
+}
+
+// Mempool buffer security window for spending transactions
+struct MempoolSecurityWindow {
+    Crypto::Hash transactionHash;        // Hash of spending transaction
+    Crypto::PublicKey elderfierPublicKey; // Elderfier attempting to spend
+    uint64_t timestamp;                  // When transaction entered buffer
+    uint64_t securityWindowEnd;          // When security window ends
+    bool signatureValidated;             // Whether last signature was valid
+    bool elderCouncilVoteRequired;       // Whether Elder Council vote is needed
+    std::vector<Crypto::PublicKey> votes; // Elder Council votes (for/against)
+    uint32_t requiredVotes;              // Required votes for quorum
+    uint32_t currentVotes;               // Current vote count
+    
+    bool isSecurityWindowActive() const;
+    bool hasQuorumReached() const;
+    bool canReleaseTransaction() const;
+    void addVote(const Crypto::PublicKey& voter);
+    std::string toString() const;
+};
+
+// Elder Council voting system
+struct ElderCouncilVote {
+    Crypto::PublicKey voterPublicKey;    // Elderfier who voted
+    Crypto::PublicKey targetPublicKey;   // Elderfier being voted on
+    bool voteFor;                        // true = allow spending, false = deny
+    uint64_t timestamp;                  // Vote timestamp
+    Crypto::Hash voteHash;               // Hash of vote data
+    std::vector<uint8_t> signature;      // Vote signature
+    
+    bool isValid() const;
+    Crypto::Hash calculateVoteHash() const;
+    std::string toString() const;
+};
+
+// Elder Council voting message (like email inbox)
+struct ElderCouncilVotingMessage {
+    Crypto::Hash messageId;              // Unique message ID
+    Crypto::PublicKey targetElderfier;   // Elderfier being voted on
+    std::string subject;                  // Subject line
+    std::string description;              // Detailed description of situation
+    uint64_t timestamp;                  // When message was created
+    uint64_t votingDeadline;             // When voting closes
+    bool isRead;                         // Whether Elderfier has read the message
+    bool hasVoted;                       // Whether Elderfier has voted on this
+    bool hasConfirmedVote;               // Whether Elderfier has confirmed their vote
+    ElderCouncilVoteType pendingVoteType; // Pending vote type (before confirmation)
+    ElderCouncilVoteType confirmedVoteType; // Confirmed vote type (after confirmation)
+    std::vector<ElderCouncilVote> votes;  // Votes cast so far
+    uint32_t requiredVotes;              // Required votes for quorum
+    uint32_t currentVotes;               // Current vote count
+    
+    bool isVotingActive() const;
+    bool hasQuorumReached() const;
+    std::string getVotingStatus() const;
+    std::string toString() const;
+};
+
+// Vote types for Elder Council decisions
+enum class ElderCouncilVoteType : uint8_t {
+    SLASH_ALL = 1,      // Slash/burn ALL of Elderfier's stake
+    SLASH_HALF = 2,      // Slash/burn HALF of Elderfier's stake  
+    SLASH_NONE = 3       // Slash/burn NONE of Elderfier's stake
+};
+
+// Misbehavior evidence for Elder Council voting
+struct MisbehaviorEvidence {
+    Crypto::PublicKey elderfierPublicKey; // Elderfier who misbehaved
+    uint32_t invalidSignatures;           // Number of invalid signatures
+    uint32_t totalAttempts;              // Total signature attempts
+    uint64_t firstInvalidSignature;      // Timestamp of first invalid signature
+    uint64_t lastInvalidSignature;      // Timestamp of last invalid signature
+    std::vector<Crypto::Hash> invalidSignatureHashes; // Hashes of invalid signatures
+    std::string misbehaviorType;        // Type of misbehavior (e.g., "Invalid Signatures")
+    std::string evidenceDescription;     // Detailed description of evidence
+    
+    bool isValid() const;
+    std::string getSummary() const;
+    std::string toString() const;
+};
+
+// Monitoring configuration
+struct ElderfierMonitoringConfig {
+    bool enableBlockBasedMonitoring;      // Monitor each block for 0x06 spending transactions
+    bool enableMempoolBuffer;            // Enable mempool security window buffer
+    bool enableElderCouncilVoting;        // Enable Elder Council voting system
+    uint64_t mempoolBufferDuration;      // How long to hold transactions in buffer (default: 8 hours)
+    uint32_t elderCouncilQuorumSize;     // Required votes for Elder Council quorum (default: 5)
+    uint64_t votingWindowDuration;      // How long voting window stays open (default: 24 hours)
+    
+    static ElderfierMonitoringConfig getDefault() {
+        ElderfierMonitoringConfig config;
+        config.enableBlockBasedMonitoring = true;  // Monitor each block
+        config.enableMempoolBuffer = true;          // Enable mempool buffer
+        config.enableElderCouncilVoting = true;     // Enable Elder Council voting
+        config.mempoolBufferDuration = 28800;        // 8 hours buffer
+        config.elderCouncilQuorumSize = 5;           // 5 votes for quorum
+        config.votingWindowDuration = 86400;         // 24 hours voting window
+        return config;
+    }
+    
+    bool isValid() const {
+        return elderCouncilQuorumSize > 0 && elderCouncilQuorumSize <= 20; // Max 20 votes
+    }
+};
+
 // Elderfier deposit data structure
 struct ElderfierDepositData {
     Crypto::Hash depositHash;
@@ -50,13 +162,29 @@ struct ElderfierDepositData {
     ElderfierServiceId serviceId;
     bool isActive;
     bool isSlashable;
+    bool isUnlocked;                 // Can be unlocked after security window
+    bool isSpent;                    // True if deposit funds have been spent
+    
+    // Security window fields
+    uint64_t lastSignatureTimestamp; // Last signature timestamp
+    uint64_t securityWindowEnd;      // When security window ends
+    uint64_t securityWindowDuration; // Duration of security window
+    bool isInSecurityWindow;         // Currently in security window
+    bool unlockRequested;            // Elderfier requested to unlock
+    uint64_t unlockRequestTimestamp; // When unlock was requested
     
     // Methods
     bool isValid() const;
     bool isOnline() const;
+    bool isDepositValid() const;     // Check if deposit is still valid (not spent)
+    bool canUnlock() const;          // Check if deposit can be unlocked (outside security window)
+    uint64_t getSecurityWindowRemaining() const; // Get remaining time in security window
     uint32_t calculateSelectionMultiplier() const;
     void updateUptime(uint64_t currentTimestamp);
     void markOffline(uint64_t currentTimestamp);
+    void markSpent();                // Mark deposit as spent (invalidates Elderfier status)
+    void updateLastSignature(uint64_t timestamp); // Update last signature timestamp
+    void requestUnlock(uint64_t timestamp);       // Request to unlock deposit
     std::string toString() const;
 };
 

@@ -99,6 +99,7 @@ struct TransactionExtraElderfierDeposit {
   std::string elderfierAddress;       // Elderfier wallet address
   std::vector<uint8_t> metadata;     // Additional metadata
   std::vector<uint8_t> signature;    // Deposit signature
+  bool isUnlocked;                   // Always true - deposits are immediately unlocked
   
   bool serialize(ISerializer& serializer);
   bool isValid() const;

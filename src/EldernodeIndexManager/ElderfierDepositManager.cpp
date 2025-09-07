@@ -28,6 +28,10 @@ public:
     ElderfierDepositData getDepositByAddress(const std::string& address) const;
     ElderfierDepositData getDepositByPublicKey(const Crypto::PublicKey& publicKey) const;
     
+    // Deposit validation
+    bool isDepositStillValid(const Crypto::PublicKey& publicKey) const;
+    void checkDepositSpending(const Crypto::PublicKey& publicKey) const;
+    
     // Uptime management
     void updateDepositUptime(const Crypto::PublicKey& publicKey, uint64_t timestamp);
     void markDepositOffline(const Crypto::PublicKey& publicKey, uint64_t timestamp);
@@ -57,6 +61,7 @@ private:
     bool isAddressAlreadyRegistered(const std::string& address) const;
     bool isAddressAllowed(const std::string& address) const;
     std::vector<uint8_t> generateDepositSignature(const TransactionExtraElderfierDeposit& deposit) const;
+    bool checkIfDepositOutputsSpent(const Crypto::Hash& depositHash) const;
 };
 
 DepositValidationResult ElderfierDepositManager::processDepositTransaction(const Transaction& tx) const {
@@ -135,7 +140,7 @@ bool ElderfierDepositManager::validateDepositSignature(const TransactionExtraEld
 std::vector<ElderfierDepositData> ElderfierDepositManager::getActiveDeposits() const {
     std::vector<ElderfierDepositData> activeDeposits;
     for (const auto& pair : m_activeDeposits) {
-        if (pair.second.isActive) {
+        if (pair.second.isActive && !pair.second.isSpent) {
             activeDeposits.push_back(pair.second);
         }
     }
@@ -177,12 +182,49 @@ void ElderfierDepositManager::updateDepositUptime(const Crypto::PublicKey& publi
     }
 }
 
-void ElderfierDepositManager::markDepositOffline(const Crypto::PublicKey& publicKey, uint64_t timestamp) {
+bool ElderfierDepositManager::isDepositStillValid(const Crypto::PublicKey& publicKey) const {
     auto it = m_activeDeposits.find(publicKey);
-    if (it != m_activeDeposits.end()) {
-        it->second.isActive = false;
-        it->second.lastSeenTimestamp = timestamp;
+    if (it == m_activeDeposits.end()) {
+        return false;
     }
+    
+    // Check if deposit is still valid (not spent)
+    return it->second.isActive && !it->second.isSpent;
+}
+
+void ElderfierDepositManager::checkDepositSpending(const Crypto::PublicKey& publicKey) const {
+    auto it = m_activeDeposits.find(publicKey);
+    if (it == m_activeDeposits.end()) {
+        return;
+    }
+    
+    // In real implementation, this would check the blockchain to see if the deposit funds have been spent
+    // For now, we'll implement a placeholder that could be called periodically
+    
+    // Check if the deposit transaction outputs have been spent
+    // If spent, mark the deposit as invalid
+    bool isSpent = checkIfDepositOutputsSpent(it->second.depositHash);
+    
+    if (isSpent && !it->second.isSpent) {
+        logger(WARNING) << "Elderfier deposit spent - invalidating Elderfier status for: " 
+                        << Common::podToHex(publicKey);
+        
+        // Mark deposit as spent
+        const_cast<ElderfierDepositData&>(it->second).isSpent = true;
+        const_cast<ElderfierDepositData&>(it->second).isActive = false;
+    }
+}
+
+bool ElderfierDepositManager::checkIfDepositOutputsSpent(const Crypto::Hash& depositHash) const {
+    // Placeholder implementation
+    // In real implementation, this would:
+    // 1. Find the deposit transaction by hash
+    // 2. Check if any of its outputs have been spent
+    // 3. Return true if any outputs are spent
+    
+    // For now, return false (not spent)
+    // This would be implemented with actual blockchain checking
+    return false;
 }
 
 SlashingResult ElderfierDepositManager::processSlashingRequest(const SlashingRequest& request) const {
@@ -273,6 +315,18 @@ std::vector<uint8_t> ElderfierDepositManager::generateDepositSignature(const Tra
     std::copy(hash.data + 32, hash.data + 64, signature.begin() + 32);
     
     return signature;
+}
+
+bool ElderfierDepositManager::checkIfDepositOutputsSpent(const Crypto::Hash& depositHash) const {
+    // Placeholder implementation
+    // In real implementation, this would:
+    // 1. Find the deposit transaction by hash
+    // 2. Check if any of its outputs have been spent
+    // 3. Return true if any outputs are spent
+    
+    // For now, return false (not spent)
+    // This would be implemented with actual blockchain checking
+    return false;
 }
 
 } // namespace CryptoNote

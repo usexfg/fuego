@@ -474,7 +474,7 @@ bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumSt
     
     // Method 1: Try to use existing wallet in daemon
     // TODO: Implement wallet-based stake verification
-    logger(INFO) << "Wallet-based stake verification - TODO: implement hasWallet() and verifyStakeWithDaemonWallet()";
+    // logger(INFO) << "Wallet-based stake verification - TODO: implement hasWallet() and verifyStakeWithDaemonWallet()";
     
     // Method 2: Try proof-of-stake verification
     return verifyMinimumStakeWithProof(address, minimumStake);
@@ -527,6 +527,7 @@ bool verifyStakeWithDaemonWallet(const CryptoNote::AccountPublicAddress& acc,
     return false; // Error during verification
   }
 }
+}
 
 bool command_line_preprocessor(const boost::program_options::variables_map &vm, LoggerRef &logger) {
   bool exit = false;
@@ -546,27 +547,4 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
   }
 
   return false;
-}
-
-// Stake verification function implementations
-bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumStake, 
-                                 const CryptoNote::core& ccore, const CryptoNote::Currency& currency) {
-  // TODO: Implement wallet-based stake verification
-  // This would check the wallet balance for the given address
-  logger(INFO) << "verifyMinimumStakeWithWallet - TODO: implement wallet balance checking for address: " << address;
-  return false; // Placeholder - always return false for now
-}
-
-bool verifyMinimumStakeWithProof(const std::string& address, uint64_t minimumStake) {
-  // TODO: Implement proof-based stake verification
-  // This would verify stake using cryptographic proofs
-  logger(INFO) << "verifyMinimumStakeWithProof - TODO: implement proof-based verification for address: " << address;
-  return false; // Placeholder - always return false for now
-}
-
-bool verifyMinimumStakeWithExternalService(const std::string& address, uint64_t minimumStake) {
-  // TODO: Implement external service stake verification
-  // This would query an external service to verify stake
-  logger(INFO) << "verifyMinimumStakeWithExternalService - TODO: implement external service verification for address: " << address;
-  return false; // Placeholder - always return false for now
 }

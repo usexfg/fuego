@@ -1,4 +1,5 @@
-# Fuego's 𝞝lderfiers: Comprehensive Guide to On-Chain Input Verifiers
+# Fuego's 𝞝lderfiers: 
+## A Comprehensive Guide to On-Chain Verifiers
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -43,27 +44,29 @@
 ### System Components
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Fuego Blockchain                         │
-├─────────────────────────────────────────────────────────────┤
+┌───────────────────────────────────────────────────────────┐
+│                    Fuego Blockchain                       │
+├───────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   Basic     │  │ Elderfier   │  │ Elderfier   │        │
-│  │ Eldernodes  │  │   Nodes     │  │   Nodes     │        │
-│  │ (0 XFG)     │  │ (800+ XFG)  │  │ (800+ XFG)  │        │
+│  │   Basic     │  │ Eldernode   │  │ Elderfier   │        │
+│  │ Fuego node  │  │  Txn Node   │  │   Nodes     │        │
+│  │  (0 XFG)    │  │  (0 XFG)    │  │ (800 XFG)   │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
-├─────────────────────────────────────────────────────────────┤
-│              EldernodeIndexManager                          │
+├───────────────────────────────────────────────────────────┤
+├───────────────────────────────────────────────────────────┤
+├───────────────────────────────────────────────────────────┤
+│              EldernodeIndexManager                        │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
 │  │   Service   │  │   Stake     │  │ Consensus   │        │
 │  │ ID Manager  │  │ Verifier    │  │ Manager     │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
-├─────────────────────────────────────────────────────────────┤
-│              On-Chain Verification Layer                    │
+├───────────────────────────────────────────────────────────┤
+│              On-Chain Verification Layer                  │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
 │  │ Transaction │  │   Proof     │  │ Consensus   │        │
 │  │ Validator   │  │ Generator   │  │ Verifier    │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
-└─────────────────────────────────────────────────────────────┘
+└───────────────────────────────────────────────────────────┘
 ```
 
 ### Data Flow
@@ -88,13 +91,13 @@ User Transaction → Basic Validation → Elderfier Verification → Consensus F
 #### Basic Eldernodes
 - **Stake**: 0 XFG (fee address only)
 - **Service ID**: Public wallet address
-- **Functionality**: Basic network operations
+- **Functionality**: Basic remote network service operations
 - **Consensus**: Standard participation
 
 #### 𝞝lderfier Nodes
 - **Stake**: 800 XFG minimum
 - **Service ID**: Flexible options (custom name, hashed address, standard address)
-- **Functionality**: Advanced verification, consensus leadership
+- **Functionality**: Advanced verification, consensus leadership, & remote services
 - **Consensus**: Prioritized participation
 
 ---
@@ -106,7 +109,7 @@ User Transaction → Basic Validation → Elderfier Verification → Consensus F
 ### 1. Custom Name (Exactly 8 Letters, All Caps)
 
 ```cpp
-ElderfierServiceId serviceId = ElderfierServiceId::createCustomName("FUEGONOD", walletAddress);
+ElderfierServiceId serviceId = ElderfierServiceId::createCustomName("FIRENODE", walletAddress);
 ```
 
 **Features:**
@@ -127,9 +130,9 @@ ElderfierServiceId serviceId = ElderfierServiceId::createCustomName("FUEGONOD", 
 ```cpp
 ENindexEntry entry;
 entry.tier = EldernodeTier::ELDERFIER;
-entry.serviceId = ElderfierServiceId::createCustomName("MYNODE", "FUEGO123456789abcdef");
-// Service ID: "MYNODE" (padded to 8 letters if needed)
-// Linked Address: "FUEGO123456789abcdef"
+entry.serviceId = ElderfierServiceId::createCustomName("LONGCLAW", "fire123456789abcdef");
+// Service ID: "MYNODEGG" (padded to 8 letters if needed)
+// Linked Address: "fire123456789abcdef"
 ```
 
 ### 2. Hashed Public Fee Address (Privacy Option)
@@ -152,13 +155,13 @@ entry.tier = EldernodeTier::ELDERFIER;
 entry.serviceId = ElderfierServiceId::createHashedAddress("FUEGO123456789abcdef");
 // Service ID: "a1b2c3d4e5f6..." (64-character hash)
 // Display Name: "FUEG...def"
-// Linked Address: "FUEGO123456789abcdef"
+// Linked Address: "fire123456789abcdef"
 ```
 
 ### 3. Standard Address (Like Basic Eldernodes)
 
 ```cpp
-ElderfierServiceId serviceId = ElderfierServiceId::createStandardAddress("FUEGO123456789abcdef");
+ElderfierServiceId serviceId = ElderfierServiceId::createStandardAddress("fire123456789abcdef");
 ```
 
 **Features:**
@@ -487,10 +490,10 @@ EldernodeIndexManager manager;
 
 ENindexEntry elderfierEntry;
 Crypto::generate_keys(elderfierEntry.eldernodePublicKey, elderfierEntry.eldernodeSecretKey);
-elderfierEntry.feeAddress = "FUEGO987654321fedcba";
+elderfierEntry.feeAddress = "fire987654321fedcba";
 elderfierEntry.stakeAmount = 800000000; // 800 XFG minimum
 elderfierEntry.tier = EldernodeTier::ELDERFIER;
-elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FUEGONOD", "FUEGO987654321fedcba");
+elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FIRENODE", "FUEGO987654321fedcba");
 elderfierEntry.isActive = true;
 
 bool success = manager.addEldernode(elderfierEntry);
@@ -501,7 +504,7 @@ bool success = manager.addEldernode(elderfierEntry);
 ```cpp
 ENindexEntry privacyEntry;
 Crypto::generate_keys(privacyEntry.eldernodePublicKey, privacyEntry.eldernodeSecretKey);
-privacyEntry.feeAddress = "FUEGO555666777888999";
+privacyEntry.feeAddress = "fire555666777888999";
 privacyEntry.stakeAmount = 1000000000; // 1000 XFG
 privacyEntry.tier = EldernodeTier::ELDERFIER;
 privacyEntry.serviceId = ElderfierServiceId::createHashedAddress("FUEGO555666777888999");
@@ -530,7 +533,7 @@ bool success = manager.addEldernode(basicEntry);
 auto elderfierNodes = manager.getElderfierNodes();
 
 // Get specific 𝞝lderfier by service ID
-auto serviceId = ElderfierServiceId::createCustomName("FUEGONOD", "FUEGO987654321fedcba");
+auto serviceId = ElderfierServiceId::createCustomName("FIRENODE", "fire987654321fedcba");
 auto node = manager.getEldernodeByServiceId(serviceId);
 
 // Get statistics

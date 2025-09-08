@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 Fuego Developers
+// Copyright (c) 2019-2025 Elderfire Privacy Group
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers

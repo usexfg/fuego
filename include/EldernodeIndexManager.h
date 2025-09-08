@@ -202,17 +202,7 @@ public:
     bool generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress);
     bool regenerateAllProofs();
     
-    // Constant stake proof management for cross-chain validation
-    bool createConstantStakeProof(const Crypto::PublicKey& publicKey, 
-                                  ConstantStakeProofType proofType,
-                                  const std::string& crossChainAddress,
-                                  uint64_t stakeAmount);
-    bool renewConstantStakeProof(const Crypto::PublicKey& publicKey, 
-                                 ConstantStakeProofType proofType);
-    bool revokeConstantStakeProof(const Crypto::PublicKey& publicKey, 
-                                 ConstantStakeProofType proofType);
-    std::vector<EldernodeStakeProof> getConstantStakeProofs(const Crypto::PublicKey& publicKey) const;
-    std::vector<EldernodeStakeProof> getConstantStakeProofsByType(ConstantStakeProofType proofType) const;
+    // Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers
     
     // Slashing functionality
     bool slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) override;
@@ -221,7 +211,7 @@ private:
     Logging::LoggerRef logger;
     mutable std::mutex m_mutex;
     std::unordered_map<Crypto::PublicKey, ENindexEntry> m_eldernodes;
-    std::unordered_map<Crypto::PublicKey, std::vector<EldernodeStakeProof>> m_stakeProofs;
+    // Note: m_stakeProofs removed - now using 0x06 tag deposits for Elderfiers
     std::unordered_map<Crypto::PublicKey, EldernodeConsensusParticipant> m_consensusParticipants;
     ConsensusThresholds m_consensusThresholds;
     ElderfierServiceConfig m_elderfierConfig;
@@ -253,7 +243,7 @@ private:
     
     // Helper methods
     bool validateEldernodeEntry(const ENindexEntry& entry) const;
-    bool validateStakeProof(const EldernodeStakeProof& proof) const;
+    // Note: validateStakeProof removed - now using 0x06 tag deposits for Elderfiers
     bool validateElderfierServiceId(const ElderfierServiceId& serviceId) const;
     bool hasServiceIdConflict(const ElderfierServiceId& serviceId, const Crypto::PublicKey& excludeKey) const;
     Crypto::Hash calculateStakeHash(const Crypto::PublicKey& publicKey, uint64_t amount, uint64_t timestamp) const;

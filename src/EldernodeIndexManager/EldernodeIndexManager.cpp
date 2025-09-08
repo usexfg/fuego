@@ -99,7 +99,7 @@ bool EldernodeIndexManager::removeEldernode(const Crypto::PublicKey& publicKey) 
     logger(INFO) << "Removing " << tierName << " Eldernode: " << Common::podToHex(publicKey);
     
     m_eldernodes.erase(it);
-    m_stakeProofs.erase(publicKey);
+    // Note: m_stakeProofs removed - now using 0x06 tag deposits for Elderfiers
     m_consensusParticipants.erase(publicKey);
     m_lastUpdate = std::chrono::system_clock::now();
     
@@ -1838,13 +1838,7 @@ bool EldernodeIndexManager::saveToStorage() {
                 file.write(entry.serviceId.hashedAddress.c_str(), hashedAddressSize);
             }
             
-            // Write constant stake proof data
-            file.write(reinterpret_cast<const char*>(&entry.constantProofType), sizeof(entry.constantProofType));
-            uint32_t crossChainAddressSize = static_cast<uint32_t>(entry.crossChainAddress.size());
-            file.write(reinterpret_cast<const char*>(&crossChainAddressSize), sizeof(crossChainAddressSize));
-            file.write(entry.crossChainAddress.c_str(), crossChainAddressSize);
-            file.write(reinterpret_cast<const char*>(&entry.constantStakeAmount), sizeof(entry.constantStakeAmount));
-            file.write(reinterpret_cast<const char*>(&entry.constantProofExpiry), sizeof(entry.constantProofExpiry));
+            // Note: Constant stake proof serialization removed - now using 0x06 tag deposits for Elderfiers
         }
         
         logger(INFO) << "Saved " << eldernodeCount << " Eldernodes to storage";
@@ -1904,14 +1898,7 @@ bool EldernodeIndexManager::loadFromStorage() {
                 file.read(&entry.serviceId.hashedAddress[0], hashedAddressSize);
             }
             
-            // Read constant stake proof data
-            file.read(reinterpret_cast<char*>(&entry.constantProofType), sizeof(entry.constantProofType));
-            uint32_t crossChainAddressSize;
-            file.read(reinterpret_cast<char*>(&crossChainAddressSize), sizeof(crossChainAddressSize));
-            entry.crossChainAddress.resize(crossChainAddressSize);
-            file.read(&entry.crossChainAddress[0], crossChainAddressSize);
-            file.read(reinterpret_cast<char*>(&entry.constantStakeAmount), sizeof(entry.constantStakeAmount));
-            file.read(reinterpret_cast<char*>(&entry.constantProofExpiry), sizeof(entry.constantProofExpiry));
+            // Note: Constant stake proof deserialization removed - now using 0x06 tag deposits for Elderfiers
             
             m_eldernodes[entry.eldernodePublicKey] = entry;
         }
@@ -1928,7 +1915,7 @@ bool EldernodeIndexManager::clearStorage() {
     std::lock_guard<std::mutex> lock(m_mutex);
     
     m_eldernodes.clear();
-    m_stakeProofs.clear();
+    // Note: m_stakeProofs removed - now using 0x06 tag deposits for Elderfiers
     m_consensusParticipants.clear();
     m_lastUpdate = std::chrono::system_clock::now();
     
@@ -1956,6 +1943,8 @@ ElderfierServiceConfig EldernodeIndexManager::getElderfierConfig() const {
     return m_elderfierConfig;
 }
 
+// Note: generateFreshProof removed - now using 0x06 tag deposits for Elderfiers
+/*
 bool EldernodeIndexManager::generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress) {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -1981,7 +1970,8 @@ bool EldernodeIndexManager::generateFreshProof(const Crypto::PublicKey& publicKe
     // Generate signature (placeholder for now)
     proof.proofSignature.resize(64, 0);
     
-    m_stakeProofs[publicKey].push_back(proof);
+    // Note: m_stakeProofs removed - now using 0x06 tag deposits for Elderfiers
+    // m_stakeProofs[publicKey].push_back(proof);
     m_lastUpdate = std::chrono::system_clock::now();
     
     std::string tierName = (entry.tier == EldernodeTier::ELDERFIER) ? "Basic" : "Elderfier";
@@ -1989,21 +1979,25 @@ bool EldernodeIndexManager::generateFreshProof(const Crypto::PublicKey& publicKe
     
     return true;
 }
+*/
 
 bool EldernodeIndexManager::regenerateAllProofs() {
     std::lock_guard<std::mutex> lock(m_mutex);
     
     bool success = true;
     for (const auto& pair : m_eldernodes) {
-        if (!generateFreshProof(pair.first, pair.second.feeAddress)) {
-            success = false;
-        }
+        // Note: generateFreshProof removed - now using 0x06 tag deposits for Elderfiers
+        // if (!generateFreshProof(pair.first, pair.second.feeAddress)) {
+        //     success = false;
+        // }
     }
     
     logger(INFO) << "Regenerated proofs for all Eldernodes, success: " << success;
     return success;
 }
 
+// Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers
+/*
 // Constant stake proof management for cross-chain validation
 bool EldernodeIndexManager::createConstantStakeProof(const Crypto::PublicKey& publicKey, 
                                                      ConstantStakeProofType proofType,
@@ -2372,6 +2366,7 @@ bool EldernodeIndexManager::validateStakeProof(const EldernodeStakeProof& proof)
     
     return true;
 }
+*/
 
 bool EldernodeIndexManager::validateElderfierServiceId(const ElderfierServiceId& serviceId) const {
     if (!serviceId.isValid()) {

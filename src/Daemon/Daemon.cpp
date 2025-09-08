@@ -77,6 +77,59 @@ namespace
   const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
     "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag.", false};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
+
+  // Implementations of stake verification functions
+  bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumStake, 
+                                   const CryptoNote::core& ccore, const CryptoNote::Currency& currency) {
+    try {
+      // Parse the address
+      CryptoNote::AccountPublicAddress acc = boost::value_initialized<CryptoNote::AccountPublicAddress>();
+      if (!currency.parseAccountAddressString(address, acc)) {
+        return false; // Invalid address
+      }
+      
+      // For private blockchain, we need wallet access to verify balance
+      // This requires the daemon to have access to the wallet for this address
+      
+      // Method 1: Try to use existing wallet in daemon
+      // TODO: Implement wallet-based stake verification
+      // logger(INFO) << "Wallet-based stake verification - TODO: implement hasWallet() and verifyStakeWithDaemonWallet()";
+      
+      // Method 2: Try proof-of-stake verification
+      return verifyMinimumStakeWithProof(address, minimumStake);
+      
+    } catch (const std::exception& e) {
+      return false; // Error during verification
+    }
+  }
+
+  bool verifyMinimumStakeWithProof(const std::string& address, uint64_t minimumStake) {
+    try {
+      // Alternative method: Generate a small proof of stake
+      // This proves sufficient funds exist without revealing exact balance
+      
+      // For now, return true to allow service to start
+      // TODO: Implement actual proof-of-stake verification
+      return true;
+      
+    } catch (const std::exception& e) {
+      return false; // Error during verification
+    }
+  }
+
+  bool verifyMinimumStakeWithExternalService(const std::string& address, uint64_t minimumStake) {
+    try {
+      // Alternative method: Query external balance service
+      // This requires network connectivity and trust in external service
+      
+      // For now, return true to allow service to start
+      // TODO: Implement external balance service integration
+      return true;
+      
+    } catch (const std::exception& e) {
+      return false; // Error during verification
+    }
+  }
 }
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
@@ -459,75 +512,76 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-// Stake verification implementation for private blockchain
-bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumStake, 
-                                 const CryptoNote::core& ccore, const CryptoNote::Currency& currency) {
-  try {
-    // Parse the address
-    CryptoNote::AccountPublicAddress acc = boost::value_initialized<CryptoNote::AccountPublicAddress>();
-    if (!currency.parseAccountAddressString(address, acc)) {
-      return false; // Invalid address
+// Note: Stake verification implementations moved inside anonymous namespace
+/*
+  bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumStake, 
+                                   const CryptoNote::core& ccore, const CryptoNote::Currency& currency) {
+    try {
+      // Parse the address
+      CryptoNote::AccountPublicAddress acc = boost::value_initialized<CryptoNote::AccountPublicAddress>();
+      if (!currency.parseAccountAddressString(address, acc)) {
+        return false; // Invalid address
+      }
+      
+      // For private blockchain, we need wallet access to verify balance
+      // This requires the daemon to have access to the wallet for this address
+      
+      // Method 1: Try to use existing wallet in daemon
+      // TODO: Implement wallet-based stake verification
+      // logger(INFO) << "Wallet-based stake verification - TODO: implement hasWallet() and verifyStakeWithDaemonWallet()";
+      
+      // Method 2: Try proof-of-stake verification
+      return verifyMinimumStakeWithProof(address, minimumStake);
+      
+    } catch (const std::exception& e) {
+      return false; // Error during verification
     }
-    
-    // For private blockchain, we need wallet access to verify balance
-    // This requires the daemon to have access to the wallet for this address
-    
-    // Method 1: Try to use existing wallet in daemon
-    // TODO: Implement wallet-based stake verification
-    // logger(INFO) << "Wallet-based stake verification - TODO: implement hasWallet() and verifyStakeWithDaemonWallet()";
-    
-    // Method 2: Try proof-of-stake verification
-    return verifyMinimumStakeWithProof(address, minimumStake);
-    
-  } catch (const std::exception& e) {
-    return false; // Error during verification
   }
-}
 
-bool verifyMinimumStakeWithProof(const std::string& address, uint64_t minimumStake) {
-  try {
-    // Alternative method: Generate a small proof of stake
-    // This proves sufficient funds exist without revealing exact balance
-    
-    // For now, return true to allow service to start
-    // TODO: Implement actual proof-of-stake verification
-    return true;
-    
-  } catch (const std::exception& e) {
-    return false; // Error during verification
+  bool verifyMinimumStakeWithProof(const std::string& address, uint64_t minimumStake) {
+    try {
+      // Alternative method: Generate a small proof of stake
+      // This proves sufficient funds exist without revealing exact balance
+      
+      // For now, return true to allow service to start
+      // TODO: Implement actual proof-of-stake verification
+      return true;
+      
+    } catch (const std::exception& e) {
+      return false; // Error during verification
+    }
   }
-}
 
-bool verifyMinimumStakeWithExternalService(const std::string& address, uint64_t minimumStake) {
-  try {
-    // Alternative method: Query external balance service
-    // This requires network connectivity and trust in external service
-    
-    // For now, return true to allow service to start
-    // TODO: Implement external balance service integration
-    return true;
-    
-  } catch (const std::exception& e) {
-    return false; // Error during verification
+  bool verifyMinimumStakeWithExternalService(const std::string& address, uint64_t minimumStake) {
+    try {
+      // Alternative method: Query external balance service
+      // This requires network connectivity and trust in external service
+      
+      // For now, return true to allow service to start
+      // TODO: Implement external balance service integration
+      return true;
+      
+    } catch (const std::exception& e) {
+      return false; // Error during verification
+    }
   }
-}
 
-// Helper function for daemon wallet verification
-bool verifyStakeWithDaemonWallet(const CryptoNote::AccountPublicAddress& acc, 
-                                uint64_t minimumStake, const CryptoNote::core& ccore) {
-  try {
-    // This would need to be implemented based on the daemon's wallet capabilities
-    // For now, return true to allow service to start
-    // TODO: Implement actual wallet-based balance checking
-    
-    // Placeholder implementation
-    return true;
-    
-  } catch (const std::exception& e) {
-    return false; // Error during verification
+  // Helper function for daemon wallet verification
+  bool verifyStakeWithDaemonWallet(const CryptoNote::AccountPublicAddress& acc, 
+                                  uint64_t minimumStake, const CryptoNote::core& ccore) {
+    try {
+      // This would need to be implemented based on the daemon's wallet capabilities
+      // For now, return true to allow service to start
+      // TODO: Implement actual wallet-based balance checking
+      
+      // Placeholder implementation
+      return true;
+      
+    } catch (const std::exception& e) {
+      return false; // Error during verification
+    }
   }
-}
-}
+*/
 
 bool command_line_preprocessor(const boost::program_options::variables_map &vm, LoggerRef &logger) {
   bool exit = false;

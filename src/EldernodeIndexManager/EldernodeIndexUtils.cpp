@@ -132,6 +132,8 @@ ElderfierServiceId ElderfierServiceId::createHashedAddress(const std::string& ad
     return serviceId;
 }
 
+// Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers
+/*
 // EldernodeStakeProof implementations
 bool EldernodeStakeProof::isValid() const {
     return !feeAddress.empty() && 
@@ -180,6 +182,7 @@ std::string EldernodeStakeProof::toString() const {
     oss << "}";
     return oss.str();
 }
+*/
 
 // EldernodeConsensusParticipant implementations
 bool EldernodeConsensusParticipant::operator==(const EldernodeConsensusParticipant& other) const {
@@ -228,27 +231,11 @@ bool ENindexEntry::operator==(const ENindexEntry& other) const {
            registrationTimestamp == other.registrationTimestamp &&
            isActive == other.isActive &&
            tier == other.tier &&
-           serviceId.identifier == other.serviceId.identifier &&
-           constantProofType == other.constantProofType &&
-           crossChainAddress == other.crossChainAddress &&
-           constantStakeAmount == other.constantStakeAmount &&
-           constantProofExpiry == other.constantProofExpiry;
+           serviceId.identifier == other.serviceId.identifier;
+           // Note: Old stake proof field comparisons removed - now using 0x06 tag deposits for Elderfiers
 }
 
-bool ENindexEntry::hasConstantProof() const {
-    return constantProofType != ConstantStakeProofType::NONE;
-}
-
-bool ENindexEntry::isConstantProofExpired() const {
-    if (!hasConstantProof() || constantProofExpiry == 0) {
-        return false; // No expiry for non-constant proofs or never-expiring proofs
-    }
-    
-    uint64_t currentTime = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    
-    return currentTime > constantProofExpiry;
-}
+// Note: hasConstantProof and isConstantProofExpired removed - now using 0x06 tag deposits for Elderfiers
 
 bool ENindexEntry::operator<(const ENindexEntry& other) const {
     // Elderfier nodes have higher priority
@@ -316,6 +303,8 @@ bool SlashingConfig::isValid() const {
            (destination == SlashingDestination::BURN || !destinationAddress.empty());
 }
 
+// Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers
+/*
 // ConstantStakeProofConfig implementations
 ConstantStakeProofConfig ConstantStakeProofConfig::getDefault() {
     ConstantStakeProofConfig config;
@@ -342,6 +331,7 @@ uint64_t ConstantStakeProofConfig::getRequiredStakeAmount(ConstantStakeProofType
             return 0;
     }
 }
+*/
 
 // ElderfierServiceConfig implementations
 ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
@@ -354,15 +344,15 @@ ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
         "SERVER", "CLIENT", "MASTER", "SLAVE", "BACKUP", "CACHE", "DB", "API", "WEB", "APP"
     };
     config.slashingConfig = SlashingConfig::getDefault();
-    config.constantProofConfig = ConstantStakeProofConfig::getDefault();
+    // Note: constantProofConfig removed - now using 0x06 tag deposits for Elderfiers
     return config;
 }
 
 bool ElderfierServiceConfig::isValid() const {
     return minimumStakeAmount > 0 && 
            customNameLength == 8 && // Must be exactly 8
-           slashingConfig.isValid() &&
-           constantProofConfig.isValid();
+           slashingConfig.isValid();
+           // Note: constantProofConfig removed - now using 0x06 tag deposits for Elderfiers
 }
 
 bool ElderfierServiceConfig::isCustomNameReserved(const std::string& name) const {

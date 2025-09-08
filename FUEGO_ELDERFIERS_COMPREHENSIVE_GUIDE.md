@@ -23,18 +23,19 @@
 **𝞝lderfiers** are Fuego's advanced on-chain input verifiers that represent a higher tier of Eldernodes in the Fuego blockchain ecosystem. They serve as distributed validators that provide cryptographic verification of blockchain transactions, particularly for cross-chain operations like the HEAT bridge system.
 
 ### Key Characteristics
-- **Higher Tier**: Require 800 XFG minimum stake (vs. 0 XFG for basic Eldernodes)
+- **Higher Tier**: Require 800 XFG minimum deposit (vs. 0 XFG for basic Eldernodes)
+- **Deposit-Based System**: Uses 0x06 tag transactions for immediate unlock with spending validation
 - **Flexible Service Identification**: Support custom names, hashed addresses, or standard addresses
 - **On-Chain Verification**: Provide cryptographic proofs for transaction validation
-- **Consensus Participation**: Participate in distributed consensus mechanisms
-- **Enhanced Security**: Multi-layered validation with stake-based incentives
+- **Fast Consensus**: 2/2 fastpass with 4/5 fallback for robust validation
+- **Enhanced Security**: Multi-layered validation with deposit-based incentives and Elder Council voting
 
 ### Core Purpose
 𝞝lderfiers act as **on-chain input verifiers** by:
 1. **Validating Transaction Data**: Cryptographically verify transaction integrity
 2. **Forming Consensus**: Participate in distributed consensus for critical operations
 3. **Generating Proofs**: Create verifiable proofs for cross-chain operations
-4. **Maintaining Security**: Provide stake-based security guarantees
+4. **Maintaining Security**: Provide deposit-based security guarantees with Elder Council governance
 
 ---
 
@@ -50,11 +51,12 @@
 │  │   Basic     │  │ Elderfier   │  │ Elderfier   │        │
 │  │ Eldernodes  │  │   Nodes     │  │   Nodes     │        │
 │  │ (0 XFG)     │  │ (800+ XFG)  │  │ (800+ XFG)  │        │
+│  │             │  │ 0x06 Tag   │  │ 0x06 Tag   │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
 ├─────────────────────────────────────────────────────────────┤
 │              EldernodeIndexManager                          │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │   Service   │  │   Stake     │  │ Consensus   │        │
+│  │   Service   │  │  Deposit    │  │ Consensus   │        │
 │  │ ID Manager  │  │ Verifier    │  │ Manager     │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
 ├─────────────────────────────────────────────────────────────┤
@@ -78,24 +80,28 @@ User Transaction → Basic Validation → Elderfier Verification → Consensus F
 
 ### Eldernode Tiers
 
-| Tier | Minimum Stake | Service ID Options | Priority | Use Case |
-|------|---------------|-------------------|----------|----------|
-| **Basic** | **0 XFG** | Public wallet address only | Standard | Basic network participation |
-| **𝞝lderfier** | **800 XFG** | Custom name, hashed address, or standard address | **High** | Advanced verification and consensus |
+| Tier | Minimum Deposit | Deposit Type | Service ID Options | Priority | Use Case |
+|------|----------------|--------------|-------------------|----------|----------|
+| **Basic** | **0 XFG** | None | Public wallet address only | Standard | Basic network participation |
+| **𝞝lderfier** | **800 XFG** | 0x06 Tag Transaction | Custom name, hashed address, or standard address | **High** | Advanced verification and consensus |
 
 ### Tier Requirements
 
 #### Basic Eldernodes
-- **Stake**: 0 XFG (fee address only)
+- **Deposit**: 0 XFG (fee address only)
+- **Deposit Type**: None required
 - **Service ID**: Public wallet address
 - **Functionality**: Basic network operations
 - **Consensus**: Standard participation
 
 #### 𝞝lderfier Nodes
-- **Stake**: 800 XFG minimum
+- **Deposit**: 800 XFG minimum
+- **Deposit Type**: 0x06 tag transaction (immediately unlocked)
 - **Service ID**: Flexible options (custom name, hashed address, standard address)
 - **Functionality**: Advanced verification, consensus leadership
-- **Consensus**: Prioritized participation
+- **Consensus**: Prioritized participation (2/2 fastpass, 4/5 fallback)
+- **Unstaking**: 8-hour security window after last signature
+- **Governance**: Elder Council voting for slashing decisions
 
 ---
 
@@ -106,7 +112,7 @@ User Transaction → Basic Validation → Elderfier Verification → Consensus F
 ### 1. Custom Name (Exactly 8 Letters, All Caps)
 
 ```cpp
-ElderfierServiceId serviceId = ElderfierServiceId::createCustomName("FUEGONOD", walletAddress);
+ElderfierServiceId serviceId = ElderfierServiceId::createCustomName("FIRENODE", walletAddress);
 ```
 
 **Features:**
@@ -127,15 +133,15 @@ ElderfierServiceId serviceId = ElderfierServiceId::createCustomName("FUEGONOD", 
 ```cpp
 ENindexEntry entry;
 entry.tier = EldernodeTier::ELDERFIER;
-entry.serviceId = ElderfierServiceId::createCustomName("MYNODE", "FUEGO123456789abcdef");
-// Service ID: "MYNODE" (padded to 8 letters if needed)
-// Linked Address: "FUEGO123456789abcdef"
+entry.serviceId = ElderfierServiceId::createCustomName("MYNODE00", "fire123456789abcdef");
+// Service ID: "MYNODE00" (padded to 8 letters if needed)
+// Linked Address: "fire123456789abcdef"
 ```
 
 ### 2. Hashed Public Fee Address (Privacy Option)
 
 ```cpp
-ElderfierServiceId serviceId = ElderfierServiceId::createHashedAddress("FUEGO123456789abcdef");
+ElderfierServiceId serviceId = ElderfierServiceId::createHashedAddress("fire123456789abcdef");
 ```
 
 **Features:**
@@ -149,16 +155,16 @@ ElderfierServiceId serviceId = ElderfierServiceId::createHashedAddress("FUEGO123
 ```cpp
 ENindexEntry entry;
 entry.tier = EldernodeTier::ELDERFIER;
-entry.serviceId = ElderfierServiceId::createHashedAddress("FUEGO123456789abcdef");
+entry.serviceId = ElderfierServiceId::createHashedAddress("fire123456789abcdef");
 // Service ID: "a1b2c3d4e5f6..." (64-character hash)
 // Display Name: "FUEG...def"
-// Linked Address: "FUEGO123456789abcdef"
+// Linked Address: "fire123456789abcdef"
 ```
 
 ### 3. Standard Address (Like Basic Eldernodes)
 
 ```cpp
-ElderfierServiceId serviceId = ElderfierServiceId::createStandardAddress("FUEGO123456789abcdef");
+ElderfierServiceId serviceId = ElderfierServiceId::createStandardAddress("fire123456789abcdef");
 ```
 
 **Features:**
@@ -352,9 +358,205 @@ public:
 
 ---
 
+## Elderfier Deposit System
+
+### 0x06 Tag Transaction Structure
+
+Elderfier deposits use a special transaction extra tag (0x06) that provides immediate unlock with spending validation:
+
+```cpp
+struct TransactionExtraElderfierDeposit {
+    Crypto::Hash depositHash;           // Unique deposit identifier
+    uint64_t depositAmount;             // Deposit amount (800 XFG minimum)
+    uint64_t timestamp;                 // Deposit creation timestamp
+    std::string elderfierAddress;       // Elderfier wallet address
+    std::vector<uint8_t> metadata;     // Additional metadata
+    std::vector<uint8_t> signature;     // Deposit signature
+    bool isUnlocked;                    // Always true - deposits are immediately unlocked
+    
+    bool serialize(ISerializer& serializer);
+    bool isValid() const;
+    std::string toString() const;
+};
+```
+
+### Deposit Lifecycle
+
+#### 1. Deposit Creation
+```cpp
+// Create Elderfier deposit transaction
+bool createElderfierDeposit(const std::string& elderfierAddress, uint64_t amount) {
+    TransactionExtraElderfierDeposit deposit;
+    deposit.depositHash = generateDepositHash(elderfierAddress, amount);
+    deposit.depositAmount = amount;
+    deposit.timestamp = getCurrentTimestamp();
+    deposit.elderfierAddress = elderfierAddress;
+    deposit.isUnlocked = true; // Always immediately unlocked
+    
+    // Create transaction with 0x06 tag
+    Transaction tx = createTransactionWithExtra(deposit);
+    return broadcastTransaction(tx);
+}
+```
+
+#### 2. Deposit Monitoring
+```cpp
+class ElderfierDepositMonitor {
+    void monitorDepositSpending() {
+        // Monitor for 0x06 tag spending transactions
+        for (const auto& tx : getPendingTransactions()) {
+            if (hasElderfierDepositTag(tx)) {
+                processSpendingTransaction(tx);
+            }
+        }
+    }
+    
+    void processSpendingTransaction(const Transaction& tx) {
+        // Check if Elderfier is trying to spend deposit
+        if (isElderfierSpendingDeposit(tx)) {
+            // Trigger 8-hour security window
+            triggerSecurityWindow(tx);
+        }
+    }
+};
+```
+
+#### 3. Security Window System
+```cpp
+struct SecurityWindow {
+    static constexpr uint64_t DURATION_HOURS = 8;
+    static constexpr uint64_t DURATION_SECONDS = DURATION_HOURS * 3600;
+    
+    Crypto::Hash elderfierId;
+    uint64_t startTime;
+    uint64_t endTime;
+    bool isActive;
+    
+    bool isExpired() const {
+        return getCurrentTimestamp() > endTime;
+    }
+    
+    uint64_t getRemainingTime() const {
+        if (isExpired()) return 0;
+        return endTime - getCurrentTimestamp();
+    }
+};
+```
+
+### Unstaking Process
+
+#### 1. Unstaking Request
+```cpp
+bool requestUnstaking(const std::string& elderfierAddress) {
+    // Check if Elderfier has valid deposit
+    if (!hasValidDeposit(elderfierAddress)) {
+        return false;
+    }
+    
+    // Check last signature validity
+    if (!validateLastSignature(elderfierAddress)) {
+        // Trigger Elder Council vote
+        triggerElderCouncilVote(elderfierAddress);
+        return false;
+    }
+    
+    // Start 8-hour security window
+    startSecurityWindow(elderfierAddress);
+    return true;
+}
+```
+
+#### 2. Security Window Validation
+```cpp
+void validateSecurityWindow(const std::string& elderfierAddress) {
+    SecurityWindow window = getSecurityWindow(elderfierAddress);
+    
+    if (window.isExpired()) {
+        // Security window passed, allow unstaking
+        allowUnstaking(elderfierAddress);
+    } else {
+        // Still in security window, check for invalid signatures
+        if (hasInvalidSignatures(elderfierAddress)) {
+            // Trigger Elder Council vote
+            triggerElderCouncilVote(elderfierAddress);
+        }
+    }
+}
+```
+
+### Elder Council Voting System
+
+#### 1. Voting Message Structure
+```cpp
+struct ElderCouncilVotingMessage {
+    std::string messageId;                    // Unique message identifier
+    std::string targetElderfier;             // Elderfier being voted on
+    std::string subject;                     // Vote subject line
+    std::string description;                  // Detailed description
+    uint64_t votingDeadline;                  // Voting deadline timestamp
+    bool isRead;                              // Whether message has been read
+    bool hasVoted;                            // Whether Elderfier has voted
+    bool hasConfirmedVote;                    // Whether vote has been confirmed
+    ElderCouncilVoteType pendingVoteType;     // Pending vote (before confirmation)
+    ElderCouncilVoteType confirmedVoteType;   // Confirmed vote (after confirmation)
+    std::vector<ElderCouncilVote> votes;     // All votes cast
+    uint32_t requiredVotes;                  // Required votes for quorum
+    uint32_t currentVotes;                    // Current vote count
+    
+    bool isValid() const;
+    std::string toString() const;
+};
+```
+
+#### 2. Vote Types
+```cpp
+enum class ElderCouncilVoteType : uint8_t {
+    SLASH_ALL = 1,      // Slash/burn ALL of Elderfier's stake
+    SLASH_HALF = 2,     // Slash/burn HALF of Elderfier's stake  
+    SLASH_NONE = 3      // Slash/burn NONE of Elderfier's stake
+};
+```
+
+#### 3. Two-Step Vote Confirmation
+```cpp
+class ElderCouncilVoting {
+    bool submitVote(const std::string& messageId, ElderCouncilVoteType voteType) {
+        // Set pending vote (not yet confirmed)
+        m_pendingVotes[messageId] = voteType;
+        return true;
+    }
+    
+    bool confirmVote(const std::string& messageId) {
+        auto it = m_pendingVotes.find(messageId);
+        if (it == m_pendingVotes.end()) {
+            return false; // No pending vote
+        }
+        
+        // Confirm the vote
+        ElderCouncilVote vote;
+        vote.voteType = it->second;
+        vote.voterId = getCurrentElderfierId();
+        vote.timestamp = getCurrentTimestamp();
+        
+        // Add to voting message
+        addVoteToMessage(messageId, vote);
+        
+        // Remove from pending votes
+        m_pendingVotes.erase(it);
+        return true;
+    }
+    
+    bool cancelPendingVote(const std::string& messageId) {
+        return m_pendingVotes.erase(messageId) > 0;
+    }
+};
+```
+
+---
+
 ## Consensus Mechanism
 
-### 1. Consensus Formation Process
+### 1. Fast Consensus Formation Process
 
 ```cpp
 class EldernodeConsensusManager {
@@ -362,17 +564,70 @@ class EldernodeConsensusManager {
         // Create consensus request
         ConsensusRequest request = createConsensusRequest(tx, commitment);
         
-        // Broadcast to other Eldernodes
-        broadcastConsensusRequest(request);
+        // Try 2/2 fastpass first (Elderfier nodes only)
+        std::vector<ConsensusResponse> fastpassResponses = tryFastPassConsensus(request);
         
-        // Wait for responses from other Eldernodes
-        std::vector<ConsensusResponse> responses = waitForResponses(request.id, CONSENSUS_TIMEOUT);
-        
-        // Verify responses and form consensus
-        if (responses.size() >= consensusThreshold) {
-            EldernodeConsensusProof proof = createConsensusProof(request, responses);
+        if (fastpassResponses.size() >= 2) {
+            // Fastpass consensus achieved
+            EldernodeConsensusProof proof = createConsensusProof(request, fastpassResponses);
+            proof.consensusType = ConsensusType::FASTPASS_2_2;
             storeConsensusProof(proof);
+            return;
         }
+        
+        // Fallback to 4/5 robust consensus
+        std::vector<ConsensusResponse> robustResponses = tryRobustConsensus(request);
+        
+        if (robustResponses.size() >= 4) {
+            // Robust consensus achieved
+            EldernodeConsensusProof proof = createConsensusProof(request, robustResponses);
+            proof.consensusType = ConsensusType::ROBUST_4_5;
+            storeConsensusProof(proof);
+            return;
+        }
+        
+        // Consensus failed
+        handleConsensusFailure(request);
+    }
+    
+    std::vector<ConsensusResponse> tryFastPassConsensus(const ConsensusRequest& request) {
+        // Only query Elderfier nodes for fastpass
+        std::vector<ElderfierNode> elderfierNodes = getActiveElderfierNodes();
+        
+        std::vector<ConsensusResponse> responses;
+        for (const auto& node : elderfierNodes) {
+            ConsensusResponse response = queryNode(node, request);
+            if (response.isValid()) {
+                responses.push_back(response);
+            }
+            
+            // Stop at 2 responses for fastpass
+            if (responses.size() >= 2) {
+                break;
+            }
+        }
+        
+        return responses;
+    }
+    
+    std::vector<ConsensusResponse> tryRobustConsensus(const ConsensusRequest& request) {
+        // Query all active Eldernodes for robust consensus
+        std::vector<Eldernode> allNodes = getActiveEldernodes();
+        
+        std::vector<ConsensusResponse> responses;
+        for (const auto& node : allNodes) {
+            ConsensusResponse response = queryNode(node, request);
+            if (response.isValid()) {
+                responses.push_back(response);
+            }
+            
+            // Stop at 5 responses for robust consensus
+            if (responses.size() >= 5) {
+                break;
+            }
+        }
+        
+        return responses;
     }
 };
 ```
@@ -380,11 +635,19 @@ class EldernodeConsensusManager {
 ### 2. Consensus Thresholds
 
 ```cpp
+enum class ConsensusType : uint8_t {
+    FASTPASS_2_2 = 1,    // 2/2 Elderfier fastpass consensus
+    ROBUST_4_5 = 2       // 4/5 robust fallback consensus
+};
+
 struct ConsensusThresholds {
-    uint32_t minimumEldernodes;    // Minimum Eldernodes required
-    uint32_t requiredAgreement;    // Required agreement threshold (e.g., 4/5)
-    uint32_t timeoutSeconds;       // Consensus timeout
-    uint32_t retryAttempts;        // Retry attempts
+    uint32_t fastpassMinElderfiers;    // Minimum Elderfiers for fastpass (2)
+    uint32_t fastpassRequiredAgreement; // Required fastpass agreement (2)
+    uint32_t robustMinEldernodes;      // Minimum Eldernodes for robust (5)
+    uint32_t robustRequiredAgreement;  // Required robust agreement (4)
+    uint32_t fastpassTimeoutSeconds;   // Fastpass timeout (10 seconds)
+    uint32_t robustTimeoutSeconds;     // Robust timeout (30 seconds)
+    uint32_t retryAttempts;            // Retry attempts (3)
     
     static ConsensusThresholds getDefault();
     bool isValid() const;
@@ -392,24 +655,29 @@ struct ConsensusThresholds {
 ```
 
 **Default Configuration:**
-- **Minimum Eldernodes**: 5 active Eldernodes required
-- **Required Agreement**: 4 out of 5 Eldernodes (80% consensus)
-- **Timeout**: 30 seconds
+- **Fastpass Consensus**: 2 out of 2 Elderfier nodes (100% consensus, 10s timeout)
+- **Robust Fallback**: 4 out of 5 Eldernodes (80% consensus, 30s timeout)
 - **Retry Attempts**: 3
+- **Priority**: Elderfier nodes prioritized in both consensus types
 
 ### 3. Consensus Result Structure
 
 ```cpp
 struct EldernodeConsensusResult {
     bool consensusReached;
-    uint32_t requiredThreshold;
-    uint32_t actualVotes;
+    ConsensusType consensusType;           // FASTPASS_2_2 or ROBUST_4_5
+    uint32_t requiredThreshold;           // Required votes for this consensus type
+    uint32_t actualVotes;                 // Actual votes received
     std::vector<Crypto::PublicKey> participatingEldernodes;
     std::vector<uint8_t> aggregatedSignature;
     uint64_t consensusTimestamp;
+    uint64_t fastpassAttemptTime;         // Time spent on fastpass attempt
+    uint64_t robustAttemptTime;           // Time spent on robust attempt
     
     bool isValid() const;
     std::string toString() const;
+    bool isFastpass() const { return consensusType == ConsensusType::FASTPASS_2_2; }
+    bool isRobust() const { return consensusType == ConsensusType::ROBUST_4_5; }
 };
 ```
 
@@ -434,23 +702,25 @@ std::sort(activeParticipants.begin(), activeParticipants.end());
 - **Key Management**: Secure private key storage for Eldernodes
 - **Signature Verification**: On-chain verification of all signatures
 
-### 2. Stake-Based Security
+### 2. Deposit-Based Security
 
-- **Minimum Stake**: 800 XFG required for 𝞝lderfier nodes
-- **Stake Verification**: Continuous validation of stake amounts
-- **Slashing Mechanism**: Penalties for malicious behavior
-- **Stake Redistribution**: Automatic redistribution of slashed stakes
+- **Minimum Deposit**: 800 XFG required for 𝞝lderfier nodes (0x06 tag transaction)
+- **Immediate Unlock**: Deposits are immediately unlocked but monitored for spending
+- **Security Window**: 8-hour buffer period after last signature before unstaking
+- **Spending Validation**: Continuous monitoring of 0x06 tag spending transactions
+- **Elder Council Slashing**: Decentralized voting system for slashing decisions
+- **Two-Step Confirmation**: Vote submission followed by explicit confirmation
 
 ### 3. Consensus Security
 
 - **Threshold Requirements**: Minimum consensus threshold prevents manipulation
 - **Active Eldernode Validation**: Only currently active Eldernodes can participate
 - **Timestamp Validation**: Prevents replay of old consensus proofs
-- **Stake Verification**: Eldernodes must maintain minimum stake
+- **Deposit Verification**: Eldernodes must maintain valid 0x06 tag deposits
 
 ### 4. Network Security
 
-- **Sybil Resistance**: Stake-based Eldernode selection
+- **Sybil Resistance**: Deposit-based Eldernode selection
 - **Byzantine Fault Tolerance**: Consensus threshold provides fault tolerance
 - **Network Partition Handling**: Graceful degradation with insufficient consensus
 - **Replay Protection**: Network ID and timestamp validation
@@ -487,10 +757,10 @@ EldernodeIndexManager manager;
 
 ENindexEntry elderfierEntry;
 Crypto::generate_keys(elderfierEntry.eldernodePublicKey, elderfierEntry.eldernodeSecretKey);
-elderfierEntry.feeAddress = "FUEGO987654321fedcba";
-elderfierEntry.stakeAmount = 800000000; // 800 XFG minimum
+elderfierEntry.feeAddress = "fire987654321fedcba";
+elderfierEntry.stakeAmount = 800000000; // 800 XFG minimum deposit
 elderfierEntry.tier = EldernodeTier::ELDERFIER;
-elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FUEGONOD", "FUEGO987654321fedcba");
+elderfierEntry.serviceId = ElderfierServiceId::createCustomName("FIRENODE", "fire987654321fedcba");
 elderfierEntry.isActive = true;
 
 bool success = manager.addEldernode(elderfierEntry);
@@ -501,10 +771,10 @@ bool success = manager.addEldernode(elderfierEntry);
 ```cpp
 ENindexEntry privacyEntry;
 Crypto::generate_keys(privacyEntry.eldernodePublicKey, privacyEntry.eldernodeSecretKey);
-privacyEntry.feeAddress = "FUEGO555666777888999";
-privacyEntry.stakeAmount = 1000000000; // 1000 XFG
+privacyEntry.feeAddress = "fire555666777888999";
+privacyEntry.stakeAmount = 1000000000; // 1000 XFG deposit
 privacyEntry.tier = EldernodeTier::ELDERFIER;
-privacyEntry.serviceId = ElderfierServiceId::createHashedAddress("FUEGO555666777888999");
+privacyEntry.serviceId = ElderfierServiceId::createHashedAddress("fire555666777888999");
 privacyEntry.isActive = true;
 
 bool success = manager.addEldernode(privacyEntry);
@@ -515,8 +785,8 @@ bool success = manager.addEldernode(privacyEntry);
 ```cpp
 ENindexEntry basicEntry;
 Crypto::generate_keys(basicEntry.eldernodePublicKey, basicEntry.eldernodeSecretKey);
-basicEntry.feeAddress = "FUEGO123456789abcdef";
-basicEntry.stakeAmount = 0; // No stake required for basic Eldernodes
+basicEntry.feeAddress = "fire123456789abcdef";
+basicEntry.stakeAmount = 0; // No deposit required for basic Eldernodes
 basicEntry.tier = EldernodeTier::BASIC;
 basicEntry.isActive = true;
 
@@ -530,7 +800,7 @@ bool success = manager.addEldernode(basicEntry);
 auto elderfierNodes = manager.getElderfierNodes();
 
 // Get specific 𝞝lderfier by service ID
-auto serviceId = ElderfierServiceId::createCustomName("FUEGONOD", "FUEGO987654321fedcba");
+auto serviceId = ElderfierServiceId::createCustomName("FIRENODE", "fire987654321fedcba");
 auto node = manager.getEldernodeByServiceId(serviceId);
 
 // Get statistics
@@ -704,11 +974,13 @@ function claimHEAT(
 
 ```cpp
 struct ElderfierServiceConfig {
-    uint64_t minimumStakeAmount = 800000000;      // 800 XFG minimum (800 * 1,000,000)
+    uint64_t minimumDepositAmount = 800000000;     // 800 XFG minimum (800 * 1,000,000)
     uint64_t customNameLength = 8;                 // Exactly 8 letters
     bool allowHashedAddresses = true;              // Enable privacy option
     std::vector<std::string> reservedNames;        // Protected names
     SlashingConfig slashingConfig;                 // Slashing configuration
+    SecurityWindowConfig securityWindowConfig;     // Security window configuration
+    ElderCouncilConfig elderCouncilConfig;         // Elder Council voting configuration
     
     static ElderfierServiceConfig getDefault();
     bool isValid() const;
@@ -789,14 +1061,14 @@ private:
 
 ### 1. Common Issues
 
-#### Insufficient Stake
-**Problem**: Eldernode rejected due to insufficient stake
-**Solution**: Ensure stake amount is at least 800 XFG (800,000,000 atomic units)
+#### Insufficient Deposit
+**Problem**: Eldernode rejected due to insufficient deposit
+**Solution**: Ensure deposit amount is at least 800 XFG (800,000,000 atomic units)
 
 ```cpp
-if (entry.stakeAmount < m_elderfierConfig.minimumStakeAmount) {
-    logger(ERROR) << "Elderfier node stake too low: " << entry.stakeAmount 
-                 << " < " << m_elderfierConfig.minimumStakeAmount << " (800 XFG)";
+if (entry.depositAmount < m_elderfierConfig.minimumDepositAmount) {
+    logger(ERROR) << "Elderfier node deposit too low: " << entry.depositAmount
+                 << " < " << m_elderfierConfig.minimumDepositAmount << " (800 XFG)";
     return false;
 }
 ```
@@ -939,7 +1211,7 @@ private:
 
 Fuego's 𝞝lderfiers represent a sophisticated on-chain input verification system that provides:
 
-- **Higher Tier Security**: 800 XFG minimum stake requirement
+- **Higher Tier Security**: 800 XFG minimum deposit requirement
 - **Flexible Service Identification**: Multiple service ID options
 - **Advanced Consensus**: Prioritized participation in consensus mechanisms
 - **Comprehensive Validation**: Multi-layered transaction verification

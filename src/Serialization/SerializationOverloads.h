@@ -61,14 +61,13 @@ serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::IS
     }
   }
 } else {
-
   if (!value.empty())
   {
     blob.assign(reinterpret_cast<const char *>(&value[0]), value.size() * sizeof(T));
   }
   serializer.binary(blob, name);
 }
-} // namespace CryptoNote
+}
 
 template <typename T>
 typename std::enable_if<std::is_pod<T>::value>::type

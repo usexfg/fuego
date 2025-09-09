@@ -126,7 +126,7 @@ struct TransactionExtraCDDepositSecret {
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraElderfierDeposit, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCDDepositSecret> TransactionExtraField;
+typedef boost::variant<CryptoNote::TransactionExtraPadding, CryptoNote::TransactionExtraPublicKey, CryptoNote::TransactionExtraNonce, CryptoNote::TransactionExtraMergeMiningTag, CryptoNote::tx_extra_message, CryptoNote::TransactionExtraTTL, CryptoNote::TransactionExtraElderfierDeposit, CryptoNote::TransactionExtraHeatCommitment, CryptoNote::TransactionExtraYieldCommitment, CryptoNote::TransactionExtraCDDepositSecret> TransactionExtraField;
 
 
 
@@ -147,14 +147,14 @@ bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<Tra
 
 Crypto::PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra);
 bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const Crypto::PublicKey& tx_pub_key);
-bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const BinaryArray& extra_nonce);
-void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const Crypto::Hash& payment_id);
-bool getPaymentIdFromTransactionExtraNonce(const BinaryArray& extra_nonce, Crypto::Hash& payment_id);
-bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraMergeMiningTag& mm_tag);
-bool append_message_to_extra(std::vector<uint8_t>& tx_extra, const tx_extra_message& message);
+bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::BinaryArray& extra_nonce);
+void setPaymentIdToTransactionExtraNonce(CryptoNote::BinaryArray& extra_nonce, const Crypto::Hash& payment_id);
+bool getPaymentIdFromTransactionExtraNonce(const CryptoNote::BinaryArray& extra_nonce, Crypto::Hash& payment_id);
+bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::TransactionExtraMergeMiningTag& mm_tag);
+bool append_message_to_extra(std::vector<uint8_t>& tx_extra, const CryptoNote::tx_extra_message& message);
 std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t>& extra, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key);
 void appendTTLToExtra(std::vector<uint8_t>& tx_extra, uint64_t ttl);
-bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
+bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, CryptoNote::TransactionExtraMergeMiningTag& mm_tag);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 //returns false if payment id is not found or parse error
@@ -163,23 +163,23 @@ bool parsePaymentId(const std::string& paymentIdString, Crypto::Hash& paymentId)
 
 // HEAT commitment helper functions
 bool createTxExtraWithHeatCommitment(const Crypto::Hash& commitment, uint64_t amount, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
-bool addHeatCommitmentToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraHeatCommitment& commitment);
-bool getHeatCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraHeatCommitment& commitment);
+bool addHeatCommitmentToExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::TransactionExtraHeatCommitment& commitment);
+bool getHeatCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, CryptoNote::TransactionExtraHeatCommitment& commitment);
 
 // Yield commitment helper functions
 bool createTxExtraWithYieldCommitment(const Crypto::Hash& commitment, uint64_t amount, uint32_t term_months, const std::string& yield_scheme, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
-bool addYieldCommitmentToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraYieldCommitment& commitment);
-bool getYieldCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraYieldCommitment& commitment);
+bool addYieldCommitmentToExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::TransactionExtraYieldCommitment& commitment);
+bool getYieldCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, CryptoNote::TransactionExtraYieldCommitment& commitment);
 
 // Elderfier Deposit helper functions
 bool createTxExtraWithElderfierDeposit(const Crypto::Hash& depositHash, uint64_t depositAmount, const std::string& elderfierAddress, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
-bool addElderfierDepositToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraElderfierDeposit& deposit);
-bool getElderfierDepositFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraElderfierDeposit& deposit);
+bool addElderfierDepositToExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::TransactionExtraElderfierDeposit& deposit);
+bool getElderfierDepositFromExtra(const std::vector<uint8_t>& tx_extra, CryptoNote::TransactionExtraElderfierDeposit& deposit);
 
 // CD Deposit Secret helper functions
 bool createTxExtraWithCDDepositSecret(const std::vector<uint8_t>& secret_key, uint64_t xfg_amount, uint32_t apr_basis_points, uint8_t term_code, uint8_t chain_code, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
-bool addCDDepositSecretToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraCDDepositSecret& deposit_secret);
-bool getCDDepositSecretFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraCDDepositSecret& deposit_secret);
+bool addCDDepositSecretToExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::TransactionExtraCDDepositSecret& deposit_secret);
+bool getCDDepositSecretFromExtra(const std::vector<uint8_t>& tx_extra, CryptoNote::TransactionExtraCDDepositSecret& deposit_secret);
 
 // Helper APIs for wallet integration
 // Computes Keccak256(address || "recipient") into out_hash

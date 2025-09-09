@@ -37,6 +37,7 @@
 #include "WalletLegacy/WalletUtils.h"
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
+#include "BurnTransactionHandler.h"
 
 #include "CryptoNoteConfig.h"
 
@@ -166,9 +167,11 @@ WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node, Lo
   m_transferDetails(nullptr),
   m_transactionsCache(m_currency.mempoolTxLiveTime()),
   m_sender(nullptr),
-  m_onInitSyncStarter(new SyncStarter(m_blockchainSync))
+  m_onInitSyncStarter(new SyncStarter(m_blockchainSync)),
+  m_burnTransactionManager(std::make_unique<BurnTransactionManager>())
 {
   addObserver(m_onInitSyncStarter.get());
+  initializeBurnTransactionManager();
 }
 
 WalletLegacy::~WalletLegacy() {
@@ -971,6 +974,11 @@ void WalletLegacy::onTransactionUpdated(ITransfersSubscription* object, const Ha
     if (pendingDepositBalanceChangedEvent) {
       events.push_back(std::move(pendingDepositBalanceChangedEvent));
     }
+    
+    // Process transaction for burn detection
+    if (txInfo.totalAmountOut > 0) {
+      processTransactionForBurnDetection(Common::toHex(transactionHash.data, 32), txInfo.extra, txInfo.totalAmountOut);
+    }
   }
 
   notifyClients(events);
@@ -1481,5 +1489,68 @@ bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& 
 
 //KK
 
+// Burn transaction management implementation
+void WalletLegacy::initializeBurnTransactionManager() {
+  if (m_burnTransactionManager) {
+    m_burnTransactionManager->initialize();
+    setBurnTransactionCallbacks();
+  }
+}
+
+void WalletLegacy::setBurnTransactionCallbacks() {
+  if (!m_burnTransactionManager) {
+    return;
+  }
+  
+  // Set up callbacks for burn detection and STARK proof generation
+  m_burnTransactionManager->setBurnDetectedCallback([this](const std::string& txHash, uint64_t amount, const std::string& ethAddress) {
+    // Log burn transaction detection
+    m_loggerGroup(Logging::INFO, Logging::WALLET) << "Burn transaction detected: " << txHash 
+                                                  << ", amount: " << amount 
+                                                  << ", ETH address: " << ethAddress;
+    
+    // Notify observers about burn transaction
+    // You can add custom observer events here if needed
+  });
+  
+  m_burnTransactionManager->setStarkProofGeneratedCallback([this](const std::string& txHash, const std::string& proofData) {
+    // Log STARK proof generation
+    m_loggerGroup(Logging::INFO, Logging::WALLET) << "STARK proof generated for burn transaction: " << txHash;
+    
+    // Notify observers about STARK proof generation
+    // You can add custom observer events here if needed
+  });
+  
+  m_burnTransactionManager->setErrorCallback([this](const std::string& error) {
+    // Log errors
+    m_loggerGroup(Logging::ERROR, Logging::WALLET) << "Burn transaction error: " << error;
+  });
+}
+
+void WalletLegacy::processTransactionForBurnDetection(const std::string& txHash, const std::vector<uint8_t>& txExtra, uint64_t amount) {
+  if (m_burnTransactionManager) {
+    m_burnTransactionManager->processTransaction(txHash, txExtra, amount);
+  }
+}
+
+bool WalletLegacy::isBurnTransaction(const std::vector<uint8_t>& txExtra) {
+  if (m_burnTransactionManager) {
+    return m_burnTransactionManager->getHandler().isBurnTransaction(txExtra);
+  }
+  return false;
+}
+
+BurnTransactionHandler::BurnTransactionData WalletLegacy::parseBurnTransaction(const std::vector<uint8_t>& txExtra) {
+  if (m_burnTransactionManager) {
+    return m_burnTransactionManager->getHandler().parseBurnTransaction(txExtra);
+  }
+  return BurnTransactionHandler::BurnTransactionData{};
+}
+
+void WalletLegacy::generateStarkProofForBurn(const std::string& txHash, const std::string& ethAddress, uint64_t amount) {
+  if (m_burnTransactionManager) {
+    m_burnTransactionManager->getHandler().generateStarkProof(txHash, ethAddress, amount);
+  }
+}
 
 } //namespace CryptoNote

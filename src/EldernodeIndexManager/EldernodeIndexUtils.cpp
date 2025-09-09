@@ -132,12 +132,29 @@ ElderfierServiceId ElderfierServiceId::createHashedAddress(const std::string& ad
     return serviceId;
 }
 
+// Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers
+/*
 // EldernodeStakeProof implementations
 bool EldernodeStakeProof::isValid() const {
     return !feeAddress.empty() && 
            !proofSignature.empty() &&
            timestamp > 0 &&
-           (tier == EldernodeTier::BASIC || serviceId.isValid());
+           (tier == EldernodeTier::ELDERFIER || serviceId.isValid());
+}
+
+bool EldernodeStakeProof::isConstantProof() const {
+    return constantProofType != ConstantStakeProofType::NONE;
+}
+
+bool EldernodeStakeProof::isConstantProofExpired() const {
+    if (!isConstantProof() || constantProofExpiry == 0) {
+        return false; // No expiry for non-constant proofs or never-expiring proofs
+    }
+    
+    uint64_t currentTime = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    return currentTime > constantProofExpiry;
 }
 
 std::string EldernodeStakeProof::toString() const {
@@ -148,16 +165,24 @@ std::string EldernodeStakeProof::toString() const {
         << "amount=" << stakeAmount << ", "
         << "timestamp=" << timestamp << ", "
         << "feeAddress=" << feeAddress << ", "
-        << "tier=" << (tier == EldernodeTier::BASIC ? "BASIC" : "ELDERFIER") << ", "
+        << "tier=" << (tier == EldernodeTier::ELDERFIER ? "BASIC" : "ELDERFIER") << ", "
         << "signatureSize=" << proofSignature.size();
     
     if (tier == EldernodeTier::ELDERFIER) {
         oss << ", serviceId=" << serviceId.toString();
     }
     
+    if (isConstantProof()) {
+        oss << ", constantProofType=" << static_cast<int>(constantProofType)
+            << ", crossChainAddress=" << crossChainAddress
+            << ", constantStakeAmount=" << constantStakeAmount
+            << ", constantProofExpiry=" << constantProofExpiry;
+    }
+    
     oss << "}";
     return oss.str();
 }
+*/
 
 // EldernodeConsensusParticipant implementations
 bool EldernodeConsensusParticipant::operator==(const EldernodeConsensusParticipant& other) const {
@@ -207,7 +232,10 @@ bool ENindexEntry::operator==(const ENindexEntry& other) const {
            isActive == other.isActive &&
            tier == other.tier &&
            serviceId.identifier == other.serviceId.identifier;
+           // Note: Old stake proof field comparisons removed - now using 0x06 tag deposits for Elderfiers
 }
+
+// Note: hasConstantProof and isConstantProofExpired removed - now using 0x06 tag deposits for Elderfiers
 
 bool ENindexEntry::operator<(const ENindexEntry& other) const {
     // Elderfier nodes have higher priority
@@ -241,22 +269,22 @@ bool ConsensusThresholds::isValid() const {
            timeoutSeconds > 0;
 }
 
-// StakeVerificationResult implementations
-StakeVerificationResult StakeVerificationResult::success(uint64_t amount, const Crypto::Hash& hash) {
-    StakeVerificationResult result;
+// DepositValidationResult implementations
+DepositValidationResult DepositValidationResult::success(uint64_t amount, const Crypto::Hash& hash) {
+    DepositValidationResult result;
     result.isValid = true;
     result.errorMessage = "";
-    result.verifiedAmount = amount;
-    result.verifiedStakeHash = hash;
+    result.validatedAmount = amount;
+    result.validatedDepositHash = hash;
     return result;
 }
 
-StakeVerificationResult StakeVerificationResult::failure(const std::string& error) {
-    StakeVerificationResult result;
+DepositValidationResult DepositValidationResult::failure(const std::string& error) {
+    DepositValidationResult result;
     result.isValid = false;
     result.errorMessage = error;
-    result.verifiedAmount = 0;
-    result.verifiedStakeHash = Crypto::Hash();
+    result.validatedAmount = 0;
+    result.validatedDepositHash = Crypto::Hash();
     return result;
 }
 
@@ -275,6 +303,36 @@ bool SlashingConfig::isValid() const {
            (destination == SlashingDestination::BURN || !destinationAddress.empty());
 }
 
+// Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers
+/*
+// ConstantStakeProofConfig implementations
+ConstantStakeProofConfig ConstantStakeProofConfig::getDefault() {
+    ConstantStakeProofConfig config;
+    config.enableElderadoC0DL3Validator = true;  // Enable Elderado validator stake for C0DL3
+    config.elderadoC0DL3StakeAmount = 8000000000; // 8000 XFG for Elderado validator (8000 * 1,000,000)
+    config.constantProofValidityPeriod = 0;      // 0 = never expires (constant proof)
+    config.c0dl3NetworkId = "C0DL3_MAINNET";     // C0DL3 network identifier
+    config.c0dl3ContractAddress = "0x0000000000000000000000000000000000000000"; // Placeholder contract address
+    config.allowConstantProofRenewal = true;      // Allow renewal of constant proofs
+    return config;
+}
+
+bool ConstantStakeProofConfig::isValid() const {
+    return elderadoC0DL3StakeAmount > 0 &&
+           !c0dl3NetworkId.empty() &&
+           !c0dl3ContractAddress.empty();
+}
+
+uint64_t ConstantStakeProofConfig::getRequiredStakeAmount(ConstantStakeProofType type) const {
+    switch (type) {
+        case ConstantStakeProofType::ELDERADO_C0DL3_VALIDATOR:
+            return elderadoC0DL3StakeAmount;
+        default:
+            return 0;
+    }
+}
+*/
+
 // ElderfierServiceConfig implementations
 ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
     ElderfierServiceConfig config;
@@ -286,6 +344,7 @@ ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
         "SERVER", "CLIENT", "MASTER", "SLAVE", "BACKUP", "CACHE", "DB", "API", "WEB", "APP"
     };
     config.slashingConfig = SlashingConfig::getDefault();
+    // Note: constantProofConfig removed - now using 0x06 tag deposits for Elderfiers
     return config;
 }
 
@@ -293,6 +352,7 @@ bool ElderfierServiceConfig::isValid() const {
     return minimumStakeAmount > 0 && 
            customNameLength == 8 && // Must be exactly 8
            slashingConfig.isValid();
+           // Note: constantProofConfig removed - now using 0x06 tag deposits for Elderfiers
 }
 
 bool ElderfierServiceConfig::isCustomNameReserved(const std::string& name) const {

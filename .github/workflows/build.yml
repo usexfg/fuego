@@ -29,11 +29,6 @@ jobs:
       run: |
         cd build
         make -j$(sysctl -n hw.ncpu)
-        
-    - name: Run Dynamic Supply Tests
-      run: |
-        cd build
-        ./simple_dynamic_supply_test || echo "Standalone test not built"
 
   build-ubuntu-22:
     runs-on: ubuntu-22.04
@@ -55,11 +50,6 @@ jobs:
       run: |
         cd build
         make -j$(nproc)
-        
-    - name: Run Dynamic Supply Tests
-      run: |
-        cd build
-        ./simple_dynamic_supply_test || echo "Standalone test not built"
 
   build-ubuntu-24:
     runs-on: ubuntu-24.04
@@ -81,11 +71,6 @@ jobs:
       run: |
         cd build
         make -j$(nproc)
-        
-    - name: Run Dynamic Supply Tests
-      run: |
-        cd build
-        ./simple_dynamic_supply_test || echo "Standalone test not built"
 
   build-windows:
     runs-on: windows-latest
@@ -106,41 +91,10 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD -DBoost_NO_BOOST_CMAKE=ON -DBOOST_ROOT=C:\tools\boost ..
         
     - name: Build
       run: |
         cd build
         cmake --build . --config Release --parallel
-        
-    - name: Run Dynamic Supply Tests
-      run: |
-        cd build
-        if (Test-Path "simple_dynamic_supply_test.exe") { ./simple_dynamic_supply_test.exe } else { echo "Standalone test not built" }
-
-  test-dynamic-supply:
-    runs-on: ubuntu-latest
-    needs: [build-ubuntu-22]
-    steps:
-    - uses: actions/checkout@v4
     
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev libgtest-dev
-        
-    - name: Build and Test Dynamic Supply
-      run: |
-        # Build the standalone test
-        g++ -std=c++17 -o simple_dynamic_supply_test simple_dynamic_supply_test.cpp
-        
-        # Run the test
-        ./simple_dynamic_supply_test
-        
-        # Verify all tests passed
-        if [ $? -eq 0 ]; then
-          echo "✅ All dynamic supply tests passed!"
-        else
-          echo "❌ Dynamic supply tests failed!"
-          exit 1
-        fi

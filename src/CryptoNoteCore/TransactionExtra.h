@@ -92,6 +92,20 @@ struct TransactionExtraYieldCommitment {
   bool serialize(ISerializer& serializer);
 };
 
+struct TransactionExtraElderfierDeposit {
+  Crypto::Hash depositHash;           // Hash of deposit data
+  uint64_t depositAmount;            // 800 XFG minimum
+  uint64_t timestamp;                // Deposit timestamp
+  std::string elderfierAddress;       // Elderfier wallet address
+  std::vector<uint8_t> metadata;     // Additional metadata
+  std::vector<uint8_t> signature;    // Deposit signature
+  bool isUnlocked;                   // Always true - deposits are immediately unlocked
+  
+  bool serialize(ISerializer& serializer);
+  bool isValid() const;
+  std::string toString() const;
+};
+
 struct TransactionExtraCDDepositSecret {
   std::vector<uint8_t> secret_key;  // 32-byte deposit secret key
   uint64_t xfg_amount;              // XFG amount for CD conversion
@@ -161,6 +175,11 @@ bool getHeatCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, Transactio
 bool createTxExtraWithYieldCommitment(const Crypto::Hash& commitment, uint64_t amount, uint32_t term_months, const std::string& yield_scheme, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
 bool addYieldCommitmentToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraYieldCommitment& commitment);
 bool getYieldCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraYieldCommitment& commitment);
+
+// Elderfier Deposit helper functions
+bool createTxExtraWithElderfierDeposit(const Crypto::Hash& depositHash, uint64_t depositAmount, const std::string& elderfierAddress, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
+bool addElderfierDepositToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraElderfierDeposit& deposit);
+bool getElderfierDepositFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraElderfierDeposit& deposit);
 
 // CD Deposit Secret helper functions
 bool createTxExtraWithCDDepositSecret(const std::vector<uint8_t>& secret_key, uint64_t xfg_amount, uint32_t apr_basis_points, uint8_t term_code, uint8_t chain_code, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);

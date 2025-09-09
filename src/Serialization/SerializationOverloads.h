@@ -60,8 +60,8 @@ serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::IS
       memcpy(&value[0], blob.data(), blobSize);
     }
   }
-} else
-{
+} else {
+
   if (!value.empty())
   {
     blob.assign(reinterpret_cast<const char *>(&value[0]), value.size() * sizeof(T));

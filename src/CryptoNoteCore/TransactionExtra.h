@@ -117,12 +117,7 @@ struct TransactionExtraCDDepositSecret {
   bool serialize(ISerializer& serializer);
 };
 
-struct TransactionExtraElderfierDeposit {
-  Crypto::Hash commitment;          // Commitment hash for elderfier deposit
-  uint64_t amount;                  // Deposit amount
-  uint32_t term_months;             // Term in months
-  std::string deposit_scheme;       // Deposit scheme identifier
-  std::vector<uint8_t> metadata;    // Additional metadata
+// Removed duplicate TransactionExtraElderfierDeposit struct
   
   bool serialize(ISerializer& serializer);
 };

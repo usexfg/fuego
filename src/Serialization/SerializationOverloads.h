@@ -32,8 +32,8 @@
 #include <unordered_set>
 #include <parallel_hashmap/phmap.h>
 
-using phmap::flat_hash_map;
-using phmap::parallel_flat_hash_map;
+// using phmap::flat_hash_map;
+// using phmap::parallel_flat_hash_map;
 namespace CryptoNote
 {
 
@@ -60,7 +60,7 @@ serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::IS
       memcpy(&value[0], blob.data(), blobSize);
     }
   }
-else
+}else
 {
   if (!value.empty())
   {
@@ -257,17 +257,19 @@ bool serialize(std::unordered_map<K, V, Hash> &value, Common::StringView name, C
   return serializeMap(value, name, serializer, [&value](size_t size) { value.reserve(size); });
 }
 
-template <typename K, typename V, typename Hash>
-bool serialize(flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
-{
-  return serializeMap(value, name, serializer, [](size_t size) {});
-}
+// Commented out to avoid conflict with std::unordered_map serialization
+// template <typename K, typename V, typename Hash>
+// bool serialize(flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+// {
+//   return serializeMap(value, name, serializer, [](size_t size) {});
+// }
 
-template <typename K, typename V, typename Hash>
-bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
-{
-  return serializeMap(value, name, serializer, [](size_t size) {});
-}
+// Commented out to avoid conflict with std::unordered_map serialization
+// template <typename K, typename V, typename Hash>
+// bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+// {
+//   return serializeMap(value, name, serializer, [](size_t size) {});
+// }
 
   template <typename K, typename V, typename Hash>
   bool serialize(std::unordered_multimap<K, V, Hash> & value, Common::StringView name, CryptoNote::ISerializer & serializer)

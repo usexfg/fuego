@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Privacy Group
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -18,7 +18,7 @@
 #include "Currency.h"
 #include <cctype>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/math/special_functions/round.hpp>
+#include <cmath>
 #include <boost/lexical_cast.hpp>
 #include "../Common/Base58.h"
 #include "../Common/int-util.h"
@@ -973,7 +973,7 @@ namespace CryptoNote
 		}
 
 		// Keep LWMA sane in case something unforeseen occurs.
-		if (static_cast<int64_t>(boost::math::round(LWMA)) < T / 20)
+            if (static_cast<int64_t>(std::round(LWMA)) < T / 20)
 			LWMA = static_cast<double>(T) / 20;
 
 		harmonic_mean_D = N / sum_inverse_D * adjust;

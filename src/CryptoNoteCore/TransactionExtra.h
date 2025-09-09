@@ -33,6 +33,7 @@
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
 #define TX_EXTRA_MESSAGE_TAG                0x04
 #define TX_EXTRA_TTL                        0x05
+#define TX_EXTRA_ELDERFIER_DEPOSIT          0x06
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
 #define TX_EXTRA_CD_DEPOSIT_SECRET          0x09
@@ -102,11 +103,21 @@ struct TransactionExtraCDDepositSecret {
   bool serialize(ISerializer& serializer);
 };
 
+struct TransactionExtraElderfierDeposit {
+  Crypto::Hash commitment;          // Commitment hash for elderfier deposit
+  uint64_t amount;                  // Deposit amount
+  uint32_t term_months;             // Term in months
+  std::string deposit_scheme;       // Deposit scheme identifier
+  std::vector<uint8_t> metadata;    // Additional metadata
+  
+  bool serialize(ISerializer& serializer);
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCDDepositSecret> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraElderfierDeposit, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCDDepositSecret> TransactionExtraField;
 
 
 

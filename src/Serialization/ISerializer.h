@@ -78,7 +78,7 @@ bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
 
 template<typename T>
 void serialize(T& value, ISerializer& serializer) {
-  value.serialize(serializer);
+  serialize(value, serializer);
 }
 
 #ifdef __clang__

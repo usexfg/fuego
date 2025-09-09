@@ -42,7 +42,7 @@ typename std::enable_if<std::is_pod<T>::value>::type
 serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
 {
   std::string blob;
-  if (serializer.type() == ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::ISerializer::INPUT)
   {
     serializer.binary(blob, name);
 
@@ -60,7 +60,7 @@ serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::IS
       memcpy(&value[0], blob.data(), blobSize);
     }
   }
-}else
+} else
 {
   if (!value.empty())
   {
@@ -75,7 +75,7 @@ typename std::enable_if<std::is_pod<T>::value>::type
 serializeAsBinary(std::list<T> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
 {
   std::string blob;
-  if (serializer.type() == ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::ISerializer::INPUT)
   {
     serializer.binary(blob, name);
 
@@ -137,7 +137,7 @@ bool serializeEnumClass(E &value, Common::StringView name, CryptoNote::ISerializ
 
   typedef typename std::underlying_type<E>::type EType;
 
-  if (serializer.type() == CryptoNote::ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::CryptoNote::ISerializer::INPUT)
   {
     EType numericValue;
     serializer(numericValue, name);
@@ -175,7 +175,7 @@ bool serializeMap(MapT &value, Common::StringView name, CryptoNote::ISerializer 
     return false;
   }
 
-  if (serializer.type() == CryptoNote::ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::CryptoNote::ISerializer::INPUT)
   {
     reserve(size);
 
@@ -218,7 +218,7 @@ bool serializeSet(SetT &value, Common::StringView name, CryptoNote::ISerializer 
     return false;
   }
 
-  if (serializer.type() == CryptoNote::ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::CryptoNote::ISerializer::INPUT)
   {
     for (size_t i = 0; i < size; ++i)
     {
@@ -296,14 +296,14 @@ bool serialize(std::unordered_map<K, V, Hash> &value, Common::StringView name, C
   }
 
   template <typename T1, typename T2>
-  void serialize(std::pair<T1, T2> & value, ISerializer & s)
+  void serialize(std::pair<T1, T2> & value, CryptoNote::ISerializer & s)
   {
     s(value.first, "first");
     s(value.second, "second");
   }
 
   template <typename Element, typename Iterator>
-  void writeSequence(Iterator begin, Iterator end, Common::StringView name, ISerializer & s)
+  void writeSequence(Iterator begin, Iterator end, Common::StringView name, CryptoNote::ISerializer & s)
   {
     size_t size = std::distance(begin, end);
     s.beginArray(size, name);
@@ -315,7 +315,7 @@ bool serialize(std::unordered_map<K, V, Hash> &value, Common::StringView name, C
   }
 
   template <typename Element, typename Iterator>
-  void readSequence(Iterator outputIterator, Common::StringView name, ISerializer & s)
+  void readSequence(Iterator outputIterator, Common::StringView name, CryptoNote::ISerializer & s)
   {
     size_t size = 0;
     s.beginArray(size, name);
@@ -331,9 +331,9 @@ bool serialize(std::unordered_map<K, V, Hash> &value, Common::StringView name, C
   }
 
   //convinience function since we change block height type
-  void serializeBlockHeight(ISerializer & s, uint32_t & blockHeight, Common::StringView name);
+  void serializeBlockHeight(CryptoNote::ISerializer & s, uint32_t & blockHeight, Common::StringView name);
 
   //convinience function since we change global output index type
-  void serializeGlobalOutputIndex(ISerializer & s, uint32_t & globalOutputIndex, Common::StringView name);
+  void serializeGlobalOutputIndex(CryptoNote::ISerializer & s, uint32_t & globalOutputIndex, Common::StringView name);
 
 } // namespace CryptoNote

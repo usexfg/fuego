@@ -203,4 +203,4 @@ bool buildHeatExtra(const std::array<uint8_t, 32>& secret,
                     const std::vector<uint8_t>& metadata,
                     std::vector<uint8_t>& extra);
 
-}
+} // namespace CryptoNote

@@ -137,7 +137,7 @@ bool serializeEnumClass(E &value, Common::StringView name, CryptoNote::ISerializ
 
   typedef typename std::underlying_type<E>::type EType;
 
-  if (serializer.type() == CryptoNote::CryptoNote::ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::ISerializer::INPUT)
   {
     EType numericValue;
     serializer(numericValue, name);
@@ -175,7 +175,7 @@ bool serializeMap(MapT &value, Common::StringView name, CryptoNote::ISerializer 
     return false;
   }
 
-  if (serializer.type() == CryptoNote::CryptoNote::ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::ISerializer::INPUT)
   {
     reserve(size);
 
@@ -218,7 +218,7 @@ bool serializeSet(SetT &value, Common::StringView name, CryptoNote::ISerializer 
     return false;
   }
 
-  if (serializer.type() == CryptoNote::CryptoNote::ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::ISerializer::INPUT)
   {
     for (size_t i = 0; i < size; ++i)
     {

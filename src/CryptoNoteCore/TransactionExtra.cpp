@@ -118,6 +118,38 @@ namespace CryptoNote
           transactionExtraFields.push_back(ttl);
           break;
         }
+
+        case TX_EXTRA_HEAT_COMMITMENT:
+        {
+          TransactionExtraHeatCommitment heatCommitment;
+          ar(heatCommitment, "heat_commitment");
+          transactionExtraFields.push_back(heatCommitment);
+          break;
+        }
+
+        case TX_EXTRA_YIELD_COMMITMENT:
+        {
+          TransactionExtraYieldCommitment yieldCommitment;
+          ar(yieldCommitment, "yield_commitment");
+          transactionExtraFields.push_back(yieldCommitment);
+          break;
+        }
+
+        case TX_EXTRA_CURA_COLORED_COIN:
+        {
+          TransactionExtraCuraColoredCoin curaTag;
+          ar(curaTag, "cura_tag");
+          transactionExtraFields.push_back(curaTag);
+          break;
+        }
+
+        case TX_EXTRA_ALBUM_LICENSE:
+        {
+          TransactionExtraAlbumLicense license;
+          ar(license, "album_license");
+          transactionExtraFields.push_back(license);
+          break;
+        }
         }
       }
     }
@@ -180,6 +212,16 @@ namespace CryptoNote
     bool operator()(const TransactionExtraYieldCommitment &t)
     {
       return addYieldCommitmentToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraCuraColoredCoin &t)
+    {
+      return appendCuraColoredCoinToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraAlbumLicense &t)
+    {
+      return appendAlbumLicenseToExtra(extra, t);
     }
   };
 
@@ -308,6 +350,50 @@ namespace CryptoNote
     tx_extra.push_back(TX_EXTRA_TTL);
     std::copy(extraFieldSize.begin(), extraFieldSize.end(), std::back_inserter(tx_extra));
     std::copy(ttlData.begin(), ttlData.end(), std::back_inserter(tx_extra));
+  }
+
+  bool appendCuraColoredCoinToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraCuraColoredCoin &cura_tag)
+  {
+    BinaryArray blob;
+    if (!toBinaryArray(cura_tag, blob))
+    {
+      return false;
+    }
+
+    tx_extra.reserve(tx_extra.size() + 1 + blob.size());
+    tx_extra.push_back(TX_EXTRA_CURA_COLORED_COIN);
+    std::copy(reinterpret_cast<const uint8_t *>(blob.data()), reinterpret_cast<const uint8_t *>(blob.data() + blob.size()), std::back_inserter(tx_extra));
+    return true;
+  }
+
+  bool getCuraColoredCoinFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraCuraColoredCoin &cura_tag)
+  {
+    std::vector<TransactionExtraField> tx_extra_fields;
+    parseTransactionExtra(tx_extra, tx_extra_fields);
+
+    return findTransactionExtraFieldByType(tx_extra_fields, cura_tag);
+  }
+
+  bool appendAlbumLicenseToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraAlbumLicense &license)
+  {
+    BinaryArray blob;
+    if (!toBinaryArray(license, blob))
+    {
+      return false;
+    }
+
+    tx_extra.reserve(tx_extra.size() + 1 + blob.size());
+    tx_extra.push_back(TX_EXTRA_ALBUM_LICENSE);
+    std::copy(reinterpret_cast<const uint8_t *>(blob.data()), reinterpret_cast<const uint8_t *>(blob.data() + blob.size()), std::back_inserter(tx_extra));
+    return true;
+  }
+
+  bool getAlbumLicenseFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraAlbumLicense &license)
+  {
+    std::vector<TransactionExtraField> tx_extra_fields;
+    parseTransactionExtra(tx_extra, tx_extra_fields);
+
+    return findTransactionExtraFieldByType(tx_extra_fields, license);
   }
 
   void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t> &extra_nonce, const Hash &payment_id)
@@ -456,6 +542,30 @@ namespace CryptoNote
   bool tx_extra_message::serialize(ISerializer &s)
   {
     s(data, "data");
+    return true;
+  }
+
+  // CURA colored-coin serialization
+  bool TransactionExtraCuraColoredCoin::serialize(ISerializer &s)
+  {
+    s(curationData, "curationData");
+    s(curatorKey, "curatorKey");
+    s(curatorSig, "curatorSig");
+    s(timestamp, "timestamp");
+    s(version, "version");
+    return true;
+  }
+
+  // Album license serialization
+  bool TransactionExtraAlbumLicense::serialize(ISerializer &s)
+  {
+    s(albumId, "albumId");
+    s(buyerKey, "buyerKey");
+    s(purchaseAmount, "purchaseAmount");
+    s(timestamp, "timestamp");
+    s(artistKey, "artistKey");
+    s(artistSig, "artistSig");
+    s(version, "version");
     return true;
   }
 

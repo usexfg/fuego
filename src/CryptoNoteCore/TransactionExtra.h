@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Elder Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -27,6 +27,7 @@
 #define TX_EXTRA_PADDING_MAX_COUNT          255
 #define TX_EXTRA_NONCE_MAX_COUNT            255
 
+#define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 #define TX_EXTRA_TAG_PADDING                0x00
 #define TX_EXTRA_TAG_PUBKEY                 0x01
 #define TX_EXTRA_NONCE                      0x02
@@ -35,8 +36,11 @@
 #define TX_EXTRA_TTL                        0x05
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
+//#define TX_EXTRA_COLD_COMMITMENT            0x09
+//#define TX_EXTRA_DIGM_COLORED_COIN            0x0A
+#define TX_EXTRA_ALBUM_LICENSE              0x0B
+#define TX_EXTRA_CURA_COLORED_COIN          0x0C
 
-#define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
 namespace CryptoNote {
 
@@ -90,11 +94,33 @@ struct TransactionExtraYieldCommitment {
   bool serialize(ISerializer& serializer);
 };
 
+struct TransactionExtraCuraColoredCoin {
+  std::string curationData;        // Curation metadata (JSON string)
+  Crypto::PublicKey curatorKey;    // Public key of the curator
+  Crypto::Signature curatorSig;   // Curator's signature over curationData
+  uint64_t timestamp;              // Unix timestamp of curation
+  uint32_t version;                // Version of the CURA colored-coin protocol
+  
+  bool serialize(ISerializer& serializer);
+};
+
+struct TransactionExtraAlbumLicense {
+  std::string albumId;             // Album identifier
+  Crypto::PublicKey buyerKey;      // Public key of the buyer
+  uint64_t purchaseAmount;         // XFG amount paid
+  uint64_t timestamp;              // Unix timestamp of purchase
+  Crypto::PublicKey artistKey;     // Artist's public key
+  Crypto::Signature artistSig;    // Artist's signature over license data
+  uint32_t version;                // Version of the license protocol
+  
+  bool serialize(ISerializer& serializer);
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCuraColoredCoin, TransactionExtraAlbumLicense> TransactionExtraField;
 
 
 
@@ -123,6 +149,10 @@ bool append_message_to_extra(std::vector<uint8_t>& tx_extra, const tx_extra_mess
 std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t>& extra, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key);
 void appendTTLToExtra(std::vector<uint8_t>& tx_extra, uint64_t ttl);
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
+bool appendCuraColoredCoinToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraCuraColoredCoin& cura_tag);
+bool getCuraColoredCoinFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraCuraColoredCoin& cura_tag);
+bool appendAlbumLicenseToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraAlbumLicense& license);
+bool getAlbumLicenseFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraAlbumLicense& license);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 //returns false if payment id is not found or parse error

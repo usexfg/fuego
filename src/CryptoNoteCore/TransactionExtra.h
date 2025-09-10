@@ -35,7 +35,7 @@
 #define TX_EXTRA_TTL                        0x05
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
-#define TX_EXTRA_CURA_COLORED_COIN          0x09
+#define TX_EXTRA_CURA_COLORED_COIN          0x0C
 #define TX_EXTRA_ALBUM_LICENSE              0x0B
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00

@@ -1,8 +1,8 @@
-# CURA Colored-Coin Implementation (Transaction Extra Type 0x09)
+# CURA Colored-Coin Implementation (Transaction Extra Type 0x0C)
 
 ## Overview
 
-This document describes the implementation of the CURA colored-coin transaction extra type (0x09) in the Fuego blockchain. The CURA colored-coin is designed to handle curation metadata and curator verification for the DIGM platform.
+This document describes the implementation of the CURA colored-coin transaction extra type (0x0C) in the Fuego blockchain. The CURA colored-coin is designed to handle curation metadata and curator verification for the DIGM platform.
 
 ## Transaction Extra Type Definitions
 
@@ -10,7 +10,7 @@ The following transaction extra types are now implemented:
 
 - `TX_EXTRA_YIELD_COMMITMENT` = 0x07 (Yield commitment schemes)
 - `TX_EXTRA_HEAT_COMMITMENT` = 0x08 (HEAT commitment schemes)  
-- `TX_EXTRA_CURA_COLORED_COIN` = 0x09 (CURA colored-coin for curation)
+- `TX_EXTRA_CURA_COLORED_COIN` = 0x0C (CURA colored-coin for curation)
 
 ## CURA Colored-Coin Structure
 

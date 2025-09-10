@@ -90,6 +90,16 @@ struct TransactionExtraYieldCommitment {
   bool serialize(ISerializer& serializer);
 };
 
+struct TransactionExtraCuraColoredCoin {
+  std::string curationData;        // Curation metadata (JSON string)
+  Crypto::PublicKey curatorKey;    // Public key of the curator
+  Crypto::Signature curatorSig;   // Curator's signature over curationData
+  uint64_t timestamp;              // Unix timestamp of curation
+  uint32_t version;                // Version of the CURA colored-coin protocol
+  
+  bool serialize(ISerializer& serializer);
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;

@@ -119,6 +119,22 @@ namespace CryptoNote
           break;
         }
 
+        case TX_EXTRA_HEAT_COMMITMENT:
+        {
+          TransactionExtraHeatCommitment heatCommitment;
+          ar(heatCommitment, "heat_commitment");
+          transactionExtraFields.push_back(heatCommitment);
+          break;
+        }
+
+        case TX_EXTRA_YIELD_COMMITMENT:
+        {
+          TransactionExtraYieldCommitment yieldCommitment;
+          ar(yieldCommitment, "yield_commitment");
+          transactionExtraFields.push_back(yieldCommitment);
+          break;
+        }
+
         case TX_EXTRA_CURA_COLORED_COIN:
         {
           TransactionExtraCuraColoredCoin curaTag;
@@ -491,6 +507,17 @@ namespace CryptoNote
   bool tx_extra_message::serialize(ISerializer &s)
   {
     s(data, "data");
+    return true;
+  }
+
+  // CURA colored-coin serialization
+  bool TransactionExtraCuraColoredCoin::serialize(ISerializer &s)
+  {
+    s(curationData, "curationData");
+    s(curatorKey, "curatorKey");
+    s(curatorSig, "curatorSig");
+    s(timestamp, "timestamp");
+    s(version, "version");
     return true;
   }
 

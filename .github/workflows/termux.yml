@@ -31,10 +31,10 @@ jobs:
 
       - name: Download and Build Boost for Android
         run: |
-          wget -O boost_1_72_0.tar.bz2 https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2
-          echo "<SHA256SUM>  boost_1_72_0.tar.bz2" | sha256sum -c -
-          tar -xjf boost_1_72_0.tar.bz2
-          cd boost_1_72_0
+          wget -O boost_1_83_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.83.0/boost_1_83_0.tar.gz
+          echo "c2fe8e80e82d8c90ddf016edd51f0579b0ccfee7b6e28b4b4a6ca0d8ce744dc2  boost_1_83_0.tar.gz" | sha256sum -c -
+          tar -xjf boost_1_83_0.tar.gz
+          cd boost_1_83_0
           
           # Configure for Android
           cat > user-config.jam << EOF
@@ -118,10 +118,14 @@ jobs:
           files: ${{ steps.build.outputs.asset_path }}
           name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}
           body: |
-            **${{ steps.build.outputs.release_name }}**
-            ${{ steps.build.outputs.sha256 }}
+            📱 [Download for Termux](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
             
-            For Termux: Download, extract, and run `./install.sh`
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
+            
+            After download:
+            1. `tar -xzf ${{ steps.build.outputs.release_name }}`
+            2. `cd $(basename -s .tar.gz ${{ steps.build.outputs.release_name }})`
+            3. `./install.sh`
           append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

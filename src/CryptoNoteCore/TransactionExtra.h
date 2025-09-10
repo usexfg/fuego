@@ -94,7 +94,7 @@ struct TransactionExtraYieldCommitment {
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCuraColoredCoin> TransactionExtraField;
 
 
 

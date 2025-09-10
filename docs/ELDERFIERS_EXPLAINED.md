@@ -1,5 +1,5 @@
 # Elderfiers Explained: 
-# Advanced Verifier nodes in the Fuego L1 Blockchain Network
+# Advanced verifier nodes in the Fuego L1 Blockchain Network
 
 
 ## What Are Elderfiers?
@@ -71,11 +71,21 @@ Fast Consensus (2/2):
   ├─ Elderfier A verifies transaction
   ├─ Elderfier B verifies transaction
   └─ Both agree → Transaction approved
+    └─ Both split fee
 
-Robust Consensus (4/5):
+Fallback Consensus (4/5):
   ├─ 5 Eldernodes participate
   ├─ Minimum 4 must agree
   └─ Majority consensus → Transaction approved
+   └─ First 4 to sign same share fee
+
+Full Quorum Consensus (8/10):
+  ├─ 10 Eldernodes participate
+  ├─ Minimum 8 must agree
+  └─ Majority consensus → Transaction approved
+   └─ First 8 to sign same share fee
+
+
 ```
 
 ### Security Window System
@@ -93,11 +103,11 @@ Robust Consensus (4/5):
 ├─────────────────────────────────────────────────────────────┤
 │ 📧 [UNREAD] Elder Council Vote - Elderfier a1b2c3d4        │
 │    Misbehavior Detected | Deadline: 24h                   │
-│    Status: 3/5 votes (PENDING) [READ] [VOTE]              │
+│    Status: 2/10 votes (PENDING) [READ] [VOTE]              │
 ├─────────────────────────────────────────────────────────────┤
 │ ✅ [READ] Elder Council Vote - Elderfier e5f6g7h8          │
 │    Misbehavior Detected | Deadline: Closed                │
-│    Status: 5/5 votes (QUORUM REACHED) [VIEW RESULTS]      │
+│    Status: 8/10 votes (QUORUM REACHED) [VIEW RESULTS]      │
 └─────────────────────────────────────────────────────────────┘
 
 Voting Options:
@@ -153,7 +163,7 @@ Voting Options:
 ### 1. **Prepare Your System**
 ```bash
 # Install Fuego daemon
-git clone https://github.com/colinritman/fuego.git
+git clone https://github.com/usexfg/fuego.git
 cd fuego
 make
 
@@ -257,8 +267,8 @@ make
 
 ### 💸 **Revenue Streams**
 - **Transaction Fees**: Share of network transaction fees
-- **Consensus Rewards**: Payments for participation in consensus
-- **Priority Fees**: Premium fees for fast-track processing
+- **Consensus Rewards**: Fee payments for participation in consensus
+- **+Remote Fees**: Earn basic Eldernode fees simultaneously
 - **Cross-Chain Fees**: Fees for bridge operations
 
 ### 💰 **Cost Structure**

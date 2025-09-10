@@ -123,14 +123,14 @@ template <typename Key, typename Hash = std::hash<Key>>
 bool load_unordered_set(std::unordered_set<Key, Hash>& set, BinaryInputArchive& ar) {
     set.clear();
     size_t size;
-    if (!ar.load(size)) {
+    if (!ar.load(&size)) {
         std::cerr << "Failed to load set size" << std::endl;
         return false;
     }
 
     for (size_t i = 0; i < size; ++i) {
         Key item;
-        if (!ar.load(item)) {
+        if (!ar.load(&item)) {
             std::cerr << "Failed to load set item" << std::endl;
             return false;
         }
@@ -161,7 +161,7 @@ template <typename Key, typename Value, typename Hash = std::hash<Key>>
 bool load_unordered_map(std::unordered_map<Key, Value, Hash>& map, BinaryInputArchive& ar) {
     map.clear();
     size_t size;
-    if (!ar.load(size)) {
+    if (!ar.load(&size)) {
         std::cerr << "Failed to load map size" << std::endl;
         return false;
     }
@@ -169,7 +169,7 @@ bool load_unordered_map(std::unordered_map<Key, Value, Hash>& map, BinaryInputAr
     for (size_t i = 0; i < size; ++i) {
         Key key;
         Value value;
-        if (!ar.load(key) || !ar.load(value)) {
+        if (!ar.load(&key) || !ar.load(&value)) {
             std::cerr << "Failed to load map item" << std::endl;
             return false;
         }

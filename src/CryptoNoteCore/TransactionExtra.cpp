@@ -122,13 +122,7 @@ namespace CryptoNote
           break;
         }
 
-        case TX_EXTRA_ELDERFIER_DEPOSIT:
-        {
-          TransactionExtraElderfierDeposit deposit;
-          ar(deposit, "elderfier_deposit");
-          transactionExtraFields.push_back(deposit);
-          break;
-        }
+        // TX_EXTRA_ELDERFIER_DEPOSIT case removed - struct no longer exists
         }
       }
     }

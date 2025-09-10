@@ -123,7 +123,7 @@ struct TransactionExtraCDDepositSecret {
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<CryptoNote::TransactionExtraPadding, CryptoNote::TransactionExtraPublicKey, CryptoNote::TransactionExtraNonce, CryptoNote::TransactionExtraMergeMiningTag, CryptoNote::tx_extra_message, CryptoNote::TransactionExtraTTL, CryptoNote::TransactionExtraElderfierDeposit, CryptoNote::TransactionExtraHeatCommitment, CryptoNote::TransactionExtraYieldCommitment, CryptoNote::TransactionExtraCDDepositSecret> TransactionExtraField;
+typedef boost::variant<CryptoNote::TransactionExtraPadding, CryptoNote::TransactionExtraPublicKey, CryptoNote::TransactionExtraNonce, CryptoNote::TransactionExtraMergeMiningTag, CryptoNote::tx_extra_message, CryptoNote::TransactionExtraTTL, CryptoNote::TransactionExtraHeatCommitment, CryptoNote::TransactionExtraYieldCommitment, CryptoNote::TransactionExtraCDDepositSecret> TransactionExtraField;
 
 
 
@@ -168,10 +168,7 @@ bool createTxExtraWithYieldCommitment(const Crypto::Hash& commitment, uint64_t a
 bool addYieldCommitmentToExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::TransactionExtraYieldCommitment& commitment);
 bool getYieldCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, CryptoNote::TransactionExtraYieldCommitment& commitment);
 
-// Elderfier Deposit helper functions
-bool createTxExtraWithElderfierDeposit(const Crypto::Hash& depositHash, uint64_t depositAmount, const std::string& elderfierAddress, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
-bool addElderfierDepositToExtra(std::vector<uint8_t>& tx_extra, const CryptoNote::TransactionExtraElderfierDeposit& deposit);
-bool getElderfierDepositFromExtra(const std::vector<uint8_t>& tx_extra, CryptoNote::TransactionExtraElderfierDeposit& deposit);
+// Elderfier Deposit helper functions - temporarily removed due to struct removal
 
 // CD Deposit Secret helper functions
 bool createTxExtraWithCDDepositSecret(const std::vector<uint8_t>& secret_key, uint64_t xfg_amount, uint32_t apr_basis_points, uint8_t term_code, uint8_t chain_code, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);

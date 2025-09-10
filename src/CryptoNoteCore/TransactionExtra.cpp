@@ -183,10 +183,6 @@ namespace CryptoNote
       return true;
     }
 
-    bool operator()(const TransactionExtraElderfierDeposit &t)
-    {
-      return addElderfierDepositToExtra(extra, t);
-    }
 
     bool operator()(const TransactionExtraHeatCommitment &t)
     {
@@ -203,10 +199,6 @@ namespace CryptoNote
       return addCDDepositSecretToExtra(extra, t);
     }
 
-    bool operator()(const TransactionExtraElderfierDeposit &t)
-    {
-      return addElderfierDepositToExtra(extra, t);
-    }
   };
 
   bool writeTransactionExtra(std::vector<uint8_t> &tx_extra, const std::vector<TransactionExtraField> &tx_extra_fields)
@@ -505,56 +497,7 @@ namespace CryptoNote
     return true;
   }
 
-  bool TransactionExtraElderfierDeposit::serialize(ISerializer &s)
-  {
-    s(commitment, "commitment");
-    s(amount, "amount");
-    s(term_months, "term_months");
-    s(deposit_scheme, "deposit_scheme");
-    s(metadata, "metadata");
-    return true;
-  }
-
-  // Elderfier deposit helper functions
-  bool addElderfierDepositToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraElderfierDeposit &deposit)
-  {
-    tx_extra.push_back(TX_EXTRA_ELDERFIER_DEPOSIT);
-    
-    // Serialize commitment hash (32 bytes)
-    tx_extra.insert(tx_extra.end(), deposit.commitment.data, deposit.commitment.data + sizeof(deposit.commitment.data));
-    
-    // Serialize amount (8 bytes, little-endian)
-    uint64_t amount = deposit.amount;
-    for (int i = 0; i < 8; ++i) {
-      tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
-      amount >>= 8;
-    }
-    
-    // Serialize term_months (4 bytes, little-endian)
-    uint32_t termMonths = deposit.term_months;
-    for (int i = 0; i < 4; ++i) {
-      tx_extra.push_back(static_cast<uint8_t>(termMonths & 0xFF));
-      termMonths >>= 8;
-    }
-    
-    // Serialize deposit_scheme length and data
-    uint8_t schemeLength = static_cast<uint8_t>(deposit.deposit_scheme.length());
-    tx_extra.push_back(schemeLength);
-    
-    if (schemeLength > 0) {
-      tx_extra.insert(tx_extra.end(), deposit.deposit_scheme.begin(), deposit.deposit_scheme.end());
-    }
-    
-    // Serialize metadata size and data
-    uint8_t metadataSize = static_cast<uint8_t>(deposit.metadata.size());
-    tx_extra.push_back(metadataSize);
-    
-    if (metadataSize > 0) {
-      tx_extra.insert(tx_extra.end(), deposit.metadata.begin(), deposit.metadata.end());
-    }
-    
-    return true;
-  }
+  // Elderfier deposit helper functions - temporarily removed due to struct removal
 
   // HEAT commitment helper functions
   bool addHeatCommitmentToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraHeatCommitment &commitment)

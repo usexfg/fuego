@@ -45,127 +45,87 @@ namespace container_internal {
 // ------------------------------------------------------------------------
 // dump/load for raw_hash_set
 // ------------------------------------------------------------------------
-template <class Policy, class Hash, class Eq, class Alloc>
-template<typename OutputArchive>
-bool raw_hash_set<Policy, Hash, Eq, Alloc>::dump(OutputArchive& ar) const {
-    static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
-                    "value_type should be trivially copyable");
-
-    if (!ar.dump(size_)) {
-        std::cerr << "Failed to dump size_" << std::endl;
-        return false;
-    }
-    if (size_ == 0) {
-        return true;
-    }
-    if (!ar.dump(capacity_)) {
-        std::cerr << "Failed to dump capacity_" << std::endl;
-        return false;
-    }
-    if (!ar.dump(reinterpret_cast<char*>(ctrl_),
-        sizeof(ctrl_t) * (capacity_ + Group::kWidth + 1))) {
-
-        std::cerr << "Failed to dump ctrl_" << std::endl;
-        return false;
-    }
-    if (!ar.dump(reinterpret_cast<char*>(slots_),
-                    sizeof(slot_type) * capacity_)) {
-        std::cerr << "Failed to dump slot_" << std::endl;
-        return false;
-    }
-    return true;
-}
-
-template <class Policy, class Hash, class Eq, class Alloc>
-template<typename InputArchive>
-bool raw_hash_set<Policy, Hash, Eq, Alloc>::load(InputArchive& ar) {
-    static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
-                    "value_type should be trivially copyable");
-    raw_hash_set<Policy, Hash, Eq, Alloc>().swap(*this); // clear any existing content
-    if (!ar.load(&size_)) {
-        std::cerr << "Failed to load size_" << std::endl;
-        return false;
-    }
-    if (size_ == 0) {
-        return true;
-    }
-    if (!ar.load(&capacity_)) {
-        std::cerr << "Failed to load capacity_" << std::endl;
+template <typename Key, typename Hash = std::hash<Key>>
+bool dump_unordered_set(const std::unordered_set<Key, Hash>& set, BinaryOutputArchive& ar) {
+    // Simple implementation for std::unordered_set - just serialize the size and elements
+    size_t size = set.size();
+    if (!ar.dump(size)) {
+        std::cerr << "Failed to dump set size" << std::endl;
         return false;
     }
 
-    // allocate memory for ctrl_ and slots_
-    initialize_slots();
-    if (!ar.load(reinterpret_cast<char*>(ctrl_),
-        sizeof(ctrl_t) * (capacity_ + Group::kWidth + 1))) {
-        std::cerr << "Failed to load ctrl" << std::endl;
-        return false;
-    }
-    if (!ar.load(reinterpret_cast<char*>(slots_),
-                    sizeof(slot_type) * capacity_)) {
-        std::cerr << "Failed to load slot" << std::endl;
-        return false;
-    }
-    return true;
-}
-
-// ------------------------------------------------------------------------
-// dump/load for parallel_hash_set
-// ------------------------------------------------------------------------
-template <size_t N,
-          template <class, class, class, class> class RefSet,
-          class Mtx_,
-          class Policy, class Hash, class Eq, class Alloc>
-template<typename OutputArchive>
-bool parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, Eq, Alloc>::dump(OutputArchive& ar) const {
-    static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
-                    "value_type should be trivially copyable");
-
-    if (! ar.dump(subcnt())) {
-        std::cerr << "Failed to dump meta!" << std::endl;
-        return false;
-    }
-    for (size_t i = 0; i < sets_.size(); ++i) {
-        auto& inner = sets_[i];
-        typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
-        if (!inner.set_.dump(ar)) {
-            std::cerr << "Failed to dump submap " << i << std::endl;
+    for (const auto& item : set) {
+        if (!ar.dump(item)) {
+            std::cerr << "Failed to dump set item" << std::endl;
             return false;
         }
     }
     return true;
 }
 
-template <size_t N,
-          template <class, class, class, class> class RefSet,
-          class Mtx_,
-          class Policy, class Hash, class Eq, class Alloc>
-template<typename InputArchive>
-bool parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, Eq, Alloc>::load(InputArchive& ar) {
-    static_assert(type_traits_internal::IsTriviallyCopyable<value_type>::value,
-                    "value_type should be trivially copyable");
-
-    size_t submap_count = 0;
-    if (!ar.load(&submap_count)) {
-        std::cerr << "Failed to load submap count!" << std::endl;
+// Load function for std::unordered_set
+template <typename Key, typename Hash = std::hash<Key>>
+bool load_unordered_set(std::unordered_set<Key, Hash>& set, BinaryInputArchive& ar) {
+    set.clear();
+    size_t size;
+    if (!ar.load(size)) {
+        std::cerr << "Failed to load set size" << std::endl;
         return false;
     }
 
-    if (submap_count != subcnt()) {
-        std::cerr << "submap count(" << submap_count << ") != N(" << N << ")" << std::endl;
+    for (size_t i = 0; i < size; ++i) {
+        Key item;
+        if (!ar.load(item)) {
+            std::cerr << "Failed to load set item" << std::endl;
+            return false;
+        }
+        set.insert(item);
+    }
+    return true;
+}
+
+// ------------------------------------------------------------------------
+// dump/load for unordered_map (used instead of parallel_hash_map)
+// ------------------------------------------------------------------------
+template <typename Key, typename Value, typename Hash = std::hash<Key>>
+bool dump_unordered_map(const std::unordered_map<Key, Value, Hash>& map, BinaryOutputArchive& ar) {
+    // Simple implementation for std::unordered_map - just serialize the size and key-value pairs
+    size_t size = map.size();
+    if (!ar.dump(size)) {
+        std::cerr << "Failed to dump map size" << std::endl;
         return false;
     }
 
-    for (size_t i = 0; i < submap_count; ++i) {            
-        auto& inner = sets_[i];
-        typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
-        if (!inner.set_.load(ar)) {
-            std::cerr << "Failed to load submap " << i << std::endl;
+    for (const auto& pair : map) {
+        if (!ar.dump(pair.first) || !ar.dump(pair.second)) {
+            std::cerr << "Failed to dump map item" << std::endl;
             return false;
         }
     }
     return true;
 }
+
+template <typename Key, typename Value, typename Hash = std::hash<Key>>
+bool load_unordered_map(std::unordered_map<Key, Value, Hash>& map, BinaryInputArchive& ar) {
+    map.clear();
+    size_t size;
+    if (!ar.load(size)) {
+        std::cerr << "Failed to load map size" << std::endl;
+        return false;
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        Key key;
+        Value value;
+        if (!ar.load(key) || !ar.load(value)) {
+            std::cerr << "Failed to load map item" << std::endl;
+            return false;
+        }
+        map[key] = value;
+    }
+    return true;
+}
+
 } // namespace container_internal
 
 

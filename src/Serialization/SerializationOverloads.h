@@ -66,6 +66,7 @@ serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::IS
     }
     serializer.binary(blob, name);
   }
+}
 
 template <typename T>
 typename std::enable_if<std::is_pod<T>::value>::type

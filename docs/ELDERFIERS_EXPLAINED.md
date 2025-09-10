@@ -22,9 +22,9 @@
 - **Standard Addresses**: Traditional wallet addresses starting with "fire"
 
 ### 🔹 **Advanced Consensus**
-- **Fast Path**: 2/2 consensus for quick validation
-- **Robust Path**: 4/5 consensus for critical operations
-- Automatic fallback between consensus modes
+- **Fast Pass**: 2/2 consensus for quick verification.
+- **Fallback Path**: 4/5 consensus for critical verification consensus
+- Automatic  (if not 2 then 4)  between consensus modes
 
 ## What Do Elderfiers Do?
 
@@ -33,18 +33,19 @@
 [Transaction] → [Elderfier Network] → [Cryptographic Verification] → [Approved/Rejected]
 ```
 - Verify transaction integrity and authenticity
-- Check digital signatures and cryptographic proofs
+- Sign digital signatures and cryptographic proofs
 - Ensure transactions meet network rules and standards
 
 ### 2. **Cross-Chain Operations** 🌉
-- Enable secure bridges between different blockchains
-- Validate cross-chain transactions (like HEAT bridge operations)
-- Generate proofs that other networks can verify
+- Enable secure bridges between different blockchains by validating cross-chain transactions (like HEAT bridge operations)
+- Generate verification consensus signatures that are needed to verify zkSTARK proof 
+
 
 ### 3. **Consensus Participation** 🗳️
 - Vote on network upgrades and protocol changes
 - Participate in governance decisions
 - Help resolve network conflicts through Elder Council voting
+- **Email Inbox Interface**: Receive voting messages in an inbox-style system
 
 ### 4. **Enhanced Security** 🛡️
 - Provide deposit-based security guarantees
@@ -82,6 +83,26 @@ Robust Consensus (4/5):
 4. Window closes → Transaction finalized
 ```
 
+### Elder Council Email Inbox 📧
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Elderfier Voting Inbox                   │
+├─────────────────────────────────────────────────────────────┤
+│ 📧 [UNREAD] Elder Council Vote - Elderfier a1b2c3d4        │
+│    Misbehavior Detected | Deadline: 24h                   │
+│    Status: 3/5 votes (PENDING) [READ] [VOTE]              │
+├─────────────────────────────────────────────────────────────┤
+│ ✅ [READ] Elder Council Vote - Elderfier e5f6g7h8          │
+│    Misbehavior Detected | Deadline: Closed                │
+│    Status: 5/5 votes (QUORUM REACHED) [VIEW RESULTS]      │
+└─────────────────────────────────────────────────────────────┘
+
+Voting Options:
+○ SLASH ALL - Burn all of Elderfier's stake
+○ SLASH HALF - Burn half of Elderfier's stake  
+○ SLASH NONE - Allow Elderfier to keep all stake
+```
+
 ## Benefits of Running an Elderfier
 
 ### 🎯 **Network Priority**
@@ -98,6 +119,7 @@ Robust Consensus (4/5):
 - Custom service identification
 - Enhanced monitoring capabilities
 - Access to advanced network features
+- **Email-style voting inbox** for Elder Council governance
 
 ### 🌐 **Network Participation**
 - Vote on network governance
@@ -157,6 +179,18 @@ make
 ./fuegod --enable-elderfier
 ```
 
+### 5. **Access Elder Council Inbox**
+```bash
+# View voting messages
+./fuegod --get-voting-messages
+
+# Check unread messages  
+./fuegod --get-unread-messages
+
+# Vote on a specific message
+./fuegod --vote-on-message [MESSAGE_ID] [VOTE_TYPE]
+```
+
 ## Security Features
 
 ### 🔐 **Deposit-Based Security**
@@ -165,9 +199,10 @@ make
 - Economic incentives align with network security
 
 ### 🗳️ **Elder Council Governance**
-- Decentralized voting on slashing decisions
+- Decentralized voting on slashing decisions  
 - Two-step confirmation process
 - Community-driven dispute resolution
+- **Email inbox interface** for voting messages and governance
 
 ### ⏰ **Security Window System**
 - 8-hour monitoring period for transactions
@@ -211,6 +246,7 @@ make
 | **Consensus** | Basic participation | Enhanced consensus roles |
 | **Rewards** | Standard fees | Premium fees + consensus rewards |
 | **Governance** | Limited voting | Full governance participation |
+| **Elder Council** | No access | Email inbox voting system |
 | **Cross-Chain** | No | Yes |
 | **Security** | Basic | Enhanced with deposits |
 
@@ -330,6 +366,7 @@ tail -f ~/.fuego/fuego.log
 2. **Service Node Setup**: [Elderfier Service Nodes Guide](ELDERFIER_SERVICE_NODES.md)
 3. **Deposit System**: [Deposit System Guide](ELDERFIER_DEPOSIT_SYSTEM_GUIDE.md)
 4. **Security Analysis**: [Security Guide](ELDERFIER_SECURITY_ANALYSIS.md)
+5. **Elder Council Voting**: [Voting Interface System](ELDERFIER_VOTING_INTERFACE_SYSTEM.md)
 
 ### 💬 **Community Support**
 - **Discord**: Join our development community

@@ -42,90 +42,6 @@ struct IsTriviallyCopyable<std::pair<T1, T2>> {
 
 namespace container_internal {
 
-// ------------------------------------------------------------------------
-// dump/load for raw_hash_set
-// ------------------------------------------------------------------------
-template <typename Key, typename Hash = std::hash<Key>>
-bool dump_unordered_set(const std::unordered_set<Key, Hash>& set, BinaryOutputArchive& ar) {
-    // Simple implementation for std::unordered_set - just serialize the size and elements
-    size_t size = set.size();
-    if (!ar.dump(size)) {
-        std::cerr << "Failed to dump set size" << std::endl;
-        return false;
-    }
-
-    for (const auto& item : set) {
-        if (!ar.dump(item)) {
-            std::cerr << "Failed to dump set item" << std::endl;
-            return false;
-        }
-    }
-    return true;
-}
-
-// Load function for std::unordered_set
-template <typename Key, typename Hash = std::hash<Key>>
-bool load_unordered_set(std::unordered_set<Key, Hash>& set, BinaryInputArchive& ar) {
-    set.clear();
-    size_t size;
-    if (!ar.load(size)) {
-        std::cerr << "Failed to load set size" << std::endl;
-        return false;
-    }
-
-    for (size_t i = 0; i < size; ++i) {
-        Key item;
-        if (!ar.load(item)) {
-            std::cerr << "Failed to load set item" << std::endl;
-            return false;
-        }
-        set.insert(item);
-    }
-    return true;
-}
-
-// ------------------------------------------------------------------------
-// dump/load for unordered_map (used instead of parallel_hash_map)
-// ------------------------------------------------------------------------
-template <typename Key, typename Value, typename Hash = std::hash<Key>>
-bool dump_unordered_map(const std::unordered_map<Key, Value, Hash>& map, BinaryOutputArchive& ar) {
-    // Simple implementation for std::unordered_map - just serialize the size and key-value pairs
-    size_t size = map.size();
-    if (!ar.dump(size)) {
-        std::cerr << "Failed to dump map size" << std::endl;
-        return false;
-    }
-
-    for (const auto& pair : map) {
-        if (!ar.dump(pair.first) || !ar.dump(pair.second)) {
-            std::cerr << "Failed to dump map item" << std::endl;
-            return false;
-        }
-    }
-    return true;
-}
-
-template <typename Key, typename Value, typename Hash = std::hash<Key>>
-bool load_unordered_map(std::unordered_map<Key, Value, Hash>& map, BinaryInputArchive& ar) {
-    map.clear();
-    size_t size;
-    if (!ar.load(size)) {
-        std::cerr << "Failed to load map size" << std::endl;
-        return false;
-    }
-
-    for (size_t i = 0; i < size; ++i) {
-        Key key;
-        Value value;
-        if (!ar.load(key) || !ar.load(value)) {
-            std::cerr << "Failed to load map item" << std::endl;
-            return false;
-        }
-        map[key] = value;
-    }
-    return true;
-}
-
 } // namespace container_internal
 
 
@@ -181,6 +97,86 @@ public:
 private:
     std::ifstream ifs_;
 };
+
+// ------------------------------------------------------------------------
+// dump/load for std::unordered_set and std::unordered_map
+// ------------------------------------------------------------------------
+template <typename Key, typename Hash = std::hash<Key>>
+bool dump_unordered_set(const std::unordered_set<Key, Hash>& set, BinaryOutputArchive& ar) {
+    // Simple implementation for std::unordered_set - just serialize the size and elements
+    size_t size = set.size();
+    if (!ar.dump(size)) {
+        std::cerr << "Failed to dump set size" << std::endl;
+        return false;
+    }
+
+    for (const auto& item : set) {
+        if (!ar.dump(item)) {
+            std::cerr << "Failed to dump set item" << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+template <typename Key, typename Hash = std::hash<Key>>
+bool load_unordered_set(std::unordered_set<Key, Hash>& set, BinaryInputArchive& ar) {
+    set.clear();
+    size_t size;
+    if (!ar.load(size)) {
+        std::cerr << "Failed to load set size" << std::endl;
+        return false;
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        Key item;
+        if (!ar.load(item)) {
+            std::cerr << "Failed to load set item" << std::endl;
+            return false;
+        }
+        set.insert(item);
+    }
+    return true;
+}
+
+template <typename Key, typename Value, typename Hash = std::hash<Key>>
+bool dump_unordered_map(const std::unordered_map<Key, Value, Hash>& map, BinaryOutputArchive& ar) {
+    // Simple implementation for std::unordered_map - just serialize the size and key-value pairs
+    size_t size = map.size();
+    if (!ar.dump(size)) {
+        std::cerr << "Failed to dump map size" << std::endl;
+        return false;
+    }
+
+    for (const auto& pair : map) {
+        if (!ar.dump(pair.first) || !ar.dump(pair.second)) {
+            std::cerr << "Failed to dump map item" << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+template <typename Key, typename Value, typename Hash = std::hash<Key>>
+bool load_unordered_map(std::unordered_map<Key, Value, Hash>& map, BinaryInputArchive& ar) {
+    map.clear();
+    size_t size;
+    if (!ar.load(size)) {
+        std::cerr << "Failed to load map size" << std::endl;
+        return false;
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        Key key;
+        Value value;
+        if (!ar.load(key) || !ar.load(value)) {
+            std::cerr << "Failed to load map item" << std::endl;
+            return false;
+        }
+        map[key] = value;
+    }
+    return true;
+}
 
 } // namespace phmap
 

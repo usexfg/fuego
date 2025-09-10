@@ -118,9 +118,6 @@ struct TransactionExtraCDDepositSecret {
 };
 
 // Removed duplicate TransactionExtraElderfierDeposit struct
-  
-  bool serialize(ISerializer& serializer);
-};
 
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;

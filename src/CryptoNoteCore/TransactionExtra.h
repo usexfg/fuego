@@ -35,6 +35,8 @@
 #define TX_EXTRA_TTL                        0x05
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
+#define TX_EXTRA_CURA_COLORED_COIN          0x09
+#define TX_EXTRA_ALBUM_LICENSE              0x0B
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
@@ -100,11 +102,23 @@ struct TransactionExtraCuraColoredCoin {
   bool serialize(ISerializer& serializer);
 };
 
+struct TransactionExtraAlbumLicense {
+  std::string albumId;             // Album identifier
+  Crypto::PublicKey buyerKey;      // Public key of the buyer
+  uint64_t purchaseAmount;         // XFG amount paid
+  uint64_t timestamp;              // Unix timestamp of purchase
+  Crypto::PublicKey artistKey;     // Artist's public key
+  Crypto::Signature artistSig;    // Artist's signature over license data
+  uint32_t version;                // Version of the license protocol
+  
+  bool serialize(ISerializer& serializer);
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCuraColoredCoin> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCuraColoredCoin, TransactionExtraAlbumLicense> TransactionExtraField;
 
 
 
@@ -135,6 +149,8 @@ void appendTTLToExtra(std::vector<uint8_t>& tx_extra, uint64_t ttl);
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
 bool appendCuraColoredCoinToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraCuraColoredCoin& cura_tag);
 bool getCuraColoredCoinFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraCuraColoredCoin& cura_tag);
+bool appendAlbumLicenseToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraAlbumLicense& license);
+bool getAlbumLicenseFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraAlbumLicense& license);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 //returns false if payment id is not found or parse error

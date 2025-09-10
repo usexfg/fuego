@@ -118,6 +118,14 @@ namespace CryptoNote
           transactionExtraFields.push_back(ttl);
           break;
         }
+
+        case TX_EXTRA_CURA_COLORED_COIN:
+        {
+          TransactionExtraCuraColoredCoin curaTag;
+          ar(curaTag, "cura_tag");
+          transactionExtraFields.push_back(curaTag);
+          break;
+        }
         }
       }
     }
@@ -180,6 +188,11 @@ namespace CryptoNote
     bool operator()(const TransactionExtraYieldCommitment &t)
     {
       return addYieldCommitmentToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraCuraColoredCoin &t)
+    {
+      return appendCuraColoredCoinToExtra(extra, t);
     }
   };
 
@@ -308,6 +321,28 @@ namespace CryptoNote
     tx_extra.push_back(TX_EXTRA_TTL);
     std::copy(extraFieldSize.begin(), extraFieldSize.end(), std::back_inserter(tx_extra));
     std::copy(ttlData.begin(), ttlData.end(), std::back_inserter(tx_extra));
+  }
+
+  bool appendCuraColoredCoinToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraCuraColoredCoin &cura_tag)
+  {
+    BinaryArray blob;
+    if (!toBinaryArray(cura_tag, blob))
+    {
+      return false;
+    }
+
+    tx_extra.reserve(tx_extra.size() + 1 + blob.size());
+    tx_extra.push_back(TX_EXTRA_CURA_COLORED_COIN);
+    std::copy(reinterpret_cast<const uint8_t *>(blob.data()), reinterpret_cast<const uint8_t *>(blob.data() + blob.size()), std::back_inserter(tx_extra));
+    return true;
+  }
+
+  bool getCuraColoredCoinFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraCuraColoredCoin &cura_tag)
+  {
+    std::vector<TransactionExtraField> tx_extra_fields;
+    parseTransactionExtra(tx_extra, tx_extra_fields);
+
+    return findTransactionExtraFieldByType(tx_extra_fields, cura_tag);
   }
 
   void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t> &extra_nonce, const Hash &payment_id)

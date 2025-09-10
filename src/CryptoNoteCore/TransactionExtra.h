@@ -123,6 +123,8 @@ bool append_message_to_extra(std::vector<uint8_t>& tx_extra, const tx_extra_mess
 std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t>& extra, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key);
 void appendTTLToExtra(std::vector<uint8_t>& tx_extra, uint64_t ttl);
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
+bool appendCuraColoredCoinToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraCuraColoredCoin& cura_tag);
+bool getCuraColoredCoinFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraCuraColoredCoin& cura_tag);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 //returns false if payment id is not found or parse error

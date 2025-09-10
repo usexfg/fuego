@@ -1,29 +1,32 @@
-# Elderfiers Explained: Advanced Validators in the Fuego Blockchain
+# Elderfiers Explained: 
+# Advanced Verifier nodes in the Fuego L1 Blockchain Network
+
 
 ## What Are Elderfiers?
 
-**Elderfiers** are advanced validator nodes in the Fuego blockchain network that serve as on-chain input verifiers and distributed consensus participants. Think of them as specialized computers that help secure and validate transactions on the Fuego network while providing additional services like cross-chain verification and enhanced security features.
+**Elderfiers** are advanced verification nodes in the Fuego blockchain network that serve as on-chain input verifiers and distributed consensus participants. Think of them as specialized Eldernodes that help secure and verify transactions on the Fuego network, while providing additional services like cross-chain verification and enhanced security features.
 
 ## Key Characteristics
 
 ### 🔹 **Higher Tier Validators**
 - Elderfiers are an enhanced version of basic Eldernodes
-- Require a **800 XFG deposit** (versus 0 XFG for basic nodes)
+- Require an **800 XFG deposit stake** (versus 0 XFG for basic nodes)
 - Operate with higher priority and enhanced capabilities
 
 ### 🔹 **On-Chain Verification**
 - Validate transaction data cryptographically
 - Generate verifiable proofs for blockchain operations
-- Participate in distributed consensus for critical network decisions
+- Participate in a distributed consensus for critical network decisions
 
 ### 🔹 **Flexible Identity System**
-- **Custom Names**: Use 8-character custom identifiers (e.g., "FIRENODE")
-- **Hashed Addresses**: Use cryptographic hashes for privacy
+- **Custom Names**: Use a custom 8-character only identifier (e.g., "FIRENODE")
+- **Hashed Addresses**: Use cryptographic hash of public fee address for privacy
 - **Standard Addresses**: Traditional wallet addresses starting with "fire"
 
 ### 🔹 **Advanced Consensus**
-- **Fast Pass**: 2/2 consensus for quick verification.
-- **Fallback Path**: 4/5 consensus for critical verification consensus
+- ***Fast-Pass***: 2/2 consensus for quick verification.
+- **Fall-Back**: 4/5 consensus for deeper verification consensus
+- **Full-Quorum**: 8/10 consensus for fail-safe verification consensus
 - Automatic  (if not 2 then 4)  between consensus modes
 
 ## What Do Elderfiers Do?
@@ -34,7 +37,7 @@
 ```
 - Verify transaction integrity and authenticity
 - Sign digital signatures and cryptographic proofs
-- Ensure transactions meet network rules and standards
+- Enhance consensus thru good network uptime and strong sync performance
 
 ### 2. **Cross-Chain Operations** 🌉
 - Enable secure bridges between different blockchains by validating cross-chain transactions (like HEAT bridge operations)

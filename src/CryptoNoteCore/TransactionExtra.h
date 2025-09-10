@@ -34,12 +34,13 @@
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
 #define TX_EXTRA_MESSAGE_TAG                0x04
 #define TX_EXTRA_TTL                        0x05
+#define TX_EXTRA_ELDERFIER_DEPOSIT          0x06
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
-//#define TX_EXTRA_COLD_COMMITMENT            0x09
-//#define TX_EXTRA_DIGM_COLORED_COIN            0x0A
+#define TX_EXTRA_COLD_COMMITMENT            0x09
+#define TX_EXTRA_DIGM_ALBUM_RECORD          0x0A
 #define TX_EXTRA_ALBUM_LICENSE              0x0B
-#define TX_EXTRA_CURA_COLORED_COIN          0x0C
+#define TX_EXTRA_CURATION_TAG               0x0C
 
 
 namespace CryptoNote {

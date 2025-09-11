@@ -22,6 +22,7 @@
 #include <Common/Base64.h>
 #include <HTTP/HttpRequest.h>
 #include <HTTP/HttpResponse.h>
+#include <System/Dispatcher.h>
 #include <System/TcpConnection.h>
 #include <System/TcpStream.h>
 #include "JsonRpc.h"

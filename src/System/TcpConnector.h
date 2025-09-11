@@ -15,21 +15,20 @@ class Dispatcher;
 class Ipv4Address;
 class TcpConnection;
 
-class TcpListener {
+class TcpConnector {
 public:
-  TcpListener();
-  TcpListener(Dispatcher& dispatcher, const Ipv4Address& address, uint16_t port);
-  TcpListener(const TcpListener&) = delete;
-  TcpListener(TcpListener&& other);
-  ~TcpListener();
-  TcpListener& operator=(const TcpListener&) = delete;
-  TcpListener& operator=(TcpListener&& other);
-  TcpConnection accept();
+  TcpConnector();
+  TcpConnector(Dispatcher& dispatcher);
+  TcpConnector(const TcpConnector&) = delete;
+  TcpConnector(TcpConnector&& other);
+  ~TcpConnector();
+  TcpConnector& operator=(const TcpConnector&) = delete;
+  TcpConnector& operator=(TcpConnector&& other);
+  TcpConnection connect(const Ipv4Address& address, uint16_t port);
 
 private:
-  Dispatcher* dispatcher;
   void* context;
-  int listener;
+  Dispatcher* dispatcher;
 };
 
 }

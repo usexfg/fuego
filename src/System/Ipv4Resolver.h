@@ -6,30 +6,26 @@
 
 #pragma once
 
-#include <cstdint>
 #include <string>
 
 namespace System {
 
 class Dispatcher;
 class Ipv4Address;
-class TcpConnection;
 
-class TcpListener {
+class Ipv4Resolver {
 public:
-  TcpListener();
-  TcpListener(Dispatcher& dispatcher, const Ipv4Address& address, uint16_t port);
-  TcpListener(const TcpListener&) = delete;
-  TcpListener(TcpListener&& other);
-  ~TcpListener();
-  TcpListener& operator=(const TcpListener&) = delete;
-  TcpListener& operator=(TcpListener&& other);
-  TcpConnection accept();
+  Ipv4Resolver();
+  explicit Ipv4Resolver(Dispatcher& dispatcher);
+  Ipv4Resolver(const Ipv4Resolver&) = delete;
+  Ipv4Resolver(Ipv4Resolver&& other);
+  ~Ipv4Resolver();
+  Ipv4Resolver& operator=(const Ipv4Resolver&) = delete;
+  Ipv4Resolver& operator=(Ipv4Resolver&& other);
+  Ipv4Address resolve(const std::string& host);
 
 private:
   Dispatcher* dispatcher;
-  void* context;
-  int listener;
 };
 
 }

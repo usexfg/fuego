@@ -1,13 +1,41 @@
-// System/TcpConnection.h
-#ifndef SYSTEM_TCPCONNECTION_H
-#define SYSTEM_TCPCONNECTION_H
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include "Dispatcher.h"
 
 namespace System {
-    class TcpConnection {
-    public:
-        TcpConnection() = default;
-        virtual ~TcpConnection() = default;
-    };
-}
 
-#endif // SYSTEM_TCPCONNECTION_H
+class Ipv4Address;
+
+class TcpConnection {
+public:
+  TcpConnection();
+  TcpConnection(const TcpConnection&) = delete;
+  TcpConnection(TcpConnection&& other);
+  ~TcpConnection();
+  TcpConnection& operator=(const TcpConnection&) = delete;
+  TcpConnection& operator=(TcpConnection&& other);
+  std::size_t read(uint8_t* data, std::size_t size);
+  std::size_t write(const uint8_t* data, std::size_t size);
+  std::pair<Ipv4Address, uint16_t> getPeerAddressAndPort() const;
+
+private:
+  friend class TcpConnector;
+  friend class TcpListener;
+  
+  Dispatcher* dispatcher;
+  int connection;
+  ContextPair contextPair;
+
+  TcpConnection(Dispatcher& dispatcher, int socket);
+};
+
+}

@@ -123,7 +123,16 @@ namespace CryptoNote
           break;
         }
 
-        // TX_EXTRA_ELDERFIER_DEPOSIT case removed - struct no longer exists
+        case TX_EXTRA_ELDERFIER_DEPOSIT:
+        {
+          TransactionExtraElderfierDeposit deposit;
+          if (getElderfierDepositFromExtra(transactionExtra, deposit)) {
+            transactionExtraFields.push_back(deposit);
+          } else {
+            return false;
+          }
+          break;
+        }
         }
       }
     }
@@ -176,6 +185,11 @@ namespace CryptoNote
     {
       appendTTLToExtra(extra, t.ttl);
       return true;
+    }
+
+    bool operator()(const TransactionExtraElderfierDeposit &t)
+    {
+      return addElderfierDepositToExtra(extra, t);
     }
 
     bool operator()(const TransactionExtraHeatCommitment &t)
@@ -491,7 +505,173 @@ namespace CryptoNote
     return true;
   }
 
-  // Elderfier deposit helper functions - temporarily removed due to struct removal
+  // Elderfier deposit helper functions (contingency-based)
+  bool TransactionExtraElderfierDeposit::serialize(ISerializer& s)
+  {
+    s(depositHash, "depositHash");
+    s(depositAmount, "depositAmount");
+    s(elderfierAddress, "elderfierAddress");
+    s(securityWindow, "securityWindow");
+    s(metadata, "metadata");
+    s(signature, "signature");
+    s(isSlashable, "isSlashable");
+    return true;
+  }
+
+  bool TransactionExtraElderfierDeposit::isValid() const
+  {
+    return depositAmount >= 800000000000 && // Minimum 800 XFG
+           !elderfierAddress.empty() &&
+           securityWindow > 0 &&
+           isSlashable; // Always true for contingency deposits
+  }
+
+  std::string TransactionExtraElderfierDeposit::toString() const
+  {
+    std::ostringstream oss;
+    oss << "ElderfierDeposit{hash=" << Common::podToHex(depositHash) 
+        << ", amount=" << depositAmount 
+        << ", address=" << elderfierAddress
+        << ", securityWindow=" << securityWindow
+        << ", slashable=" << (isSlashable ? "true" : "false") << "}";
+    return oss.str();
+  }
+
+  bool createTxExtraWithElderfierDeposit(const Crypto::Hash& depositHash, uint64_t depositAmount, const std::string& elderfierAddress, uint32_t securityWindow, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra)
+  {
+    TransactionExtraElderfierDeposit deposit;
+    deposit.depositHash = depositHash;
+    deposit.depositAmount = depositAmount;
+    deposit.elderfierAddress = elderfierAddress;
+    deposit.securityWindow = securityWindow;
+    deposit.metadata = metadata;
+    deposit.isSlashable = true; // Always true for contingency deposits
+    
+    return addElderfierDepositToExtra(extra, deposit);
+  }
+
+  bool addElderfierDepositToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraElderfierDeposit& deposit)
+  {
+    tx_extra.push_back(TX_EXTRA_ELDERFIER_DEPOSIT);
+    
+    // Serialize deposit hash (32 bytes)
+    tx_extra.insert(tx_extra.end(), deposit.depositHash.data, deposit.depositHash.data + sizeof(deposit.depositHash.data));
+    
+    // Serialize amount (8 bytes, little-endian)
+    uint64_t amount = deposit.depositAmount;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
+      amount >>= 8;
+    }
+    
+    // Serialize address length and data
+    uint32_t addrLen = static_cast<uint32_t>(deposit.elderfierAddress.length());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(addrLen & 0xFF));
+      addrLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), deposit.elderfierAddress.begin(), deposit.elderfierAddress.end());
+    
+    // Serialize security window (4 bytes, little-endian)
+    uint32_t window = deposit.securityWindow;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(window & 0xFF));
+      window >>= 8;
+    }
+    
+    // Serialize metadata size and data
+    uint32_t metaLen = static_cast<uint32_t>(deposit.metadata.size());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(metaLen & 0xFF));
+      metaLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), deposit.metadata.begin(), deposit.metadata.end());
+    
+    // Serialize signature size and data
+    uint32_t sigLen = static_cast<uint32_t>(deposit.signature.size());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(sigLen & 0xFF));
+      sigLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), deposit.signature.begin(), deposit.signature.end());
+    
+    // Serialize slashable flag (1 byte)
+    tx_extra.push_back(deposit.isSlashable ? 1 : 0);
+    
+    return true;
+  }
+
+  bool getElderfierDepositFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraElderfierDeposit& deposit)
+  {
+    if (tx_extra.empty() || tx_extra[0] != TX_EXTRA_ELDERFIER_DEPOSIT) {
+      return false;
+    }
+    
+    size_t pos = 1;
+    
+    // Deserialize deposit hash (32 bytes)
+    if (pos + 32 > tx_extra.size()) return false;
+    std::memcpy(deposit.depositHash.data, &tx_extra[pos], 32);
+    pos += 32;
+    
+    // Deserialize amount (8 bytes, little-endian)
+    if (pos + 8 > tx_extra.size()) return false;
+    deposit.depositAmount = 0;
+    for (int i = 0; i < 8; ++i) {
+      deposit.depositAmount |= static_cast<uint64_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 8;
+    
+    // Deserialize address length and data
+    if (pos + 4 > tx_extra.size()) return false;
+    uint32_t addrLen = 0;
+    for (int i = 0; i < 4; ++i) {
+      addrLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+    
+    if (pos + addrLen > tx_extra.size()) return false;
+    deposit.elderfierAddress.assign(reinterpret_cast<const char*>(&tx_extra[pos]), addrLen);
+    pos += addrLen;
+    
+    // Deserialize security window (4 bytes, little-endian)
+    if (pos + 4 > tx_extra.size()) return false;
+    deposit.securityWindow = 0;
+    for (int i = 0; i < 4; ++i) {
+      deposit.securityWindow |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+    
+    // Deserialize metadata size and data
+    if (pos + 4 > tx_extra.size()) return false;
+    uint32_t metaLen = 0;
+    for (int i = 0; i < 4; ++i) {
+      metaLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+    
+    if (pos + metaLen > tx_extra.size()) return false;
+    deposit.metadata.assign(&tx_extra[pos], &tx_extra[pos] + metaLen);
+    pos += metaLen;
+    
+    // Deserialize signature size and data
+    if (pos + 4 > tx_extra.size()) return false;
+    uint32_t sigLen = 0;
+    for (int i = 0; i < 4; ++i) {
+      sigLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+    
+    if (pos + sigLen > tx_extra.size()) return false;
+    deposit.signature.assign(&tx_extra[pos], &tx_extra[pos] + sigLen);
+    pos += sigLen;
+    
+    // Deserialize slashable flag (1 byte)
+    if (pos >= tx_extra.size()) return false;
+    deposit.isSlashable = (tx_extra[pos] != 0);
+    
+    return true;
+  }
   // HEAT commitment helper functions
   bool addHeatCommitmentToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraHeatCommitment &commitment)
   {
@@ -769,111 +949,6 @@ namespace CryptoNote
     // Implementation would parse the extra field to extract CD deposit secret
     // This is a placeholder - full implementation would need proper parsing logic
     return false;
-  }
-
-  // Elderfier Deposit serialization
-  bool TransactionExtraElderfierDeposit::serialize(ISerializer &s)
-  {
-    s(depositHash, "deposit_hash");
-    s(depositAmount, "deposit_amount");
-    s(timestamp, "timestamp");
-    s(elderfierAddress, "elderfier_address");
-    s(metadata, "metadata");
-    s(signature, "signature");
-    s(isUnlocked, "is_unlocked");
-    return true;
-  }
-
-  bool TransactionExtraElderfierDeposit::isValid() const
-  {
-    return depositAmount >= 8000000000 && // Minimum 800 XFG
-           !elderfierAddress.empty() &&
-           !signature.empty() &&
-           depositHash != Crypto::Hash();
-  }
-
-  std::string TransactionExtraElderfierDeposit::toString() const
-  {
-    std::stringstream ss;
-    ss << "TransactionExtraElderfierDeposit{"
-       << "depositHash=" << Common::podToHex(depositHash)
-       << ", depositAmount=" << depositAmount
-       << ", timestamp=" << timestamp
-       << ", elderfierAddress=" << elderfierAddress
-       << ", metadataSize=" << metadata.size()
-       << ", signatureSize=" << signature.size()
-       << ", isUnlocked=" << isUnlocked
-       << "}";
-    return ss.str();
-  }
-
-  // Elderfier Deposit helper functions
-  bool addElderfierDepositToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraElderfierDeposit &deposit)
-  {
-    tx_extra.push_back(TX_EXTRA_ELDERFIER_DEPOSIT);
-    
-    // Serialize deposit hash (32 bytes)
-    tx_extra.insert(tx_extra.end(), deposit.depositHash.data, deposit.depositHash.data + sizeof(deposit.depositHash.data));
-    
-    // Serialize deposit amount (8 bytes, little-endian)
-    uint64_t amount = deposit.depositAmount;
-    for (int i = 0; i < 8; ++i) {
-      tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
-      amount >>= 8;
-    }
-    
-    // Serialize timestamp (8 bytes, little-endian)
-    uint64_t timestamp = deposit.timestamp;
-    for (int i = 0; i < 8; ++i) {
-      tx_extra.push_back(static_cast<uint8_t>(timestamp & 0xFF));
-      timestamp >>= 8;
-    }
-    
-    // Serialize elderfier address length and data
-    uint8_t addressLength = static_cast<uint8_t>(deposit.elderfierAddress.length());
-    tx_extra.push_back(addressLength);
-    tx_extra.insert(tx_extra.end(), deposit.elderfierAddress.begin(), deposit.elderfierAddress.end());
-    
-    // Serialize metadata size and data
-    uint8_t metadataSize = static_cast<uint8_t>(deposit.metadata.size());
-    tx_extra.push_back(metadataSize);
-    if (metadataSize > 0) {
-      tx_extra.insert(tx_extra.end(), deposit.metadata.begin(), deposit.metadata.end());
-    }
-    
-    // Serialize signature size and data
-    uint8_t signatureSize = static_cast<uint8_t>(deposit.signature.size());
-    tx_extra.push_back(signatureSize);
-    if (signatureSize > 0) {
-      tx_extra.insert(tx_extra.end(), deposit.signature.begin(), deposit.signature.end());
-    }
-    
-    // Serialize isUnlocked flag (1 byte)
-    tx_extra.push_back(deposit.isUnlocked ? 1 : 0);
-    
-    return true;
-  }
-
-  bool getElderfierDepositFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraElderfierDeposit &deposit)
-  {
-    // Implementation would parse the extra field to extract Elderfier deposit
-    // This is a placeholder - full implementation would need proper parsing logic
-    return false;
-  }
-
-  bool createTxExtraWithElderfierDeposit(const Crypto::Hash &depositHash, uint64_t depositAmount, const std::string &elderfierAddress, const std::vector<uint8_t> &metadata, std::vector<uint8_t> &extra)
-  {
-    TransactionExtraElderfierDeposit deposit;
-    deposit.depositHash = depositHash;
-    deposit.depositAmount = depositAmount;
-    deposit.timestamp = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-    deposit.elderfierAddress = elderfierAddress;
-    deposit.metadata = metadata;
-    deposit.signature = std::vector<uint8_t>(); // Placeholder - would be signed
-    deposit.isUnlocked = true; // Always true for immediately unlocked deposits
-    
-    return addElderfierDepositToExtra(extra, deposit);
   }
 
 } // namespace CryptoNote

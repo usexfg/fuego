@@ -93,13 +93,13 @@ struct TransactionExtraYieldCommitment {
 };
 
 struct TransactionExtraElderfierDeposit {
-  Crypto::Hash depositHash;           // Hash of deposit data
-  uint64_t depositAmount;            // 800 XFG minimum
-  uint64_t timestamp;                // Deposit timestamp
-  std::string elderfierAddress;       // Elderfier wallet address
-  std::vector<uint8_t> metadata;     // Additional metadata
-  std::vector<uint8_t> signature;    // Deposit signature
-  bool isUnlocked;                   // Always true - deposits are immediately unlocked
+  Crypto::Hash depositHash;         // Unique deposit identifier
+  uint64_t depositAmount;           // XFG amount (minimum 800 XFG)
+  std::string elderfierAddress;     // Elderfier node address
+  uint32_t securityWindow;          // Security window in seconds (8 hours = 28800)
+  std::vector<uint8_t> metadata;   // Additional metadata
+  std::vector<uint8_t> signature;   // Deposit signature
+  bool isSlashable;                // True - deposits can be slashed by Elder Council
   
   bool serialize(ISerializer& serializer);
   bool isValid() const;
@@ -122,7 +122,7 @@ struct TransactionExtraCDDepositSecret {
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<CryptoNote::TransactionExtraPadding, CryptoNote::TransactionExtraPublicKey, CryptoNote::TransactionExtraNonce, CryptoNote::TransactionExtraMergeMiningTag, CryptoNote::tx_extra_message, CryptoNote::TransactionExtraTTL, CryptoNote::TransactionExtraHeatCommitment, CryptoNote::TransactionExtraYieldCommitment, CryptoNote::TransactionExtraCDDepositSecret> TransactionExtraField;
+typedef boost::variant<CryptoNote::TransactionExtraPadding, CryptoNote::TransactionExtraPublicKey, CryptoNote::TransactionExtraNonce, CryptoNote::TransactionExtraMergeMiningTag, CryptoNote::tx_extra_message, CryptoNote::TransactionExtraTTL, CryptoNote::TransactionExtraElderfierDeposit, CryptoNote::TransactionExtraHeatCommitment, CryptoNote::TransactionExtraYieldCommitment, CryptoNote::TransactionExtraCDDepositSecret> TransactionExtraField;
 
 
 
@@ -167,7 +167,10 @@ bool createTxExtraWithYieldCommitment(const Crypto::Hash& commitment, uint64_t a
 bool addYieldCommitmentToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraYieldCommitment& commitment);
 bool getYieldCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraYieldCommitment& commitment);
 
-// Elderfier Deposit helper functions - temporarily removed due to struct removal
+// Elderfier Deposit helper functions (contingency-based)
+bool createTxExtraWithElderfierDeposit(const Crypto::Hash& depositHash, uint64_t depositAmount, const std::string& elderfierAddress, uint32_t securityWindow, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
+bool addElderfierDepositToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraElderfierDeposit& deposit);
+bool getElderfierDepositFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraElderfierDeposit& deposit);
 
 // CD Deposit Secret helper functions
 bool createTxExtraWithCDDepositSecret(const std::vector<uint8_t>& secret_key, uint64_t xfg_amount, uint32_t apr_basis_points, uint8_t term_code, uint8_t chain_code, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);

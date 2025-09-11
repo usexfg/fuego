@@ -1505,7 +1505,7 @@ void WalletLegacy::setBurnTransactionCallbacks() {
   // Set up callbacks for burn detection and STARK proof generation
   m_burnTransactionManager->setBurnDetectedCallback([this](const std::string& txHash, uint64_t amount, const std::string& ethAddress) {
     // Log burn transaction detection
-    m_loggerGroup(Logging::INFO, Logging::WALLET) << "Burn transaction detected: " << txHash 
+    m_loggerGroup(Logging::INFO) << "Burn transaction detected: " << txHash 
                                                   << ", amount: " << amount 
                                                   << ", ETH address: " << ethAddress;
     
@@ -1515,7 +1515,7 @@ void WalletLegacy::setBurnTransactionCallbacks() {
   
   m_burnTransactionManager->setStarkProofGeneratedCallback([this](const std::string& txHash, const std::string& proofData) {
     // Log STARK proof generation
-    m_loggerGroup(Logging::INFO, Logging::WALLET) << "STARK proof generated for burn transaction: " << txHash;
+    m_loggerGroup(Logging::INFO) << "STARK proof generated for burn transaction: " << txHash;
     
     // Notify observers about STARK proof generation
     // You can add custom observer events here if needed
@@ -1523,7 +1523,7 @@ void WalletLegacy::setBurnTransactionCallbacks() {
   
   m_burnTransactionManager->setErrorCallback([this](const std::string& error) {
     // Log errors
-    m_loggerGroup(Logging::ERROR, Logging::WALLET) << "Burn transaction error: " << error;
+    m_loggerGroup(Logging::ERROR) << "Burn transaction error: " << error;
   });
 }
 

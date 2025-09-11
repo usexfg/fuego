@@ -19,7 +19,7 @@
 #include <functional>
 #include <memory>
 #include "CryptoNoteCore/TransactionExtra.h"
-#include "Crypto.h"
+#include "crypto/crypto.h"
 
 namespace CryptoNote {
 

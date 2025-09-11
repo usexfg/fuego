@@ -1,100 +1,69 @@
-name: Build Fuego
+# CI workflow that builds Fuego / Fuego-Wallet on all three major OSes
+
+name: CI
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, fix/sysapi ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ master ]
 
 jobs:
-  build-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install dependencies
-      run: |
-        # Install Boost and other dependencies
-        # Handle CMake conflict by uninstalling existing version first
-        brew uninstall cmake || true
-        brew install boost cmake
-        
-    - name: Configure CMake
-      run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
-        
-    - name: Build
-      run: |
-        cd build
-        make -j$(sysctl -n hw.ncpu)
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
-  build-ubuntu-22:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev libgtest-dev
-        
-    - name: Configure CMake
-      run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
-        
-    - name: Build
-      run: |
-        cd build
-        make -j$(nproc)
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-12, windows-2022]
 
-  build-ubuntu-24:
-    runs-on: ubuntu-24.04
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev libgtest-dev
-        
-    - name: Configure CMake
-      run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
-        
-    - name: Build
-      run: |
-        cd build
-        make -j$(nproc)
+    env:
+      CMAKE_BUILD_TYPE: Release
+      Qt5_DIR: ${{ matrix.os == 'windows-2022' && 'C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5' || '' }}
 
-  build-windows:
-    runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install dependencies
-      run: |
-        # Install Visual Studio Build Tools
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
-        choco install cmake -y
-        # Install boost via Chocolatey (try different package name)
-        choco install boost-msvc-14.3 -y || choco install boost -y
-        # Refresh environment variables using PowerShell
-        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-        
-    - name: Configure CMake
-      run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD -DBoost_NO_BOOST_CMAKE=ON -DBOOST_ROOT=C:\tools\boost ..
-        
-    - name: Build
-      run: |
-        cd build
-        cmake --build . --config Release --parallel
+      - uses: actions/checkout@v4
+
+      # -------------------- Linux --------------------
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build pkg-config \
+               libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
+               libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
+
+          # Install Boost using apt (more reliable)
+          sudo apt-get install -y libboost-all-dev
+
+      # -------------------- macOS --------------------
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-12'
+        run: |
+          brew install ninja boost@1.89 qt@5 miniupnpc qrencode
+          echo "BOOST_ROOT=$(brew --prefix boost@1.89)" >> $GITHUB_ENV
+
+      # -------------------- Windows --------------------
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-2022'
+        shell: pwsh
+        run: |
+          choco install -y ninja
+          choco install -y boost-msvc-14.3 --version=1.82.0
+          choco install -y miniupnpc qrencode
+          choco install -y qt5-default --params '/InstallDir:C:\Qt'
+
+      # -------------------- Configure & Build --------------------
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+                -DBOOST_ROOT="$BOOST_ROOT"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      # -------------------- Tests (if present) --------------------
+      - name: Run tests
+        if: ${{ success() && hashFiles('build/tests/**') != '' }}
+        run: ctest --test-dir build --output-on-failure
     

@@ -26,6 +26,7 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "crypto/keccak.h"
+#include <memory>
 #include <sstream>
 #include <chrono>
 

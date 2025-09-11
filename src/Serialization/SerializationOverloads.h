@@ -30,6 +30,7 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <stdexcept>
 #include <parallel_hashmap/phmap.h>
 
 // using phmap::flat_hash_map;

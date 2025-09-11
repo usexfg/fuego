@@ -18,6 +18,7 @@
 #include "WalletLegacy.h"
 
 #include <algorithm>
+#include <sstream>
 #include <numeric>
 #include <random>
 #include <set>
@@ -1505,9 +1506,11 @@ void WalletLegacy::setBurnTransactionCallbacks() {
   // Set up callbacks for burn detection and STARK proof generation
   m_burnTransactionManager->setBurnDetectedCallback([this](const std::string& txHash, uint64_t amount, const std::string& ethAddress) {
     // Log burn transaction detection
-    m_loggerGroup(Logging::INFO) << "Burn transaction detected: " << txHash 
-                                                  << ", amount: " << amount 
-                                                  << ", ETH address: " << ethAddress;
+    std::stringstream ss;
+    ss << "Burn transaction detected: " << txHash 
+       << ", amount: " << amount 
+       << ", ETH address: " << ethAddress;
+    m_loggerGroup("Wallet", Logging::INFO, boost::posix_time::microsec_clock::universal_time(), ss.str());
     
     // Notify observers about burn transaction
     // You can add custom observer events here if needed
@@ -1515,7 +1518,9 @@ void WalletLegacy::setBurnTransactionCallbacks() {
   
   m_burnTransactionManager->setStarkProofGeneratedCallback([this](const std::string& txHash, const std::string& proofData) {
     // Log STARK proof generation
-    m_loggerGroup(Logging::INFO) << "STARK proof generated for burn transaction: " << txHash;
+    std::stringstream ss;
+    ss << "STARK proof generated for burn transaction: " << txHash;
+    m_loggerGroup("Wallet", Logging::INFO, boost::posix_time::microsec_clock::universal_time(), ss.str());
     
     // Notify observers about STARK proof generation
     // You can add custom observer events here if needed
@@ -1523,7 +1528,9 @@ void WalletLegacy::setBurnTransactionCallbacks() {
   
   m_burnTransactionManager->setErrorCallback([this](const std::string& error) {
     // Log errors
-    m_loggerGroup(Logging::ERROR) << "Burn transaction error: " << error;
+    std::stringstream ss;
+    ss << "Burn transaction error: " << error;
+    m_loggerGroup("Wallet", Logging::ERROR, boost::posix_time::microsec_clock::universal_time(), ss.str());
   });
 }
 

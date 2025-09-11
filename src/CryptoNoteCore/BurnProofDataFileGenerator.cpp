@@ -37,7 +37,7 @@ std::error_code BurnProofDataFileGenerator::generateBPDF(
         return std::make_error_code(std::errc::invalid_argument);
     }
     
-    // Validate XFG amount (supports both 0.8 XFG and 8000 XFG)
+    // Validate XFG amount (supports both 0.8 XFG and 800 XFG)
     if (!isValidXfgAmount(amount)) {
         return std::make_error_code(std::errc::invalid_argument);
     }

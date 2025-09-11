@@ -91,9 +91,23 @@ public:
     std::string getStarkCliPath() const;
     void setStarkCliPath(const std::string& path);
 
+    /**
+     * Check if burn detected callback is set
+     */
+    bool hasBurnDetectedCallback() const;
+
+    /**
+     * Trigger burn detected callback
+     */
+    void triggerBurnDetectedCallback(const std::string& txHash, uint64_t amount, const std::string& ethAddress);
+
 private:
     class Impl;
     std::unique_ptr<Impl> m_impl;
+    
+    // Helper functions
+    BurnTransactionData parseHeatCommitment(const std::vector<uint8_t>& txExtra, size_t pos);
+    std::string extractEthereumAddress(const std::string& metadata);
 };
 
 /**

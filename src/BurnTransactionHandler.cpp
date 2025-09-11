@@ -299,6 +299,16 @@ void BurnTransactionHandler::setStarkCliPath(const std::string& path) {
     m_impl->starkCliPath = path;
 }
 
+bool BurnTransactionHandler::hasBurnDetectedCallback() const {
+    return static_cast<bool>(m_impl->burnDetectedCallback);
+}
+
+void BurnTransactionHandler::triggerBurnDetectedCallback(const std::string& txHash, uint64_t amount, const std::string& ethAddress) {
+    if (m_impl->burnDetectedCallback) {
+        m_impl->burnDetectedCallback(txHash, amount, ethAddress);
+    }
+}
+
 // BurnTransactionManager implementation
 class BurnTransactionManager::Impl {
 public:
@@ -331,9 +341,7 @@ void BurnTransactionManager::processTransaction(const std::string& txHash,
         auto burnData = m_impl->handler->parseBurnTransaction(txExtra);
         if (burnData.isValid) {
             // Notify that a burn transaction was detected
-            if (m_impl->handler->burnDetectedCallback) {
-                m_impl->handler->burnDetectedCallback(txHash, burnData.amount, burnData.ethAddress);
-            }
+            m_impl->handler->triggerBurnDetectedCallback(txHash, burnData.amount, burnData.ethAddress);
             
             // Auto-generate STARK proof if enabled
             if (m_impl->handler->isAutoGenerateProofsEnabled() && !burnData.ethAddress.empty()) {

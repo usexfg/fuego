@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12, windows-2022]
+        os: [ubuntu-22.04, macos-14, windows-2022]
 
     env:
       CMAKE_BUILD_TYPE: Release
@@ -38,10 +38,10 @@ jobs:
 
       # -------------------- macOS --------------------
       - name: Install dependencies (macOS)
-        if: matrix.os == 'macos-12'
+        if: matrix.os == 'macos-14'
         run: |
-          brew install ninja boost@1.89 qt@5 miniupnpc qrencode
-          echo "BOOST_ROOT=$(brew --prefix boost@1.89)" >> $GITHUB_ENV
+          brew install ninja boost qt@5 miniupnpc qrencode
+          echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
 
       # -------------------- Windows --------------------
       - name: Install dependencies (Windows)
@@ -56,8 +56,13 @@ jobs:
       # -------------------- Configure & Build --------------------
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                -DBOOST_ROOT="$BOOST_ROOT"
+          if [ "${{ matrix.os }}" == "macos-14" ]; then
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+                  -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
+          else
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+                  -DBOOST_ROOT="$BOOST_ROOT"
+          fi
 
       - name: Build
         run: cmake --build build --parallel

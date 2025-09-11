@@ -116,6 +116,17 @@ Voting Options:
 ○ SLASH NONE - Allow Elderfier to keep all stake
 ```
 
+### 🔥 Slashing Outcomes (Where Does the Stake Go?)
+When an Elderfier misbehaves (invalid signatures, extended downtime, security-window violations, etc.) its 800 XFG deposit is frozen and an Elder Council vote decides the outcome.
+
+| Council Decision | What Happens to Deposit | Notes |
+|------------------|-------------------------|-------|
+| **SLASH ALL**    | 100 % of deposit is sent to the protocol’s irreversible **burn address** `fire11111111111111111111111111111111111111111111111111111111dead` | Coins are permanently removed from circulation. |
+| **SLASH HALF**   | 50 % burned, 50 % returned to operator after the security window closes | Economic penalty but not total loss. |
+| **SLASH NONE**   | 0 % burned, entire deposit unlocked after window closes | Reserved for minor or unproven infractions. |
+
+A decision becomes final when the Elder Council voting inbox reaches quorum (2/2 fast-pass or 4/5 fallback).  Burn transactions are generated automatically by the daemon once quorum is reached.
+
 ## Benefits of Running an Elderfier
 
 ### 🎯 **Network Priority**
@@ -211,11 +222,11 @@ make
 - Immediate slashing for malicious activity
 - Economic incentives align with network security
 
-### 🗳️ **Elder Council Governance**
+### 🗳️ **Governance (Elder Council)**
 - Decentralized voting on slashing decisions  
 - Two-step confirmation process
 - Community-driven dispute resolution
-- **Email inbox interface** for voting messages and governance
+- **Email inbox style interface** for quorum messages and network governance framework.
 
 ### ⏰ **Security Window System**
 - 8-hour monitoring period for transactions
@@ -256,12 +267,12 @@ make
 | **Deposit Required** | 0 XFG | 800 XFG |
 | **Service ID** | Wallet address only | Custom name, hash, or address |
 | **Priority** | Standard | High |
-| **Consensus** | Basic participation | Enhanced consensus roles |
-| **Rewards** | Standard fees | Premium fees + consensus rewards |
-| **Governance** | Limited voting | Full governance participation |
+| **Consensus** | Network node | Enhanced consensus roles |
+| **Rewards** | remote node fee 0.008 per txn relayed | Relay fees + Burn fees + fees on COLD yield deposits |
+| **Governance** | None | Full governance participation |
 | **Elder Council** | No access | Email inbox voting system |
-| **Cross-Chain** | No | Yes |
-| **Security** | Basic | Enhanced with deposits |
+| **Cross-Chain Use** | No | Yes |
+| **Security** | Standard | Enhanced by staked deposit  |
 
 ## Economic Model
 
@@ -272,7 +283,7 @@ make
 - **Cross-Chain Fees**: Fees for bridge operations
 
 ### 💰 **Cost Structure**
-- **Initial Deposit**: 800 XFG (refundable)
+- **Initial Deposit**: 800 XFG (refundable if valid service, slashable if not )
 - **Operating Costs**: Server, bandwidth, maintenance
 - **Slashing Risk**: Potential loss for misbehavior
 
@@ -366,10 +377,10 @@ tail -f ~/.fuego/fuego.log
 - **Automated Governance**: Smart contract-based voting systems
 - **Performance Optimizations**: Faster consensus and validation
 
-### 🔬 **Research Areas**
+### Actual features now**
 - Zero-knowledge proof integration
 - Advanced consensus algorithms
-- Cross-chain interoperability protocols
+- Cross-chain interoperability protocol
 - Quantum-resistant cryptography
 
 ## Getting Started
@@ -382,22 +393,24 @@ tail -f ~/.fuego/fuego.log
 5. **Elder Council Voting**: [Voting Interface System](ELDERFIER_VOTING_INTERFACE_SYSTEM.md)
 
 ### 💬 **Community Support**
-- **Discord**: Join our development community
+- **[Github](https://github.com/usexfg/)**: Join our development community
 - **GitHub**: Report issues and contribute code
-- **Forums**: Technical discussions and support
+- **[Forums](https://github.com/usexfg/guides)**: Technical discussions and support
 
 ### 🔗 **Quick Links**
-- [Source Code](https://github.com/colinritman/fuego)
-- [Documentation](https://github.com/colinritman/fuego/docs)
-- [Issue Tracker](https://github.com/colinritman/fuego/issues)
+- [Source Code](https://github.com/usexfg/fuego)
+- [Documentation](https://github.com/usexfg/fuego/docs)
+- [Issue Tracker](https://github.com/usexfg/fuego/issues)
 
 ---
 
 ## Conclusion
 
-Elderfiers represent the next evolution of blockchain validation, combining economic incentives with advanced cryptographic verification to create a more secure, efficient, and scalable network. Whether you're interested in earning rewards, contributing to network security, or accessing premium blockchain services, Elderfiers offer a compelling opportunity to participate in the future of decentralized validation.
+Elderfiers represent the next evolution of Fuego, combining economic incentive with cryptographic verification to create a more secure, efficient, and scalable network. If you're interested in earning rewards, contributing to network security expansion, or offering premium blockchain services, Elderfiers offer a compelling opportunity to participate in the future of Fuego.
 
-By running an Elderfier, you become part of a distributed network of validators that secure the Fuego blockchain while earning rewards and participating in governance decisions that shape the network's future.
+By running an Elderfier you become part of an index of verifiers that are selected at random (potentially, weighted, by uptime) to participate in validation of network status, and therefore, are able to earn a share on fees from very specific types of transactions.  Fees on burn transactions, for example, are 0.8 XFG each large burn, and 0.0008 XFG from each standard burn. The Elderfiers participating in verification split once if 2/2 fastpass and spilt twice if fallback 4/5 is needed. Invalid signatures do not earn a share. The other transaction fee type is COLD deposits. COLD deposit *yield* rates, on the other hand, will be *managed* by COLDAO. By the way- this group of Elderfiers will essentially be the ones to set burn fees & determine deposit fees thru Elder Council voting, if so desired.  Either way, Elderfiers continue to earn fees in XFG.
+
+Secure the Fuego blockchain while earning rewards & participating in Elder Council decisions that shape the network's future.
 
 ---
 

@@ -178,7 +178,6 @@ namespace CryptoNote
       return true;
     }
 
-
     bool operator()(const TransactionExtraHeatCommitment &t)
     {
       return addHeatCommitmentToExtra(extra, t);
@@ -493,7 +492,6 @@ namespace CryptoNote
   }
 
   // Elderfier deposit helper functions - temporarily removed due to struct removal
-
   // HEAT commitment helper functions
   bool addHeatCommitmentToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraHeatCommitment &commitment)
   {

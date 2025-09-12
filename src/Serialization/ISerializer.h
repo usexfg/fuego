@@ -78,7 +78,9 @@ bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
 
 template<typename T>
 void serialize(T& value, ISerializer& serializer) {
-  serialize(value, serializer);
+  // This generic template should not be used directly
+  // Specialized versions should be provided for each type
+  static_assert(sizeof(T) == 0, "No serialization specialization found for this type");
 }
 
 #ifdef __clang__

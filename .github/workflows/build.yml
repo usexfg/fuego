@@ -51,7 +51,7 @@ jobs:
           choco install -y vcpkg
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit --triplet x64-windows
+          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
 
       - name: Debug Boost installation (Windows)
         if: matrix.os == 'windows-2022'

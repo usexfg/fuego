@@ -22,9 +22,6 @@
 #include <functional>
 #include <queue>
 #include <stack>
-#ifdef __GLIBC__
-#include <bits/reg.h>
-#endif
 
 namespace System {
 

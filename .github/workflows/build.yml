@@ -48,12 +48,9 @@ jobs:
         shell: pwsh
         run: |
           choco install -y ninja
-          choco install -y boost-msvc-14.3 --version=1.82.0
+          choco install -y boost --version=1.82.0
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          echo "BOOST_ROOT=C:\tools\boost_1_82_0" >> $env:GITHUB_ENV
-          echo "Boost_INCLUDEDIR=C:\tools\boost_1_82_0\include" >> $env:GITHUB_ENV
-          echo "Boost_LIBRARYDIR=C:\tools\boost_1_82_0\lib" >> $env:GITHUB_ENV
 
       - name: Debug Boost installation (Windows)
         if: matrix.os == 'windows-2022'
@@ -76,10 +73,7 @@ jobs:
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DBOOST_ROOT="$BOOST_ROOT" \
-                  -DBoost_INCLUDEDIR="$Boost_INCLUDEDIR" \
-                  -DBoost_LIBRARYDIR="$Boost_LIBRARYDIR"
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DBOOST_ROOT="$BOOST_ROOT"

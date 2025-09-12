@@ -214,7 +214,7 @@ private:
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
   
   // Burn transaction management
-  std::unique_ptr<BurnTransactionManager> m_burnTransactionManager;
+  std::unique_ptr<CryptoNote::BurnTransactionManager> m_burnTransactionManager;
 };
 
 } //namespace CryptoNote

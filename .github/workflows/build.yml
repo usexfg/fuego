@@ -51,9 +51,9 @@ jobs:
           choco install -y boost-msvc-14.3 --version=1.82.0
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          echo "BOOST_ROOT=C:\local\boost_1_82_0" >> $env:GITHUB_ENV
-          echo "Boost_INCLUDEDIR=C:\local\boost_1_82_0\include" >> $env:GITHUB_ENV
-          echo "Boost_LIBRARYDIR=C:\local\boost_1_82_0\lib" >> $env:GITHUB_ENV
+          echo "BOOST_ROOT=C:\tools\boost_1_82_0" >> $env:GITHUB_ENV
+          echo "Boost_INCLUDEDIR=C:\tools\boost_1_82_0\include" >> $env:GITHUB_ENV
+          echo "Boost_LIBRARYDIR=C:\tools\boost_1_82_0\lib" >> $env:GITHUB_ENV
 
       # -------------------- Configure & Build --------------------
       - name: Configure

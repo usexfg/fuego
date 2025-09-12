@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-macos:
-    runs-on: macos-latest
+    runs-on: macos-14
     strategy:
       matrix:
         include:
@@ -17,14 +17,15 @@ jobs:
           - arch: apple
             arch_flag: arm64
             arch_name: apple
+    env:
+      CMAKE_BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install dependencies
+    - name: Install dependencies (macOS)
       run: |
-        # Install Boost and other dependencies
-        brew uninstall cmake || true
-        brew install boost cmake
+        brew install ninja boost qt@5 miniupnpc qrencode
+        echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
         
     - name: Build macOS ${{ matrix.arch_name }}
       run: |
@@ -36,16 +37,12 @@ jobs:
         cd "$build_folder"
         
         # Configure CMake with architecture-specific flags
-        cmake -DCMAKE_BUILD_TYPE=Release \
-              -DBUILD_TESTS=OFF \
-              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD \
-              -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" \
-              -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" \
+        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
               -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} \
-              ..
+              -DBOOST_ROOT="$BOOST_ROOT"
         
         # Build
-        make -j$(sysctl -n hw.ncpu)
+        cmake --build . --parallel
         
         # Create release package
         mkdir "$release_name"
@@ -80,13 +77,20 @@ jobs:
 
   release-ubuntu-22:
     runs-on: ubuntu-22.04
+    env:
+      CMAKE_BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install dependencies
+    - name: Install dependencies (Ubuntu)
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev libgtest-dev
+        sudo apt-get install -y build-essential ninja-build pkg-config \
+             libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
+             libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
+
+        # Install Boost using apt (more reliable)
+        sudo apt-get install -y libboost-all-dev
         
     - name: Build Ubuntu 22.04
       run: |
@@ -97,8 +101,8 @@ jobs:
         mkdir "$build_folder"
         cd "$build_folder"
         
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
-        make -j$(nproc)
+        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+        cmake --build . --parallel
         
         # Create release package
         mkdir "$release_name"
@@ -132,13 +136,20 @@ jobs:
 
   release-ubuntu-24:
     runs-on: ubuntu-24.04
+    env:
+      CMAKE_BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install dependencies
+    - name: Install dependencies (Ubuntu)
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev libgtest-dev
+        sudo apt-get install -y build-essential ninja-build pkg-config \
+             libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
+             libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
+
+        # Install Boost using apt (more reliable)
+        sudo apt-get install -y libboost-all-dev
         
     - name: Build Ubuntu 24.04
       run: |
@@ -149,8 +160,8 @@ jobs:
         mkdir "$build_folder"
         cd "$build_folder"
         
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
-        make -j$(nproc)
+        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+        cmake --build . --parallel
         
         # Create release package
         mkdir "$release_name"
@@ -183,54 +194,72 @@ jobs:
         path: build/fuego-cli-ubuntu-2404-v${{ github.ref_name }}.tar.gz
 
   release-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
+    env:
+      CMAKE_BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install dependencies
+    - name: Install dependencies (Windows)
+      shell: pwsh
       run: |
-        # Install Visual Studio Build Tools
-        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
-        choco install cmake -y
-        # Install boost via Chocolatey
-        choco install boost-msvc-14.3 -y || choco install boost -y
-        # Refresh environment variables
-        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+        choco install -y ninja
+        choco install -y vcpkg
+        choco install -y miniupnpc qrencode
+        choco install -y qt5-default --params '/InstallDir:C:\Qt'
+        vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit --triplet x64-windows
+
+    - name: Debug Boost installation (Windows)
+      shell: pwsh
+      run: |
+        echo "Checking Boost installation..."
+        if (Test-Path "C:\local\") { ls C:\local\ } else { echo "C:\local\ does not exist" }
+        if (Test-Path "C:\tools\") { ls C:\tools\ } else { echo "C:\tools\ does not exist" }
+        if (Test-Path "C:\ProgramData\chocolatey\lib\boost-msvc-14.3\") { ls C:\ProgramData\chocolatey\lib\boost-msvc-14.3\ } else { echo "Chocolatey Boost path does not exist" }
+        echo "Environment variables:"
+        echo "BOOST_ROOT=$env:BOOST_ROOT"
+        echo "Boost_INCLUDEDIR=$env:Boost_INCLUDEDIR"
+        echo "Boost_LIBRARYDIR=$env:Boost_LIBRARYDIR"
         
     - name: Build Windows
+      shell: bash
       run: |
-        $buildFolder = "build/"
-        $xfgVer = $env:GITHUB_REF -replace "refs/tags/", ""
-        $releaseName = "fuego-cli-win64-v$xfgVer"
+        build_folder="build/"
+        xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
+        release_name="fuego-cli-win64-v$xfg_ver"
         
-        New-Item -ItemType Directory -Path $buildFolder -Force
-        Set-Location $buildFolder
+        mkdir "$build_folder"
+        cd "$build_folder"
         
         # Configure CMake
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD -DBoost_NO_BOOST_CMAKE=ON -DBOOST_ROOT=C:\tools\boost ..
+        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
         
         # Build
-        cmake --build . --config Release --parallel
+        cmake --build . --parallel
         
         # Create release package
-        New-Item -ItemType Directory -Path $releaseName -Force
+        mkdir "$release_name"
         
         # Copy executables
-        $exeFiles = Get-ChildItem -Path "src\*" -File | Where-Object { $_.Extension -eq ".exe" }
-        foreach ($file in $exeFiles) {
-          Copy-Item $file.FullName -Destination "$releaseName/"
-        }
+        exeFiles=()
+        for f in src/*.exe; do 
+          if [[ -x $f && -f $f ]]; then
+            exeFiles+=("$f")
+          fi
+        done
+        cp "${exeFiles[@]}" "$release_name/"
         
         # Create zip archive
-        Compress-Archive -Path "$releaseName/*" -DestinationPath "$releaseName.zip"
+        zip -r "$release_name.zip" "$release_name"
         
         # Calculate SHA256
-        $sha256 = (Get-FileHash "$releaseName.zip" -Algorithm SHA256).Hash.ToUpper()
+        sha256=$(sha256sum "$release_name.zip" | awk '{print toupper($1)}')
         
         # Set outputs
-        echo "sha256=$sha256" >> $env:GITHUB_OUTPUT
-        echo "release_name=$releaseName.zip" >> $env:GITHUB_OUTPUT
-        echo "asset_path=./$buildFolder$releaseName.zip" >> $env:GITHUB_OUTPUT
+        echo "sha256=$sha256" >> $GITHUB_OUTPUT
+        echo "release_name=$release_name.zip" >> $GITHUB_OUTPUT
+        echo "asset_path=./$build_folder$release_name.zip" >> $GITHUB_OUTPUT
         
     - name: Upload Windows artifact
       uses: actions/upload-artifact@v4

@@ -170,7 +170,7 @@ WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node, Lo
   m_transactionsCache(m_currency.mempoolTxLiveTime()),
   m_sender(nullptr),
   m_onInitSyncStarter(new SyncStarter(m_blockchainSync)),
-  m_burnTransactionManager(std::make_unique<CryptoNote::BurnTransactionManager>())
+  m_burnTransactionManager(std::unique_ptr<CryptoNote::BurnTransactionManager>(new CryptoNote::BurnTransactionManager()))
 {
   addObserver(m_onInitSyncStarter.get());
   initializeBurnTransactionManager();

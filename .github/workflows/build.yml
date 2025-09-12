@@ -48,9 +48,10 @@ jobs:
         shell: pwsh
         run: |
           choco install -y ninja
-          choco install -y boost --version=1.82.0
+          choco install -y vcpkg
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
+          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options --triplet x64-windows
 
       - name: Debug Boost installation (Windows)
         if: matrix.os == 'windows-2022'
@@ -73,7 +74,8 @@ jobs:
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+                  -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DBOOST_ROOT="$BOOST_ROOT"

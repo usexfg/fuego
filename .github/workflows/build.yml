@@ -51,7 +51,6 @@ jobs:
           choco install -y boost-msvc-14.3 --version=1.82.0
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          echo "BOOST_ROOT=C:\tools\boost_1_82_0" >> $env:GITHUB_ENV
 
       # -------------------- Configure & Build --------------------
       - name: Configure
@@ -61,8 +60,7 @@ jobs:
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
-            cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DBOOST_ROOT="$BOOST_ROOT"
+            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DBOOST_ROOT="$BOOST_ROOT"

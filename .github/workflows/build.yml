@@ -60,9 +60,9 @@ jobs:
         shell: pwsh
         run: |
           echo "Checking Boost installation..."
-          ls C:\local\ 2>$null || echo "C:\local\ does not exist"
-          ls C:\tools\ 2>$null || echo "C:\tools\ does not exist"
-          ls C:\ProgramData\chocolatey\lib\boost-msvc-14.3\ 2>$null || echo "Chocolatey Boost path does not exist"
+          if (Test-Path "C:\local\") { ls C:\local\ } else { echo "C:\local\ does not exist" }
+          if (Test-Path "C:\tools\") { ls C:\tools\ } else { echo "C:\tools\ does not exist" }
+          if (Test-Path "C:\ProgramData\chocolatey\lib\boost-msvc-14.3\") { ls C:\ProgramData\chocolatey\lib\boost-msvc-14.3\ } else { echo "Chocolatey Boost path does not exist" }
           echo "Environment variables:"
           echo "BOOST_ROOT=$env:BOOST_ROOT"
           echo "Boost_INCLUDEDIR=$env:Boost_INCLUDEDIR"

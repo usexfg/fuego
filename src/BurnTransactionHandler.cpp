@@ -54,7 +54,7 @@ public:
     }
 };
 
-BurnTransactionHandler::BurnTransactionHandler() : m_impl(std::make_unique<Impl>()) {
+BurnTransactionHandler::BurnTransactionHandler() : m_impl(std::unique_ptr<Impl>(new Impl())) {
 }
 
 BurnTransactionHandler::~BurnTransactionHandler() = default;
@@ -315,10 +315,10 @@ public:
     std::unique_ptr<BurnTransactionHandler> handler;
     bool autoProcessing = true;
     
-    Impl() : handler(std::make_unique<BurnTransactionHandler>()) {}
+    Impl() : handler(std::unique_ptr<BurnTransactionHandler>(new BurnTransactionHandler())) {}
 };
 
-BurnTransactionManager::BurnTransactionManager() : m_impl(std::make_unique<Impl>()) {
+BurnTransactionManager::BurnTransactionManager() : m_impl(std::unique_ptr<Impl>(new Impl())) {
 }
 
 BurnTransactionManager::~BurnTransactionManager() = default;

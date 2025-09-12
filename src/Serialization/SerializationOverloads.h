@@ -335,15 +335,7 @@ bool serialize(std::unordered_map<K, V, Hash> &value, Common::StringView name, C
   //convinience function since we change global output index type
   void serializeGlobalOutputIndex(CryptoNote::ISerializer & s, uint32_t & globalOutputIndex, Common::StringView name);
 
-  // Explicit specializations to prevent infinite recursion
-  template<>
-  inline void serialize(EMPTY_STRUCT& value, ISerializer& serializer) {
-    value.serialize(serializer);
-  }
-
-  template<>
-  inline void serialize(STATUS_STRUCT& value, ISerializer& serializer) {
-    value.serialize(serializer);
-  }
+  // Serialization specializations are now handled by the generic template
+  // which calls the object's serialize method directly
 
 } // namespace CryptoNote

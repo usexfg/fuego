@@ -75,6 +75,13 @@
 #include <google/sparsehash/libc_allocator_with_realloc.h>
 #include <google/type_traits.h> // for true_type, integral_constant, etc.
 
+// Windows compatibility: define u_int16_t if not available
+#ifdef _MSC_VER
+#ifndef u_int16_t
+typedef unsigned short u_int16_t;
+#endif
+#endif
+
 #if STDC_HEADERS
 #include <string.h>             // for memcpy
 #else

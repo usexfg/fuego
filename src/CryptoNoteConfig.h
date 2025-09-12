@@ -70,8 +70,8 @@ namespace CryptoNote
 		const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
 		const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fuego (~180 block per day)
 
-		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
-               // const uint64_t MIN_TX_MIXIN_SIZE_V9                          = 8;
+		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;                   
+		const uint64_t MIN_TX_MIXIN_SIZE_V10                         = 8;  // Enhanced privacy starting from BlockMajorVersion 10
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
@@ -155,7 +155,8 @@ namespace CryptoNote
 	const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 	const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
 	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8; 
-	const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;
+		const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;
+		const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
 	const uint8_t  BLOCK_MINOR_VERSION_0 			     =  0;
 	const uint8_t  BLOCK_MINOR_VERSION_1 			     =  1;
 

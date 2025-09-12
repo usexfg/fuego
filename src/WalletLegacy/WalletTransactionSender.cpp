@@ -245,7 +245,9 @@ namespace CryptoNote
     }
     else
     {
-      mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
+      // Use enhanced privacy (ring size 8) for better transaction privacy
+      // This will be enforced by the blockchain when BlockMajorVersion 10 is active
+      mixIn = CryptoNote::parameters::MIN_TX_MIXIN_SIZE_V10;
       neededMoney = countNeededMoney(fee, transfers);
       context->foundMoney = selectTransfersToSend(neededMoney, false, context->dustPolicy.dustThreshold, context->selectedTransfers);
     }

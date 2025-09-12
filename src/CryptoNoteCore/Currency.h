@@ -91,6 +91,12 @@ public:
   size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
   size_t minMixin() const { return m_minMixin; }
+  size_t minMixin(uint8_t blockMajorVersion) const {
+    if (blockMajorVersion >= BLOCK_MAJOR_VERSION_10) {
+      return parameters::MIN_TX_MIXIN_SIZE_V10; // Enhanced privacy: ring size 8
+    }
+    return m_minMixin; // Default: ring size 2
+  }
   size_t maxMixin() const { return m_maxMixin; }
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   uint64_t coin() const { return m_coin; }

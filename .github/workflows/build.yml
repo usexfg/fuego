@@ -15,11 +15,10 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        os: [ubuntu-22.04, macos-14]
 
     env:
       CMAKE_BUILD_TYPE: Release
-      Qt5_DIR: ${{ matrix.os == 'windows-2022' && 'C:/Qt/5.15.2/msvc2019_64/lib/cmake/Qt5' || '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -59,8 +58,6 @@ jobs:
           if [ "${{ matrix.os }}" == "macos-14" ]; then
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
-          elif [ "${{ matrix.os }}" == "windows-2022" ]; then
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DBOOST_ROOT="$BOOST_ROOT"

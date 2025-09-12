@@ -18,6 +18,7 @@
 #include "WalletLegacy.h"
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 #include <numeric>
 #include <random>

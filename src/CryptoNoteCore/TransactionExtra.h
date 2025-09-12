@@ -41,6 +41,8 @@
 #define TX_EXTRA_DIGM_ALBUM_RECORD          0x0A
 #define TX_EXTRA_ALBUM_LICENSE              0x0B
 #define TX_EXTRA_CURATION_TAG               0x0C
+#define TX_EXTRA_WITNESS_TAG                0x1C
+
 
 
 namespace CryptoNote {

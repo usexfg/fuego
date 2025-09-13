@@ -27,7 +27,7 @@ file(GLOB_RECURSE PaymentGateService PaymentGateService/*)
 add_subdirectory(EldernodeIndexManager)
 add_subdirectory(BurnDepositValidationService)
 
-if(MSVC)
+if(WIN32)
   file(GLOB_RECURSE System System/* Platform/Windows/System/*)
 elseif(APPLE)
   file(GLOB_RECURSE System System/* Platform/OSX/System/*)

@@ -1,4 +1,5 @@
-// Copyright (c) 2017-2024 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2018-2019 The Ryo Currency developers
@@ -75,10 +76,10 @@ namespace CryptoNote
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;    // 800 XFG (8,000,000,000 atomic units)
-		const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
-		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 atomic units)
-		const uint64_t BURN_DEPOSIT_8000_AMOUNT = 8000 * COIN;  // 8000 XFG (80,000,000,000 atomic units)
+		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;    // 800 XFG (8,000,000,000 8B heat) COLD / YIELD
+		const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 8M heat)
+		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 8M heat)
+		const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 800 * COIN;  // Large burn: 800 XFG (8,000,000,000 8B heat)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
                 const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
                 const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
@@ -122,11 +123,14 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-                const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
-		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
-                const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
-                const uint32_t UPGRADE_HEIGHT_V10                            = 969696; //Enhanced Privacy (ring size 8)
-		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
+                const uint32_t UPGRADE_HEIGHT_V7                     = 657000; //Apotheosis  Fango
+		        const uint32_t UPGRADE_HEIGHT_V8                     = 800000; //Dragonborn (emission|deposits)
+        const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //{Godflame}  (emission|UPX2|Fuego)
+		const uint32_t UPGRADE_HEIGHT_V10                            = 969696; //Dynamigos (dynamic RingCT, dynamic supply, dynamic difficulty (AMWDA)) 		
+		const uint32_t UPGRADE_HEIGHT_V11                            = 987654; //Elderfire (XFG-STARK burn proofs, Elderfiers, Fuegotor, Elderfyre Deposit Stayking, Elder Council Inbox)
+		const uint32_t UPGRADE_HEIGHT_DIGM                           =1000000; //{CURADI₲M} (DI₲M colored-coin, CURA colored-coin, PayNyms (BIP-47), XFG-C0DL3 bridge)
+
+				const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent            
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 
@@ -156,8 +160,12 @@ namespace CryptoNote
 	const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 	const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
 	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8; 
-		const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;
-		const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
+            const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;                  
+            const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
+            const uint8_t  BLOCK_MAJOR_VERSION_11                        = 11;
+            const uint8_t  BLOCK_MAJOR_VERSION_12                        = 12;
+            const uint8_t  BLOCK_MAJOR_VERSION_13                        = 13;
+            const uint8_t  BLOCK_MAJOR_VERSION_14                        = 14;
 	const uint8_t  BLOCK_MINOR_VERSION_0 			     =  0;
 	const uint8_t  BLOCK_MINOR_VERSION_1 			     =  1;
 

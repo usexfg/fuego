@@ -21,6 +21,14 @@
 #include <fstream>
 #include <sys/stat.h>
 
+#ifdef _WIN32
+    #ifdef _MSC_VER
+        #include <direct.h>
+    #else
+        #include <sys/stat.h>
+    #endif
+#endif
+
 namespace Common {
 
 /**
@@ -46,7 +54,11 @@ inline bool createDirectory(const std::string& path) {
     
     // Try to create the directory
     #ifdef _WIN32
-        return _mkdir(path.c_str()) == 0;
+        #ifdef _MSC_VER
+            return _mkdir(path.c_str()) == 0;
+        #else
+            return mkdir(path.c_str()) == 0;
+        #endif
     #else
         return mkdir(path.c_str(), 0755) == 0;
     #endif

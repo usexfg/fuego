@@ -1414,7 +1414,7 @@ namespace CryptoNote
     // Burn deposit configuration
     burnDepositMinAmount(parameters::BURN_DEPOSIT_MIN_AMOUNT);
     burnDepositStandardAmount(parameters::BURN_DEPOSIT_STANDARD_AMOUNT);
-    burnDeposit8000Amount(parameters::BURN_DEPOSIT_8000_AMOUNT);
+    burnDeposit8000Amount(parameters::BURN_DEPOSIT_LARGE_AMOUNT);
     depositTermForever(parameters::DEPOSIT_TERM_FOREVER);
 
     // HEAT conversion rate (0.8 XFG = 8M HEAT)
@@ -1557,7 +1557,7 @@ namespace CryptoNote
 	/* ---------------------------------------------------------------------------------------------------- */
 
 	bool Currency::isValidBurnDepositAmount(uint64_t amount) const {
-		// Valid burn amounts: 0.8 XFG (8,000,000) or 8000 XFG (80,000,000,000)
+               // Valid burn amounts: 0.8 XFG (8,000,000) or 800 XFG (8,000,000,000)
 		return (amount == m_burnDepositMinAmount || 
 				amount == m_burnDepositStandardAmount || 
 				amount == m_burnDeposit8000Amount);

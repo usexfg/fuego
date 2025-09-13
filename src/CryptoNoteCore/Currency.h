@@ -97,6 +97,31 @@ public:
     }
     return m_minMixin; // Default: ring size 2
   }
+  
+  // Dynamic ring size calculation based on available outputs
+  size_t calculateOptimalRingSize(uint64_t amount, size_t availableOutputs, uint8_t blockMajorVersion) const {
+    if (blockMajorVersion < BLOCK_MAJOR_VERSION_10) {
+      return minMixin(blockMajorVersion); // Use static ring size for older versions
+    }
+    
+    // Enhanced privacy: aim for larger ring sizes when possible
+    size_t minRingSize = minMixin(blockMajorVersion); // Minimum: 8
+    size_t maxRingSize = maxMixin(); // Maximum: typically 20
+    
+    // Target ring sizes in order of preference
+    std::vector<size_t> targetRingSizes = {18, 15, 12, 11, 10, 9, 8};
+    
+    // Find the largest achievable ring size
+    for (size_t targetSize : targetRingSizes) {
+      if (targetSize <= availableOutputs && targetSize <= maxRingSize) {
+        return targetSize;
+      }
+    }
+    
+    // Fall back to minimum if no targets are achievable
+    return minRingSize;
+  }
+  
   size_t maxMixin() const { return m_maxMixin; }
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   uint64_t coin() const { return m_coin; }

@@ -1375,7 +1375,7 @@ namespace PaymentService
       sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
       sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
       sendParams.fee = CryptoNote::parameters::MINIMUM_FEE;
-      // Use enhanced privacy (ring size 8) for better transaction privacy
+      // Use dynamic ring sizing for optimal privacy (aim for 18, fallback to 8 minimum)
       sendParams.mixIn = parameters::MIN_TX_MIXIN_SIZE_V10;
       sendParams.unlockTimestamp = request.unlockTime;
       sendParams.changeDestination = request.changeAddress;

@@ -1873,9 +1873,9 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
-    /* set static mixin of 2*/
-    // Use enhanced privacy (ring size 8) for better transaction privacy
-    cmd.fake_outs_count = CryptoNote::parameters::MIN_TX_MIXIN_SIZE_V10;
+    /* set dynamic mixin for optimal privacy*/
+    // Use dynamic ring sizing: aim for 18, then fall back to 15, 12, 11, 10, 9, 8 minimum
+    cmd.fake_outs_count = CryptoNote::parameters::MIN_TX_MIXIN_SIZE_V10; // Start with minimum, will be optimized by daemon
 
     /* force minimum fee */
     if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE_V2) {

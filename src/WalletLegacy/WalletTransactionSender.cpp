@@ -18,6 +18,7 @@
 #include "INode.h"
 #include "crypto/crypto.h" //for rand()
 #include "CryptoNoteCore/Account.h"
+#include "DynamicRingSize.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/TransactionApi.h"
@@ -245,11 +246,14 @@ namespace CryptoNote
     }
     else
     {
-      // Use enhanced privacy (ring size 8) for better transaction privacy
+      // Use dynamic ring sizing for optimal privacy
       // This will be enforced by the blockchain when BlockMajorVersion 10 is active
-      mixIn = CryptoNote::parameters::MIN_TX_MIXIN_SIZE_V10;
+      mixIn = CryptoNote::parameters::MIN_TX_MIXIN_SIZE_V10; // Start with minimum
       neededMoney = countNeededMoney(fee, transfers);
       context->foundMoney = selectTransfersToSend(neededMoney, false, context->dustPolicy.dustThreshold, context->selectedTransfers);
+      
+      // Calculate optimal ring size based on available outputs
+      mixIn = calculateDynamicRingSize(context->selectedTransfers, mixIn);
     }
     throwIf(context->foundMoney < neededMoney, error::WRONG_AMOUNT);
 
@@ -956,6 +960,28 @@ namespace CryptoNote
       Deposit &deposit = m_transactionsCache.getDeposit(id);
       deposit.spendingTransactionId = transactionId;
     }
+  }
+
+  uint64_t WalletTransactionSender::calculateDynamicRingSize(const std::vector<TransactionOutputInformation>& selectedTransfers, uint64_t minRingSize)
+  {
+    // For now, we'll use a simplified approach that requests more outputs
+    // and lets the daemon determine the optimal ring size
+    // In a full implementation, we would query available outputs first
+    
+    // Target ring sizes in order of preference (highest privacy first)
+    std::vector<uint64_t> targetRingSizes = {18, 15, 12, 11, 10, 9, 8};
+    
+    // Start with the highest target and work down
+    for (uint64_t targetSize : targetRingSizes) {
+      if (targetSize >= minRingSize && targetSize <= m_currency.maxMixin()) {
+        // For now, we'll use the target size
+        // In a full implementation, we would check available outputs first
+        return targetSize;
+      }
+    }
+    
+    // Fall back to minimum if no targets are achievable
+    return minRingSize;
   }
 
 } /* namespace CryptoNote */

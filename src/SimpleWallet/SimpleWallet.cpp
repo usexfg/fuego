@@ -28,6 +28,12 @@
 
 #include <boost/format.hpp>
 #include <boost/bind.hpp>
+
+#ifdef _WIN32
+  #ifdef _MSC_VER
+    #include <crtdbg.h>
+  #endif
+#endif
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
@@ -1954,7 +1960,9 @@ void simple_wallet::printConnectionError() const {
 
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
-  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+  #ifdef _MSC_VER
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+  #endif
 #endif
 
   po::options_description desc_general("General options");

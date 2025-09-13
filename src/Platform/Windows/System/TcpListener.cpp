@@ -119,6 +119,7 @@ TcpConnection TcpListener::accept() {
   if (connection == INVALID_SOCKET) {
     message = "socket failed, " + errorMessage(WSAGetLastError());
   } else {
+    // Fixed sizeof syntax for Windows compatibility
     uint8_t addresses[sizeof(sockaddr_in) * 2 + 32];
     DWORD received;
     TcpListenerContext context2;

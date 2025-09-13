@@ -150,6 +150,13 @@ namespace CryptoNote
           transactionExtraFields.push_back(license);
           break;
         }
+        case TX_EXTRA_DIGM_ALBUM_RECORD:
+        {
+          TransactionExtraDigmAlbumRecord rec;
+          ar(rec, "digm_album_record");
+          transactionExtraFields.push_back(rec);
+          break;
+        }
         }
       }
     }
@@ -222,6 +229,10 @@ namespace CryptoNote
     bool operator()(const TransactionExtraAlbumLicense &t)
     {
       return appendAlbumLicenseToExtra(extra, t);
+    }
+    bool operator()(const TransactionExtraDigmAlbumRecord &t)
+    {
+      return appendDigmAlbumRecordToExtra(extra, t);
     }
   };
 
@@ -687,6 +698,38 @@ namespace CryptoNote
     // Implementation would parse the extra field to extract yield commitment
     // This is a placeholder - full implementation would need proper parsing logic
     return false;
+  }
+
+  // Helper: append DIGM Album Record (0x0A)
+  bool appendDigmAlbumRecordToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDigmAlbumRecord& rec) {
+    std::vector<TransactionExtraField> fields;
+    fields.emplace_back(rec);
+    return writeTransactionExtra(tx_extra, fields);
+  }
+
+  // Helper: get DIGM Album Record
+  bool getDigmAlbumRecordFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraDigmAlbumRecord& rec) {
+    std::vector<TransactionExtraField> fields;
+    if (!parseTransactionExtra(tx_extra, fields)) {
+      return false;
+    }
+    return findTransactionExtraFieldByType(fields, rec);
+  }
+
+  // Helper: append Album License (0x0B)
+  bool appendAlbumLicenseToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraAlbumLicense& license) {
+    std::vector<TransactionExtraField> fields;
+    fields.emplace_back(license);
+    return writeTransactionExtra(tx_extra, fields);
+  }
+
+  // Helper: get Album License
+  bool getAlbumLicenseFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraAlbumLicense& license) {
+    std::vector<TransactionExtraField> fields;
+    if (!parseTransactionExtra(tx_extra, fields)) {
+      return false;
+    }
+    return findTransactionExtraFieldByType(fields, license);
   }
 
 } // namespace CryptoNote

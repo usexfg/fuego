@@ -16,7 +16,10 @@
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-
+#include <string>
+#include <cstdint>
+#include "CryptoNoteCore/TransactionExtra.h"
+#include "Serialization/ISerializer.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolDefinitions.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/Difficulty.h"

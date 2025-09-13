@@ -88,4 +88,41 @@ jobs:
       - name: Run tests
         if: ${{ success() && hashFiles('build/tests/**') != '' }}
         run: ctest --test-dir build --output-on-failure
+
+      # -------------------- Upload Artifacts --------------------
+      - name: Upload macOS artifacts
+        if: matrix.os == 'macos-14' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuego-macos-${{ github.sha }}
+          path: |
+            build/fuegod
+            build/fuego-wallet
+            build/simplewallet
+            build/payment_gate_service
+          retention-days: 30
+
+      - name: Upload Windows artifacts
+        if: matrix.os == 'windows-2022' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuego-windows-${{ github.sha }}
+          path: |
+            build/fuegod.exe
+            build/fuego-wallet.exe
+            build/simplewallet.exe
+            build/payment_gate_service.exe
+          retention-days: 30
+
+      - name: Upload Ubuntu artifacts
+        if: matrix.os == 'ubuntu-22.04' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuego-ubuntu-${{ github.sha }}
+          path: |
+            build/fuegod
+            build/fuego-wallet
+            build/simplewallet
+            build/payment_gate_service
+          retention-days: 30
     

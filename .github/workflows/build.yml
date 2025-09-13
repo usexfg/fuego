@@ -23,6 +23,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # -------------------- Cache Dependencies --------------------
+      - name: Cache apt packages (Ubuntu)
+        if: matrix.os == 'ubuntu-22.04'
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
+      - name: Cache Homebrew packages (macOS)
+        if: matrix.os == 'macos-14'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /usr/local/Homebrew/Library/Homebrew/vendor/bundle
+          key: ${{ runner.os }}-homebrew-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-homebrew-
+
+      - name: Cache vcpkg packages (Windows)
+        if: matrix.os == 'windows-2022'
+        uses: actions/cache@v4
+        with:
+          path: C:\vcpkg\installed
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Cache Chocolatey packages (Windows)
+        if: matrix.os == 'windows-2022'
+        uses: actions/cache@v4
+        with:
+          path: C:\ProgramData\chocolatey\lib
+          key: ${{ runner.os }}-choco-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-choco-
+
       # -------------------- Linux --------------------
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
@@ -65,6 +104,15 @@ jobs:
           echo "BOOST_ROOT=$env:BOOST_ROOT"
           echo "Boost_INCLUDEDIR=$env:Boost_INCLUDEDIR"
           echo "Boost_LIBRARYDIR=$env:Boost_LIBRARYDIR"
+
+      # -------------------- Cache CMake Build --------------------
+      - name: Cache CMake build
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt', '**/CMakeCache.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-
 
       # -------------------- Configure & Build --------------------
       - name: Configure

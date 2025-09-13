@@ -22,6 +22,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    # -------------------- Cache Dependencies --------------------
+    - name: Cache Homebrew packages (macOS)
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew/Library/Homebrew/vendor/bundle
+        key: ${{ runner.os }}-homebrew-release-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-homebrew-release-
+          ${{ runner.os }}-homebrew-
+    
     - name: Install dependencies (macOS)
       run: |
         brew install ninja boost qt@5 miniupnpc qrencode
@@ -82,6 +94,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    # -------------------- Cache Dependencies --------------------
+    - name: Cache apt packages (Ubuntu)
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt
+        key: ${{ runner.os }}-apt-release-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-apt-release-
+          ${{ runner.os }}-apt-
+    
     - name: Install dependencies (Ubuntu)
       run: |
         sudo apt-get update
@@ -141,6 +163,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    # -------------------- Cache Dependencies --------------------
+    - name: Cache apt packages (Ubuntu)
+      uses: actions/cache@v4
+      with:
+        path: /var/cache/apt
+        key: ${{ runner.os }}-apt-release-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-apt-release-
+          ${{ runner.os }}-apt-
+    
     - name: Install dependencies (Ubuntu)
       run: |
         sudo apt-get update
@@ -199,6 +231,25 @@ jobs:
       CMAKE_BUILD_TYPE: Release
     steps:
     - uses: actions/checkout@v4
+    
+    # -------------------- Cache Dependencies --------------------
+    - name: Cache vcpkg packages (Windows)
+      uses: actions/cache@v4
+      with:
+        path: C:\vcpkg\installed
+        key: ${{ runner.os }}-vcpkg-release-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-release-
+          ${{ runner.os }}-vcpkg-
+
+    - name: Cache Chocolatey packages (Windows)
+      uses: actions/cache@v4
+      with:
+        path: C:\ProgramData\chocolatey\lib
+        key: ${{ runner.os }}-choco-release-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-choco-release-
+          ${{ runner.os }}-choco-
     
     - name: Install dependencies (Windows)
       shell: pwsh

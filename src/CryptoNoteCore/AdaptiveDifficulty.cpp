@@ -25,6 +25,11 @@ namespace CryptoNote {
             return calculateEmergencyDifficulty(timestamps, cumulativeDifficulties);
         }
         
+        // Check for block stealing attempts
+        if (detectBlockStealingAttempt(timestamps, cumulativeDifficulties)) {
+            return calculateEmergencyDifficulty(timestamps, cumulativeDifficulties);
+        }
+        
         // Use multi-window adaptive algorithm
         return calculateMultiWindowDifficulty(timestamps, cumulativeDifficulties);
     }
@@ -178,16 +183,20 @@ namespace CryptoNote {
         if (timestamps.size() < 3) return false;
         
         // Detect suspiciously fast consecutive blocks
-        for (size_t i = 1; i < std::min(static_cast<size_t>(3), timestamps.size()); ++i) {
+        uint32_t fastBlockCount = 0;
+        uint32_t checkBlocks = std::min(static_cast<uint32_t>(5), static_cast<uint32_t>(timestamps.size() - 1));
+        
+        for (size_t i = 1; i <= checkBlocks; ++i) {
             int64_t solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i - 1]);
             
-            // If blocks are coming too fast (less than 1% of target time)
-            if (solveTime < static_cast<int64_t>(m_config.targetTime / 100)) {
-                return true;
+            // If blocks are coming too fast (less than 5% of target time = ~24 seconds)
+            if (solveTime < static_cast<int64_t>(m_config.targetTime / 20)) {
+                fastBlockCount++;
             }
         }
         
-        return false;
+        // Trigger if more than 2 blocks in 5 are suspiciously fast
+        return fastBlockCount >= 2;
     }
 
     uint64_t AdaptiveDifficulty::applySmoothing(uint64_t newDifficulty, uint64_t previousDifficulty) {

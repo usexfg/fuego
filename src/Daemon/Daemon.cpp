@@ -20,6 +20,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
+#ifdef _WIN32
+  #ifdef _MSC_VER
+    #include <crtdbg.h>
+  #endif
+#endif
+
 #include "DaemonCommandsHandler.h"
 
 #include "Common/SignalHandler.h"
@@ -228,7 +234,9 @@ int main(int argc, char* argv[])
 {
 
 #ifdef _WIN32
-  _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+  #ifdef _MSC_VER
+    _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+  #endif
 #endif
 
   LoggerManager logManager;

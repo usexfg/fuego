@@ -28,6 +28,7 @@
 
 #include <Logging/LoggerGroup.h>
 #include <random>
+#include <set>
 
 using namespace Crypto;
 
@@ -253,7 +254,15 @@ namespace CryptoNote
       context->foundMoney = selectTransfersToSend(neededMoney, false, context->dustPolicy.dustThreshold, context->selectedTransfers);
       
       // Calculate optimal ring size based on available outputs
-      mixIn = calculateDynamicRingSize(context->selectedTransfers, mixIn);
+      uint64_t calculatedRingSize = calculateDynamicRingSize(context->selectedTransfers, mixIn);
+      
+      // Check if ring size 8 is achievable (for BlockMajorVersion 10+)
+      if (calculatedRingSize == 0) {
+        // Insufficient outputs for minimum ring size 8
+        throw std::system_error(make_error_code(error::INSUFFICIENT_OUTPUTS_FOR_RING_SIZE));
+      }
+      
+      mixIn = calculatedRingSize;
     }
     throwIf(context->foundMoney < neededMoney, error::WRONG_AMOUNT);
 
@@ -964,23 +973,49 @@ namespace CryptoNote
 
   uint64_t WalletTransactionSender::calculateDynamicRingSize(const std::vector<TransactionOutputInformation>& selectedTransfers, uint64_t minRingSize)
   {
-    // For now, we'll use a simplified approach that requests more outputs
-    // and lets the daemon determine the optimal ring size
-    // In a full implementation, we would query available outputs first
-    
     // Target ring sizes in order of preference (highest privacy first)
     std::vector<uint64_t> targetRingSizes = {18, 15, 12, 11, 10, 9, 8};
     
-    // Start with the highest target and work down
-    for (uint64_t targetSize : targetRingSizes) {
-      if (targetSize >= minRingSize && targetSize <= m_currency.maxMixin()) {
-        // For now, we'll use the target size
-        // In a full implementation, we would check available outputs first
-        return targetSize;
+    // For BlockMajorVersion 10+, never go below ring size 8
+    // If we can't achieve ring size 8, direct user to run optimizer
+    if (minRingSize >= CryptoNote::parameters::MIN_TX_MIXIN_SIZE_V10) {
+      // Simplified check: For now, we'll assume we can achieve ring size 8
+      // In a full implementation, we would:
+      // 1. Query daemon for available outputs for each amount in selectedTransfers
+      // 2. Check if any amount has >= 8 outputs available
+      // 3. If not, return 0 to signal insufficient outputs
+      
+      // For now, we'll use a basic heuristic:
+      // If we have multiple different amounts, we're more likely to have enough outputs
+      // This is a simplified approach - a full implementation would query the daemon
+      
+      // Count unique amounts in selected transfers
+      std::set<uint64_t> uniqueAmounts;
+      for (const auto& transfer : selectedTransfers) {
+        uniqueAmounts.insert(transfer.amount);
       }
+      
+      // If we have very few unique amounts, we might not have enough outputs
+      // This is a conservative check - in practice, we'd query the daemon
+      if (uniqueAmounts.size() < 2) {
+        // Conservative check: if we only have one amount type, 
+        // we might not have enough outputs for ring size 8
+        // Return 0 to signal that ring size 8 is not achievable
+        return 0;
+      }
+      
+      // Start with the highest target and work down
+      for (uint64_t targetSize : targetRingSizes) {
+        if (targetSize >= minRingSize && targetSize <= m_currency.maxMixin()) {
+          return targetSize;
+        }
+      }
+      
+      // This should never happen since we start with minRingSize, but just in case
+      return minRingSize;
     }
     
-    // Fall back to minimum if no targets are achievable
+    // For older block versions, use static ring size
     return minRingSize;
   }
 

@@ -108,6 +108,14 @@ public:
     size_t minRingSize = minMixin(blockMajorVersion); // Minimum: 8
     size_t maxRingSize = maxMixin(); // Maximum: typically 20
     
+    // For BlockMajorVersion 10+, never go below ring size 8
+    // If insufficient outputs for ring size 8, this should be handled by the caller
+    if (availableOutputs < minRingSize) {
+      // This indicates insufficient outputs - caller should handle this error
+      // and direct user to run optimizer
+      return 0; // Signal to caller that ring size 8 is not achievable
+    }
+    
     // Target ring sizes in order of preference
     std::vector<size_t> targetRingSizes = {18, 15, 12, 11, 10, 9, 8};
     

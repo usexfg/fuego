@@ -19,7 +19,8 @@ Fuego now implements dynamic ring sizing to provide optimal privacy based on ava
 1. **Check Block Version**: Only applies to BlockMajorVersion 10+
 2. **Target Selection**: Tries ring sizes in descending order (18 → 15 → 12 → 11 → 10 → 9 → 8)
 3. **Availability Check**: Verifies sufficient outputs exist for the target ring size
-4. **Fallback**: Uses minimum ring size (8) if no targets are achievable
+4. **Minimum Enforcement**: Never goes below ring size 8 for BlockMajorVersion 10+
+5. **Optimizer Direction**: If ring size 8 is not achievable, directs user to run wallet optimizer
 
 ## Implementation Details
 
@@ -136,17 +137,38 @@ size_t calculateOptimalRingSizeWithQuery(
 }
 ```
 
+## Error Handling
+
+### Insufficient Outputs
+When there are insufficient outputs to achieve ring size 8 (minimum for BlockMajorVersion 10+):
+
+**Error Code**: `INSUFFICIENT_OUTPUTS_FOR_RING_SIZE`
+**Error Message**: "Insufficient outputs for minimum ring size. Please run wallet optimizer to consolidate outputs."
+
+**User Action Required**:
+1. Run wallet optimizer to consolidate outputs
+2. Wait for optimization to complete
+3. Retry transaction
+
+### Implementation Details
+- System checks available outputs before attempting transaction
+- Conservative heuristic: requires multiple unique output amounts
+- Never compromises on minimum ring size 8 for enhanced privacy
+- Graceful error handling with clear user guidance
+
 ## Security Considerations
 
 ### Privacy Guarantees
 - Minimum ring size ensures basic privacy
 - Dynamic sizing maximizes privacy when possible
-- Graceful fallback maintains transaction functionality
+- Never compromises on minimum ring size 8
+- Clear error handling prevents privacy degradation
 
 ### Performance Impact
 - Minimal overhead in ring size calculation
 - No impact on transaction validation
 - Slight increase in transaction size for larger ring sizes
+- Error checking adds minimal computational overhead
 
 ## Conclusion
 

@@ -82,7 +82,11 @@ public:
   void pushTimer(int timer);
 
 #ifdef __x86_64__
-#if __WORDSIZE == 64
+#if defined(__WORDSIZE) && __WORDSIZE == 64
+  static const int SIZEOF_PTHREAD_MUTEX_T = 40;
+#elif defined(__WORDSIZE) && __WORDSIZE == 32
+  static const int SIZEOF_PTHREAD_MUTEX_T = 32;
+#elif defined(_WIN64)
   static const int SIZEOF_PTHREAD_MUTEX_T = 40;
 #else
   static const int SIZEOF_PTHREAD_MUTEX_T = 32;

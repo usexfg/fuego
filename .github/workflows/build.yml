@@ -48,8 +48,11 @@ jobs:
         if: matrix.os == 'windows-2022'
         uses: actions/cache@v4
         with:
-          path: C:\vcpkg\installed
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
+          path: |
+            C:\vcpkg\installed
+            C:\vcpkg\buildtrees
+            C:\vcpkg\downloads
+          key: ${{ runner.os }}-vcpkg-boost-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
@@ -90,8 +93,17 @@ jobs:
           choco install -y vcpkg
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          # Install Boost with specific version to avoid compatibility issues
-          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index --triplet x64-windows
+          
+          # Check if Boost packages are already cached
+          $boostInstalled = Test-Path "C:\vcpkg\installed\x64-windows\include\boost\filesystem.hpp"
+          if ($boostInstalled) {
+            Write-Host "Boost packages found in cache, skipping installation"
+          } else {
+            Write-Host "Boost packages not in cache, installing..."
+            # Install Boost with specific version to avoid compatibility issues
+            vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index --triplet x64-windows
+          }
+          
           # Set environment variables for Boost
           echo "BOOST_ROOT=C:\vcpkg\installed\x64-windows" >> $env:GITHUB_ENV
           echo "Boost_INCLUDEDIR=C:\vcpkg\installed\x64-windows\include" >> $env:GITHUB_ENV
@@ -181,4 +193,31 @@ jobs:
             build/src/walletd
             build/src/optimizer
           retention-days: 30
-    
+
+      # -------------------- Post-Cache Steps --------------------
+      - name: Post Cache Chocolatey packages (Windows)
+        if: matrix.os == 'windows-2022'
+        uses: actions/cache@v4
+        with:
+          path: C:\ProgramData\chocolatey\lib
+          key: ${{ runner.os }}-choco-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-choco-
+
+      - name: Post Cache vcpkg packages (Windows)
+        if: matrix.os == 'windows-2022'
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\vcpkg\installed
+            C:\vcpkg\buildtrees
+            C:\vcpkg\downloads
+          key: ${{ runner.os }}-vcpkg-boost-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Post Run actions/checkout@v4
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          clean: true

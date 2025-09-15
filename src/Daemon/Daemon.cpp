@@ -30,6 +30,7 @@
 
 #include "Common/SignalHandler.h"
 #include "Common/PathTools.h"
+#include "Common/ConsoleTools.h"
 #include "crypto/hash.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/CoreConfig.h"
@@ -287,12 +288,12 @@ int main(int argc, char* argv[])
    bool r = command_line::handle_error_helper(desc_options, [&]() {
      po::store(po::parse_command_line(argc, argv, desc_options), vm);
 
-     if (command_line::get_arg(vm, command_line::arg_help))
-     {
-       std::cout << "Fuego || " << PROJECT_VERSION_LONG << ENDL;
-       std::cout << desc_options << std::endl;
-       return false;
-     }
+    if (command_line::get_arg(vm, command_line::arg_help))
+    {
+      std::cout << "\033[1;33mFuego || " << PROJECT_VERSION_LONG << "\033[0m" << ENDL;
+      std::cout << desc_options << std::endl;
+      return false;
+    }
 
      if (command_line::get_arg(vm, arg_print_genesis_tx))
      {

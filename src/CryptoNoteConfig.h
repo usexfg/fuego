@@ -30,7 +30,7 @@ namespace CryptoNote
 	{
 		const uint64_t DIFFICULTY_TARGET = 480;	
 		const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
-		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 500000000;
+		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 8000000;
 		const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
                 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
 		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;	
@@ -123,12 +123,12 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-                const uint32_t UPGRADE_HEIGHT_V7                     = 657000; //Apotheosis  Fango
+                const uint32_t UPGRADE_HEIGHT_V7                     = 657000; //Apotheosis | Fango
 		        const uint32_t UPGRADE_HEIGHT_V8                     = 800000; //Dragonborn (emission|deposits)
         const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //{Godflame}  (emission|UPX2|Fuego)
-		const uint32_t UPGRADE_HEIGHT_V10                            = 969696; //Dynamigos (dynamic RingCT, dynamic supply, dynamic difficulty (AMWDA)) 		
-		const uint32_t UPGRADE_HEIGHT_V11                            = 987654; //Elderfire (XFG-STARK burn proofs, Elderfiers, Fuegotor, Elderfyre Deposit Stayking, Elder Council Inbox)
-		const uint32_t UPGRADE_HEIGHT_DIGM                           =1000000; //{CURADI₲M} (DI₲M colored-coin, CURA colored-coin, PayNyms (BIP-47), XFG-C0DL3 bridge)
+		const uint32_t UPGRADE_HEIGHT_V10                            = 969696; //Dynamigos (dynamic RingCT, dynamic supply, dynamic difficulty (DMWD)) 		
+		const uint32_t UPGRADE_HEIGHT_V11                            = 987654; //Elderfire (XFG-STARK burn proofs, Elderfiers, Fuegotor, Elderfyre Stayking, Elder Council Inbox)
+		const uint32_t UPGRADE_HEIGHT_DIGM                           =1000000; //{CURADI₲M} (DI₲M colored-coin, CURA colored-coin, XFG-C0DL3 bridge, BIP-41 Payment codes (PayNyms))
 
 				const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent            
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;

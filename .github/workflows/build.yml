@@ -152,10 +152,10 @@ jobs:
         with:
           name: fuego-macos-${{ github.sha }}
           path: |
-            build/fuegod
-            build/fuego-wallet-cli
-            build/walletd
-            build/optimizer
+            build/src/fuegod
+            build/src/fuego-wallet-cli
+            build/src/walletd
+            build/src/optimizer
           retention-days: 30
 
       - name: Upload Windows artifacts
@@ -164,10 +164,10 @@ jobs:
         with:
           name: fuego-windows-${{ github.sha }}
           path: |
-            build/fuegod.exe
-            build/fuego-wallet-cli.exe
-            build/walletd.exe
-            build/optimizer.exe
+            build/src/fuegod.exe
+            build/src/fuego-wallet-cli.exe
+            build/src/walletd.exe
+            build/src/optimizer.exe
           retention-days: 30
 
       - name: Upload Ubuntu artifacts
@@ -176,9 +176,9 @@ jobs:
         with:
           name: fuego-ubuntu-${{ github.sha }}
           path: |
-            build/fuegod
-            build/fuego-wallet-cli
-            build/walletd
-            build/optimizer
+            build/src/fuegod
+            build/src/fuego-wallet-cli
+            build/src/walletd
+            build/src/optimizer
           retention-days: 30
     

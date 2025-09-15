@@ -91,7 +91,7 @@ jobs:
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
           # Install Boost with specific version to avoid compatibility issues
-          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options --triplet x64-windows
+          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index --triplet x64-windows
           # Set environment variables for Boost
           echo "BOOST_ROOT=C:\vcpkg\installed\x64-windows" >> $env:GITHUB_ENV
           echo "Boost_INCLUDEDIR=C:\vcpkg\installed\x64-windows\include" >> $env:GITHUB_ENV

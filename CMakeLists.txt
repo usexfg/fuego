@@ -189,7 +189,7 @@ if(APPLE)
   endif()
 endif()
 
-find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options multi_index)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(MINGW)

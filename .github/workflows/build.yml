@@ -76,12 +76,16 @@ jobs:
 
           # Install Boost using apt (more reliable)
           sudo apt-get install -y libboost-all-dev
+          
+          # Install boost-multi-index separately as it's not included in libboost-all-dev
+          sudo apt-get install -y libboost-multi-index-dev
 
       # -------------------- macOS --------------------
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'
         run: |
           brew install ninja boost qt@5 miniupnpc qrencode
+          # Boost on macOS includes multi-index by default
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
 
       # -------------------- Windows --------------------

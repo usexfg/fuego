@@ -196,6 +196,11 @@ if(MINGW)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
 elseif(APPLE)
   set(Boost_LIBRARIES "${Boost_LIBRARIES}")
+elseif(MSVC)
+  # Windows with vcpkg - ensure proper linking
+  set(Boost_LIBRARIES "${Boost_LIBRARIES}")
+  # Add Windows-specific libraries
+  set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
 elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
 endif()

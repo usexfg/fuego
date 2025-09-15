@@ -90,7 +90,12 @@ jobs:
           choco install -y vcpkg
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
+          # Install Boost with specific version to avoid compatibility issues
+          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options --triplet x64-windows
+          # Set environment variables for Boost
+          echo "BOOST_ROOT=C:\vcpkg\installed\x64-windows" >> $env:GITHUB_ENV
+          echo "Boost_INCLUDEDIR=C:\vcpkg\installed\x64-windows\include" >> $env:GITHUB_ENV
+          echo "Boost_LIBRARYDIR=C:\vcpkg\installed\x64-windows\lib" >> $env:GITHUB_ENV
 
       - name: Debug Boost installation (Windows)
         if: matrix.os == 'windows-2022'
@@ -123,7 +128,10 @@ jobs:
                   -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                  -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+                  -DBOOST_ROOT="$BOOST_ROOT" \
+                  -DBoost_INCLUDEDIR="$Boost_INCLUDEDIR" \
+                  -DBoost_LIBRARYDIR="$Boost_LIBRARYDIR"
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DBOOST_ROOT="$BOOST_ROOT"

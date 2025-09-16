@@ -211,15 +211,15 @@ message(STATUS "Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}")
 
 # Fix Boost library linking for macOS
 if(APPLE)
-  # Explicitly set Boost libraries for macOS
+  # Use Boost::targets for proper linking
   set(Boost_LIBRARIES 
-    ${Boost_LIBRARY_DIRS}/libboost_filesystem.a
-    ${Boost_LIBRARY_DIRS}/libboost_program_options.a
-    ${Boost_LIBRARY_DIRS}/libboost_thread.a
-    ${Boost_LIBRARY_DIRS}/libboost_date_time.a
-    ${Boost_LIBRARY_DIRS}/libboost_chrono.a
-    ${Boost_LIBRARY_DIRS}/libboost_regex.a
-    ${Boost_LIBRARY_DIRS}/libboost_serialization.a
+    Boost::filesystem
+    Boost::program_options
+    Boost::thread
+    Boost::date_time
+    Boost::chrono
+    Boost::regex
+    Boost::serialization
   )
   message(STATUS "Fixed Boost_LIBRARIES for macOS: ${Boost_LIBRARIES}")
 elseif(MINGW)

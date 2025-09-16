@@ -112,7 +112,7 @@ jobs:
           } else {
             Write-Host "Boost packages not in cache, installing..."
             # Install Boost with specific version to avoid compatibility issues
-            vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index --triplet x64-windows
+            vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-uuid --triplet x64-windows
           }
           
           # Set environment variables for Boost

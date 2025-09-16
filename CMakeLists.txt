@@ -209,8 +209,8 @@ message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
 message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 message(STATUS "Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}")
 
-# Fix Boost library linking for macOS and Linux
-if(APPLE OR UNIX)
+# Fix Boost library linking for all platforms using Boost::targets
+if(APPLE OR UNIX OR MSVC)
   # Use Boost::targets for proper linking
   set(Boost_LIBRARIES 
     Boost::filesystem
@@ -223,11 +223,6 @@ if(APPLE OR UNIX)
   )
   message(STATUS "Fixed Boost_LIBRARIES for ${CMAKE_SYSTEM_NAME}: ${Boost_LIBRARIES}")
 elseif(MINGW)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
-elseif(MSVC)
-  # Windows with vcpkg - ensure proper linking
-  set(Boost_LIBRARIES "${Boost_LIBRARIES}")
-  # Add Windows-specific libraries
   set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
 elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")

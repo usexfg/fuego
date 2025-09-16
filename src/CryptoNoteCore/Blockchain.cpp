@@ -1130,8 +1130,8 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
     size_t max_i = timestamps.size() - 1;
     // get difficulties and timestamps from most recent blocks in alt chain
     for (auto it = alt_chain.rbegin(); it != alt_chain.rend(); ++it) {
-      timestamps[max_i - count] = it->second.bl.timestamp;
-      cumulative_difficulties[max_i - count] = it->second.cumulative_difficulty;
+      timestamps[max_i - count] = (*it).second.bl.timestamp;
+      cumulative_difficulties[max_i - count] = (*it).second.cumulative_difficulty;
       count++;
       if (count >= m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion)) {
         break;

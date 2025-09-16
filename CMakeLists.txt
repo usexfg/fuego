@@ -189,6 +189,10 @@ if(APPLE)
   endif()
 endif()
 
+# Set CMake policies to suppress warnings
+cmake_policy(SET CMP0144 NEW)  # Use upper-case <PACKAGENAME>_ROOT variables
+cmake_policy(SET CMP0167 NEW)  # Use BoostConfig instead of FindBoost
+
 find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options multi_index)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 

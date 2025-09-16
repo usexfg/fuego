@@ -23,7 +23,6 @@
 #include <numeric>
 #include <cstdio>
 #include <cmath>
-#include <boost/foreach.hpp>
 #include "Common/Math.h"
 #include "Common/int-util.h"
 #include "Common/ShuffleGenerator.h"

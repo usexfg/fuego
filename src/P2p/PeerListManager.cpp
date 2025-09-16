@@ -18,7 +18,6 @@
 #include "PeerListManager.h"
 
 #include <time.h>
-#include <boost/foreach.hpp>
 #include <System/Ipv4Address.h>
 
 #include "Serialization/SerializationOverloads.h"

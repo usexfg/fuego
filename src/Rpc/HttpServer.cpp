@@ -16,7 +16,6 @@
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "HttpServer.h"
-#include <boost/scope_exit.hpp>
 
 #include <Common/Base64.h>
 #include <HTTP/HttpParser.h>
@@ -73,8 +72,6 @@ void HttpServer::acceptLoop() {
     }
 
     m_connections.insert(&connection);
-    BOOST_SCOPE_EXIT_ALL(this, &connection) { 
-      m_connections.erase(&connection); };
 
 	workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
 
@@ -121,6 +118,9 @@ void HttpServer::acceptLoop() {
   } catch (std::exception& e) {
     logger(DEBUGGING) << "Connection error: " << e.what();
   }
+  
+  // Cleanup: remove connection from active connections
+  m_connections.erase(&connection);
 }
 
 bool HttpServer::authenticate(const HttpRequest& request) const {

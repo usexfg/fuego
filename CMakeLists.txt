@@ -209,10 +209,21 @@ message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
 message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
 message(STATUS "Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}")
 
-if(MINGW)
+# Fix Boost library linking for macOS
+if(APPLE)
+  # Explicitly set Boost libraries for macOS
+  set(Boost_LIBRARIES 
+    ${Boost_LIBRARY_DIRS}/libboost_filesystem.a
+    ${Boost_LIBRARY_DIRS}/libboost_program_options.a
+    ${Boost_LIBRARY_DIRS}/libboost_thread.a
+    ${Boost_LIBRARY_DIRS}/libboost_date_time.a
+    ${Boost_LIBRARY_DIRS}/libboost_chrono.a
+    ${Boost_LIBRARY_DIRS}/libboost_regex.a
+    ${Boost_LIBRARY_DIRS}/libboost_serialization.a
+  )
+  message(STATUS "Fixed Boost_LIBRARIES for macOS: ${Boost_LIBRARIES}")
+elseif(MINGW)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
-elseif(APPLE)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES}")
 elseif(MSVC)
   # Windows with vcpkg - ensure proper linking
   set(Boost_LIBRARIES "${Boost_LIBRARIES}")

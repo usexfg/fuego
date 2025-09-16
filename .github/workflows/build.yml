@@ -87,8 +87,12 @@ jobs:
         if: matrix.os == 'macos-14'
         run: |
           brew install ninja boost qt@5 miniupnpc qrencode
-          # Install boost-multi-index separately as it's not included in base boost
-          brew install boost-multi-index
+          
+          # Check what Boost components are available
+          echo "Checking Boost installation..."
+          ls -la $(brew --prefix boost)/include/boost/ | grep multi_index || echo "multi_index not found in headers"
+          find $(brew --prefix boost)/lib -name "*multi_index*" || echo "multi_index libraries not found"
+          
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
 
       # -------------------- Windows --------------------

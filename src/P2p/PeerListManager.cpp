@@ -165,8 +165,9 @@ bool PeerlistManager::get_peerlist_head(std::list<PeerlistEntry>& bs_head, uint3
   const peers_indexed::index<by_time>::type& by_time_index = m_peers_white.get<by_time>();
   uint32_t cnt = 0;
 
-  BOOST_REVERSE_FOREACH(const peers_indexed::value_type& vl, by_time_index)
+  for (auto it = by_time_index.rbegin(); it != by_time_index.rend(); ++it)
   {
+    const peers_indexed::value_type& vl = *it;
     if (!vl.last_seen)
       continue;
     bs_head.push_back(vl);

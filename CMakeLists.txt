@@ -193,7 +193,15 @@ endif()
 cmake_policy(SET CMP0144 NEW)  # Use upper-case <PACKAGENAME>_ROOT variables
 cmake_policy(SET CMP0167 NEW)  # Use BoostConfig instead of FindBoost
 
-find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options multi_index)
+# Try to find Boost with multi_index, fall back to without it if not available
+find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+# Try to add multi_index if available
+find_package(Boost 1.74 QUIET COMPONENTS multi_index)
+if(Boost_multi_index_FOUND)
+  message(STATUS "Boost multi_index found")
+else()
+  message(WARNING "Boost multi_index not found - some features may be disabled")
+endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(MINGW)

@@ -77,8 +77,10 @@ jobs:
           # Install Boost using apt (more reliable)
           sudo apt-get install -y libboost-all-dev
           
-          # Install boost-multi-index separately as it's not included in libboost-all-dev
-          sudo apt-get install -y libboost-multi-index-dev
+          # Check what Boost components are available
+          echo "Checking Boost installation..."
+          ls -la /usr/include/boost/ | grep multi_index || echo "multi_index not found in headers"
+          find /usr/lib -name "*multi_index*" || echo "multi_index libraries not found"
 
       # -------------------- macOS --------------------
       - name: Install dependencies (macOS)

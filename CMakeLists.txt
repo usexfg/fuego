@@ -17,10 +17,12 @@ set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
 
+# Create the version target
 configure_file(
   "${PROJECT_SOURCE_DIR}/src/version.h.in"
   "${PROJECT_BINARY_DIR}/version/version.h"
 )
+add_custom_target(version DEPENDS "${PROJECT_BINARY_DIR}/version/version.h")
 include_directories(SYSTEM "${PROJECT_BINARY_DIR}/version")
 
 #
@@ -122,6 +124,9 @@ else()
   include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIRS})
 endif()
+
+# Find pthreads
+find_package(Threads REQUIRED)
 
 # Additional include directories
 include_directories(

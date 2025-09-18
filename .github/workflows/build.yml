@@ -1,10 +1,10 @@
-# CI workflow that builds Fuego / Fuego-Wallet on all three major OSes
+# CI workflow that builds Fuego on all three major OSes
 
 name: CI
 
 on:
   push:
-    branches: [ master, fix/sysapi ]
+    branches: [ master, dynamigo-release-v10 ]
   pull_request:
     branches: [ master ]
 

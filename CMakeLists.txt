@@ -50,9 +50,9 @@ if(MSVC)
 elseif(APPLE)
   include_directories(src/Platform/OSX)
 else()
-	include_directories(src/Platform/Linux)
-	include(TestCXXAcceptsFlag)
-	include(CheckCCompilerFlag)
+  include_directories(src/Platform/Linux)
+  include(TestCXXAcceptsFlag)
+  include(CheckCCompilerFlag)
   if (NOT ARCH)
     set(ARCH native CACHE STRING "CPU to build for: -march value or 'default' to not pass -march at all")
   endif()
@@ -73,20 +73,17 @@ else()
       endif()
       if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
         if(APPLE)
-          # For Apple Silicon (ARM64), don't use -march flag as it's not needed
           if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
             set(ARCH_FLAG "")
           else()
-            # For Intel Macs, use x86-64
             set(ARCH_FLAG "-march=x86-64")
           endif()
         else()
-          # For other platforms, use x86-64
           set(ARCH_FLAG "-march=x86-64")
         endif()
       endif()
     endif()
-	endif()
+  endif()
 endif()
 
 include (arm.cmake)
@@ -94,16 +91,14 @@ include (arm.cmake)
 # Check support for AES
 option(NO_AES "Explicitly disable AES support" ${NO_AES})
 
-if(NO_AES) # No AES
-	message(STATUS "AES support explicitly disabled")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_AES")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_AES")
-
-elseif(NOT ARM) # x86/64
-	message(STATUS "AES support enabled")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
-
+if(NO_AES)
+  message(STATUS "AES support explicitly disabled")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_AES")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_AES")
+elseif(NOT ARM)
+  message(STATUS "AES support enabled")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARCH_FLAG}")
@@ -123,10 +118,8 @@ if(MSVC)
   add_definitions(/DHAVE_ROTR)
 else()
   if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    # This option has no effect in glibc version less than 2.20.
-    # Since glibc 2.20 _BSD_SOURCE is deprecated, this macro is recomended instead
     add_definitions("-D_DEFAULT_SOURCE -D_GNU_SOURCE")
-	endif()
+  endif()
 
   set(WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins")
   if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -162,11 +155,10 @@ else()
     set(DEBUG_FLAGS "-g3 -O0")
   endif()
   set(RELEASE_FLAGS "-g3 -O0")
-
 endif()
 
 if(APPLE)
-	add_definitions(-DHAVE_ROTR)
+  add_definitions(-DHAVE_ROTR)
 endif()
 
 if(STATIC)
@@ -174,10 +166,8 @@ if(STATIC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-#set(Boost_DEBUG on)
-# Try to find Boost with different configurations
+# -------------------- Boost --------------------
 if(APPLE)
-  # Try multiple possible Homebrew locations
   if(EXISTS /opt/homebrew)
     set(BOOST_ROOT /opt/homebrew)
     set(Boost_INCLUDEDIR /opt/homebrew/include)
@@ -200,13 +190,27 @@ elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
 endif()
 
-# option(BUILD_TESTS "Build tests." ON)
+# -------------------- ICU --------------------
+if(APPLE AND DEFINED ENV{ICU_ROOT})
+  list(APPEND CMAKE_PREFIX_PATH "$ENV{ICU_ROOT}")
+endif()
 
+find_package(ICU REQUIRED COMPONENTS uc i18n data)
+
+if(ICU_FOUND)
+  message(STATUS "Found ICU: ${ICU_INCLUDE_DIRS} ${ICU_LIBRARIES}")
+  include_directories(SYSTEM ${ICU_INCLUDE_DIRS})
+else()
+  message(FATAL_ERROR "ICU not found!")
+endif()
+
+# -------------------- Tests --------------------
 if(BUILD_TESTS)
   add_subdirectory(tests)
   enable_testing()
 endif()
 
+# -------------------- Version --------------------
 set(COMMIT_ID_IN_VERSION ON CACHE BOOL "Include commit ID in version")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/version")
 if (NOT COMMIT_ID_IN_VERSION)
@@ -235,3 +239,4 @@ endif()
 
 add_subdirectory(external)
 add_subdirectory(src)
+

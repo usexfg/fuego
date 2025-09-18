@@ -70,9 +70,8 @@ jobs:
           sudo apt-get install -y build-essential ninja-build pkg-config \
                libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
                libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
-
-          # Install Boost using apt (more reliable)
           sudo apt-get install -y libboost-all-dev
+          echo "BOOST_ROOT=/usr" >> $GITHUB_ENV
 
       # -------------------- macOS --------------------
       - name: Install dependencies (macOS)
@@ -119,15 +118,23 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" == "macos-14" ]; then
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DCMAKE_OSX_ARCHITECTURES=arm64 -DBoost_USE_STATIC_LIBS=ON -DBOOST_ROOT="$BOOST_ROOT"
+            cmake -S . -B build \
+                  -G Ninja \
+                  -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+                  -DCMAKE_OSX_ARCHITECTURES=arm64 \
+                  -DBOOST_ROOT="$BOOST_ROOT" \
+                  -DBoost_USE_STATIC_LIBS=ON
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+            cmake -S . -B build \
+                  -G Ninja \
+                  -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
           else
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DBoost_USE_STATIC_LIBS=ON -DBOOST_ROOT="$BOOST_ROOT"
-          fi
+            cmake -S . -B build \
+                  -G Ninja \
+                  -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+                  -DBOOST_ROOT="$BOOST_ROOT" \
+                  -DBoost_USE_STATIC_LIBS=ON
 
       - name: Build
         run: cmake --build build --parallel
@@ -179,5 +186,3 @@ jobs:
             build/**/walletd
             build/**/optimizer
           retention-days: 30
-
-    

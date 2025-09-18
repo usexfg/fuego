@@ -162,6 +162,7 @@ if(APPLE)
         include_directories(SYSTEM ${ICU_INCLUDE_DIR})
         set(ICU_LIBRARIES ${ICU_DATA_LIBRARY} ${ICU_I18N_LIBRARY} ${ICU_UC_LIBRARY})
         message(STATUS "Found ICU: ${ICU_LIBRARIES}")
+        set(HAVE_ICU TRUE)
     else()
         message(FATAL_ERROR "ICU libraries not found! Install icu4c via Homebrew.")
     endif()
@@ -202,13 +203,14 @@ endif()
 # Subdirectories
 # --------------------------
 add_subdirectory(external)
-add_subdirectory(src)
+add_subdirectory(src)  # <--- fuegod is defined inside here
 
 # --------------------------
-# Link ICU libraries to executable
+# ICU linking hook
 # --------------------------
-if(APPLE)
-    target_link_libraries(fuegod ${ICU_LIBRARIES})
+if(APPLE AND HAVE_ICU)
+    # Delay linking until fuegod is defined inside src/
+    set_property(GLOBAL APPEND PROPERTY FUEGOX_EXTRA_LIBS ${ICU_LIBRARIES})
 endif()
 
 # --------------------------

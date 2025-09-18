@@ -23,17 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # -------------------- Cache Dependencies --------------------
-      - name: Cache apt packages (Ubuntu)
+      # -------------------- Cache --------------------
+      - name: Cache packages
         if: matrix.os == 'ubuntu-22.04'
         uses: actions/cache@v4
         with:
           path: /var/cache/apt
           key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-
-
-      - name: Cache Homebrew packages (macOS)
+      - name: Cache Homebrew (macOS)
         if: matrix.os == 'macos-14'
         uses: actions/cache@v4
         with:
@@ -41,36 +38,24 @@ jobs:
             ~/Library/Caches/Homebrew
             /usr/local/Homebrew/Library/Homebrew/vendor/bundle
           key: ${{ runner.os }}-homebrew-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-
-
-      - name: Cache vcpkg packages (Windows)
+      - name: Cache vcpkg & Chocolatey (Windows)
         if: matrix.os == 'windows-2022'
         uses: actions/cache@v4
         with:
-          path: C:\vcpkg\installed
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
+          path: |
+            C:\vcpkg\installed
+            C:\ProgramData\chocolatey\lib
+          key: ${{ runner.os }}-windows-${{ hashFiles('**/CMakeLists.txt') }}
 
-      - name: Cache Chocolatey packages (Windows)
-        if: matrix.os == 'windows-2022'
-        uses: actions/cache@v4
-        with:
-          path: C:\ProgramData\chocolatey\lib
-          key: ${{ runner.os }}-choco-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-choco-
-
-      # -------------------- Install Dependencies --------------------
+      # -------------------- Dependencies --------------------
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential ninja-build pkg-config \
                libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
-               libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
-          sudo apt-get install -y libboost-all-dev
+               libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
+               libboost-all-dev
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'
@@ -82,33 +67,10 @@ jobs:
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |
-         choco install -y ninja
-         choco install -y vcpkg
-         choco install -y miniupnpc qrencode
-         choco install -y qt5-default --params '/InstallDir:C:\Qt'
-         vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
-
-      - name: Debug Boost installation (Windows)
-        if: matrix.os == 'windows-2022'
-        shell: pwsh
-        run: |
-          echo "Checking Boost installation..."
-          if (Test-Path "C:\local\") { ls C:\local\ } else { echo "C:\local\ does not exist" }
-          if (Test-Path "C:\tools\") { ls C:\tools\ } else { echo "C:\tools\ does not exist" }
-          if (Test-Path "C:\ProgramData\chocolatey\lib\boost-msvc-14.3\") { ls C:\ProgramData\chocolatey\lib\boost-msvc-14.3\ } else { echo "Chocolatey Boost path does not exist" }
-          echo "Environment variables:"
-          echo "BOOST_ROOT=$env:BOOST_ROOT"
-          echo "Boost_INCLUDEDIR=$env:Boost_INCLUDEDIR"
-          echo "Boost_LIBRARYDIR=$env:Boost_LIBRARYDIR"
-
-      # -------------------- Cache CMake Build --------------------
-      - name: Cache CMake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt', '**/CMakeCache.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cmake-
+          choco install -y ninja vcpkg miniupnpc qrencode qt5-default
+          vcpkg install boost-filesystem boost-thread boost-date-time \
+            boost-chrono boost-regex boost-serialization boost-program-options \
+            --triplet x64-windows
 
       # -------------------- Configure & Build --------------------
       - name: Configure
@@ -129,58 +91,24 @@ jobs:
           else
             cmake -S . -B build \
                   -G Ninja \
-                  -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DBOOST_ROOT="$BOOST_ROOT" \
-                  -DBoost_USE_STATIC_LIBS=ON
-          fi
-
+                  -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+          
       - name: Build
         run: cmake --build build --parallel
 
       # -------------------- Run Tests --------------------
       - name: Run tests
-        if: ${{ success() && (hashFiles('build/**/fuegod*') != '' || hashFiles('build/**/fuego-wallet-cli*') != '' || hashFiles('build/**/walletd*') != '' || hashFiles('build/**/optimizer*') != '') }}
+        if: success()
         run: ctest --test-dir build --output-on-failure
 
-      # -------------------- List build outputs --------------------
-      - name: List build outputs
-        run: |
-          echo "Listing build directory contents..."
-          ls -R build
-
       # -------------------- Upload Artifacts --------------------
-      - name: Upload macOS artifacts
-        if: matrix.os == 'macos-14' && success()
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fuego-macos-${{ github.sha }}
+          name: fuego-${{ matrix.os }}-${{ github.sha }}
           path: |
-            build/**/fuegod
-            build/**/fuego-wallet-cli
-            build/**/walletd
-            build/**/optimizer
-          retention-days: 30
-
-      - name: Upload Windows artifacts
-        if: matrix.os == 'windows-2022' && success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: fuego-windows-${{ github.sha }}
-          path: |
-            build/**/fuegod.exe
-            build/**/fuego-wallet-cli.exe
-            build/**/walletd.exe
-            build/**/optimizer.exe
-          retention-days: 30
-
-      - name: Upload Ubuntu artifacts
-        if: matrix.os == 'ubuntu-22.04' && success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: fuego-ubuntu-${{ github.sha }}
-          path: |
-            build/**/fuegod
-            build/**/fuego-wallet-cli
-            build/**/walletd
-            build/**/optimizer
+            build/**/fuegod*
+            build/**/fuego-wallet-cli*
+            build/**/walletd*
+            build/**/optimizer*
           retention-days: 30

@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04, macos-14, windows-2022]
+
     env:
       CMAKE_BUILD_TYPE: Release
 
@@ -61,7 +62,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-choco-
 
-      # -------------------- Linux --------------------
+      # -------------------- Install Dependencies --------------------
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         run: |
@@ -70,16 +71,13 @@ jobs:
                libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
                libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
           sudo apt-get install -y libboost-all-dev
-          echo "BOOST_ROOT=/usr" >> $GITHUB_ENV
 
-      # -------------------- macOS --------------------
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'
         run: |
           brew install ninja boost qt@5 miniupnpc qrencode
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
 
-      # -------------------- Windows --------------------
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
         shell: pwsh
@@ -88,7 +86,10 @@ jobs:
           choco install -y vcpkg
           choco install -y miniupnpc qrencode
           choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
+          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono \
+                        boost-regex boost-serialization boost-program-options \
+                        boost-multi-index boost-foreach boost-uuid boost-asio \
+                        boost-scope-exit boost-format --triplet x64-windows
 
       - name: Debug Boost installation (Windows)
         if: matrix.os == 'windows-2022'
@@ -134,11 +135,12 @@ jobs:
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DBOOST_ROOT="$BOOST_ROOT" \
                   -DBoost_USE_STATIC_LIBS=ON
+          fi
 
       - name: Build
         run: cmake --build build --parallel
 
-      # -------------------- Tests (only if binaries exist) --------------------
+      # -------------------- Run Tests --------------------
       - name: Run tests
         if: ${{ success() && (hashFiles('build/**/fuegod*') != '' || hashFiles('build/**/fuego-wallet-cli*') != '' || hashFiles('build/**/walletd*') != '' || hashFiles('build/**/optimizer*') != '') }}
         run: ctest --test-dir build --output-on-failure

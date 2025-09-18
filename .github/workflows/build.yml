@@ -67,10 +67,24 @@ jobs:
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |
-          choco install -y ninja vcpkg miniupnpc qrencode qt5-default
-          vcpkg install boost-filesystem boost-thread boost-date-time \
-            boost-chrono boost-regex boost-serialization boost-program-options \
-            --triplet x64-windows
+          choco install -y ninja
+          choco install -y vcpkg
+          choco install -y miniupnpc
+          choco install -y qrencode
+          choco install -y qt5-default
+          vcpkg install boost-filesystem
+          vcpkg install boost-thread
+          vcpkg install boost-date-time
+          vcpkg install boost-chrono
+          vcpkg install boost-regex
+          vcpkg install boost-serialization
+          vcpkg install boost-program-options
+          vcpkg install boost-multi-index
+          vcpkg install boost-uuid
+          vcpkg install boost-asio
+          vcpkg install boost-scope-exit
+          vcpkg install boost-format
+          vcpkg install --triplet x64-windows
 
       # -------------------- Configure & Build --------------------
       - name: Configure

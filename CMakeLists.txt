@@ -1,237 +1,155 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.8)
 
-include(CheckCXXCompilerFlag)
-set(VERSION "0.2")
-# Packaged from main commits
-set(COMMIT 72946d9)
-set(REFS " (HEAD -> master)")
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Force C++17 flag for all compilers
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-    message(STATUS "Using GNU compiler with C++17")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-    message(STATUS "Using Clang compiler with C++17")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-    message(STATUS "Using AppleClang compiler with C++17")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
-    message(STATUS "Using MSVC compiler with C++17")
-endif()
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
-message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo Release CACHE STRING INTERNAL)
-set(CMAKE_SKIP_INSTALL_RULES ON)
-set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
-set(CMAKE_SUPPRESS_REGENERATION ON)
+# Suppress CMake policies warning for newer CMake versions
+cmake_policy(SET CMP0144 NEW) # Handles BOOST_ROOT behavior
+cmake_policy(SET CMP0167 NEW) # Handles modern FindBoost usage
 
 project(fuegoX)
 
-include_directories(include src external "${CMAKE_BINARY_DIR}/version")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(APPLE OR FREEBSD)
+set(PROJECT_VERSION_MAJOR 10)
+set(PROJECT_VERSION_MINOR 0)
+set(PROJECT_VERSION_PATCH 0)
+set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/src/version.h.in"
+  "${PROJECT_BINARY_DIR}/version/version.h"
+)
+include_directories(SYSTEM "${PROJECT_BINARY_DIR}/version")
+
+#
+# Platform-specific compiler flags
+#
+option(ARCH "Choose architecture" "x86-64")
+
+set(ARM 0) # Default to NOT ARM
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+  # We are on an ARM processor, but it could be an emulated x86 build (Rosetta)
+  # Check if the compiler supports ARM-specific flags to confirm a native ARM build
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-march=armv8-a+fp+simd" CXX_SUPPORTS_ARMV8)
+  if(CXX_SUPPORTS_ARMV8)
+    message(STATUS "Native ARM architecture detected.")
+    set(ARM 1)
+  else()
+    message(STATUS "System processor is ARM, but compiler does not support ARM flags. Assuming x86 emulation.")
+  endif()
+endif()
+
+if(ARM)
+  include(arm)
+endif()
+
+# Set common compiler flags
+if(MSVC)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /EHsc")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins -Wno-error=unused-but-set-variable -Wno-reorder -Wno-missing-field-initializers")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins -Wno-error=unused-but-set-variable -Waggregate-return -Wnested-externs -Wold-style-definition -Wstrict-prototypes")
+endif()
+
+if(NOT ARM AND NOT MSVC)
+  include(CheckCCompilerFlag)
+  CHECK_C_COMPILER_FLAG("-maes" C_SUPPORTS_MAES)
+  if(C_SUPPORTS_MAES)
+    message(STATUS "AES-NI hardware acceleration is available. Enabling -maes flag.")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
+  else()
+     message(STATUS "AES-NI hardware acceleration is not available.")
+  endif()
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+
+#
+# End of platform-specific compiler flags
+#
+
+# Suppress CMake policies warning
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif()
+if(POLICY CMP0079)
+  cmake_policy(SET CMP0079 NEW)
+endif()
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif()
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
+if(APPLE)
   include_directories(SYSTEM /usr/include/malloc)
-  if(POLICY CMP0042)
-    cmake_policy(SET CMP0042 NEW)
-  endif()
-  enable_language(ASM)
+  # brew install boost
+  set(BOOST_ROOT "/opt/homebrew")
+  set(Boost_NO_SYSTEM_PATHS ON)
 endif()
 
-if(MSVC)
-  include_directories(src/Platform/Windows)
-elseif(APPLE)
-  include_directories(src/Platform/OSX)
-else()
-	include_directories(src/Platform/Linux)
-	include(TestCXXAcceptsFlag)
-	include(CheckCCompilerFlag)
-  if (NOT ARCH)
-    set(ARCH native CACHE STRING "CPU to build for: -march value or 'default' to not pass -march at all")
-  endif()
-  message(STATUS "Building on ${CMAKE_SYSTEM_PROCESSOR}")
-  if(ARCH STREQUAL "default")
-    set(ARCH_FLAG "")
-  else()
-    set(ARCH_FLAG "-march=${ARCH}")
-    if(ARCH STREQUAL "native")
-      check_c_compiler_flag(-march=native CC_SUPPORTS_MARCH_NATIVE)
-      if (NOT CC_SUPPORTS_MARCH_NATIVE)
-        check_c_compiler_flag(-mtune=native CC_SUPPORTS_MTUNE_NATIVE)
-        if (CC_SUPPORTS_MTUNE_NATIVE)
-          set(ARCH_FLAG "-mtune=${ARCH}")
-        else()
-          set(ARCH_FLAG "")
-        endif()
-      endif()
-      if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-        if(APPLE)
-          # For Apple Silicon (ARM64), don't use -march flag as it's not needed
-          if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
-            set(ARCH_FLAG "")
-          else()
-            # For Intel Macs, use x86-64
-            set(ARCH_FLAG "-march=x86-64")
-          endif()
-        else()
-          # For other platforms, use x86-64
-          set(ARCH_FLAG "-march=x86-64")
-        endif()
-      endif()
-    endif()
-	endif()
-endif()
-
-include (arm.cmake)
-
-# Check support for AES
-option(NO_AES "Explicitly disable AES support" ${NO_AES})
-
-if(NO_AES) # No AES
-	message(STATUS "AES support explicitly disabled")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_AES")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_AES")
-
-elseif(NOT ARM) # x86/64
-	message(STATUS "AES support enabled")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
-
-endif()
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARCH_FLAG}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAG}")
-
-set(STATIC ${MSVC} CACHE BOOL "Link libraries statically")
-
-if(MSVC)
-  add_definitions("/bigobj /MP /W3 /GS- /D_CRT_SECURE_NO_WARNINGS /wd4996 /wd4345 /D_WIN32_WINNT=0x0600 /DWIN32_LEAN_AND_MEAN /DGTEST_HAS_TR1_TUPLE=0 /D_VARIADIC_MAX=8 /D__SSE4_1__")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:10485760")
-  if(STATIC)
-    foreach(VAR CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE)
-      string(REPLACE "/MD" "/MT" ${VAR} "${${VAR}}")
-    endforeach()
-  endif()
-  include_directories(SYSTEM src/platform/msc)
-  add_definitions(/DHAVE_ROTR)
-else()
-  if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    # This option has no effect in glibc version less than 2.20.
-    # Since glibc 2.20 _BSD_SOURCE is deprecated, this macro is recomended instead
-    add_definitions("-D_DEFAULT_SOURCE -D_GNU_SOURCE")
-	endif()
-
-  set(WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins")
-  if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    set(WARNINGS "${WARNINGS} -Wno-error=mismatched-tags -Wno-error=null-conversion -Wno-overloaded-shift-op-parentheses -Wno-error=shift-count-overflow -Wno-error=tautological-constant-out-of-range-compare -Wno-error=unused-private-field -Wno-error=unneeded-internal-declaration -Wno-error=unused-function")
-    add_definitions(-DHAVE_ROTR)
-  else()
-    set(WARNINGS "${WARNINGS} -Wno-error=unused-but-set-variable")
-  endif()
-  if(MINGW)
-    set(WARNINGS "${WARNINGS} -Wno-error=unused-value")
-    set(MINGW_FLAG "-DWIN32_LEAN_AND_MEAN")
-    include_directories(SYSTEM src/platform/mingw)
-  else()
-    set(MINGW_FLAG "")
-  endif()
-  if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 5.1))
-    set(WARNINGS "${WARNINGS} -Wno-error=odr")
-    add_definitions(-DHAVE_ROTR)
-  endif()
-  set(C_WARNINGS "-Waggregate-return -Wnested-externs -Wold-style-definition -Wstrict-prototypes")
-  set(CXX_WARNINGS "-Wno-reorder -Wno-missing-field-initializers")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 ${MINGW_FLAG} ${WARNINGS} ${C_WARNINGS}")
-  if(NOT APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-  endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 ${MINGW_FLAG} ${WARNINGS} ${CXX_WARNINGS}")
-  if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_TR1_TUPLE=0")
-  endif()
-  if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 4.8))
-    set(DEBUG_FLAGS "-g3 -Og")
-  else()
-    set(DEBUG_FLAGS "-g3 -O0")
-  endif()
-  set(RELEASE_FLAGS "-g3 -O0")
-
-endif()
-
-if(APPLE)
-	add_definitions(-DHAVE_ROTR)
-endif()
-
-if(STATIC)
+if(UNIX AND NOT APPLE)
+  # sudo apt-get install libboost-all-dev
   set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
-#set(Boost_DEBUG on)
-# Try to find Boost with different configurations
-if(APPLE)
-  # Try multiple possible Homebrew locations
-  if(EXISTS /opt/homebrew)
-    set(BOOST_ROOT /opt/homebrew)
-    set(Boost_INCLUDEDIR /opt/homebrew/include)
-    set(Boost_LIBRARYDIR /opt/homebrew/lib)
-  elseif(EXISTS /usr/local)
-    set(BOOST_ROOT /usr/local)
-    set(Boost_INCLUDEDIR /usr/local/include)
-    set(Boost_LIBRARYDIR /usr/local/lib)
-  endif()
+if(WIN32)
+  set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 endif()
 
-find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+# Find Boost
+find_package(Boost 1.74 REQUIRED COMPONENTS
+  filesystem
+  thread
+  date_time
+  chrono
+  regex
+  serialization
+  program_options
+)
 
-if(MINGW)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
-elseif(APPLE)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES}")
-elseif(NOT MSVC)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
-endif()
-
-# option(BUILD_TESTS "Build tests." ON)
-
-if(BUILD_TESTS)
-  add_subdirectory(tests)
-  enable_testing()
-endif()
-
-set(COMMIT_ID_IN_VERSION ON CACHE BOOL "Include commit ID in version")
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/version")
-if (NOT COMMIT_ID_IN_VERSION)
-  set(VERSION "${VERSION}-unknown")
-  configure_file("src/version.h.in" "version/version.h")
-  add_custom_target(version ALL)
-elseif(DEFINED COMMIT)
-  string(REPLACE "." "\\." VERSION_RE "${VERSION}")
-  if(NOT REFS MATCHES "(\\(|, )tag: v${VERSION_RE}(\\)|, )")
-    set(VERSION "${VERSION}-g${COMMIT}")
-  endif()
-  configure_file("src/version.h.in" "version/version.h")
-  add_custom_target(version ALL)
+if(NOT Boost_FOUND)
+  message(FATAL_ERROR "Could not find Boost. Please install Boost 1.74 or newer.")
 else()
-  find_package(Git QUIET)
-  if(Git_FOUND OR GIT_FOUND)
-    message(STATUS "Found Git: ${GIT_EXECUTABLE}")
-    add_custom_target(version ALL "${CMAKE_COMMAND}" "-D" "VERSION=${VERSION}" "-D" "GIT=${GIT_EXECUTABLE}" "-D" "TO=${CMAKE_BINARY_DIR}/version/version.h" "-P" "src/version.cmake" WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-  else()
-    message(STATUS "WARNING: Git was not found!")
-    set(VERSION "${VERSION}-unknown")
-    configure_file("src/version.h.in" "version/version.h")
-    add_custom_target(version ALL)
-  endif()
+  message(STATUS "Found Boost: ${Boost_INCLUDE_DIRS}")
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+  link_directories(${Boost_LIBRARY_DIRS})
 endif()
 
+# Additional include directories
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}/src
+  ${PROJECT_SOURCE_DIR}/external
+)
+
+# Set platform-specific sources
+if(UNIX OR APPLE)
+  set(PLATFORM_DIR "Posix")
+else()
+  set(PLATFORM_DIR "Windows")
+endif()
+include_directories(${PROJECT_SOURCE_DIR}/src/Platform/${PLATFORM_DIR})
+
+# External dependencies
 add_subdirectory(external)
+
+# Add subdirectories
 add_subdirectory(src)
+
+# Enable testing
+enable_testing()
+add_subdirectory(tests)
+
+# Set build output path
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/src)
+
+option(STATIC "Build static libraries" ON)
+set(STATICLIB ${STATIC})

@@ -30,6 +30,7 @@ jobs:
         with:
           path: /var/cache/apt
           key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
+
       - name: Cache Homebrew (macOS)
         if: matrix.os == 'macos-14'
         uses: actions/cache@v4
@@ -38,6 +39,7 @@ jobs:
             ~/Library/Caches/Homebrew
             /usr/local/Homebrew/Library/Homebrew/vendor/bundle
           key: ${{ runner.os }}-homebrew-${{ hashFiles('**/CMakeLists.txt') }}
+
       - name: Cache vcpkg & Chocolatey (Windows)
         if: matrix.os == 'windows-2022'
         uses: actions/cache@v4
@@ -55,13 +57,14 @@ jobs:
           sudo apt-get install -y build-essential ninja-build pkg-config \
                libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
                libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
-               libboost-all-dev
+               libboost-all-dev libicu-dev
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'
         run: |
-          brew install ninja boost qt@5 miniupnpc qrencode
+          brew install ninja boost qt@5 miniupnpc qrencode icu4c
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
+          echo "ICU_ROOT=$(brew --prefix icu4c)" >> $GITHUB_ENV
 
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
@@ -72,19 +75,9 @@ jobs:
           choco install -y miniupnpc
           choco install -y qrencode
           choco install -y qt5-default
-          vcpkg install boost-filesystem
-          vcpkg install boost-thread
-          vcpkg install boost-date-time
-          vcpkg install boost-chrono
-          vcpkg install boost-regex
-          vcpkg install boost-serialization
-          vcpkg install boost-program-options
-          vcpkg install boost-multi-index
-          vcpkg install boost-uuid
-          vcpkg install boost-asio
-          vcpkg install boost-scope-exit
-          vcpkg install boost-format
-          vcpkg install --triplet x64-windows
+          vcpkg install boost-filesystem boost-thread boost-date-time \
+            boost-chrono boost-regex boost-serialization boost-program-options \
+            boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
 
       # -------------------- Configure & Build --------------------
       - name: Configure
@@ -96,6 +89,7 @@ jobs:
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_OSX_ARCHITECTURES=arm64 \
                   -DBOOST_ROOT="$BOOST_ROOT" \
+                  -DICU_ROOT="$ICU_ROOT" \
                   -DBoost_USE_STATIC_LIBS=ON
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
             cmake -S . -B build \
@@ -107,7 +101,7 @@ jobs:
                   -G Ninja \
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
           fi
-          
+
       - name: Build
         run: cmake --build build --parallel
 

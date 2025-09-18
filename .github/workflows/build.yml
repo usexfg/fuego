@@ -1,10 +1,10 @@
-# CI workflow that builds Fuego on all three major OSes
+# CI workflow that builds Fuego / Fuego-Wallet on all three major OSes
 
 name: CI
 
 on:
   push:
-    branches: [ master, dynamigo-release-v10 ]
+    branches: [ master, fix/sysapi ]
   pull_request:
     branches: [ master ]
 
@@ -132,10 +132,16 @@ jobs:
       - name: Build
         run: cmake --build build --parallel
 
-      # -------------------- Tests (if present) --------------------
+      # -------------------- Tests (only if binaries exist) --------------------
       - name: Run tests
-        if: ${{ success() && hashFiles('build/tests/**') != '' }}
+        if: ${{ success() && (hashFiles('build/**/fuegod*') != '' || hashFiles('build/**/fuego-wallet-cli*') != '' || hashFiles('build/**/walletd*') != '' || hashFiles('build/**/optimizer*') != '') }}
         run: ctest --test-dir build --output-on-failure
+
+      # -------------------- List build outputs --------------------
+      - name: List build outputs
+        run: |
+          echo "Listing build directory contents..."
+          ls -R build
 
       # -------------------- Upload Artifacts --------------------
       - name: Upload macOS artifacts
@@ -144,10 +150,10 @@ jobs:
         with:
           name: fuego-macos-${{ github.sha }}
           path: |
-            build/fuegod
-            build/fuego-wallet-cli
-            build/walletd
-            build/optimizer
+            build/**/fuegod
+            build/**/fuego-wallet-cli
+            build/**/walletd
+            build/**/optimizer
           retention-days: 30
 
       - name: Upload Windows artifacts
@@ -156,10 +162,10 @@ jobs:
         with:
           name: fuego-windows-${{ github.sha }}
           path: |
-            build/fuegod.exe
-            build/fuego-wallet-cli.exe
-            build/walletd.exe
-            build/optimizer.exe
+            build/**/fuegod.exe
+            build/**/fuego-wallet-cli.exe
+            build/**/walletd.exe
+            build/**/optimizer.exe
           retention-days: 30
 
       - name: Upload Ubuntu artifacts
@@ -168,9 +174,10 @@ jobs:
         with:
           name: fuego-ubuntu-${{ github.sha }}
           path: |
-            build/fuegod
-            build/fuego-wallet-cli
-            build/walletd
-            build/optimizer
+            build/**/fuegod
+            build/**/fuego-wallet-cli
+            build/**/walletd
+            build/**/optimizer
           retention-days: 30
+
     

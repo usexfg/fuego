@@ -120,13 +120,13 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" == "macos-14" ]; then
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
+                  -DCMAKE_OSX_ARCHITECTURES=arm64 -DBoost_USE_STATIC_LIBS=ON -DBOOST_ROOT="$BOOST_ROOT"
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
           else
             cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DBOOST_ROOT="$BOOST_ROOT"
+                  -DBoost_USE_STATIC_LIBS=ON -DBOOST_ROOT="$BOOST_ROOT"
           fi
 
       - name: Build

@@ -106,6 +106,7 @@ jobs:
             cmake -S . -B build \
                   -G Ninja \
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+          fi
           
       - name: Build
         run: cmake --build build --parallel

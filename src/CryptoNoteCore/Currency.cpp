@@ -251,6 +251,7 @@ namespace CryptoNote
       interestHi = cHi;
       interestLo = cLo;
     }
+    (void)interestLo; // Suppress unused variable warning
     return offchaininterest;
   }
 

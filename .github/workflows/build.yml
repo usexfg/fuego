@@ -62,9 +62,14 @@ jobs:
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'
         run: |
+          brew update
           brew install ninja boost qt@5 miniupnpc qrencode icu4c
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
           echo "ICU_ROOT=$(brew --prefix icu4c)" >> $GITHUB_ENV
+          echo "ICU_INCLUDE_DIR=$(brew --prefix icu4c)/include" >> $GITHUB_ENV
+          echo "ICU_DATA_LIBRARY=$(brew --prefix icu4c)/lib/libicudata.dylib" >> $GITHUB_ENV
+          echo "ICU_I18N_LIBRARY=$(brew --prefix icu4c)/lib/libicui18n.dylib" >> $GITHUB_ENV
+          echo "ICU_UC_LIBRARY=$(brew --prefix icu4c)/lib/libicuuc.dylib" >> $GITHUB_ENV
 
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
@@ -89,7 +94,10 @@ jobs:
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                   -DCMAKE_OSX_ARCHITECTURES=arm64 \
                   -DBOOST_ROOT="$BOOST_ROOT" \
-                  -DICU_ROOT="$ICU_ROOT" \
+                  -DICU_INCLUDE_DIR="$ICU_INCLUDE_DIR" \
+                  -DICU_DATA_LIBRARY="$ICU_DATA_LIBRARY" \
+                  -DICU_I18N_LIBRARY="$ICU_I18N_LIBRARY" \
+                  -DICU_UC_LIBRARY="$ICU_UC_LIBRARY" \
                   -DBoost_USE_STATIC_LIBS=ON
           elif [ "${{ matrix.os }}" == "windows-2022" ]; then
             cmake -S . -B build \

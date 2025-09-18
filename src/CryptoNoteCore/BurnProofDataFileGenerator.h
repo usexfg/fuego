@@ -64,7 +64,7 @@ public:
     // Validate Arbitrum address format
     static bool isValidArbitrumAddress(const std::string& address);
     
-    // Validate XFG amount (supports both 0.8 XFG and 800 XFG)
+    // Validate XFG amount (supports both 0.8 XFG and 8000 XFG)
     static bool isValidXfgAmount(uint64_t amount);
 
 private:

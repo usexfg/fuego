@@ -374,9 +374,9 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDepositWithProof(co
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000(const CreateBurnDeposit8000::Request& request, CreateBurnDeposit8000::Response& response) {
-  // Create burn deposit with FOREVER term and fixed 800 XFG amount
+  // Create burn deposit with FOREVER term and fixed 8000 XFG amount
   uint64_t term = CryptoNote::parameters::DEPOSIT_TERM_BURN;  // 4294967295 (FOREVER)
-  uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_LARGE_AMOUNT;  // 800 XFG
+  uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_8000_AMOUNT;  // 8000 XFG
   
   // 🔥 ADD: Include network ID in metadata for STARK validation
   std::string networkId = "93385046440755750514194170694064996624";
@@ -392,7 +392,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000(const C
   
   if (!result) {
     response.term = term;  // Always 4294967295
-    response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 800 XFG = 8,000,000,000 HEAT
+    response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 8000 XFG = 80,000,000,000 HEAT
     
     // 🔥 ADD: Store secret locally (never on blockchain)
     service.storeBurnDepositSecret(response.transactionHash, secret, amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
@@ -402,9 +402,9 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000(const C
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000WithProof(const CreateBurnDeposit8000WithProof::Request& request, CreateBurnDeposit8000WithProof::Response& response) {
-  // Create burn deposit with FOREVER term and fixed 800 XFG amount
+  // Create burn deposit with FOREVER term and fixed 8000 XFG amount
   uint64_t term = CryptoNote::parameters::DEPOSIT_TERM_BURN;  // 4294967295 (FOREVER)
-  uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_LARGE_AMOUNT;  // 800 XFG
+  uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_8000_AMOUNT;  // 8000 XFG
   
   // 🔥 ADD: Include network ID in metadata for STARK validation
   std::string networkId = "93385046440755750514194170694064996624";
@@ -420,7 +420,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000WithProo
   
   if (!result) {
     response.term = term;  // Always 4294967295
-    response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 800 XFG = 8,000,000,000 HEAT
+    response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 8000 XFG = 80,000,000,000 HEAT
     
     // 🔥 ADD: Generate BPDF with network ID
     std::string outputPath = service.getDefaultWalletPath() + "/bpdf/" + response.transactionHash + ".json";

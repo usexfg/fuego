@@ -187,10 +187,10 @@ bool BurnProofDataFileGenerator::isValidArbitrumAddress(const std::string& addre
 }
 
 bool BurnProofDataFileGenerator::isValidXfgAmount(uint64_t amount) {
-    // Validate XFG amount (supports both 0.8 XFG and 800 XFG)
+    // Validate XFG amount (supports both 0.8 XFG and 8000 XFG)
     switch (amount) {
         case 8000000:        // 0.8 XFG
-        case 800000000000ULL: // 800 XFG
+        case 80000000000ULL: // 8000 XFG
             return true;
         default:
             return false;

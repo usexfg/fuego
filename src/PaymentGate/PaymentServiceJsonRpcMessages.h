@@ -208,7 +208,7 @@ struct CreateBurnDeposit8000
   {
     std::string transactionHash;
     uint64_t term;               // Always 4294967295 (FOREVER)
-    uint64_t heatAmount;         // HEAT amount that will be minted (800 XFG = 8,000,000,000 HEAT)
+    uint64_t heatAmount;         // HEAT amount that will be minted (8000 XFG = 80,000,000,000 HEAT)
 
     void serialize(CryptoNote::ISerializer &serializer);
   };
@@ -229,7 +229,7 @@ struct CreateBurnDeposit8000WithProof
   {
     std::string transactionHash;
     uint64_t term;                 // Always 4294967295 (FOREVER)
-    uint64_t heatAmount;           // HEAT amount that will be minted (800 XFG = 8,000,000,000 HEAT)
+    uint64_t heatAmount;           // HEAT amount that will be minted (8000 XFG = 80,000,000,000 HEAT)
     std::string burnProofDataFile; // 🔥 ADD: Path to generated BPDF
     std::string networkId;         // 🔥 ADD: Network ID for validation
 

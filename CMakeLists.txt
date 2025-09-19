@@ -16,7 +16,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Force C++17 flags for all compilers
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
    CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
    CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -150,7 +149,7 @@ elseif(NOT MSVC)
 endif()
 
 # --------------------------
-# ICU linking
+# ICU linking hook
 # --------------------------
 if(APPLE)
     if(DEFINED ENV{ICU_INCLUDE_DIR})
@@ -173,9 +172,10 @@ if(APPLE)
         message(FATAL_ERROR "ICU libraries not found! Install icu4c via Homebrew.")
     endif()
 else()
+    # Non-Apple platforms use find_package(ICU) directly
     find_package(ICU REQUIRED COMPONENTS i18n uc data)
     include_directories(${ICU_INCLUDE_DIRS})
-    set(ICU_LIBRARIES ${ICU_LIBRARIES})
+    message(STATUS "Found ICU: ${ICU_LIBRARIES}")
 endif()
 
 # --------------------------
@@ -216,10 +216,17 @@ add_subdirectory(external)
 add_subdirectory(src)  # <--- fuegod target is defined inside here
 
 # --------------------------
-# ICU linking to fuegod target
+# ICU linking
 # --------------------------
 if(TARGET fuegod)
     target_link_libraries(fuegod PRIVATE ${ICU_LIBRARIES})
+    if(APPLE)
+        # Prevent CMake from adding duplicate -licu* fallback flags
+        set_target_properties(fuegod PROPERTIES
+            LINK_SEARCH_START_STATIC OFF
+            LINK_SEARCH_END_STATIC OFF
+        )
+    endif()
 endif()
 
 # --------------------------
@@ -229,4 +236,3 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
     enable_testing()
 endif()
-

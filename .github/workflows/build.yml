@@ -19,6 +19,7 @@ jobs:
 
     env:
       CMAKE_BUILD_TYPE: Release
+      MATRIX_OS: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +89,7 @@ jobs:
       - name: Configure
         shell: bash
         run: |
-          if [ "${{ matrix.os }}" == "macos-14" ]; then
+          if [ "$MATRIX_OS" = "macos-14" ]; then
             cmake -S . -B build \
                   -G Ninja \
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
@@ -99,7 +100,7 @@ jobs:
                   -DICU_I18N_LIBRARY="$ICU_I18N_LIBRARY" \
                   -DICU_UC_LIBRARY="$ICU_UC_LIBRARY" \
                   -DBoost_USE_STATIC_LIBS=ON
-          elif [ "${{ matrix.os }}" == "windows-2022" ]; then
+          elif [ "$MATRIX_OS" = "windows-2022" ]; then
             cmake -S . -B build \
                   -G Ninja \
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
@@ -108,7 +109,6 @@ jobs:
             cmake -S . -B build \
                   -G Ninja \
                   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
-          fi
 
       - name: Build
         run: cmake --build build --parallel

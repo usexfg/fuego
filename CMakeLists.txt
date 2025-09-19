@@ -164,6 +164,8 @@ if(APPLE)
         find_library(ICU_I18N_LIBRARY icui18n HINTS /opt/homebrew/opt/icu4c/lib)
         find_library(ICU_UC_LIBRARY icuuc HINTS /opt/homebrew/opt/icu4c/lib)
     endif()
+    include_directories(SYSTEM ${ICU_INCLUDE_DIR})
+endif()
 
     if(ICU_INCLUDE_DIR AND ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
         include_directories(SYSTEM ${ICU_INCLUDE_DIR})

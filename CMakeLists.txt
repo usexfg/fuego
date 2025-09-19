@@ -222,14 +222,15 @@ add_subdirectory(src)
 # ICU linking (patched to avoid -licu* fallbacks)
 # --------------------------
 if(TARGET fuegod)
-    # Force absolute paths only
-    set_target_properties(fuegod PROPERTIES LINK_LIBRARIES "${ICU_LIBRARIES}")
-
     if(APPLE)
+        # Ensure ICU is linked only with absolute paths (no -l fallback)
         set_target_properties(fuegod PROPERTIES
+            LINK_LIBRARIES "${ICU_DATA_LIBRARY};${ICU_I18N_LIBRARY};${ICU_UC_LIBRARY}"
             LINK_SEARCH_START_STATIC OFF
             LINK_SEARCH_END_STATIC OFF
         )
+    else()
+        target_link_libraries(fuegod PRIVATE ${ICU_LIBRARIES})
     endif()
 endif()
 

@@ -202,14 +202,13 @@ endif()
 # Subdirectories
 # --------------------------
 add_subdirectory(external)
-add_subdirectory(src)  # <--- fuegod is defined inside here
+add_subdirectory(src)  # <--- fuegod target is defined inside here
 
 # --------------------------
-# ICU linking hook
+# ICU linking
 # --------------------------
-if(APPLE AND HAVE_ICU)
-    # Delay linking until fuegod is defined inside src/
-    set_property(GLOBAL APPEND PROPERTY FUEGOX_EXTRA_LIBS ${ICU_LIBRARIES})
+if(APPLE AND TARGET fuegod)
+    target_link_libraries(fuegod PRIVATE ${ICU_LIBRARIES})
 endif()
 
 # --------------------------

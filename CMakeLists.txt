@@ -204,7 +204,7 @@ if(APPLE)
     else()
         message(FATAL_ERROR "ICU libraries not found on macOS. Install icu4c (Homebrew) and/or set ICU_* env vars in CI.")
     endif()
-else()
+
     # Non-Apple platforms: use find_package which will set ICU_LIBRARIES and ICU_INCLUDE_DIRS
     find_package(ICU REQUIRED COMPONENTS i18n uc data)
     if(ICU_FOUND)

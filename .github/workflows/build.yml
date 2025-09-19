@@ -71,7 +71,7 @@ jobs:
           echo "ICU_I18N_LIBRARY=$(brew --prefix icu4c)/lib/libicui18n.dylib" >> $GITHUB_ENV
           echo "ICU_UC_LIBRARY=$(brew --prefix icu4c)/lib/libicuuc.dylib" >> $GITHUB_ENV
 
-            - name: Install dependencies (Windows)
+      - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |

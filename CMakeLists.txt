@@ -150,7 +150,7 @@ elseif(NOT MSVC)
 endif()
 
 # --------------------------
-# ICU linking hook (macOS)
+# ICU linking
 # --------------------------
 if(APPLE)
     if(DEFINED ENV{ICU_INCLUDE_DIR})
@@ -164,8 +164,6 @@ if(APPLE)
         find_library(ICU_I18N_LIBRARY icui18n HINTS /opt/homebrew/opt/icu4c/lib)
         find_library(ICU_UC_LIBRARY icuuc HINTS /opt/homebrew/opt/icu4c/lib)
     endif()
-    include_directories(SYSTEM ${ICU_INCLUDE_DIR})
-endif()
 
     if(ICU_INCLUDE_DIR AND ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
         include_directories(SYSTEM ${ICU_INCLUDE_DIR})
@@ -173,6 +171,11 @@ endif()
         message(STATUS "Found ICU: ${ICU_LIBRARIES}")
     else()
         message(FATAL_ERROR "ICU libraries not found! Install icu4c via Homebrew.")
+    endif()
+else()
+    find_package(ICU REQUIRED COMPONENTS i18n uc data)
+    include_directories(${ICU_INCLUDE_DIRS})
+    set(ICU_LIBRARIES ${ICU_LIBRARIES})
 endif()
 
 # --------------------------
@@ -213,9 +216,9 @@ add_subdirectory(external)
 add_subdirectory(src)  # <--- fuegod target is defined inside here
 
 # --------------------------
-# ICU linking
+# ICU linking to fuegod target
 # --------------------------
-if(APPLE AND TARGET fuegod)
+if(TARGET fuegod)
     target_link_libraries(fuegod PRIVATE ${ICU_LIBRARIES})
 endif()
 
@@ -226,3 +229,4 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
     enable_testing()
 endif()
+

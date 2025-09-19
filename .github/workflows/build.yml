@@ -80,9 +80,9 @@ jobs:
           choco install -y miniupnpc
           choco install -y qrencode
           choco install -y qt5-default
-          vcpkg install boost_filesystem boost_thread boost_date_time `
-            boost_chrono boost_regex boost_serialization boost_program_options `
-            boost_multi_index boost_uuid boost_asio boost_scope_exit boost_format --triplet x64-windows
+          vcpkg install boost-filesystem boost-thread boost-date-time `
+            boost-chrono boost-regex boost-serialization boost-program-options `
+            boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
 
       # -------------------- Configure & Build --------------------
       - name: Configure

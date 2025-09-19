@@ -309,7 +309,7 @@ bool SlashingConfig::isValid() const {
 ConstantStakeProofConfig ConstantStakeProofConfig::getDefault() {
     ConstantStakeProofConfig config;
     config.enableElderadoC0DL3Validator = true;  // Enable Elderado validator stake for C0DL3
-    config.elderadoC0DL3StakeAmount = 8000000000; // 8000 XFG for Elderado validator (8000 * 1,000,000)
+    config.elderadoC0DL3StakeAmount = 800000000000; // 800 XFG for Elderado validator (800 * 1,000,000)
     config.constantProofValidityPeriod = 0;      // 0 = never expires (constant proof)
     config.c0dl3NetworkId = "C0DL3_MAINNET";     // C0DL3 network identifier
     config.c0dl3ContractAddress = "0x0000000000000000000000000000000000000000"; // Placeholder contract address
@@ -336,7 +336,7 @@ uint64_t ConstantStakeProofConfig::getRequiredStakeAmount(ConstantStakeProofType
 // ElderfierServiceConfig implementations
 ElderfierServiceConfig ElderfierServiceConfig::getDefault() {
     ElderfierServiceConfig config;
-    config.minimumStakeAmount = 800000000;      // 800 XFG minimum for Elderfier (800 * 1,000,000)
+    config.minimumStakeAmount = 800000000000;      // 800 XFG minimum for Elderfier (800 * 1,000,000)
     config.customNameLength = 8;                 // Exactly 8 letters for custom names
     config.allowHashedAddresses = true;         // Allow hashed addresses for privacy
     config.reservedNames = {

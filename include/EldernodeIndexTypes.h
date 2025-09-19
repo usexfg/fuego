@@ -34,7 +34,7 @@ struct ElderfierServiceId {
 // Eldernode tier levels
 enum class EldernodeTier : uint8_t {
     ELDERFIER = 1,       // Elderfier service node (800 XFG stake required)
-    ELDARADO = 2         // Eldarado validator (8000 XFG stake required)
+    ELDARADO = 2         // Eldarado validator (800 XFG stake required)
 };
 
 // Note: Old stake proof system removed - now using 0x06 tag deposits for Elderfiers
@@ -196,8 +196,8 @@ struct ElderfierDepositData {
 namespace EldernodeFees {
     static const uint64_t LARGE_BURN_FEE = 8000000;      // 0.8 XFG for large burns (800 XFG+)
     static const uint64_t DEFAULT_BURN_FEE = 80000;       // 0.008 XFG for default burns
-    static const uint64_t ELDERFIER_STAKE_AMOUNT = 8000000000;  // 800 XFG stake required
-    static const uint64_t ELDARADO_STAKE_AMOUNT = 80000000000;  // 8000 XFG stake required
+    static const uint64_t ELDERFIER_STAKE_AMOUNT = 800000000000;  // 800 XFG stake required
+    static const uint64_t ELDARADO_STAKE_AMOUNT = 800000000000;  // 800 XFG stake required
 }
 
 // Selection multiplier mapping based on uptime duration

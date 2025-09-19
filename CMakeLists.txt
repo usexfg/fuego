@@ -173,7 +173,6 @@ endif()
         message(STATUS "Found ICU: ${ICU_LIBRARIES}")
     else()
         message(FATAL_ERROR "ICU libraries not found! Install icu4c via Homebrew.")
-    endif()
 endif()
 
 # --------------------------

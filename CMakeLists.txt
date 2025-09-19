@@ -231,13 +231,9 @@ add_subdirectory(src)  # <--- fuegod target is defined inside here
 # --------------------------
 # ICU linking
 # --------------------------
-# Only link ICU if fuegod target exists. Use PRIVATE to avoid leaking to others.
 if(APPLE AND TARGET fuegod)
-    # Prevent duplicate -licu* flags (we already link full paths)
     set_target_properties(fuegod PROPERTIES
-        LINK_SEARCH_START_STATIC OFF
-        LINK_SEARCH_END_STATIC OFF
-        LINK_DIRECTORIES ""   # don't let CMake search for -licu*
+        LINK_DIRECTORIES ""   # stops adding -licu*
     )
 endif()
 

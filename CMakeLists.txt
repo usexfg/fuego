@@ -172,8 +172,48 @@ elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
 endif()
 
+# --------------------------
+# ICU handling
+#  - On macOS: prefer Homebrew icu4c absolute dylib paths (avoids CMake falling back to -licudata etc)
+#  - On non-macOS: use find_package(ICU) (usual system behavior)
+# --------------------------
+if(APPLE)
+    # If CI provided explicit env vars (from workflow), prefer them
+    if(DEFINED ENV{ICU_INCLUDE_DIR} AND DEFINED ENV{ICU_DATA_LIBRARY} AND DEFINED ENV{ICU_I18N_LIBRARY} AND DEFINED ENV{ICU_UC_LIBRARY})
+        set(ICU_INCLUDE_DIR $ENV{ICU_INCLUDE_DIR})
+        set(ICU_DATA_LIBRARY $ENV{ICU_DATA_LIBRARY})
+        set(ICU_I18N_LIBRARY $ENV{ICU_I18N_LIBRARY})
+        set(ICU_UC_LIBRARY $ENV{ICU_UC_LIBRARY})
+    else()
+        # Look for Homebrew icu4c
+        find_path(ICU_INCLUDE_DIR icu.h HINTS /opt/homebrew/opt/icu4c/include /usr/local/opt/icu4c/include)
+        find_library(ICU_DATA_LIBRARY NAMES libicudata.dylib icudata HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
+        find_library(ICU_I18N_LIBRARY NAMES libicui18n.dylib icui18n HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
+        find_library(ICU_UC_LIBRARY NAMES libicuuc.dylib icuuc HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
+    endif()
+
+    if(ICU_INCLUDE_DIR AND ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
+        include_directories(SYSTEM ${ICU_INCLUDE_DIR})
 # option(BUILD_TESTS "Build tests." ON)
 
+        # Ensure we pass absolute library paths (use the found full path variables if they are full paths)
+        # Normalize names: if find_library returned plain names (unlikely on mac brew), prefer to error.
+        # We want ICU_LIBRARIES to contain absolute paths to prevent CMake from adding -licudata fallback
+        set(ICU_LIBRARIES ${ICU_DATA_LIBRARY} ${ICU_I18N_LIBRARY} ${ICU_UC_LIBRARY})
+        message(STATUS "Found ICU (macOS): ${ICU_LIBRARIES}")
+    else()
+        message(FATAL_ERROR "ICU libraries not found on macOS. Install icu4c (Homebrew) and/or set ICU_* env vars in CI.")
+    endif()
+else()
+    # Non-Apple platforms: use find_package which will set ICU_LIBRARIES and ICU_INCLUDE_DIRS
+    find_package(ICU REQUIRED COMPONENTS i18n uc data)
+    if(ICU_FOUND)
+        include_directories(${ICU_INCLUDE_DIRS})
+        # ICU_LIBRARIES is provided by find_package(ICU)
+        message(STATUS "Found ICU: ${ICU_LIBRARIES}")
+    else()
+        message(FATAL_ERROR "ICU not found on non-Apple platform. Install libicu-dev (Ubuntu) or the system equivalent.")
+    endif()
 if(BUILD_TESTS)
   add_subdirectory(tests)
   enable_testing()
@@ -205,5 +245,25 @@ else()
   endif()
 endif()
 
+# Subdirectories
+# --------------------------
 add_subdirectory(external)
-add_subdirectory(src)
+add_subdirectory(src)  # <--- fuegod target is defined inside here
+
+# --------------------------
+# ICU linking
+# --------------------------
+# Only link ICU if fuegod target exists. Use PRIVATE to avoid leaking to others.
+if(TARGET fuegod)
+    if(ICU_LIBRARIES)
+        target_link_libraries(fuegod PRIVATE ${ICU_LIBRARIES})
+    endif()
+endif()
+
+# --------------------------
+# Tests
+# --------------------------
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+    enable_testing()
+endif()

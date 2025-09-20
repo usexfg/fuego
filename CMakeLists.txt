@@ -224,7 +224,7 @@ if(APPLE)
     foreach(exec_target fuegod PaymentGateService SimpleWallet Optimizer BurnDepositValidationService)
         if(TARGET ${exec_target})
             message(STATUS "Fixing ICU linkage for ${exec_target}")
-            target_link_libraries(${exec_target} PRIVATE
+            target_link_libraries(${exec_target}
                 ${ICU_DATA_LIBRARY}
                 ${ICU_I18N_LIBRARY}
                 ${ICU_UC_LIBRARY}

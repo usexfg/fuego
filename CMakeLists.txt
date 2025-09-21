@@ -34,6 +34,35 @@ message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
 
 # --------------------------
+# CPU instruction set flags (AES-NI, SSE2, SSE4.1)
+# --------------------------
+include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
+
+set(AES_FLAGS "-maes" "-msse2" "-msse4.1")
+
+# Check and add for C
+foreach(flag ${AES_FLAGS})
+    string(REPLACE "-" "" flag_var ${flag})
+    check_c_compiler_flag(${flag} HAVE_C_${flag_var})
+    if(HAVE_C_${flag_var})
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}")
+    endif()
+endforeach()
+
+# Check and add for C++
+foreach(flag ${AES_FLAGS})
+    string(REPLACE "-" "" flag_var ${flag})
+    check_cxx_compiler_flag(${flag} HAVE_CXX_${flag_var})
+    if(HAVE_CXX_${flag_var})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+    endif()
+endforeach()
+
+message(STATUS "Final C Flags: ${CMAKE_C_FLAGS}")
+message(STATUS "Final CXX Flags: ${CMAKE_CXX_FLAGS}")
+
+# --------------------------
 # Include directories
 # --------------------------
 include_directories(include src external "${CMAKE_BINARY_DIR}/version")

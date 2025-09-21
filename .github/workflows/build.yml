@@ -85,7 +85,7 @@ jobs:
         shell: bash
         run: |
          if [ "${{ matrix.os }}" = "macos-14" ]; then
-         cmake -S . -B build \
+           cmake -S . -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
@@ -96,14 +96,16 @@ jobs:
             -DICU_I18N_LIBRARY="$ICU_ROOT/lib/libicui18n.dylib" \
             -DICU_UC_LIBRARY="$ICU_ROOT/lib/libicuuc.dylib" \
             -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
+            -DCMAKE_CXX_FLAGS="-march=armv8-a -I$ICU_ROOT/include" \
+            -DCMAKE_EXE_LINKER_FLAGS="-L$ICU_ROOT/lib -licudata -licui18n -licuuc" \
             -DBoost_USE_STATIC_LIBS=ON
          elif [ "${{ matrix.os }}" = "windows-2022" ]; then
-         cmake -S . -B build \
+           cmake -S . -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
             -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
          else
-         cmake -S . -B build \
+           cmake -S . -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
          fi
@@ -127,4 +129,5 @@ jobs:
             build/**/walletd*
             build/**/optimizer*
           retention-days: 30
+
 

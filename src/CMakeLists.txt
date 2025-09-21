@@ -66,17 +66,21 @@ endif ()
 # --------------------------
 # Link libraries to executables
 # --------------------------
-target_link_libraries(Daemon CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(SimpleWallet Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES} Serialization)
-target_link_libraries(PaymentGateService PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(Optimizer PaymentGate Rpc Http CryptoNoteCore Logging Serialization Crypto System Common ${Boost_LIBRARIES})
+target_link_libraries(Daemon PRIVATE
+    CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization
+)
 
-# --------------------------
-# Link ICU on macOS
-# --------------------------
-if(APPLE)
-    target_link_libraries(Daemon ${ICU_LIBRARIES})
-endif()
+target_link_libraries(SimpleWallet PRIVATE
+    Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES} Serialization
+)
+
+target_link_libraries(PaymentGateService PRIVATE
+    PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization
+)
+
+target_link_libraries(Optimizer PRIVATE
+    PaymentGate Rpc Http CryptoNoteCore Logging Serialization Crypto System Common ${Boost_LIBRARIES}
+)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
   target_link_libraries(SimpleWallet -lresolv)

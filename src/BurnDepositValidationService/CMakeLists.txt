@@ -9,7 +9,8 @@ target_include_directories(BurnDepositValidationService PUBLIC
     ${CMAKE_SOURCE_DIR}/src
 )
 
-target_link_libraries(BurnDepositValidationService
+# Keyword form for linking
+target_link_libraries(BurnDepositValidationService PRIVATE
     CryptoNoteCore
     Common
     Crypto

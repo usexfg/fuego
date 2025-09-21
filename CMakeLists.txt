@@ -219,7 +219,7 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# ICU linking fix (macOS)
+# ICU linking fix for executables (keyword form)
 # --------------------------
 if(APPLE)
     foreach(exec_target fuegod PaymentGateService SimpleWallet Optimizer BurnDepositValidationService)
@@ -229,10 +229,6 @@ if(APPLE)
                 ${ICU_DATA_LIBRARY}
                 ${ICU_I18N_LIBRARY}
                 ${ICU_UC_LIBRARY}
-            )
-            set_target_properties(${exec_target} PROPERTIES
-                LINK_SEARCH_START_STATIC OFF
-                LINK_SEARCH_END_STATIC OFF
             )
         endif()
     endforeach()

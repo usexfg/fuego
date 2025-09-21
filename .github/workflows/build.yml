@@ -31,14 +31,16 @@ jobs:
           path: /var/cache/apt
           key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
 
-      - name: Cache Homebrew (macOS)
+      - name: Cache Homebrew & ICU (macOS)
         if: matrix.os == 'macos-14'
         uses: actions/cache@v4
         with:
           path: |
             ~/Library/Caches/Homebrew
             /usr/local/Homebrew/Library/Homebrew/vendor/bundle
-          key: ${{ runner.os }}-homebrew-${{ hashFiles('**/CMakeLists.txt') }}
+            $(brew --prefix icu4c@77)/lib
+            $(brew --prefix icu4c@77)/include
+          key: ${{ runner.os }}-homebrew-icu-${{ hashFiles('**/CMakeLists.txt') }}
 
       - name: Cache vcpkg & Chocolatey (Windows)
         if: matrix.os == 'windows-2022'
@@ -84,31 +86,29 @@ jobs:
       - name: Configure
         shell: bash
         run: |
-         if [ "${{ matrix.os }}" = "macos-14" ]; then
-           cmake -S . -B build \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DBOOST_ROOT="$BOOST_ROOT" \
-            -DICU_ROOT="$ICU_ROOT" \
-            -DICU_INCLUDE_DIR="$ICU_ROOT/include" \
-            -DICU_DATA_LIBRARY="$ICU_ROOT/lib/libicudata.dylib" \
-            -DICU_I18N_LIBRARY="$ICU_ROOT/lib/libicui18n.dylib" \
-            -DICU_UC_LIBRARY="$ICU_ROOT/lib/libicuuc.dylib" \
-            -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
-            -DCMAKE_CXX_FLAGS="-march=armv8-a -I$ICU_ROOT/include" \
-            -DCMAKE_EXE_LINKER_FLAGS="-L$ICU_ROOT/lib -licudata -licui18n -licuuc" \
-            -DBoost_USE_STATIC_LIBS=ON
-         elif [ "${{ matrix.os }}" = "windows-2022" ]; then
-           cmake -S . -B build \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-         else
-           cmake -S . -B build \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
-         fi
+          if [ "${{ matrix.os }}" = "macos-14" ]; then
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DCMAKE_OSX_ARCHITECTURES=arm64 \
+              -DBOOST_ROOT="$BOOST_ROOT" \
+              -DICU_ROOT="$ICU_ROOT" \
+              -DICU_INCLUDE_DIR="$ICU_ROOT/include" \
+              -DICU_DATA_LIBRARY="$ICU_ROOT/lib/libicudata.dylib" \
+              -DICU_I18N_LIBRARY="$ICU_ROOT/lib/libicui18n.dylib" \
+              -DICU_UC_LIBRARY="$ICU_ROOT/lib/libicuuc.dylib" \
+              -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
+              -DBoost_USE_STATIC_LIBS=ON
+          elif [ "${{ matrix.os }}" = "windows-2022" ]; then
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          else
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+          fi
 
       - name: Build
         run: cmake --build build --parallel
@@ -129,5 +129,4 @@ jobs:
             build/**/walletd*
             build/**/optimizer*
           retention-days: 30
-
 

@@ -1,5 +1,3 @@
-# CI workflow that builds Fuego on three major OSes
-
 name: CI
 
 on:
@@ -39,8 +37,8 @@ jobs:
           path: |
             ~/Library/Caches/Homebrew
             /usr/local/Homebrew/Library/Homebrew/vendor/bundle
-            $(brew --prefix icu4c@77)/lib
-            $(brew --prefix icu4c@77)/include
+            /opt/homebrew/opt/icu4c@77/lib
+            /opt/homebrew/opt/icu4c@77/include
           key: ${{ runner.os }}-homebrew-icu-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
       - name: Cache vcpkg & Chocolatey (Windows)
@@ -74,11 +72,7 @@ jobs:
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |
-          choco install -y ninja
-          choco install -y vcpkg
-          choco install -y miniupnpc
-          choco install -y qrencode
-          choco install -y qt5-default
+          choco install -y ninja vcpkg miniupnpc qrencode qt5-default
           vcpkg install boost-filesystem boost-thread boost-date-time `
             boost-chrono boost-regex boost-serialization boost-program-options `
             boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
@@ -88,6 +82,7 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "macos-14" ]; then
+            export ICU_ROOT=$(brew --prefix icu4c@77)
             cmake -S . -B build \
               -G Ninja \
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \

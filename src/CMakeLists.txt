@@ -59,6 +59,13 @@ add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
 
 # --------------------------
+# Apply AES/SSE compile options to Crypto library only
+# --------------------------
+if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    target_compile_options(Crypto PRIVATE -maes -msse2 -msse4.1)
+endif()
+
+# --------------------------
 # Executables
 # --------------------------
 add_executable(Daemon ${Daemon})

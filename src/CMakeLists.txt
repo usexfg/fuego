@@ -67,25 +67,40 @@ endif ()
 # Link libraries to executables
 # --------------------------
 target_link_libraries(Daemon PRIVATE
-    CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization
+    CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static
+    BlockchainExplorer ${Boost_LIBRARIES} Serialization
 )
 
 target_link_libraries(SimpleWallet PRIVATE
-    Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES} Serialization
+    Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common
+    Crypto ${Boost_LIBRARIES} Serialization
 )
 
 target_link_libraries(PaymentGateService PRIVATE
-    PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization
+    PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto
+    P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer
+    ${Boost_LIBRARIES} Serialization
 )
 
 target_link_libraries(Optimizer PRIVATE
-    PaymentGate Rpc Http CryptoNoteCore Logging Serialization Crypto System Common ${Boost_LIBRARIES}
+    PaymentGate Rpc Http CryptoNoteCore Logging Serialization Crypto System Common
+    ${Boost_LIBRARIES}
 )
 
+# --------------------------
+# Link ICU on macOS
+# --------------------------
+if(APPLE)
+    target_link_libraries(Daemon PRIVATE ${ICU_LIBRARIES})
+endif()
+
+# --------------------------
+# System resolv libs (Linux/macOS)
+# --------------------------
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
-  target_link_libraries(SimpleWallet -lresolv)
-  target_link_libraries(Daemon -lresolv)
-  target_link_libraries(PaymentGateService -lresolv)
+    target_link_libraries(SimpleWallet PRIVATE resolv)
+    target_link_libraries(Daemon PRIVATE resolv)
+    target_link_libraries(PaymentGateService PRIVATE resolv)
 endif ()
 
 add_dependencies(Rpc version)

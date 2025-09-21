@@ -134,15 +134,17 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# ICU support
+# ICU linking fix for executables (macOS)
 # --------------------------
-find_package(ICU REQUIRED COMPONENTS uc i18n data)
-
 if(APPLE)
-    foreach(exec_target Daemon SimpleWallet Optimizer BurnDepositValidationService)
+    foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
         if(TARGET ${exec_target})
             message(STATUS "Fixing ICU linkage for ${exec_target}")
-            target_link_libraries(${exec_target} PRIVATE ICU::uc ICU::i18n ICU::data)
+            target_link_libraries(${exec_target} PRIVATE
+                ${ICU_DATA_LIBRARY}
+                ${ICU_I18N_LIBRARY}
+                ${ICU_UC_LIBRARY}
+            )
         endif()
     endforeach()
 endif()

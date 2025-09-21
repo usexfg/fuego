@@ -217,6 +217,7 @@ endif()
 # --------------------------
 add_subdirectory(external)
 add_subdirectory(src)
+
 # --------------------------
 # ICU linking fix (macOS)
 # --------------------------
@@ -224,7 +225,7 @@ if(APPLE)
     foreach(exec_target fuegod PaymentGateService SimpleWallet Optimizer BurnDepositValidationService)
         if(TARGET ${exec_target})
             message(STATUS "Fixing ICU linkage for ${exec_target}")
-            target_link_libraries(${exec_target}
+            target_link_libraries(${exec_target} PRIVATE
                 ${ICU_DATA_LIBRARY}
                 ${ICU_I18N_LIBRARY}
                 ${ICU_UC_LIBRARY}

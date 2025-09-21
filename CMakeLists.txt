@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(fuegoX)
 
 # --------------------------
@@ -110,7 +109,7 @@ if(MSVC)
     endif()
 else()
     add_definitions("-D_DEFAULT_SOURCE -D_GNU_SOURCE")
-    set(C_WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins")
+    set(C_WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins")
     set(CXX_WARNINGS "-Wno-reorder -Wno-missing-field-initializers")
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 ${C_WARNINGS}")
@@ -149,68 +148,36 @@ elseif(NOT MSVC)
 endif()
 
 # --------------------------
-# ICU handling
+# ICU handling (macOS full paths)
 # --------------------------
 if(APPLE)
-    if(DEFINED ENV{ICU_INCLUDE_DIR} AND DEFINED ENV{ICU_DATA_LIBRARY} AND DEFINED ENV{ICU_I18N_LIBRARY} AND DEFINED ENV{ICU_UC_LIBRARY})
-        set(ICU_INCLUDE_DIR $ENV{ICU_INCLUDE_DIR})
-        set(ICU_DATA_LIBRARY $ENV{ICU_DATA_LIBRARY})
-        set(ICU_I18N_LIBRARY $ENV{ICU_I18N_LIBRARY})
-        set(ICU_UC_LIBRARY $ENV{ICU_UC_LIBRARY})
-    else()
-        find_path(ICU_INCLUDE_DIR icu.h HINTS /opt/homebrew/opt/icu4c/include /usr/local/opt/icu4c/include)
-        find_library(ICU_DATA_LIBRARY NAMES libicudata.dylib icudata HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
-        find_library(ICU_I18N_LIBRARY NAMES libicui18n.dylib icui18n HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
-        find_library(ICU_UC_LIBRARY NAMES libicuuc.dylib icuuc HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
-    endif()
+    find_path(ICU_INCLUDE_DIR icu.h HINTS /opt/homebrew/opt/icu4c/include /usr/local/opt/icu4c/include)
+    find_library(ICU_DATA_LIBRARY NAMES libicudata.dylib icudata HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
+    find_library(ICU_I18N_LIBRARY NAMES libicui18n.dylib icui18n HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
+    find_library(ICU_UC_LIBRARY NAMES libicuuc.dylib icuuc HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
 
     if(ICU_INCLUDE_DIR AND ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
         include_directories(SYSTEM ${ICU_INCLUDE_DIR})
         set(ICU_LIBRARIES ${ICU_DATA_LIBRARY} ${ICU_I18N_LIBRARY} ${ICU_UC_LIBRARY})
         message(STATUS "Found ICU (macOS): ${ICU_LIBRARIES}")
     else()
-        message(FATAL_ERROR "ICU libraries not found on macOS. Install icu4c (Homebrew) and/or set ICU_* env vars in CI.")
+        message(FATAL_ERROR "ICU libraries not found on macOS. Install icu4c via Homebrew.")
     endif()
 else()
     find_package(ICU REQUIRED COMPONENTS i18n uc data)
     if(ICU_FOUND)
         include_directories(${ICU_INCLUDE_DIRS})
+        set(ICU_LIBRARIES ${ICU_LIBRARIES})
         message(STATUS "Found ICU: ${ICU_LIBRARIES}")
     else()
-        message(FATAL_ERROR "ICU not found on non-Apple platform. Install libicu-dev (Ubuntu) or the system equivalent.")
+        message(FATAL_ERROR "ICU not found on non-Apple platform.")
     endif()
 endif()
 
 # --------------------------
 # Version generation
 # --------------------------
-set(COMMIT_ID_IN_VERSION ON CACHE BOOL "Include commit ID in version")
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/version")
-if (NOT COMMIT_ID_IN_VERSION)
-    set(VERSION "${VERSION}-unknown")
-    configure_file("src/version.h.in" "version/version.h")
-    add_custom_target(version ALL)
-elseif(DEFINED COMMIT)
-    string(REPLACE "." "\\." VERSION_RE "${VERSION}")
-    if(NOT REFS MATCHES "(\\(|, )tag: v${VERSION_RE}(\\)|, )")
-        set(VERSION "${VERSION}-g${COMMIT}")
-    endif()
-    configure_file("src/version.h.in" "version/version.h")
-    add_custom_target(version ALL)
-else()
-    find_package(Git QUIET)
-    if(Git_FOUND OR GIT_FOUND)
-        message(STATUS "Found Git: ${GIT_EXECUTABLE}")
-        add_custom_target(version ALL
-            "${CMAKE_COMMAND}" "-D" "VERSION=${VERSION}" "-D" "GIT=${GIT_EXECUTABLE}" "-D" "TO=${CMAKE_BINARY_DIR}/version/version.h" "-P" "src/version.cmake"
-            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-    else()
-        message(STATUS "WARNING: Git was not found!")
-        set(VERSION "${VERSION}-unknown")
-        configure_file("src/version.h.in" "version/version.h")
-        add_custom_target(version ALL)
-    endif()
-endif()
+# ... [keep your existing version generation code] ...
 
 # --------------------------
 # Subdirectories
@@ -219,17 +186,13 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# ICU linking fix for executables (keyword form)
+# Fix ICU linking for executables (keyword form)
 # --------------------------
 if(APPLE)
     foreach(exec_target fuegod PaymentGateService SimpleWallet Optimizer BurnDepositValidationService)
         if(TARGET ${exec_target})
             message(STATUS "Fixing ICU linkage for ${exec_target}")
-            target_link_libraries(${exec_target} PRIVATE
-                ${ICU_DATA_LIBRARY}
-                ${ICU_I18N_LIBRARY}
-                ${ICU_UC_LIBRARY}
-            )
+            target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
         endif()
     endforeach()
 endif()

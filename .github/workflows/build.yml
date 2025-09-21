@@ -10,15 +10,16 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }}-${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         os: [ubuntu-22.04, macos-14, windows-2022]
+        build_type: [Release, RelWithDebInfo]
 
     env:
-      CMAKE_BUILD_TYPE: Release
+      CMAKE_BUILD_TYPE: ${{ matrix.build_type }}
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +30,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /var/cache/apt
-          key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
       - name: Cache Homebrew & ICU (macOS)
         if: matrix.os == 'macos-14'
@@ -40,7 +41,7 @@ jobs:
             /usr/local/Homebrew/Library/Homebrew/vendor/bundle
             $(brew --prefix icu4c@77)/lib
             $(brew --prefix icu4c@77)/include
-          key: ${{ runner.os }}-homebrew-icu-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-homebrew-icu-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
       - name: Cache vcpkg & Chocolatey (Windows)
         if: matrix.os == 'windows-2022'
@@ -49,7 +50,7 @@ jobs:
           path: |
             C:\vcpkg\installed
             C:\ProgramData\chocolatey\lib
-          key: ${{ runner.os }}-windows-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-windows-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
       # -------------------- Dependencies --------------------
       - name: Install dependencies (Ubuntu)
@@ -98,7 +99,8 @@ jobs:
               -DICU_I18N_LIBRARY="$ICU_ROOT/lib/libicui18n.dylib" \
               -DICU_UC_LIBRARY="$ICU_ROOT/lib/libicuuc.dylib" \
               -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
-              -DBoost_USE_STATIC_LIBS=ON
+              -DBoost_USE_STATIC_LIBS=ON \
+              -DDISABLE_ASYNC_CONSOLE=$([[ "$CMAKE_BUILD_TYPE" == "RelWithDebInfo" ]] && echo ON || echo OFF)
           elif [ "${{ matrix.os }}" = "windows-2022" ]; then
             cmake -S . -B build \
               -G Ninja \
@@ -122,11 +124,10 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fuego-${{ matrix.os }}-${{ github.sha }}
+          name: fuego-${{ matrix.os }}-${{ matrix.build_type }}-${{ github.sha }}
           path: |
             build/**/fuegod*
             build/**/fuego-wallet-cli*
             build/**/walletd*
             build/**/optimizer*
           retention-days: 30
-

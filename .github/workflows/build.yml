@@ -74,14 +74,11 @@ jobs:
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |
-          choco install -y ninja
-          choco install -y vcpkg
-          choco install -y miniupnpc
-          choco install -y qrencode
-          choco install -y qt5-default
+          choco install -y ninja vcpkg miniupnpc qrencode qt5-default
+          # Install Boost and ICU via vcpkg
           vcpkg install boost-filesystem boost-thread boost-date-time `
             boost-chrono boost-regex boost-serialization boost-program-options `
-            boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
+            boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format icu:x64-windows --triplet x64-windows
 
       # -------------------- Configure & Build --------------------
       - name: Configure
@@ -125,3 +122,4 @@ jobs:
             build/**/walletd*
             build/**/optimizer*
           retention-days: 30
+

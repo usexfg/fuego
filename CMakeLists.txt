@@ -41,23 +41,21 @@ include(CheckCXXCompilerFlag)
 
 set(AES_FLAGS "-maes" "-msse2" "-msse4.1")
 
-# Check and add for C
-foreach(flag ${AES_FLAGS})
-    string(REPLACE "-" "" flag_var ${flag})
-    check_c_compiler_flag(${flag} HAVE_C_${flag_var})
-    if(HAVE_C_${flag_var})
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}")
-    endif()
-endforeach()
+# Skip AES/SSE flags on Apple ARM64
+if(NOT (APPLE AND CMAKE_OSX_ARCHITECTURES MATCHES "arm64"))
+    foreach(flag ${AES_FLAGS})
+        string(REPLACE "-" "" flag_var ${flag})
+        check_c_compiler_flag(${flag} HAVE_C_${flag_var})
+        if(HAVE_C_${flag_var})
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flag}")
+        endif()
 
-# Check and add for C++
-foreach(flag ${AES_FLAGS})
-    string(REPLACE "-" "" flag_var ${flag})
-    check_cxx_compiler_flag(${flag} HAVE_CXX_${flag_var})
-    if(HAVE_CXX_${flag_var})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
-    endif()
-endforeach()
+        check_cxx_compiler_flag(${flag} HAVE_CXX_${flag_var})
+        if(HAVE_CXX_${flag_var})
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+        endif()
+    endforeach()
+endif()
 
 message(STATUS "Final C Flags: ${CMAKE_C_FLAGS}")
 message(STATUS "Final CXX Flags: ${CMAKE_CXX_FLAGS}")
@@ -105,10 +103,15 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 # ICU handling
 # --------------------------
 if(APPLE)
-    find_path(ICU_INCLUDE_DIR icu.h HINTS /opt/homebrew/opt/icu4c/include /usr/local/opt/icu4c/include)
-    find_library(ICU_DATA_LIBRARY NAMES libicudata.dylib icudata HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
-    find_library(ICU_I18N_LIBRARY NAMES libicui18n.dylib icui18n HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
-    find_library(ICU_UC_LIBRARY NAMES libicuuc.dylib icuuc HINTS /opt/homebrew/opt/icu4c/lib /usr/local/opt/icu4c/lib)
+    # Default ICU path for Homebrew
+    if(NOT DEFINED ICU_ROOT)
+        set(ICU_ROOT "/opt/homebrew/opt/icu4c")
+    endif()
+
+    find_path(ICU_INCLUDE_DIR icu.h HINTS "${ICU_ROOT}/include")
+    find_library(ICU_DATA_LIBRARY NAMES icudata libicudata.dylib HINTS "${ICU_ROOT}/lib")
+    find_library(ICU_I18N_LIBRARY NAMES icui18n libicui18n.dylib HINTS "${ICU_ROOT}/lib")
+    find_library(ICU_UC_LIBRARY NAMES icuuc libicuuc.dylib HINTS "${ICU_ROOT}/lib")
 
     if(ICU_INCLUDE_DIR AND ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
         include_directories(SYSTEM ${ICU_INCLUDE_DIR})
@@ -121,6 +124,7 @@ else()
     find_package(ICU REQUIRED COMPONENTS i18n uc data)
     if(ICU_FOUND)
         include_directories(${ICU_INCLUDE_DIRS})
+        set(ICU_LIBRARIES ${ICU_LIBRARIES})
         message(STATUS "Found ICU: ${ICU_LIBRARIES}")
     else()
         message(FATAL_ERROR "ICU not found on non-Apple platform.")
@@ -141,10 +145,9 @@ if(APPLE)
         if(TARGET ${exec_target})
             message(STATUS "Fixing ICU linkage for ${exec_target}")
             target_link_libraries(${exec_target} PRIVATE
-                ${ICU_DATA_LIBRARY}
-                ${ICU_I18N_LIBRARY}
-                ${ICU_UC_LIBRARY}
+                ${ICU_LIBRARIES}
             )
         endif()
     endforeach()
 endif()
+

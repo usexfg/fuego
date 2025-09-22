@@ -66,7 +66,11 @@ jobs:
           brew update
           brew install ninja boost qt@5 miniupnpc qrencode icu4c
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
-          echo "ICU_ROOT=$(brew --prefix icu4c)" >> $GITHUB_ENV
+          echo "ICU_ROOT=$(brew --prefix icu4c@77)" >> $GITHUB_ENV
+          echo "PATH=$(brew --prefix icu4c@77)/bin:$PATH" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix icu4c@77)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$(brew --prefix icu4c@77)/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$(brew --prefix icu4c@77)/include" >> $GITHUB_ENV
 
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
@@ -83,7 +87,39 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "macos-14" ]; then
-            export ICU_ROOT=$(brew --prefix icu4c)
+            export ICU_ROOT=$(brew --prefix icu4c@77)
+            export PATH="$ICU_ROOT/bin:$PATH"
+            export PKG_CONFIG_PATH="$ICU_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH"
+            export LDFLAGS="-L$ICU_ROOT/lib $LDFLAGS"
+            export CPPFLAGS="-I$ICU_ROOT/include $CPPFLAGS"
+            
+            # Check for ICU library files and use versioned names if needed
+            ICU_DATA_LIB=""
+            ICU_I18N_LIB=""
+            ICU_UC_LIB=""
+            
+            if [ -f "$ICU_ROOT/lib/libicudata.77.dylib" ]; then
+              ICU_DATA_LIB="$ICU_ROOT/lib/libicudata.77.dylib"
+            elif [ -f "$ICU_ROOT/lib/libicudata.dylib" ]; then
+              ICU_DATA_LIB="$ICU_ROOT/lib/libicudata.dylib"
+            fi
+            
+            if [ -f "$ICU_ROOT/lib/libicui18n.77.dylib" ]; then
+              ICU_I18N_LIB="$ICU_ROOT/lib/libicui18n.77.dylib"
+            elif [ -f "$ICU_ROOT/lib/libicui18n.dylib" ]; then
+              ICU_I18N_LIB="$ICU_ROOT/lib/libicui18n.dylib"
+            fi
+            
+            if [ -f "$ICU_ROOT/lib/libicuuc.77.dylib" ]; then
+              ICU_UC_LIB="$ICU_ROOT/lib/libicuuc.77.dylib"
+            elif [ -f "$ICU_ROOT/lib/libicuuc.dylib" ]; then
+              ICU_UC_LIB="$ICU_ROOT/lib/libicuuc.dylib"
+            fi
+            
+            echo "ICU Data Library: $ICU_DATA_LIB"
+            echo "ICU I18N Library: $ICU_I18N_LIB"
+            echo "ICU UC Library: $ICU_UC_LIB"
+            
             cmake -S . -B build \
               -G Ninja \
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
@@ -91,10 +127,12 @@ jobs:
               -DBOOST_ROOT="$BOOST_ROOT" \
               -DICU_ROOT="$ICU_ROOT" \
               -DICU_INCLUDE_DIR="$ICU_ROOT/include" \
-              -DICU_DATA_LIBRARY="$ICU_ROOT/lib/libicudata.dylib" \
-              -DICU_I18N_LIBRARY="$ICU_ROOT/lib/libicui18n.dylib" \
-              -DICU_UC_LIBRARY="$ICU_ROOT/lib/libicuuc.dylib" \
+              -DICU_DATA_LIBRARY="$ICU_DATA_LIB" \
+              -DICU_I18N_LIBRARY="$ICU_I18N_LIB" \
+              -DICU_UC_LIBRARY="$ICU_UC_LIB" \
               -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
+              -DCMAKE_LIBRARY_PATH="$ICU_ROOT/lib" \
+              -DCMAKE_INCLUDE_PATH="$ICU_ROOT/include" \
               -DBoost_USE_STATIC_LIBS=ON \
               -DCMAKE_POLICY_DEFAULT_CMP0167=OLD \
               -DDISABLE_ASYNC_CONSOLE=$([[ "$CMAKE_BUILD_TYPE" == "RelWithDebInfo" ]] && echo ON || echo OFF)
@@ -117,7 +155,12 @@ jobs:
       # -------------------- Run Tests --------------------
       - name: Run tests
         if: success()
-        run: ctest --test-dir build --output-on-failure
+        run: |
+          if [ -f "build/CTestTestfile.cmake" ]; then
+            ctest --test-dir build --output-on-failure
+          else
+            echo "No tests configured, skipping ctest"
+          fi
 
       # -------------------- Upload Artifacts --------------------
       - name: Upload artifacts

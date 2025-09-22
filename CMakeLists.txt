@@ -100,17 +100,30 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# Link ICU to executables
+# Link ICU to executables (macOS)
 # --------------------------
-foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
-    if(TARGET ${exec_target})
-        message(STATUS "Linking ICU libraries to ${exec_target}")
-        target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
-        if(APPLE)
+if(APPLE)
+    foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
+        if(TARGET ${exec_target})
+            message(STATUS "Force-linking ICU libraries to ${exec_target}")
+            # Remove any previous ICU linkage
+            get_target_property(old_libs ${exec_target} LINK_LIBRARIES)
+            if(old_libs)
+                list(REMOVE_ITEM old_libs icudata icui18n icuuc)
+                set_target_properties(${exec_target} PROPERTIES LINK_LIBRARIES "${old_libs}")
+            endif()
+
+            # Add explicit paths
+            target_link_libraries(${exec_target} PRIVATE
+                ${ICU_LIB_DAT}
+                ${ICU_LIB_I18N}
+                ${ICU_LIB_UC}
+            )
+
             set_target_properties(${exec_target} PROPERTIES
                 BUILD_WITH_INSTALL_RPATH TRUE
                 INSTALL_RPATH "${ICU_ROOT}/lib"
             )
         endif()
-    endif()
-endforeach()
+    endforeach()
+endif()

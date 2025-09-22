@@ -103,17 +103,18 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 # ICU handling
 # --------------------------
 if(APPLE)
-    # Default ICU path for Homebrew
     if(NOT DEFINED ICU_ROOT)
         set(ICU_ROOT "/opt/homebrew/opt/icu4c")
     endif()
 
     find_path(ICU_INCLUDE_DIR icu.h HINTS "${ICU_ROOT}/include")
-    find_library(ICU_DATA_LIBRARY NAMES icudata libicudata.dylib HINTS "${ICU_ROOT}/lib")
-    find_library(ICU_I18N_LIBRARY NAMES icui18n libicui18n.dylib HINTS "${ICU_ROOT}/lib")
-    find_library(ICU_UC_LIBRARY NAMES icuuc libicuuc.dylib HINTS "${ICU_ROOT}/lib")
 
-    if(ICU_INCLUDE_DIR AND ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
+    # Force absolute paths to .dylib to avoid 'library not found' errors
+    set(ICU_DATA_LIBRARY "${ICU_ROOT}/lib/libicudata.dylib")
+    set(ICU_I18N_LIBRARY "${ICU_ROOT}/lib/libicui18n.dylib")
+    set(ICU_UC_LIBRARY "${ICU_ROOT}/lib/libicuuc.dylib")
+
+    if(ICU_INCLUDE_DIR AND EXISTS ${ICU_DATA_LIBRARY} AND EXISTS ${ICU_I18N_LIBRARY} AND EXISTS ${ICU_UC_LIBRARY})
         include_directories(SYSTEM ${ICU_INCLUDE_DIR})
         set(ICU_LIBRARIES ${ICU_DATA_LIBRARY} ${ICU_I18N_LIBRARY} ${ICU_UC_LIBRARY})
         message(STATUS "Found ICU (macOS): ${ICU_LIBRARIES}")
@@ -147,7 +148,11 @@ if(APPLE)
             target_link_libraries(${exec_target} PRIVATE
                 ${ICU_LIBRARIES}
             )
+            # Optional: ensure runtime loader can find ICU
+            set_target_properties(${exec_target} PROPERTIES
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH "${ICU_ROOT}/lib"
+            )
         endif()
     endforeach()
 endif()
-

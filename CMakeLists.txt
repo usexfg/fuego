@@ -78,16 +78,15 @@ message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 # --------------------------
 # ICU
 # --------------------------
-# Use find_package on all platforms, fallback to Homebrew prefix on macOS
 if(APPLE)
-    # Tell CMake where Homebrew puts ICU
     list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/icu4c" "/usr/local/opt/icu4c")
 endif()
 
 find_package(ICU REQUIRED COMPONENTS data i18n uc)
 
 if(ICU_FOUND)
-    message(STATUS "Found ICU: ${ICU_INCLUDE_DIRS}")
+    message(STATUS "Found ICU includes: ${ICU_INCLUDE_DIRS}")
+    message(STATUS "Found ICU libraries: ${ICU_LIBRARIES}")
     include_directories(${ICU_INCLUDE_DIRS})
 else()
     message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
@@ -105,24 +104,11 @@ add_subdirectory(src)
 if(APPLE)
     foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
         if(TARGET ${exec_target})
-            message(STATUS "Force-linking ICU libraries to ${exec_target}")
-            # Remove any previous ICU linkage
-            get_target_property(old_libs ${exec_target} LINK_LIBRARIES)
-            if(old_libs)
-                list(REMOVE_ITEM old_libs icudata icui18n icuuc)
-                set_target_properties(${exec_target} PROPERTIES LINK_LIBRARIES "${old_libs}")
-            endif()
-
-            # Add explicit paths
-            target_link_libraries(${exec_target} PRIVATE
-                ${ICU_LIB_DAT}
-                ${ICU_LIB_I18N}
-                ${ICU_LIB_UC}
-            )
-
+            message(STATUS "Force-linking ICU to ${exec_target}")
+            target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
             set_target_properties(${exec_target} PROPERTIES
                 BUILD_WITH_INSTALL_RPATH TRUE
-                INSTALL_RPATH "${ICU_ROOT}/lib"
+                INSTALL_RPATH "${ICU_LIBRARY_DIRS}"
             )
         endif()
     endforeach()

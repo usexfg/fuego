@@ -117,9 +117,9 @@ if(APPLE)
     if(ICU_INCLUDE_DIR AND EXISTS ${ICU_DATA_LIBRARY} AND EXISTS ${ICU_I18N_LIBRARY} AND EXISTS ${ICU_UC_LIBRARY})
         include_directories(SYSTEM ${ICU_INCLUDE_DIR})
         set(ICU_LIBRARIES ${ICU_DATA_LIBRARY} ${ICU_I18N_LIBRARY} ${ICU_UC_LIBRARY})
-        message(STATUS "Found ICU (macOS): ${ICU_LIBRARIES}")
+        message(STATUS "Found ICU (macOS ARM64): ${ICU_LIBRARIES}")
     else()
-        message(FATAL_ERROR "ICU libraries not found on macOS. Install icu4c (Homebrew).")
+        message(FATAL_ERROR "ICU libraries not found on macOS. Install icu4c via Homebrew.")
     endif()
 else()
     find_package(ICU REQUIRED COMPONENTS i18n uc data)
@@ -145,10 +145,7 @@ if(APPLE)
     foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
         if(TARGET ${exec_target})
             message(STATUS "Fixing ICU linkage for ${exec_target}")
-            target_link_libraries(${exec_target} PRIVATE
-                ${ICU_LIBRARIES}
-            )
-            # Optional: ensure runtime loader can find ICU
+            target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
             set_target_properties(${exec_target} PROPERTIES
                 BUILD_WITH_INSTALL_RPATH TRUE
                 INSTALL_RPATH "${ICU_ROOT}/lib"

@@ -30,6 +30,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message(STATUS "Using MSVC compiler with C++17")
 endif()
 
+# Debug/Release flags
+set(CMAKE_C_FLAGS_DEBUG   "-g3 -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0")
+set(CMAKE_C_FLAGS_RELEASE   "-O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
 
@@ -74,23 +80,26 @@ message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 # --------------------------
 if(APPLE)
     set(ICU_ROOT "/opt/homebrew/opt/icu4c")
-    find_path(ICU_INCLUDE_DIR icu.h HINTS "${ICU_ROOT}/include")
-    set(ICU_LIBRARIES
-        "${ICU_ROOT}/lib/libicudata.dylib"
-        "${ICU_ROOT}/lib/libicui18n.dylib"
-        "${ICU_ROOT}/lib/libicuuc.dylib"
-    )
+    find_path(ICU_INCLUDE_DIR unicode/utypes.h HINTS "${ICU_ROOT}/include")
 
-    if(NOT (ICU_INCLUDE_DIR AND EXISTS ${ICU_LIBRARIES}))
-        message(FATAL_ERROR "ICU libraries not found at ${ICU_ROOT}. Install icu4c via Homebrew.")
+    set(ICU_LIB_DAT "${ICU_ROOT}/lib/libicudata.dylib")
+    set(ICU_LIB_I18N "${ICU_ROOT}/lib/libicui18n.dylib")
+    set(ICU_LIB_UC "${ICU_ROOT}/lib/libicuuc.dylib")
+
+    if(NOT (ICU_INCLUDE_DIR
+            AND EXISTS "${ICU_LIB_DAT}"
+            AND EXISTS "${ICU_LIB_I18N}"
+            AND EXISTS "${ICU_LIB_UC}"))
+        message(FATAL_ERROR "ICU libraries not found at ${ICU_ROOT}. Install icu4c via Homebrew (brew install icu4c).")
     endif()
 
+    set(ICU_LIBRARIES "${ICU_LIB_DAT}" "${ICU_LIB_I18N}" "${ICU_LIB_UC}")
     include_directories(SYSTEM ${ICU_INCLUDE_DIR})
+
 else()
     find_package(ICU REQUIRED COMPONENTS i18n uc data)
     if(ICU_FOUND)
         include_directories(${ICU_INCLUDE_DIRS})
-        set(ICU_LIBRARIES ${ICU_LIBRARIES})
     else()
         message(FATAL_ERROR "ICU not found")
     endif()

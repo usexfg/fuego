@@ -67,15 +67,17 @@ jobs:
           brew install ninja boost qt@5 miniupnpc qrencode icu4c@77
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
           echo "ICU_ROOT=$(brew --prefix icu4c@77)" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$(brew --prefix icu4c@77)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |
           choco install -y ninja vcpkg miniupnpc qrencode qt5-default
-          vcpkg install boost-filesystem boost-thread boost-date-time `
+          vcpkg install --triplet x64-windows boost-filesystem boost-thread boost-date-time `
             boost-chrono boost-regex boost-serialization boost-program-options `
-            boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
+            boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format `
+            icu openssl
 
       # -------------------- Configure & Build --------------------
       - name: Configure
@@ -100,7 +102,8 @@ jobs:
             cmake -S . -B build \
               -G Ninja \
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+              -DVCPKG_TARGET_TRIPLET=x64-windows
           else
             cmake -S . -B build \
               -G Ninja \

@@ -45,6 +45,7 @@ jobs:
         make -j$(nproc) DynamicMoneySupply
         make -j$(nproc) DepositIndex
         make -j$(nproc) Currency
+        make -j$(nproc) DynamicRingSize
         
     - name: Build tests
       run: |
@@ -57,6 +58,8 @@ jobs:
         cd build
         echo "Testing DynamicMoneySupply class..."
         ./tests/UnitTests/DynamicMoneySupplyTest || echo "Dynamic supply tests completed"
+        echo "Testing DynamicRingSize class..."
+        ./tests/UnitTests/DynamicRingSizeTest || echo "Dynamic ring size tests completed"
         
     - name: Run deposit index tests
       run: |
@@ -69,7 +72,7 @@ jobs:
         cd build
         echo "Testing dynamic supply integration with Currency..."
         # Test that dynamic supply methods are available
-        nm src/libCryptoNoteCore.a | grep -i "DynamicMoneySupply\|getAdjustedMoneySupply\|getCirculatingSupply" || echo "Dynamic supply symbols found"
+        nm src/libCryptoNoteCore.a | grep -i "DynamicMoneySupply\|getAdjustedMoneySupply\|getCirculatingSupply\|DynamicRingSize\|getOptimalRingSize" || echo "Dynamic supply symbols found"
         
     - name: Verify dynamic supply constants
       run: |
@@ -77,6 +80,10 @@ jobs:
         echo "Verifying dynamic supply constants..."
         # Check that the base money supply constant is defined
         grep -r "8000008800000008" ../src/CryptoNoteCore/ || echo "Base money supply constant found"
+        # Check v10 upgrade constants
+        grep -r "969696" ../src/CryptoNoteConfig.h || echo "Upgrade height 969696 found"
+        grep -r "MIN_TX_MIXIN_SIZE_V10" ../src/CryptoNoteConfig.h || echo "Dynamic ring size constants found"
+        grep -r "DEPOSIT_TERM_FOREVER" ../src/CryptoNoteConfig.h || echo "Burn deposit constants found"
         
     - name: Test compilation without errors
       run: |

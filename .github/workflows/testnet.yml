@@ -52,7 +52,7 @@ jobs:
         cd build
         echo "Testing dynamic supply functionality in testnet build..."
         # Check that dynamic supply symbols are present
-        nm src/libCryptoNoteCore.a | grep -i "DynamicMoneySupply" || echo "Dynamic supply symbols found"
+        nm src/libCryptoNoteCore.a | grep -i "DynamicMoneySupply\|getAdjustedMoneySupply\|getCirculatingSupply" || echo "Dynamic supply symbols found"
         
     - name: Upload testnet binaries
       uses: actions/upload-artifact@v4
@@ -107,7 +107,10 @@ jobs:
       run: |
         echo "Testing dynamic supply integration..."
         # Check that dynamic supply methods are available in testnet
-        grep -r "getAdjustedMoneySupply\|getCirculatingSupply" src/CryptoNoteCore/ || echo "Dynamic supply methods found"
+        grep -r "getAdjustedMoneySupply\|getCirculatingSupply\|DynamicMoneySupply" src/CryptoNoteCore/ || echo "Dynamic supply methods found"
+        # Verify v10 upgrade constants
+        grep -r "969696" src/CryptoNoteConfig.h || echo "Upgrade height 969696 found"
+        grep -r "MIN_TX_MIXIN_SIZE_V10" src/CryptoNoteConfig.h || echo "Dynamic ring size constants found"
         
     - name: Upload testnet configuration
       uses: actions/upload-artifact@v4

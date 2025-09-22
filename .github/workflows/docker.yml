@@ -45,58 +45,74 @@ jobs:
       - name: Create Dockerfile
         run: |
           cat > Dockerfile << 'EOF'
-          FROM ubuntu:20.04 as builder
-          
+          FROM ubuntu:22.04 as builder
+
           # Install dependencies
           RUN apt-get update && apt-get install -y \
               build-essential \
               cmake \
+              ninja-build \
               libboost-all-dev \
+              libssl-dev \
+              libminiupnpc-dev \
+              libqrencode-dev \
+              libudev-dev \
+              libunwind-dev \
+              liblzma-dev \
+              qtbase5-dev \
+              qtbase5-dev-tools \
+              pkg-config \
               git \
               && rm -rf /var/lib/apt/lists/*
-          
+
           # Copy source code
           WORKDIR /src
           COPY . .
-          
+
           # Build
           RUN mkdir build && cd build && \
-              cmake -DCMAKE_BUILD_TYPE=Release .. && \
-              make -j$(nproc)
-          
+              cmake -G Ninja -DCMAKE_BUILD_TYPE=Release .. && \
+              ninja
+
           # Runtime stage
-          FROM ubuntu:20.04
-          
+          FROM ubuntu:22.04
+
           # Install runtime dependencies
           RUN apt-get update && apt-get install -y \
-              libboost-system1.71.0 \
-              libboost-filesystem1.71.0 \
-              libboost-thread1.71.0 \
-              libboost-date-time1.71.0 \
-              libboost-chrono1.71.0 \
-              libboost-regex1.71.0 \
-              libboost-serialization1.71.0 \
-              libboost-program-options1.71.0 \
+              libboost-system1.74.0 \
+              libboost-filesystem1.74.0 \
+              libboost-thread1.74.0 \
+              libboost-date-time1.74.0 \
+              libboost-chrono1.74.0 \
+              libboost-regex1.74.0 \
+              libboost-serialization1.74.0 \
+              libboost-program-options1.74.0 \
+              libminiupnpc18 \
+              libqrencode4 \
+              libudev1 \
+              liblzma5 \
+              libunwind8 \
+              libssl3 \
               ca-certificates \
               && rm -rf /var/lib/apt/lists/*
-          
+
           # Copy binaries from builder
           COPY --from=builder /src/build/src/fuegod /usr/local/bin/
           COPY --from=builder /src/build/src/fuego-wallet-cli /usr/local/bin/
           COPY --from=builder /src/build/src/walletd /usr/local/bin/
-          
+
           # Create fuego user
           RUN useradd -m -u 1000 fuego
           USER fuego
           WORKDIR /home/fuego
-          
+
           # Create data directory
           RUN mkdir -p /home/fuego/.fuego
           VOLUME ["/home/fuego/.fuego"]
-          
+
           # Expose ports
           EXPOSE 20808 28180
-          
+
           # Default command
           ENTRYPOINT ["fuegod"]
           CMD ["--data-dir=/home/fuego/.fuego"]

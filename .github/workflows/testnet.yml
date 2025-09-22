@@ -2,9 +2,9 @@ name: Testnet Build and Test
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, dynamigo-release-v10 ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
     - name: Configure with CMake (Testnet)
       run: |
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DTESTNET=ON ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DTESTNET=ON -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
         
     - name: Build Fuego Testnet
       run: |

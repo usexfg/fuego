@@ -70,7 +70,8 @@ jobs:
           cd "$build_folder"
           cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/arm64-toolchain.cmake \
                 -DBOOST_ROOT=/tmp/boost-arm64 \
-                -DCMAKE_BUILD_TYPE=Release ..
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
           make -j$(nproc)
           mkdir "$release_name"
           exeFiles=()

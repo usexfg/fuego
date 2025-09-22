@@ -51,7 +51,8 @@ jobs:
         # Configure CMake with architecture-specific flags
         cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
               -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} \
-              -DBOOST_ROOT="$BOOST_ROOT"
+              -DBOOST_ROOT="$BOOST_ROOT" \
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
         
         # Build
         cmake --build . --parallel
@@ -123,7 +124,7 @@ jobs:
         mkdir "$build_folder"
         cd "$build_folder"
         
-        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
         cmake --build . --parallel
         
         # Create release package
@@ -192,7 +193,7 @@ jobs:
         mkdir "$build_folder"
         cd "$build_folder"
         
-        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+        cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
         cmake --build . --parallel
         
         # Create release package
@@ -284,7 +285,8 @@ jobs:
         
         # Configure CMake
         cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
         
         # Build
         cmake --build . --parallel

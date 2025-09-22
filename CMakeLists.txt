@@ -76,33 +76,21 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 
 # --------------------------
-# ICU (macOS / Linux)
+# ICU
 # --------------------------
+# Use find_package on all platforms, fallback to Homebrew prefix on macOS
 if(APPLE)
-    set(ICU_ROOT "/opt/homebrew/opt/icu4c")
-    find_path(ICU_INCLUDE_DIR unicode/utypes.h HINTS "${ICU_ROOT}/include")
+    # Tell CMake where Homebrew puts ICU
+    list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/icu4c" "/usr/local/opt/icu4c")
+endif()
 
-    set(ICU_LIB_DAT "${ICU_ROOT}/lib/libicudata.dylib")
-    set(ICU_LIB_I18N "${ICU_ROOT}/lib/libicui18n.dylib")
-    set(ICU_LIB_UC "${ICU_ROOT}/lib/libicuuc.dylib")
+find_package(ICU REQUIRED COMPONENTS data i18n uc)
 
-    if(NOT (ICU_INCLUDE_DIR
-            AND EXISTS "${ICU_LIB_DAT}"
-            AND EXISTS "${ICU_LIB_I18N}"
-            AND EXISTS "${ICU_LIB_UC}"))
-        message(FATAL_ERROR "ICU libraries not found at ${ICU_ROOT}. Install icu4c via Homebrew (brew install icu4c).")
-    endif()
-
-    set(ICU_LIBRARIES "${ICU_LIB_DAT}" "${ICU_LIB_I18N}" "${ICU_LIB_UC}")
-    include_directories(SYSTEM ${ICU_INCLUDE_DIR})
-
+if(ICU_FOUND)
+    message(STATUS "Found ICU: ${ICU_INCLUDE_DIRS}")
+    include_directories(${ICU_INCLUDE_DIRS})
 else()
-    find_package(ICU REQUIRED COMPONENTS i18n uc data)
-    if(ICU_FOUND)
-        include_directories(${ICU_INCLUDE_DIRS})
-    else()
-        message(FATAL_ERROR "ICU not found")
-    endif()
+    message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
 endif()
 
 # --------------------------
@@ -112,17 +100,17 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# Link ICU to executables (macOS)
+# Link ICU to executables
 # --------------------------
-if(APPLE)
-    foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
-        if(TARGET ${exec_target})
-            message(STATUS "Linking ICU libraries to ${exec_target}")
-            target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
+foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
+    if(TARGET ${exec_target})
+        message(STATUS "Linking ICU libraries to ${exec_target}")
+        target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
+        if(APPLE)
             set_target_properties(${exec_target} PROPERTIES
                 BUILD_WITH_INSTALL_RPATH TRUE
                 INSTALL_RPATH "${ICU_ROOT}/lib"
             )
         endif()
-    endforeach()
-endif()
+    endif()
+endforeach()

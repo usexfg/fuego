@@ -1,5 +1,5 @@
-// Copyright (c) 2017-2025 Fuego Developers
-// Copyright (c) 2017-2025 Elderfire Council
+// Copyright (c) 2017-2025 Fuego Elder Council
+// Copyright (c) 2020-2025 Elderfire Privacy Group
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2018-2019 The Ryo Currency developers
@@ -32,12 +32,12 @@ namespace CryptoNote
 		const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
 		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 500000000;
 		const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
-                const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
+        const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
 		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;	
 		const uint64_t DIFFICULTY_TARGET_DRGL = 81;
 		const unsigned EMISSION_SPEED_FACTOR = 18;
-                const unsigned EMISSION_SPEED_FACTOR_FANGO = 19;  //major version 8
-                const unsigned EMISSION_SPEED_FACTOR_FUEGO = 20;   //major version 9
+        const unsigned EMISSION_SPEED_FACTOR_FANGO = 19;  //major version 8
+        const unsigned EMISSION_SPEED_FACTOR_FUEGO = 20;   //major version 9
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT  = 60 * 60 * 2;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1 = DIFFICULTY_TARGET_DRGL * 6;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2 = DIFFICULTY_TARGET * 2;
@@ -55,7 +55,7 @@ namespace CryptoNote
 		const size_t   MINIMUM_MIXIN = 2;
 
 		const size_t   CRYPTONOTE_COIN_VERSION                       = 1;
-		const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT 	     = 7;
+		const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT 	         = 7;
 		const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
 		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 800000; //size of block (bytes) after reward for block is calculated in block-size
 		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2  = 800000;
@@ -81,14 +81,14 @@ namespace CryptoNote
 		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 8M heat)
 		const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 800 * COIN;  // Large burn: 800 XFG (8,000,000,000 8B heat)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
-                const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
-                const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
-                const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
-                const uint32_t DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
+        const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
+        const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
+        const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
+        const uint32_t DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
                 
                 // User-friendly deposit term constants
-                const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
-                const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
+        const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+        const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
@@ -123,14 +123,14 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-                const uint32_t UPGRADE_HEIGHT_V7                     = 657000; //Apotheosis  Fango
-		        const uint32_t UPGRADE_HEIGHT_V8                     = 800000; //Dragonborn (emission|deposits)
-        const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //{Godflame}  (emission|UPX2|Fuego)
-		const uint32_t UPGRADE_HEIGHT_V10                            = 969696; //Dynamigos (dynamic RingCT, dynamic supply, dynamic difficulty (AMWDA)) 		
+        const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango 
+		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborn  emission|deposits
+        const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //{Godflame}  emission|UPX2|Fuego
+		const uint32_t UPGRADE_HEIGHT_V10                            = 966996; //{Dynamigo} (dynamic RingCT, dynamic supply, dynamic difficulty (AMWDA)) 		
 		const uint32_t UPGRADE_HEIGHT_V11                            = 987654; //Elderfire (XFG-STARK burn proofs, Elderfiers, Fuegotor, Elderfyre Deposit Stayking, Elder Council Inbox)
 		const uint32_t UPGRADE_HEIGHT_DIGM                           =1000000; //{CURADI₲M} (DI₲M colored-coin, CURA colored-coin, PayNyms (BIP-47), XFG-C0DL3 bridge)
 
-				const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent            
+		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent            
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 
@@ -147,7 +147,7 @@ namespace CryptoNote
 
 	} // namespace parameters
 
-        const char CRYPTONOTE_NAME[] = "fuego";
+    const char CRYPTONOTE_NAME[] = "fuego";
 	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
 
 	const uint8_t  TRANSACTION_VERSION_1                         =  1;
@@ -160,14 +160,15 @@ namespace CryptoNote
 	const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 	const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
 	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8; 
-            const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;                  
-            const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
-            const uint8_t  BLOCK_MAJOR_VERSION_11                        = 11;
-            const uint8_t  BLOCK_MAJOR_VERSION_12                        = 12;
-            const uint8_t  BLOCK_MAJOR_VERSION_13                        = 13;
-            const uint8_t  BLOCK_MAJOR_VERSION_14                        = 14;
-	const uint8_t  BLOCK_MINOR_VERSION_0 			     =  0;
-	const uint8_t  BLOCK_MINOR_VERSION_1 			     =  1;
+    const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;                  
+    const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
+    const uint8_t  BLOCK_MAJOR_VERSION_11                        = 11;
+    const uint8_t  BLOCK_MAJOR_VERSION_12                        = 12;
+    const uint8_t  BLOCK_MAJOR_VERSION_13                        = 13;
+    const uint8_t  BLOCK_MAJOR_VERSION_14                        = 14;
+    //  minor vers
+	const uint8_t  BLOCK_MINOR_VERSION_0 			             =  0;
+	const uint8_t  BLOCK_MINOR_VERSION_1 			             =  1;
 
 	const size_t BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT = 10000; // by default, blocks ids count in synchronizing
 	const size_t BLOCKS_SYNCHRONIZING_DEFAULT_COUNT = 128;		 // by default, blocks count in blocks downloading
@@ -176,8 +177,8 @@ namespace CryptoNote
 	const int P2P_DEFAULT_PORT = 10808;
  	const int RPC_DEFAULT_PORT = 18180;
 
-	/* P2P Network Configuration Section - This defines our current P2P network version
-	and the minimum version for communication between nodes */
+	/* P2P Network Config Section */
+    /* This defines our current P2P network version & the minumum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;
 	const uint8_t P2P_VERSION_2 = 2;
 	const uint8_t P2P_CURRENT_VERSION = 1;
@@ -201,8 +202,8 @@ namespace CryptoNote
 	const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT = 2000; // 2 seconds
 	const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000; // 2 minutes
 	const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;  // 5 seconds
-        const uint32_t P2P_IP_BLOCKTIME         = (60 * 60 * 24);  // 24 hr
-        const uint32_t P2P_IP_FAILS_BEFORE_BLOCK  =  45;
+    const uint32_t P2P_IP_BLOCKTIME         = (60 * 60 * 24);  // 24 hr
+    const uint32_t P2P_IP_FAILS_BEFORE_BLOCK  =  45;
 	const char P2P_STAT_TRUSTED_PUB_KEY[] = "";
 
 	// Seed Nodes
@@ -210,7 +211,7 @@ namespace CryptoNote
 		"3.16.217.33:10808",
  		"80.89.228.157:10808",
  		"207.244.247.64:10808",
-	        "216.145.66.224:10808"
+	    "216.145.66.224:10808"
 			
 	};
 
@@ -274,18 +275,19 @@ namespace CryptoNote
  			{ 752411, "8675187b8a7bdf73ac93ac9d86f37315c0780a41ff4c0aa671f5d809b6c5b631" },
  			{ 752593, "e270b1419d5ae8589ea8fdb148a6de6b02637432e76a1b23258324754a16f46f" },
 			{ 777777, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" },
-		        { 800001, "ee744efcc80fe4a483b21bf6918f72bfa19ca2b4324b51786c522428acffce98" },
- 	         	{ 810000, "ca66bed2600a0750f4dafe8ec7a8e4581b2ab9df326cc8f321ffd96bc2947b2c" },
-	        	{ 820000, "6bb848f23668412e35c7bdcd60cd0aea70761d11f1f41204a1b8ca2d808e79d7" },
+		    { 800001, "ee744efcc80fe4a483b21bf6918f72bfa19ca2b4324b51786c522428acffce98" },
+ 	        { 810000, "ca66bed2600a0750f4dafe8ec7a8e4581b2ab9df326cc8f321ffd96bc2947b2c" },
+	        { 820000, "6bb848f23668412e35c7bdcd60cd0aea70761d11f1f41204a1b8ca2d808e79d7" },
 			{ 826421, "9a0158c87c062c63a675c65eda91c10bb6d7b68b854be783aa85b2cbbf3b8a55" },
 			{ 830000, "cee38b0701df9f26a938f6c65a1f233d1f810e5f19eb1b4cb87b15d514342064" },
 			{ 840000, "ec767b0e56d7002966e3184e197b3da06c5f94484bf6218781a38f59a75bfaab" },
 			{ 888888, "b818f74d11ab6b16f86455986b3078217dd2eb0cac3de9b9a0c3111ebb07b9dc" },
-			{ 895000, "2bc71e117bf0544ec1c4a193a0c012c106f0bedc0c27b62feeef944bb16b83e3" }
-
-
-
-
+			{ 895000, "2bc71e117bf0544ec1c4a193a0c012c106f0bedc0c27b62feeef944bb16b83e3" },
+			{ 900000, "1cacd4c442ddc836020f5d21c9540cac8890a0d7bf7e9a6ed5b6615f0a564afa" },
+			{ 910000, "99de18bcc18f47c2d4676f29b1ca01ae604c237bddfa8970da42b683705289b2" },
+			{ 927000, "0aabada8090e76475e13a97d6d4bb528af38123c9098361c978b730705c3f714" },
+			{ 945459, "80d341e6c8cac55c90ddcbf20af1adf077d3bde7e52b648a82a5c22e543ebe68" },
+			{ 963000, "8fce23fb4b75d20f053188e38813895925ff09c1b94f07bd1b551f1d0f9b0902" }
 
  		};
 

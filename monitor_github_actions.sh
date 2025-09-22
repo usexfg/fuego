@@ -20,6 +20,7 @@ check_workflow() {
     echo ""
     echo "🔧 Checking $workflow_name..."
     
+
     # Get the latest workflow run
     local response=$(curl -s "https://api.github.com/repos/$REPO/actions/workflows/$workflow/runs?per_page=1")
     local status=$(echo "$response" | jq -r '.workflow_runs[0].status // "no_runs"')

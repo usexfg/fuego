@@ -59,9 +59,11 @@ add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
 
 # --------------------------
-# Apply AES/SSE compile options to Crypto library only
+# Apply AES/SSE compile options to Crypto library only (x86/x64 non-Android)
 # --------------------------
-if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+if ((CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    AND NOT ANDROID
+    AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i[3-6]86|amd64|x86_64"))
     target_compile_options(Crypto PRIVATE -maes -msse2 -msse4.1)
 endif()
 
@@ -151,16 +153,15 @@ target_link_libraries(Optimizer PRIVATE
 # ICU linking fix for executables (macOS)
 # --------------------------
 if(APPLE)
-    foreach(exec_target fuegod walletd optimizer BurnDepositValidationService)
-        if(TARGET ${exec_target})
-            message(STATUS "Fixing ICU linkage for ${exec_target}")
-            target_link_libraries(${exec_target} PRIVATE
-                ${ICU_DATA_LIBRARY}
-                ${ICU_I18N_LIBRARY}
-                ${ICU_UC_LIBRARY}
-            )
-        endif()
-    endforeach()
+    # Ensure ICU is linked on macOS via imported targets
+    if(TARGET ICU::i18n AND TARGET ICU::uc AND TARGET ICU::data)
+        foreach(exec_target Daemon PaymentGateService Optimizer)
+            if(TARGET ${exec_target})
+                message(STATUS "Fixing ICU linkage for ${exec_target} using ICU imported targets")
+                target_link_libraries(${exec_target} PRIVATE ICU::i18n ICU::uc ICU::data)
+            endif()
+        endforeach()
+    endif()
 endif()
 
 # --------------------------

@@ -13,88 +13,54 @@ on:
 
 jobs:
   test-dynamic-supply:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-22.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          cmake \
-          git \
-          libboost-all-dev \
-          pkg-config \
-          ca-certificates \
-          gtest
-          
-    - name: Create build directory
-      run: mkdir -p build
-      
-    - name: Configure with CMake
-      run: |
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
-        
-    - name: Build dynamic supply components
-      run: |
-        cd build
-        make -j$(nproc) DynamicMoneySupply
-        make -j$(nproc) DepositIndex
-        make -j$(nproc) Currency
-        make -j$(nproc) DynamicRingSize
-        
-    - name: Build tests
-      run: |
-        cd build
-        make -j$(nproc) EldernodeIndexTest
-        make -j$(nproc) CoreTests
-        
-    - name: Run dynamic supply unit tests
-      run: |
-        cd build
-        echo "Testing DynamicMoneySupply class..."
-        ./tests/UnitTests/DynamicMoneySupplyTest || echo "Dynamic supply tests completed"
-        echo "Testing DynamicRingSize class..."
-        ./tests/UnitTests/DynamicRingSizeTest || echo "Dynamic ring size tests completed"
-        
-    - name: Run deposit index tests
-      run: |
-        cd build
-        echo "Testing DepositIndex functionality..."
-        ./test/EldernodeIndexTest || echo "Deposit index tests completed"
-        
-    - name: Test dynamic supply integration
-      run: |
-        cd build
-        echo "Testing dynamic supply integration with Currency..."
-        # Test that dynamic supply methods are available
-        nm src/libCryptoNoteCore.a | grep -i "DynamicMoneySupply\|getAdjustedMoneySupply\|getCirculatingSupply\|DynamicRingSize\|getOptimalRingSize" || echo "Dynamic supply symbols found"
-        
-    - name: Verify dynamic supply constants
-      run: |
-        cd build
-        echo "Verifying dynamic supply constants..."
-        # Check that the base money supply constant is defined
-        grep -r "8000008800000008" ../src/CryptoNoteCore/ || echo "Base money supply constant found"
-        # Check v10 upgrade constants
-        grep -r "969696" ../src/CryptoNoteConfig.h || echo "Upgrade height 969696 found"
-        grep -r "MIN_TX_MIXIN_SIZE_V10" ../src/CryptoNoteConfig.h || echo "Dynamic ring size constants found"
-        grep -r "DEPOSIT_TERM_FOREVER" ../src/CryptoNoteConfig.h || echo "Burn deposit constants found"
-        
-    - name: Test compilation without errors
-      run: |
-        cd build
-        echo "Final compilation test..."
-        make -j$(nproc) || echo "Build completed with warnings"
-        
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: dynamic-supply-test-results
-        path: build/CMakeFiles/CMakeOutput.log
-        retention-days: 30
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ninja-build \
+            cmake \
+            git \
+            libboost-all-dev \
+            pkg-config \
+            ca-certificates \
+            libicu-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests (ctest)
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Verify dynamic supply symbols
+        run: |
+          echo "Verifying dynamic supply symbols in CryptoNoteCore..."
+          nm build/src/libCryptoNoteCore.a | grep -Ei "DynamicMoneySupply|getAdjustedMoneySupply|getCirculatingSupply" || true
+
+      - name: Verify dynamic supply constants
+        run: |
+          echo "Verifying dynamic supply constants..."
+          grep -R "8000008800000008" src/CryptoNoteCore/ || true
+
+      - name: Upload test logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dynamic-supply-test-results
+          path: |
+            build/CTestTestfile.cmake
+            build/Testing/Temporary/LastTest.log
+            build/CMakeFiles/CMakeOutput.log
+          retention-days: 30

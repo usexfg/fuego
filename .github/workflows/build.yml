@@ -46,8 +46,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            C:\vcpkg\installed
-            C:\ProgramData\chocolatey\lib
+            C:\\vcpkg\\installed
+            C:\\ProgramData\\chocolatey\\lib
           key: ${{ runner.os }}-windows-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
       # -------------------- Dependencies --------------------
@@ -125,6 +125,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
               -DCMAKE_OSX_ARCHITECTURES=arm64 \
               -DBOOST_ROOT="$BOOST_ROOT" \
+              -DBUILD_TESTS=ON
               -DICU_ROOT="$ICU_ROOT" \
               -DICU_INCLUDE_DIR="$ICU_ROOT/include" \
               -DICU_DATA_LIBRARY="$ICU_DATA_LIB" \
@@ -140,12 +141,14 @@ jobs:
             cmake -S . -B build \
               -G Ninja \
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DBUILD_TESTS=ON \
               -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
               -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
           else
             cmake -S . -B build \
               -G Ninja \
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DBUILD_TESTS=ON
               -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
           fi
 

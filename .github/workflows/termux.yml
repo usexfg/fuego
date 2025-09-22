@@ -1,7 +1,10 @@
 name: Android (Termux)
 
 on:
+  workflow_dispatch:
   push:
+    branches:
+      - "**"
     tags:
       - "*"
 
@@ -27,13 +30,13 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential wget
+          sudo apt-get install -y cmake build-essential ninja-build wget unzip
 
       - name: Download and Build Boost for Android
         run: |
-          wget -O boost_1_83_0.tar.gz https://sourceforge.net/projects/boost/files/boost/1.83.0/boost_1_83_0.tar.gz
+          wget -O boost_1_83_0.tar.gz "https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz"
           echo "c2fe8e80e82d8c90ddf016edd51f0579b0ccfee7b6e28b4b4a6ca0d8ce744dc2  boost_1_83_0.tar.gz" | sha256sum -c -
-          tar -xjf boost_1_83_0.tar.gz
+          tar -xzf boost_1_83_0.tar.gz
           cd boost_1_83_0
           
           # Configure for Android
@@ -75,13 +78,12 @@ jobs:
           
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/android-${{ matrix.arch }}-toolchain.cmake \
+          cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../cmake/android-${{ matrix.arch }}-toolchain.cmake \
                 -DBOOST_ROOT=/tmp/boost-android-${{ matrix.arch }} \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DANDROID_ABI=${{ matrix.arch == 'aarch64' && 'arm64-v8a' || 'armeabi-v7a' }} \
-                -DANDROID_PLATFORM=android-${{ matrix.api }} \
-                -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
-          make -j$(nproc)
+                -DANDROID_PLATFORM=android-${{ matrix.api }} ..
+          cmake --build . --parallel
           
           mkdir "$release_name"
           exeFiles=()
@@ -117,7 +119,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ steps.build.outputs.asset_path }}
-          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}
+          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}
           body: |
             📱 [Download for Termux](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
             

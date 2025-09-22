@@ -76,18 +76,24 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 
 # --------------------------
-# ICU
+# ICU (skipped on Android)
 # --------------------------
-if(APPLE)
-    list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/icu4c" "/usr/local/opt/icu4c")
-endif()
+if(ANDROID)
+    message(STATUS "Android build detected: skipping ICU discovery")
+else()
+    if(APPLE)
+        list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/icu4c" "/usr/local/opt/icu4c")
+    endif()
 
-find_package(ICU REQUIRED COMPONENTS data i18n uc)
+    find_package(ICU REQUIRED COMPONENTS data i18n uc)
 
-if(ICU_FOUND)
-    message(STATUS "Found ICU includes: ${ICU_INCLUDE_DIRS}")
-    message(STATUS "Found ICU libraries: ${ICU_LIBRARIES}")
-    include_directories(${ICU_INCLUDE_DIRS})
+    if(ICU_FOUND)
+        message(STATUS "Found ICU includes: ${ICU_INCLUDE_DIRS}")
+        message(STATUS "Found ICU libraries: ${ICU_LIBRARIES}")
+        include_directories(${ICU_INCLUDE_DIRS})
+    else()
+        message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
+    endif()
     
     # On macOS, ensure we have the correct ICU library paths
     if(APPLE)
@@ -121,8 +127,16 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# Link ICU to executables (macOS)
+# Tests
 # --------------------------
+# Expose a toggle to optionally build the test suite. This preserves all
+# existing behavior when disabled and allows CI to turn tests on explicitly.
+option(BUILD_TESTS "Build tests" OFF)
+if(BUILD_TESTS)
+    set(DO_TESTS ON)
+    enable_testing()
+    add_subdirectory(tests)
+    
 if(APPLE)
     foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer BurnDepositValidationService)
         if(TARGET ${exec_target})
@@ -151,3 +165,4 @@ if(APPLE)
         endif()
     endforeach()
 endif()
+# Intentionally avoid extra macOS ICU link manipulation here. Handled in src/CMakeLists.txt

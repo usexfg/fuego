@@ -65,56 +65,87 @@ jobs:
         run: |
           brew update
           brew install ninja boost qt@5 miniupnpc qrencode icu4c
+          
+          # Set environment variables for Boost and ICU
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
-          echo "ICU_ROOT=$(brew --prefix icu4c@77)" >> $GITHUB_ENV
-          echo "PATH=$(brew --prefix icu4c@77)/bin:$PATH" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix icu4c@77)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
-          echo "LDFLAGS=-L$(brew --prefix icu4c@77)/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I$(brew --prefix icu4c@77)/include" >> $GITHUB_ENV
+          
+          # Try different ICU versions
+          if [ -d "$(brew --prefix)/opt/icu4c" ]; then
+            ICU_PREFIX="$(brew --prefix)/opt/icu4c"
+          elif [ -d "$(brew --prefix)/opt/icu4c@77" ]; then
+            ICU_PREFIX="$(brew --prefix)/opt/icu4c@77"
+          elif [ -d "$(brew --prefix)/opt/icu4c@76" ]; then
+            ICU_PREFIX="$(brew --prefix)/opt/icu4c@76"
+          else
+            ICU_PREFIX="$(brew --prefix icu4c)"
+          fi
+          
+          echo "ICU_ROOT=$ICU_PREFIX" >> $GITHUB_ENV
+          echo "PATH=$ICU_PREFIX/bin:$PATH" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$ICU_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$ICU_PREFIX/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$ICU_PREFIX/include" >> $GITHUB_ENV
 
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |
-          choco install -y ninja vcpkg miniupnpc qrencode qt5-default
-          vcpkg install --triplet x64-windows boost-filesystem boost-thread boost-date-time `
-            boost-chrono boost-regex boost-serialization boost-program-options `
-            boost-multi-index boost-uuid boost-asio boost-scope-exit boost-format `
-            icu openssl
+          # Install basic tools
+          choco install -y ninja
+          
+          # Initialize vcpkg if not already done
+          if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
+            git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+            cd C:/vcpkg
+            .\bootstrap-vcpkg.bat
+            .\vcpkg integrate install
+          }
+          
+          # Install packages via vcpkg
+          C:/vcpkg/vcpkg.exe install --triplet x64-windows `
+            boost-filesystem boost-thread boost-date-time boost-chrono `
+            boost-regex boost-serialization boost-program-options `
+            boost-multi-index boost-uuid boost-asio boost-scope-exit `
+            boost-format icu openssl miniupnpc
 
       # -------------------- Configure & Build --------------------
       - name: Configure
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "macos-14" ]; then
-            export ICU_ROOT=$(brew --prefix icu4c@77)
+            # ICU_ROOT should be set from previous step
             export PATH="$ICU_ROOT/bin:$PATH"
             export PKG_CONFIG_PATH="$ICU_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH"
             export LDFLAGS="-L$ICU_ROOT/lib $LDFLAGS"
             export CPPFLAGS="-I$ICU_ROOT/include $CPPFLAGS"
+            
+            echo "Using ICU_ROOT: $ICU_ROOT"
+            echo "Available ICU libraries:"
+            ls -la "$ICU_ROOT/lib/" | grep -E "libicu.*\.(dylib|a)$" || echo "No ICU libraries found"
             
             # Check for ICU library files and use versioned names if needed
             ICU_DATA_LIB=""
             ICU_I18N_LIB=""
             ICU_UC_LIB=""
             
-            if [ -f "$ICU_ROOT/lib/libicudata.77.dylib" ]; then
-              ICU_DATA_LIB="$ICU_ROOT/lib/libicudata.77.dylib"
-            elif [ -f "$ICU_ROOT/lib/libicudata.dylib" ]; then
-              ICU_DATA_LIB="$ICU_ROOT/lib/libicudata.dylib"
-            fi
-            
-            if [ -f "$ICU_ROOT/lib/libicui18n.77.dylib" ]; then
-              ICU_I18N_LIB="$ICU_ROOT/lib/libicui18n.77.dylib"
-            elif [ -f "$ICU_ROOT/lib/libicui18n.dylib" ]; then
-              ICU_I18N_LIB="$ICU_ROOT/lib/libicui18n.dylib"
-            fi
-            
-            if [ -f "$ICU_ROOT/lib/libicuuc.77.dylib" ]; then
-              ICU_UC_LIB="$ICU_ROOT/lib/libicuuc.77.dylib"
-            elif [ -f "$ICU_ROOT/lib/libicuuc.dylib" ]; then
-              ICU_UC_LIB="$ICU_ROOT/lib/libicuuc.dylib"
-            fi
+            # Try to find ICU libraries with different version patterns
+            for version in 77 76 75 74 ""; do
+              if [ -n "$version" ]; then
+                suffix=".$version.dylib"
+              else
+                suffix=".dylib"
+              fi
+              
+              if [ -z "$ICU_DATA_LIB" ] && [ -f "$ICU_ROOT/lib/libicudata$suffix" ]; then
+                ICU_DATA_LIB="$ICU_ROOT/lib/libicudata$suffix"
+              fi
+              if [ -z "$ICU_I18N_LIB" ] && [ -f "$ICU_ROOT/lib/libicui18n$suffix" ]; then
+                ICU_I18N_LIB="$ICU_ROOT/lib/libicui18n$suffix"
+              fi
+              if [ -z "$ICU_UC_LIB" ] && [ -f "$ICU_ROOT/lib/libicuuc$suffix" ]; then
+                ICU_UC_LIB="$ICU_ROOT/lib/libicuuc$suffix"
+              fi
+            done
             
             echo "ICU Data Library: $ICU_DATA_LIB"
             echo "ICU I18N Library: $ICU_I18N_LIB"
@@ -125,7 +156,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
               -DCMAKE_OSX_ARCHITECTURES=arm64 \
               -DBOOST_ROOT="$BOOST_ROOT" \
-              -DBUILD_TESTS=ON
+              -DBUILD_TESTS=ON \
               -DICU_ROOT="$ICU_ROOT" \
               -DICU_INCLUDE_DIR="$ICU_ROOT/include" \
               -DICU_DATA_LIBRARY="$ICU_DATA_LIB" \
@@ -148,7 +179,7 @@ jobs:
             cmake -S . -B build \
               -G Ninja \
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-              -DBUILD_TESTS=ON
+              -DBUILD_TESTS=ON \
               -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
           fi
 
@@ -158,11 +189,19 @@ jobs:
       # -------------------- Run Tests --------------------
       - name: Run tests
         if: success()
+        shell: bash
         run: |
-          if [ -f "build/CTestTestfile.cmake" ]; then
-            ctest --test-dir build --output-on-failure
+          cd build
+          if [ -f "CTestTestfile.cmake" ]; then
+            echo "Running tests..."
+            ctest --output-on-failure --verbose
+          elif [ -f "test/CTestTestfile.cmake" ]; then
+            echo "Running tests from test directory..."
+            ctest --test-dir test --output-on-failure --verbose
           else
             echo "No tests configured, skipping ctest"
+            echo "Available files in build directory:"
+            find . -name "CTestTestfile.cmake" -o -name "*test*" -type f | head -10
           fi
 
       # -------------------- Upload Artifacts --------------------

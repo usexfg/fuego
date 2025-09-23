@@ -36,8 +36,28 @@ jobs:
     
     - name: Install dependencies (macOS)
       run: |
-        brew install ninja boost qt@5 miniupnpc qrencode
+        brew update
+        brew install ninja boost qt@5 miniupnpc qrencode icu4c
+        
+        # Set environment variables for Boost and ICU
         echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
+        
+        # Try different ICU versions
+        if [ -d "$(brew --prefix)/opt/icu4c" ]; then
+          ICU_PREFIX="$(brew --prefix)/opt/icu4c"
+        elif [ -d "$(brew --prefix)/opt/icu4c@77" ]; then
+          ICU_PREFIX="$(brew --prefix)/opt/icu4c@77"
+        elif [ -d "$(brew --prefix)/opt/icu4c@76" ]; then
+          ICU_PREFIX="$(brew --prefix)/opt/icu4c@76"
+        else
+          ICU_PREFIX="$(brew --prefix icu4c)"
+        fi
+        
+        echo "ICU_ROOT=$ICU_PREFIX" >> $GITHUB_ENV
+        echo "PATH=$ICU_PREFIX/bin:$PATH" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$ICU_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+        echo "LDFLAGS=-L$ICU_PREFIX/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I$ICU_PREFIX/include" >> $GITHUB_ENV
         
     - name: Build macOS ${{ matrix.arch_name }}
       run: |
@@ -48,10 +68,17 @@ jobs:
         mkdir "$build_folder"
         cd "$build_folder"
         
-        # Configure CMake with architecture-specific flags
+        # Configure CMake with architecture-specific flags and ICU
+        export PATH="$ICU_ROOT/bin:$PATH"
+        export PKG_CONFIG_PATH="$ICU_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH"
+        export LDFLAGS="-L$ICU_ROOT/lib $LDFLAGS"
+        export CPPFLAGS="-I$ICU_ROOT/include $CPPFLAGS"
+        
         cmake -S .. -B . -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
               -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} \
               -DBOOST_ROOT="$BOOST_ROOT" \
+              -DICU_ROOT="$ICU_ROOT" \
+              -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
               -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
         
         # Build
@@ -110,7 +137,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential ninja-build pkg-config \
              libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
-             libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
+             libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
+             libicu-dev
 
         # Install Boost using apt (more reliable)
         sudo apt-get install -y libboost-all-dev
@@ -179,7 +207,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential ninja-build pkg-config \
              libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
-             libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
+             libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
+             libicu-dev
 
         # Install Boost using apt (more reliable)
         sudo apt-get install -y libboost-all-dev
@@ -255,11 +284,23 @@ jobs:
     - name: Install dependencies (Windows)
       shell: pwsh
       run: |
+        # Install basic tools
         choco install -y ninja
-        choco install -y vcpkg
-        choco install -y miniupnpc qrencode
-        choco install -y qt5-default --params '/InstallDir:C:\Qt'
-        vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
+        
+        # Initialize vcpkg if not already done
+        if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
+          git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+          cd C:/vcpkg
+          .\bootstrap-vcpkg.bat
+          .\vcpkg integrate install
+        }
+        
+        # Install packages via vcpkg
+        C:/vcpkg/vcpkg.exe install --triplet x64-windows `
+          boost-filesystem boost-thread boost-date-time boost-chrono `
+          boost-regex boost-serialization boost-program-options `
+          boost-multi-index boost-uuid boost-asio boost-scope-exit `
+          boost-format icu openssl miniupnpc
 
     - name: Debug Boost installation (Windows)
       shell: pwsh

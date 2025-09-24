@@ -44,11 +44,16 @@ BurnDepositConfig BurnDepositConfig::getDefault() {
     config.proofExpirationSeconds = 3600;  // 1 hour
     config.requireProofValidation = true;
     config.treasuryAddress = "";
-    config.fastPassConsensusThreshold = 2;  // 2/2 fast pass Eldernodes
-    config.fallbackConsensusThreshold = 4;  // 4/5 fallback Eldernodes
-    config.totalEldernodes = 5;     // Total Eldernodes in network
+    config.fastPassConsensusThreshold = 3;   // 3/3 fast pass Eldernodes
+    config.fallbackConsensusThreshold = 5;   // 5/7 fallback Eldernodes
+    config.fullConsensusThreshold = 7;       // 7/10 full quorum Eldernodes
+    config.totalEldernodes = 10;             // Total Eldernodes in network
     config.enableDualValidation = true;  // Both commitment and burn amount validation
     config.enableFastPass = true;   // Enable 2/2 fast pass consensus
+    // Confirmation block settings
+    config.fastPassConfirmationBlocks = 3;   // 3 block confirmations for FastPass
+    config.fallbackConfirmationBlocks = 6;   // 6 block confirmations for fallback
+    config.fullConfirmationBlocks = 10;      // 10 block confirmations for full quorum
     return config;
 }
 
@@ -58,10 +63,18 @@ bool BurnDepositConfig::isValid() const {
            proofExpirationSeconds > 0 && 
            fastPassConsensusThreshold > 0 && 
            fallbackConsensusThreshold > 0 && 
+           fullConsensusThreshold > 0 && 
            totalEldernodes > 0 && 
            fastPassConsensusThreshold <= totalEldernodes &&
            fallbackConsensusThreshold <= totalEldernodes &&
-           fastPassConsensusThreshold <= fallbackConsensusThreshold;
+           fullConsensusThreshold <= totalEldernodes &&
+           fastPassConsensusThreshold <= fallbackConsensusThreshold &&
+           fallbackConsensusThreshold <= fullConsensusThreshold &&
+           fastPassConfirmationBlocks > 0 &&
+           fastPassConfirmationBlocks <= fallbackConfirmationBlocks &&
+           fallbackConfirmationBlocks > 0 &&
+           fallbackConfirmationBlocks <= fullConfirmationBlocks &&
+           fullConfirmationBlocks > 0;
 }
 
 // BurnProofData implementation

@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+
 #include "crypto/hash.h"
 #include "crypto/crypto.h"
 #include "Common/StringTools.h"
@@ -27,16 +28,23 @@ struct BurnDepositValidationResult {
 };
 
 struct BurnDepositConfig {
-    uint64_t minimumBurnAmount;
-    uint64_t maximumBurnAmount;
-    uint32_t proofExpirationSeconds;
-    bool requireProofValidation;
-    std::string treasuryAddress;
-    uint32_t fastPassConsensusThreshold;  // 2/2 fast pass threshold
-    uint32_t fallbackConsensusThreshold;  // 4/5 fallback threshold
-    uint32_t totalEldernodes;     // Total number of Eldernodes in network
-    bool enableDualValidation;    // Both commitment and burn amount validation
-    bool enableFastPass;          // Enable 2/2 fast pass consensus
+    uint64_t minimumBurnAmount;           // Minimum burn amount (atomic units)
+    uint64_t maximumBurnAmount;           // Maximum burn amount (atomic units)
+    uint32_t proofExpirationSeconds;      // Proof expiration time
+    bool requireProofValidation;          // Require proof validation
+    std::string treasuryAddress;          // Treasury address for proofs
+    // Consensus thresholds
+    uint32_t fastPassConsensusThreshold;  // 3/3 FastPass consensus threshold
+    uint32_t fallbackConsensusThreshold;  // 5/7 fallback consensus threshold
+    uint32_t fullConsensusThreshold;      // 7/10 full quorum consensus threshold
+    uint32_t totalEldernodes;             // Total Eldernodes (10)
+    // Enable flags
+    bool enableDualValidation;            // Both commitment and burn amount validation
+    bool enableFastPass;                  // Enable FastPass consensus
+    // Confirmation block counts per consensus path
+    uint32_t fastPassConfirmationBlocks;  // 3 block confirmations for FastPass
+    uint32_t fallbackConfirmationBlocks;  // 6 block confirmations for fallback consensus
+    uint32_t fullConfirmationBlocks;      // 10 block confirmations for full quorum consensus
     static BurnDepositConfig getDefault();
     bool isValid() const;
 };

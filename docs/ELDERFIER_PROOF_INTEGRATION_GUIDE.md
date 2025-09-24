@@ -79,4 +79,15 @@ To reward Eldernodes for participating in consensus, configure and distribute pr
 
 With this in place, proof fees are split evenly among all Eldernodes whose proofs matched consensus, ensuring dynamic and fair reward distribution based on actual network size.
 
+## 8. Ephemeral Per-Proof Multisig Workflow
+1) Query the current active Eldernode public keys (N nodes) via IEldernodeIndexManager.
+2) Initiate the CryptoNote multisig key-exchange protocol among those N nodes to derive a one-time K-of-N multisig address.
+3) Build the burn-deposit transaction with two outputs:
+   - The standard burn output (commitment tag, zero-XFG burn).
+   - A second output sending the fier-fee into the new multisig address.
+4) Wait for the configured confirmations (FastPass/Fallback/FullQuorum) on the burn-deposit TX and complete the P2P proof signature round.
+5) Once consensus is reached, collect at least K-of-N multisig spending shares from the agreeing nodes.
+6) Perform the CryptoNote multisig signing protocol to assemble the payout transaction, splitting the fee UTXO evenly among the agreeing Eldernodes.
+7) Broadcast the payout transaction on-chain; all fee distributions are then immutable and auditable.
+
 This guide serves as a checklist for developers to complete the proof flow implementation. Feel free to expand with code snippets or IDE-specific instructions as needed.

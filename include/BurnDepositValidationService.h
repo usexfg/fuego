@@ -44,7 +44,7 @@ struct BurnDepositConfig {
     // Confirmation block counts per consensus path
     uint32_t fastPassConfirmationBlocks;  // 3 block confirmations for FastPass
     uint32_t fallbackConfirmationBlocks;  // 6 block confirmations for fallback consensus
-    uint32_t fullConfirmationBlocks;      // 10 block confirmations for full quorum consensus
+    uint32_t fullConfirmationBlocks;      // 9 block confirmations for full quorum consensus
     static BurnDepositConfig getDefault();
     bool isValid() const;
 };

@@ -53,7 +53,7 @@ BurnDepositConfig BurnDepositConfig::getDefault() {
     // Confirmation block settings
     config.fastPassConfirmationBlocks = 3;   // 3 block confirmations for FastPass
     config.fallbackConfirmationBlocks = 6;   // 6 block confirmations for fallback
-    config.fullConfirmationBlocks = 10;      // 10 block confirmations for full quorum
+    config.fullConfirmationBlocks = 9;       // 9 block confirmations for full quorum
     return config;
 }
 

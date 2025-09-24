@@ -44,4 +44,39 @@ This guide outlines the remaining development tasks to fully integrate the Elder
 
 ---
 
+## 7. Fee Splits (fier_fees)
+
+To reward Eldernodes for participating in consensus, configure and distribute proof fees as follows:
+
+1. **Configure proof fee amounts** in `BurnDepositConfig`:
+   - `smallBurnProofFee = 80000;`      // 0.008 XFG for standard burns
+   - `largeBurnProofFee = 8000000;`     // 0.8 XFG for large burns
+
+2. **After consensus verification** (in `verifyEldernodeConsensus` or immediately after):
+   - Retrieve the list of Eldernode IDs whose signatures matched: `consensus.eldernodeIds`.
+   - Determine which fee applies based on the burn deposit type:
+     - If `proof.burnAmount == BURN_DEPOSIT_STANDARD_AMOUNT`, use `smallBurnProofFee`.
+     - If `proof.burnAmount == BURN_DEPOSIT_LARGE_AMOUNT`, use `largeBurnProofFee`.
+
+3. **Compute per-node fee**:
+   ```cpp
+   uint64_t totalFee = (proof.burnAmount == BURN_DEPOSIT_LARGE_AMOUNT)
+       ? config.largeBurnProofFee
+       : config.smallBurnProofFee;
+   size_t winners = consensus.eldernodeIds.size();
+   uint64_t perNodeFee = totalFee / winners;
+   uint64_t remainder = totalFee % winners;  // if needed
+   ```
+
+4. **Distribute fees**:
+   - For each matching Eldernode ID:
+     - Issue a payment of `perNodeFee` XFG via the payment service or wallet RPC.
+   - Optionally allocate the `remainder` to the treasury or burn it.
+
+5. **Record distributions**:
+   - Log or store a record of which nodes were paid and the amounts.
+   - Expose this data via metrics or a UI component for transparency.
+
+With this in place, proof fees are split evenly among all Eldernodes whose proofs matched consensus, ensuring dynamic and fair reward distribution based on actual network size.
+
 This guide serves as a checklist for developers to complete the proof flow implementation. Feel free to expand with code snippets or IDE-specific instructions as needed.

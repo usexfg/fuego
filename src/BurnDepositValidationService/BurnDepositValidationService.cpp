@@ -54,6 +54,15 @@ BurnDepositConfig BurnDepositConfig::getDefault() {
     config.fastPassConfirmationBlocks = 3;   // 3 block confirmations for FastPass
     config.fallbackConfirmationBlocks = 6;   // 6 block confirmations for fallback
     config.fullConfirmationBlocks = 9;       // 9 block confirmations for full quorum
+    // Fractional thresholds (0.0 - 1.0)
+    config.fastPassFraction = 1.0;          // 100% of active Eldernodes for FastPass
+    config.fallbackFraction = 0.5;          // Query 50% of active Eldernodes for fallback
+    config.fallbackMatchFraction = 0.80;    // Require 80% of total Eldernodes to agree for fallback
+    config.fullQuorumFraction = 1.0;        // Query all active Eldernodes for full quorum
+    config.fullQuorumMatchFraction = 0.69;  // Require 69% of total Eldernodes to agree for full quorum
+    // Fee configuration
+    config.smallBurnProofFee = 80000;       // 0.008 XFG for standard burn proofs
+    config.largeBurnProofFee = 8000000;     // 0.8 XFG for large burn proofs
     return config;
 }
 

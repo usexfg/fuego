@@ -45,6 +45,15 @@ struct BurnDepositConfig {
     uint32_t fastPassConfirmationBlocks;  // 3 block confirmations for FastPass
     uint32_t fallbackConfirmationBlocks;  // 6 block confirmations for fallback consensus
     uint32_t fullConfirmationBlocks;      // 9 block confirmations for full quorum consensus
+    // Dynamic quorum fractions (0.0 - 1.0)
+    double fastPassFraction;              // Fraction of active Eldernodes required for FastPass (typically 1.0)
+    double fallbackFraction;              // Fraction of active Eldernodes queried for fallback (e.g. 0.5)
+    double fallbackMatchFraction;         // Fraction of total Eldernodes that must agree for fallback (e.g. 0.80)
+    double fullQuorumFraction;            // Fraction of active Eldernodes queried for full quorum (typically 1.0)
+    double fullQuorumMatchFraction;       // Fraction of total Eldernodes that must agree for full quorum (e.g. 0.69)
+    // Proof fee configuration (atomic units)
+    uint64_t smallBurnProofFee;           // Fee for standard burn proofs (0.008 XFG = 80000 atomic units)
+    uint64_t largeBurnProofFee;           // Fee for large burn proofs (0.8 XFG = 8000000 atomic units)
     static BurnDepositConfig getDefault();
     bool isValid() const;
 };
@@ -65,6 +74,7 @@ struct BurnProofData {
 struct EldernodeConsensus {
     std::vector<std::string> eldernodeIds;
     std::vector<std::string> signatures;
+    std::vector<std::string> agreeingEldernodeIds; // Eldernodes whose proofs matched consensus
     std::string messageHash;
     uint64_t timestamp;
     uint32_t fastPassConsensusThreshold;     // 2/2 fast pass threshold
@@ -77,6 +87,8 @@ struct EldernodeConsensus {
     uint64_t txBurnAmount;          // Burn amount from transaction (undefined output key)
     bool commitmentMatch;           // Whether commitments match
     bool burnAmountMatch;          // Whether burn amounts match
+    uint64_t totalFeeDistributed;   // Total fee distributed among agreeing Eldernodes
+    uint64_t perEldernodeFee;       // Fee paid per agreeing Eldernode
     bool isValid() const;
     std::string toString() const;
 };
@@ -141,6 +153,7 @@ private:
     BurnDepositConfig m_config;
     std::vector<BurnProofData> m_burnProofs;
     uint64_t m_totalBurnedAmount;
+    uint64_t distributeProofFees(const BurnProofData& proof, const std::vector<std::string>& agreeingEldernodes);
     
     bool validateBurnAmount(uint64_t amount) const;
     bool validateBurnProofSignature(const BurnProofData& proof) const;

@@ -1,4 +1,23 @@
 cmake_minimum_required(VERSION 3.16)
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
+include(CheckCXXCompilerFlag)
+set(VERSION "0.2")
+# Packaged from main commits
+set(COMMIT 72946d9)
+set(REFS " (HEAD -> master)")
+
+set(CMAKE_CXX_STANDARD 14)
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo Release CACHE STRING INTERNAL)
+set(CMAKE_SKIP_INSTALL_RULES ON)
+set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
+set(CMAKE_SUPPRESS_REGENERATION ON)
 
 project(fuegoX)
 

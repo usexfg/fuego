@@ -23,10 +23,11 @@ file(GLOB_RECURSE JsonRpcServer JsonRpcServer/*)
 file(GLOB_RECURSE PaymentGate PaymentGate/*)
 file(GLOB_RECURSE PaymentGateService PaymentGateService/*)
 
-# Add Eldernode services
+# Eldernode services
 add_subdirectory(EldernodeIndexManager)
 add_subdirectory(BurnDepositValidationService)
 
+# System files
 if(WIN32)
   file(GLOB_RECURSE System System/* Platform/Windows/System/*)
 elseif(APPLE)
@@ -35,8 +36,11 @@ else()
   file(GLOB_RECURSE System System/* Platform/Linux/System/*)
 endif()
 
-source_group("" FILES $${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${Daemon} ${JsonRpcServer} ${Http} ${Logging} ${NodeRpcProxy} ${P2p} ${Rpc} ${Serialization} ${SimpleWallet} ${System} ${Transfers} ${Wallet} ${WalletLegacy})
+source_group("" FILES ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${Daemon} ${JsonRpcServer} ${Http} ${Logging} ${NodeRpcProxy} ${P2p} ${Rpc} ${Serialization} ${SimpleWallet} ${System} ${Transfers} ${Wallet} ${WalletLegacy})
 
+# --------------------------
+# Libraries
+# --------------------------
 add_library(BlockchainExplorer STATIC ${BlockchainExplorer})
 add_library(Common STATIC ${Common})
 add_library(Crypto STATIC ${Crypto})
@@ -54,34 +58,134 @@ add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
 
+# --------------------------
+# Apply AES/SSE compile options to Crypto library only (x86/x64 non-Android)
+# --------------------------
+if ((CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    AND NOT ANDROID
+    AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86|i[3-6]86|amd64|x86_64"))
+    target_compile_options(Crypto PRIVATE -maes -msse2 -msse4.1)
+endif()
+
+# --------------------------
+# Executables
+# --------------------------
 add_executable(Daemon ${Daemon})
 add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})
 
+# --------------------------
+# System library for Windows
+# --------------------------
 if (MSVC)
-  target_link_libraries(System ws2_32)
+  target_link_libraries(System PRIVATE ws2_32)
 endif ()
 
-target_link_libraries(Daemon CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(SimpleWallet Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES} Serialization)
-target_link_libraries(PaymentGateService PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(Optimizer PaymentGate Rpc Http CryptoNoteCore Logging Serialization Crypto System Common ${Boost_LIBRARIES})
+# --------------------------
+# Link libraries (keyword form)
+# --------------------------
+target_link_libraries(Daemon PRIVATE
+    CryptoNoteCore
+    P2P
+    Rpc
+    System
+    Http
+    Logging
+    Common
+    Crypto
+    upnpc-static
+    BlockchainExplorer
+    ${Boost_LIBRARIES}
+    Serialization
+)
 
+target_link_libraries(SimpleWallet PRIVATE
+    Wallet
+    NodeRpcProxy
+    Transfers
+    Rpc
+    Http
+    CryptoNoteCore
+    System
+    Logging
+    Common
+    Crypto
+    ${Boost_LIBRARIES}
+    Serialization
+)
+
+target_link_libraries(PaymentGateService PRIVATE
+    PaymentGate
+    JsonRpcServer
+    Wallet
+    NodeRpcProxy
+    Transfers
+    CryptoNoteCore
+    Crypto
+    P2P
+    Rpc
+    Http
+    System
+    Logging
+    Common
+    InProcessNode
+    upnpc-static
+    BlockchainExplorer
+    ${Boost_LIBRARIES}
+    Serialization
+)
+
+target_link_libraries(Optimizer PRIVATE
+    PaymentGate
+    Rpc
+    Http
+    CryptoNoteCore
+    Logging
+    Serialization
+    Crypto
+    System
+    Common
+    ${Boost_LIBRARIES}
+)
+
+# --------------------------
+# ICU linking fix for executables (macOS)
+# --------------------------
+if(APPLE)
+    # Ensure ICU is linked on macOS via imported targets
+    if(TARGET ICU::i18n AND TARGET ICU::uc AND TARGET ICU::data)
+        foreach(exec_target Daemon PaymentGateService Optimizer)
+            if(TARGET ${exec_target})
+                message(STATUS "Fixing ICU linkage for ${exec_target} using ICU imported targets")
+                target_link_libraries(${exec_target} PRIVATE ICU::i18n ICU::uc ICU::data)
+            endif()
+        endforeach()
+    endif()
+endif()
+
+# --------------------------
+# Additional Linux linking
+# --------------------------
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
-  target_link_libraries(SimpleWallet -lresolv)
-  target_link_libraries(Daemon -lresolv)
-  target_link_libraries(PaymentGateService -lresolv)
+  target_link_libraries(SimpleWallet PRIVATE -lresolv)
+  target_link_libraries(Daemon PRIVATE -lresolv)
+  target_link_libraries(PaymentGateService PRIVATE -lresolv)
 endif ()
 
+# --------------------------
+# Dependencies
+# --------------------------
 add_dependencies(Rpc version)
 add_dependencies(Daemon version)
 add_dependencies(SimpleWallet version)
 add_dependencies(PaymentGateService version)
 add_dependencies(P2P version)
 
+# --------------------------
+# Output names
+# --------------------------
 set_property(TARGET SimpleWallet PROPERTY OUTPUT_NAME "fuego-wallet-cli")
 set_property(TARGET PaymentGateService PROPERTY OUTPUT_NAME "walletd")
 set_property(TARGET Daemon PROPERTY OUTPUT_NAME "fuegod")
 set_property(TARGET Optimizer PROPERTY OUTPUT_NAME "optimizer")
-# Test comment

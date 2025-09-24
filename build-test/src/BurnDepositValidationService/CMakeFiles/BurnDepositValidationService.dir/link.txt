@@ -1,0 +1,2 @@
+/usr/bin/ar qc libBurnDepositValidationService.a CMakeFiles/BurnDepositValidationService.dir/BurnDepositValidationService.cpp.o
+/usr/bin/ranlib libBurnDepositValidationService.a

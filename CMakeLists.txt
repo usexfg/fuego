@@ -1,18 +1,40 @@
-cmake_minimum_required(VERSION 3.8)
-
-# Suppress CMake policies warning for newer CMake versions
-cmake_policy(SET CMP0144 NEW) # Handles BOOST_ROOT behavior
-cmake_policy(SET CMP0167 NEW) # Handles modern FindBoost usage
+cmake_minimum_required(VERSION 3.16)
 
 project(fuegoX)
 
+# --------------------------
+# Version generation
+# --------------------------
+set(VERSION "0.2")
+set(COMMIT 72946d9)
+set(REFS " (HEAD -> master)")
+
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/version")
+configure_file("src/version.h.in" "${CMAKE_BINARY_DIR}/version/version.h")
+add_custom_target(version ALL)
+
+# --------------------------
+# C++ Standard
+# --------------------------
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(PROJECT_VERSION_MAJOR 10)
-set(PROJECT_VERSION_MINOR 0)
-set(PROJECT_VERSION_PATCH 0)
-set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
+   CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+   CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    message(STATUS "Using ${CMAKE_CXX_COMPILER_ID} compiler with C++17")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    message(STATUS "Using MSVC compiler with C++17")
+endif()
+
+# Debug/Release flags
+set(CMAKE_C_FLAGS_DEBUG   "-g3 -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0")
+set(CMAKE_C_FLAGS_RELEASE   "-O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
@@ -25,104 +47,71 @@ configure_file(
 add_custom_target(version DEPENDS "${PROJECT_BINARY_DIR}/version/version.h")
 include_directories(SYSTEM "${PROJECT_BINARY_DIR}/version")
 
-#
-# Platform-specific compiler flags
-#
-option(ARCH "Choose architecture" "x86-64")
-
-set(ARM 0) # Default to NOT ARM
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-  # We are on an ARM processor, but it could be an emulated x86 build (Rosetta)
-  # Check if the compiler supports ARM-specific flags to confirm a native ARM build
-  include(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG("-march=armv8-a+fp+simd" CXX_SUPPORTS_ARMV8)
-  if(CXX_SUPPORTS_ARMV8)
-    message(STATUS "Native ARM architecture detected.")
-    set(ARM 1)
-  else()
-    message(STATUS "System processor is ARM, but compiler does not support ARM flags. Assuming x86 emulation.")
-  endif()
+if(APPLE OR FREEBSD)
+    include_directories(SYSTEM /usr/include/malloc)
+    if(POLICY CMP0042)
+        cmake_policy(SET CMP0042 NEW)
+    endif()
+    enable_language(ASM)
 endif()
 
-if(ARM)
-  include(arm)
-endif()
-
-# Set common compiler flags
 if(MSVC)
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /EHsc")
+    include_directories(src/Platform/Windows)
+elseif(APPLE)
+    include_directories(src/Platform/OSX)
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins -Wno-error=unused-but-set-variable -Wno-reorder -Wno-missing-field-initializers")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result -Wno-deprecated-builtins -Wno-error=unused-but-set-variable -Waggregate-return -Wnested-externs -Wold-style-definition -Wstrict-prototypes")
+    include_directories(src/Platform/Linux)
 endif()
 
-if(NOT ARM AND NOT MSVC)
-  include(CheckCCompilerFlag)
-  CHECK_C_COMPILER_FLAG("-maes" C_SUPPORTS_MAES)
-  if(C_SUPPORTS_MAES)
-    message(STATUS "AES-NI hardware acceleration is available. Enabling -maes flag.")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
-  else()
-     message(STATUS "AES-NI hardware acceleration is not available.")
-  endif()
-endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-
-#
-# End of platform-specific compiler flags
-#
-
-# Suppress CMake policies warning
-if(POLICY CMP0077)
-  cmake_policy(SET CMP0077 NEW)
-endif()
-if(POLICY CMP0079)
-  cmake_policy(SET CMP0079 NEW)
-endif()
-if(POLICY CMP0144)
-  cmake_policy(SET CMP0144 NEW)
-endif()
-if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
-endif()
-
+# --------------------------
+# Boost
+# --------------------------
 if(APPLE)
-  include_directories(SYSTEM /usr/include/malloc)
-  # brew install boost
-  set(BOOST_ROOT "/opt/homebrew")
-  set(Boost_NO_SYSTEM_PATHS ON)
+    if(EXISTS /opt/homebrew)
+        set(BOOST_ROOT /opt/homebrew)
+    elseif(EXISTS /usr/local)
+        set(BOOST_ROOT /usr/local)
+    endif()
 endif()
 
-if(UNIX AND NOT APPLE)
-  # sudo apt-get install libboost-all-dev
-  set(Boost_USE_STATIC_LIBS ON)
-endif()
+find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 
-if(WIN32)
-  set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-endif()
-
-# Find Boost
-find_package(Boost 1.74 REQUIRED COMPONENTS
-  filesystem
-  thread
-  date_time
-  chrono
-  regex
-  serialization
-  program_options
-)
-
-if(NOT Boost_FOUND)
-  message(FATAL_ERROR "Could not find Boost. Please install Boost 1.74 or newer.")
+# --------------------------
+# ICU (skipped on Android)
+# --------------------------
+if(ANDROID)
+    message(STATUS "Android build detected: skipping ICU discovery")
 else()
-  message(STATUS "Found Boost: ${Boost_INCLUDE_DIRS}")
-  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-  link_directories(${Boost_LIBRARY_DIRS})
+    if(APPLE)
+        list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/icu4c" "/usr/local/opt/icu4c")
+    endif()
+
+    find_package(ICU REQUIRED COMPONENTS data i18n uc)
+
+    if(ICU_FOUND)
+        message(STATUS "Found ICU includes: ${ICU_INCLUDE_DIRS}")
+        message(STATUS "Found ICU libraries: ${ICU_LIBRARIES}")
+        include_directories(${ICU_INCLUDE_DIRS})
+    else()
+        message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
+    endif()
+    
+    # On macOS, ensure we have the correct ICU library paths
+    if(APPLE)
+        if(ICU_DATA_LIBRARY)
+            message(STATUS "ICU Data Library: ${ICU_DATA_LIBRARY}")
+        endif()
+        if(ICU_I18N_LIBRARY)
+            message(STATUS "ICU I18N Library: ${ICU_I18N_LIBRARY}")
+        endif()
+        if(ICU_UC_LIBRARY)
+            message(STATUS "ICU UC Library: ${ICU_UC_LIBRARY}")
+        endif()
+    endif()
+else()
+    message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
 endif()
 
 # Find pthreads
@@ -141,20 +130,50 @@ if(UNIX OR APPLE)
 else()
   set(PLATFORM_DIR "Windows")
 endif()
-include_directories(${PROJECT_SOURCE_DIR}/src/Platform/${PLATFORM_DIR})
 
-# External dependencies
+# --------------------------
+# Subdirectories
+# --------------------------
 add_subdirectory(external)
-
-# Add subdirectories
 add_subdirectory(src)
 
-# Enable testing
-enable_testing()
-add_subdirectory(tests)
-
-# Set build output path
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/src)
-
-option(STATIC "Build static libraries" ON)
-set(STATICLIB ${STATIC})
+# --------------------------
+# Tests
+# --------------------------
+# Expose a toggle to optionally build the test suite. This preserves all
+# existing behavior when disabled and allows CI to turn tests on explicitly.
+option(BUILD_TESTS "Build tests" OFF)
+if(BUILD_TESTS)
+    set(DO_TESTS ON)
+    enable_testing()
+    add_subdirectory(tests)
+    
+if(APPLE)
+    foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer BurnDepositValidationService)
+        if(TARGET ${exec_target})
+            message(STATUS "Force-linking ICU to ${exec_target}")
+            
+            # Use specific ICU library paths if available, otherwise fall back to ICU_LIBRARIES
+            if(ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
+                target_link_libraries(${exec_target} PRIVATE 
+                    ${ICU_DATA_LIBRARY}
+                    ${ICU_I18N_LIBRARY}
+                    ${ICU_UC_LIBRARY}
+                )
+                message(STATUS "Using specific ICU library paths for ${exec_target}")
+            else()
+                target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
+                message(STATUS "Using ICU_LIBRARIES for ${exec_target}")
+            endif()
+            
+            set_target_properties(${exec_target} PROPERTIES
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH "${ICU_LIBRARY_DIRS}"
+                LINK_FLAGS "-L${ICU_LIBRARY_DIRS}"
+            )
+            # Add ICU library directory to link directories
+            target_link_directories(${exec_target} PRIVATE ${ICU_LIBRARY_DIRS})
+        endif()
+    endforeach()
+endif()
+# Intentionally avoid extra macOS ICU link manipulation here. Handled in src/CMakeLists.txt

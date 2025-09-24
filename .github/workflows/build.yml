@@ -1,176 +1,217 @@
-# CI workflow that builds Fuego / Fuego-Wallet on all three major OSes
-
 name: CI
 
 on:
   push:
-    branches: [ master, fix/sysapi ]
+    branches: [ master, dynamigo-release-v10 ]
   pull_request:
     branches: [ master ]
 
 jobs:
   build:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }}-${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         os: [ubuntu-22.04, macos-14, windows-2022]
+        build_type: [Release, RelWithDebInfo]
 
     env:
-      CMAKE_BUILD_TYPE: Release
+      CMAKE_BUILD_TYPE: ${{ matrix.build_type }}
 
     steps:
       - uses: actions/checkout@v4
 
-      # -------------------- Cache Dependencies --------------------
-      - name: Cache apt packages (Ubuntu)
+      # -------------------- Cache --------------------
+      - name: Cache packages (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         uses: actions/cache@v4
         with:
           path: /var/cache/apt
-          key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
-      - name: Cache Homebrew packages (macOS)
+      - name: Cache Homebrew & ICU (macOS)
         if: matrix.os == 'macos-14'
         uses: actions/cache@v4
         with:
           path: |
             ~/Library/Caches/Homebrew
             /usr/local/Homebrew/Library/Homebrew/vendor/bundle
-          key: ${{ runner.os }}-homebrew-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-
+            /opt/homebrew/opt/icu4c@77/lib
+            /opt/homebrew/opt/icu4c@77/include
+          key: ${{ runner.os }}-homebrew-icu-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
-      - name: Cache vcpkg packages (Windows)
+      - name: Cache vcpkg & Chocolatey (Windows)
         if: matrix.os == 'windows-2022'
         uses: actions/cache@v4
         with:
-          path: C:\vcpkg\installed
-          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
+          path: |
+            C:\\vcpkg\\installed
+            C:\\ProgramData\\chocolatey\\lib
+          key: ${{ runner.os }}-windows-${{ hashFiles('**/CMakeLists.txt') }}-${{ matrix.build_type }}
 
-      - name: Cache Chocolatey packages (Windows)
-        if: matrix.os == 'windows-2022'
-        uses: actions/cache@v4
-        with:
-          path: C:\ProgramData\chocolatey\lib
-          key: ${{ runner.os }}-choco-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-choco-
-
-      # -------------------- Linux --------------------
+      # -------------------- Dependencies --------------------
       - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential ninja-build pkg-config \
                libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
-               libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools
+               libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
+               libboost-all-dev libicu-dev
 
-          # Install Boost using apt (more reliable)
-          sudo apt-get install -y libboost-all-dev
-
-      # -------------------- macOS --------------------
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'
         run: |
-          brew install ninja boost qt@5 miniupnpc qrencode
+          brew update
+          brew install ninja boost qt@5 miniupnpc qrencode icu4c
+          
+          # Set environment variables for Boost and ICU
           echo "BOOST_ROOT=$(brew --prefix boost)" >> $GITHUB_ENV
+          
+          # Try different ICU versions
+          if [ -d "$(brew --prefix)/opt/icu4c" ]; then
+            ICU_PREFIX="$(brew --prefix)/opt/icu4c"
+          elif [ -d "$(brew --prefix)/opt/icu4c@77" ]; then
+            ICU_PREFIX="$(brew --prefix)/opt/icu4c@77"
+          elif [ -d "$(brew --prefix)/opt/icu4c@76" ]; then
+            ICU_PREFIX="$(brew --prefix)/opt/icu4c@76"
+          else
+            ICU_PREFIX="$(brew --prefix icu4c)"
+          fi
+          
+          echo "ICU_ROOT=$ICU_PREFIX" >> $GITHUB_ENV
+          echo "PATH=$ICU_PREFIX/bin:$PATH" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$ICU_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$ICU_PREFIX/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$ICU_PREFIX/include" >> $GITHUB_ENV
 
-      # -------------------- Windows --------------------
       - name: Install dependencies (Windows)
         if: matrix.os == 'windows-2022'
         shell: pwsh
         run: |
+          # Install basic tools
           choco install -y ninja
-          choco install -y vcpkg
-          choco install -y miniupnpc qrencode
-          choco install -y qt5-default --params '/InstallDir:C:\Qt'
-          vcpkg install boost-filesystem boost-thread boost-date-time boost-chrono boost-regex boost-serialization boost-program-options boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit boost-format --triplet x64-windows
-
-      - name: Debug Boost installation (Windows)
-        if: matrix.os == 'windows-2022'
-        shell: pwsh
-        run: |
-          echo "Checking Boost installation..."
-          if (Test-Path "C:\local\") { ls C:\local\ } else { echo "C:\local\ does not exist" }
-          if (Test-Path "C:\tools\") { ls C:\tools\ } else { echo "C:\tools\ does not exist" }
-          if (Test-Path "C:\ProgramData\chocolatey\lib\boost-msvc-14.3\") { ls C:\ProgramData\chocolatey\lib\boost-msvc-14.3\ } else { echo "Chocolatey Boost path does not exist" }
-          echo "Environment variables:"
-          echo "BOOST_ROOT=$env:BOOST_ROOT"
-          echo "Boost_INCLUDEDIR=$env:Boost_INCLUDEDIR"
-          echo "Boost_LIBRARYDIR=$env:Boost_LIBRARYDIR"
-
-      # -------------------- Cache CMake Build --------------------
-      - name: Cache CMake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt', '**/CMakeCache.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cmake-
+          
+          # Initialize vcpkg if not already done
+          if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
+            git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+            cd C:/vcpkg
+            .\bootstrap-vcpkg.bat
+            .\vcpkg integrate install
+          }
+          
+          # Install packages via vcpkg
+          C:/vcpkg/vcpkg.exe install --triplet x64-windows `
+            boost-filesystem boost-thread boost-date-time boost-chrono `
+            boost-regex boost-serialization boost-program-options `
+            boost-multi-index boost-uuid boost-asio boost-scope-exit `
+            boost-format icu openssl miniupnpc
 
       # -------------------- Configure & Build --------------------
       - name: Configure
         shell: bash
         run: |
-          if [ "${{ matrix.os }}" == "macos-14" ]; then
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DCMAKE_OSX_ARCHITECTURES=arm64 -DBOOST_ROOT="$BOOST_ROOT"
-          elif [ "${{ matrix.os }}" == "windows-2022" ]; then
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          if [ "${{ matrix.os }}" = "macos-14" ]; then
+            # ICU_ROOT should be set from previous step
+            export PATH="$ICU_ROOT/bin:$PATH"
+            export PKG_CONFIG_PATH="$ICU_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH"
+            export LDFLAGS="-L$ICU_ROOT/lib $LDFLAGS"
+            export CPPFLAGS="-I$ICU_ROOT/include $CPPFLAGS"
+            
+            echo "Using ICU_ROOT: $ICU_ROOT"
+            echo "Available ICU libraries:"
+            ls -la "$ICU_ROOT/lib/" | grep -E "libicu.*\.(dylib|a)$" || echo "No ICU libraries found"
+            
+            # Check for ICU library files and use versioned names if needed
+            ICU_DATA_LIB=""
+            ICU_I18N_LIB=""
+            ICU_UC_LIB=""
+            
+            # Try to find ICU libraries with different version patterns
+            for version in 77 76 75 74 ""; do
+              if [ -n "$version" ]; then
+                suffix=".$version.dylib"
+              else
+                suffix=".dylib"
+              fi
+              
+              if [ -z "$ICU_DATA_LIB" ] && [ -f "$ICU_ROOT/lib/libicudata$suffix" ]; then
+                ICU_DATA_LIB="$ICU_ROOT/lib/libicudata$suffix"
+              fi
+              if [ -z "$ICU_I18N_LIB" ] && [ -f "$ICU_ROOT/lib/libicui18n$suffix" ]; then
+                ICU_I18N_LIB="$ICU_ROOT/lib/libicui18n$suffix"
+              fi
+              if [ -z "$ICU_UC_LIB" ] && [ -f "$ICU_ROOT/lib/libicuuc$suffix" ]; then
+                ICU_UC_LIB="$ICU_ROOT/lib/libicuuc$suffix"
+              fi
+            done
+            
+            echo "ICU Data Library: $ICU_DATA_LIB"
+            echo "ICU I18N Library: $ICU_I18N_LIB"
+            echo "ICU UC Library: $ICU_UC_LIB"
+            
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DCMAKE_OSX_ARCHITECTURES=arm64 \
+              -DBOOST_ROOT="$BOOST_ROOT" \
+              -DBUILD_TESTS=ON \
+              -DICU_ROOT="$ICU_ROOT" \
+              -DICU_INCLUDE_DIR="$ICU_ROOT/include" \
+              -DICU_DATA_LIBRARY="$ICU_DATA_LIB" \
+              -DICU_I18N_LIBRARY="$ICU_I18N_LIB" \
+              -DICU_UC_LIBRARY="$ICU_UC_LIB" \
+              -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
+              -DCMAKE_LIBRARY_PATH="$ICU_ROOT/lib" \
+              -DCMAKE_INCLUDE_PATH="$ICU_ROOT/include" \
+              -DBoost_USE_STATIC_LIBS=ON \
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD \
+              -DDISABLE_ASYNC_CONSOLE=$([[ "$CMAKE_BUILD_TYPE" == "RelWithDebInfo" ]] && echo ON || echo OFF)
+          elif [ "${{ matrix.os }}" = "windows-2022" ]; then
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DBUILD_TESTS=ON \
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
           else
-            cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
-                  -DBOOST_ROOT="$BOOST_ROOT"
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DBUILD_TESTS=ON \
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
           fi
 
       - name: Build
         run: cmake --build build --parallel
 
-      # -------------------- Tests (if present) --------------------
+      # -------------------- Run Tests --------------------
       - name: Run tests
-        if: ${{ success() && hashFiles('build/tests/**') != '' }}
-        run: ctest --test-dir build --output-on-failure
+        if: success()
+        shell: bash
+        run: |
+          cd build
+          if [ -f "CTestTestfile.cmake" ]; then
+            echo "Running tests..."
+            ctest --output-on-failure --verbose
+          elif [ -f "test/CTestTestfile.cmake" ]; then
+            echo "Running tests from test directory..."
+            ctest --test-dir test --output-on-failure --verbose
+          else
+            echo "No tests configured, skipping ctest"
+            echo "Available files in build directory:"
+            find . -name "CTestTestfile.cmake" -o -name "*test*" -type f | head -10
+          fi
 
       # -------------------- Upload Artifacts --------------------
-      - name: Upload macOS artifacts
-        if: matrix.os == 'macos-14' && success()
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fuego-macos-${{ github.sha }}
+          name: fuego-${{ matrix.os }}-${{ matrix.build_type }}-${{ github.sha }}
           path: |
-            build/fuegod
-            build/fuego-wallet-cli
-            build/walletd
-            build/optimizer
+            build/**/fuegod*
+            build/**/fuego-wallet-cli*
+            build/**/walletd*
+            build/**/optimizer*
           retention-days: 30
-
-      - name: Upload Windows artifacts
-        if: matrix.os == 'windows-2022' && success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: fuego-windows-${{ github.sha }}
-          path: |
-            build/fuegod.exe
-            build/fuego-wallet-cli.exe
-            build/walletd.exe
-            build/optimizer.exe
-          retention-days: 30
-
-      - name: Upload Ubuntu artifacts
-        if: matrix.os == 'ubuntu-22.04' && success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: fuego-ubuntu-${{ github.sha }}
-          path: |
-            build/fuegod
-            build/fuego-wallet-cli
-            build/walletd
-            build/optimizer
-          retention-days: 30
-    

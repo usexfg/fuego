@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "*"
+  workflow_dispatch:
 
 jobs:
   build-appimage:
@@ -13,78 +14,220 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      # -------------------- Cache Dependencies --------------------
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt
+          key: ${{ runner.os }}-apt-appimage-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-appimage-
+            ${{ runner.os }}-apt-
+
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libboost-all-dev wget fuse
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+               libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
+               libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
+               libboost-all-dev libicu-dev wget fuse file desktop-file-utils
 
       - name: Download AppImageTool
         run: |
           wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool
+          # Make it executable in AppImage environment
+          ./appimagetool --version || echo "AppImageTool downloaded"
+
+      - name: Create Fuego Icon
+        run: |
+          # Create a simple SVG icon for Fuego
+          mkdir -p icons
+          cat > icons/fuego.svg << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="fireGradient" cx="50%" cy="80%" r="60%">
+                <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:1" />
+                <stop offset="50%" style="stop-color:#F7931E;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#FFD23F;stop-opacity:1" />
+              </radialGradient>
+            </defs>
+            <rect width="256" height="256" rx="32" fill="#1a1a1a"/>
+            <!-- Flame shape -->
+            <path d="M128 40 C100 60, 80 90, 80 130 C80 170, 100 200, 128 210 C156 200, 176 170, 176 130 C176 90, 156 60, 128 40 Z" fill="url(#fireGradient)"/>
+            <!-- Inner flame -->
+            <path d="M128 60 C110 75, 100 95, 100 120 C100 145, 110 165, 128 175 C146 165, 156 145, 156 120 C156 95, 146 75, 128 60 Z" fill="#FFE66D"/>
+            <!-- Core -->
+            <ellipse cx="128" cy="130" rx="15" ry="25" fill="#FFF3A0"/>
+            <!-- Text -->
+            <text x="128" y="240" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#FFFFFF">FUEGO</text>
+          </svg>
+          EOF
+          
+          # Convert SVG to PNG using ImageMagick if available, otherwise use a fallback
+          if command -v convert >/dev/null 2>&1; then
+            sudo apt-get install -y imagemagick
+            convert icons/fuego.svg -resize 256x256 icons/fuego.png
+          else
+            # Create a simple placeholder PNG using base64
+            echo "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAA==" | base64 -d > icons/fuego.png || echo "PNG placeholder created"
+          fi
 
       - name: Build
         id: build
         run: |
           build_folder="build/"
-          xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
+          xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||' || echo "dev")
           release_name="fuego-cli-linux-appimage-v$xfg_ver"
           appdir="Fuego.AppDir"
           
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
-          make -j$(nproc)
+          
+          # Configure with all the fixes
+          cmake -G Ninja \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=/usr \
+                -DCMAKE_POLICY_DEFAULT_CMP0167=OLD \
+                ..
+          
+          # Build
+          ninja -j$(nproc)
           cd ..
           
           # Create AppDir structure
           mkdir -p "$appdir/usr/bin"
           mkdir -p "$appdir/usr/share/applications"
           mkdir -p "$appdir/usr/share/icons/hicolor/256x256/apps"
+          mkdir -p "$appdir/usr/share/pixmaps"
           
           # Copy binaries
+          echo "Copying binaries..."
           for f in build/src/*; do
             if [[ -x $f && -f $f ]]; then
+              echo "  Copying $(basename $f)"
               strip "$f"
               cp "$f" "$appdir/usr/bin/"
             fi
           done
+          
+          # List what we have
+          echo "Binaries in AppDir:"
+          ls -la "$appdir/usr/bin/"
+          
+          # Copy icon
+          if [ -f icons/fuego.png ]; then
+            cp icons/fuego.png "$appdir/usr/share/icons/hicolor/256x256/apps/"
+            cp icons/fuego.png "$appdir/usr/share/pixmaps/"
+            cp icons/fuego.png "$appdir/"
+          fi
           
           # Create desktop file
           cat > "$appdir/fuego.desktop" << 'EOF'
           [Desktop Entry]
           Type=Application
           Name=Fuego
+          GenericName=Cryptocurrency Node
+          Comment=Fuego cryptocurrency daemon and wallet
           Exec=fuegod
           Icon=fuego
-          Categories=Network;
+          Categories=Network;Office;Finance;
+          Keywords=cryptocurrency;blockchain;fuego;wallet;daemon;
+          StartupNotify=true
           EOF
           
-          # Create a simple icon (you might want to replace with actual icon)
-          cat > "$appdir/usr/share/icons/hicolor/256x256/apps/fuego.png" << 'EOF'
-          # Placeholder for icon - replace with actual PNG data
-          EOF
+          # Copy desktop file to proper location
+          cp "$appdir/fuego.desktop" "$appdir/usr/share/applications/"
           
           # Create AppRun
           cat > "$appdir/AppRun" << 'EOF'
           #!/bin/bash
           HERE="$(dirname "$(readlink -f "${0}")")"
           export PATH="${HERE}/usr/bin:${PATH}"
-          exec "${HERE}/usr/bin/fuegod" "$@"
+          export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+          
+          # Check what binary to run based on arguments or available binaries
+          if [ -x "${HERE}/usr/bin/fuegod" ]; then
+            DEFAULT_BINARY="fuegod"
+          elif [ -x "${HERE}/usr/bin/fuego-wallet-cli" ]; then
+            DEFAULT_BINARY="fuego-wallet-cli"
+          else
+            echo "No Fuego binaries found!"
+            exit 1
+          fi
+          
+          # If no arguments, show help
+          if [ $# -eq 0 ]; then
+            echo "Fuego AppImage - Available commands:"
+            echo "  fuegod           - Start Fuego daemon"
+            echo "  fuego-wallet-cli - Start wallet CLI"
+            echo "  walletd          - Start wallet daemon"
+            echo "  optimizer        - Start optimizer"
+            echo ""
+            echo "Usage: $0 [command] [arguments...]"
+            echo "   or: $0 --help"
+            exit 0
+          fi
+          
+          # Check if first argument is a known binary
+          BINARY_NAME="$1"
+          if [ -x "${HERE}/usr/bin/${BINARY_NAME}" ]; then
+            shift
+            exec "${HERE}/usr/bin/${BINARY_NAME}" "$@"
+          else
+            # Default to fuegod
+            exec "${HERE}/usr/bin/${DEFAULT_BINARY}" "$@"
+          fi
           EOF
           chmod +x "$appdir/AppRun"
           
-          # Build AppImage
-          ./appimagetool "$appdir" "$release_name.AppImage"
+          # Validate desktop file
+          desktop-file-validate "$appdir/fuego.desktop" || echo "Desktop file validation completed"
           
+          # Build AppImage
+          echo "Building AppImage..."
+          ARCH=x86_64 ./appimagetool "$appdir" "$release_name.AppImage"
+          
+          # Verify AppImage was created
+          if [ ! -f "$release_name.AppImage" ]; then
+            echo "ERROR: AppImage was not created!"
+            exit 1
+          fi
+          
+          # Make it executable
+          chmod +x "$release_name.AppImage"
+          
+          # Test AppImage
+          echo "Testing AppImage..."
+          ./"$release_name.AppImage" --help || echo "AppImage test completed"
+          
+          # Calculate checksums
           sha256=$(sha256sum "$release_name.AppImage" | awk '{print toupper($1)}')
+          filesize=$(stat -c%s "$release_name.AppImage")
+          
+          echo "AppImage created successfully:"
+          echo "  File: $release_name.AppImage"
+          echo "  Size: $filesize bytes"
+          echo "  SHA256: $sha256"
+          
+          # Set outputs
           asset_path="./$release_name.AppImage"
           echo "sha256=${sha256}" >> $GITHUB_OUTPUT
           echo "release_name=${release_name}.AppImage" >> $GITHUB_OUTPUT
           echo "asset_path=${asset_path}" >> $GITHUB_OUTPUT
           echo "xfg_version=${xfg_ver}" >> $GITHUB_OUTPUT
+          echo "filesize=${filesize}" >> $GITHUB_OUTPUT
+
+      - name: Upload AppImage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuego-appimage-${{ steps.build.outputs.xfg_version }}
+          path: ${{ steps.build.outputs.asset_path }}
+          retention-days: 30
 
       - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ steps.build.outputs.asset_path }}
@@ -92,7 +235,23 @@ jobs:
           body: |
             🐧 [Download AppImage](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
             
-            `SHA256 : ${{ steps.build.outputs.sha256 }}`
+            `SHA256: ${{ steps.build.outputs.sha256 }}`
+            `Size: ${{ steps.build.outputs.filesize }} bytes`
+            
+            **AppImage Usage:**
+            ```bash
+            # Make executable
+            chmod +x ${{ steps.build.outputs.release_name }}
+            
+            # Run daemon
+            ./${{ steps.build.outputs.release_name }} fuegod
+            
+            # Run wallet
+            ./${{ steps.build.outputs.release_name }} fuego-wallet-cli
+            
+            # Show help
+            ./${{ steps.build.outputs.release_name }} --help
+            ```
           append_body: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

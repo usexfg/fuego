@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DMWDA Analysis Script
+DMWD Analysis Script
 Advanced analysis and visualization for Dynamic Multi-Window Difficulty Algorithm
 """
 

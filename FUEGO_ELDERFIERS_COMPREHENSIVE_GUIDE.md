@@ -52,7 +52,7 @@
 │  │   Basic     │  │ Elderfier   │  │ Elderfier   │        │
 │  │ Eldernodes  │  │   Nodes     │  │   Nodes     │        │
 │  │ (0 XFG)     │  │ (800+ XFG)  │  │ (800+ XFG)  │        │
-│  │             │  │ 0x06 Tag   │  │ 0x06 Tag   │        │
+│  │             │  │ 0x06 Tag    │  │ 0x06 Tag    │        │
 │  └─────────────┘  └─────────────┘  └─────────────┘        │
 ├───────────────────────────────────────────────────────────┤
 ├───────────────────────────────────────────────────────────┤
@@ -85,7 +85,7 @@ User Transaction → Basic Validation → Elderfier Verification → Consensus F
 
 | Tier | Minimum Deposit | Deposit Type | Service ID Options | Priority | Use Case |
 |------|----------------|--------------|-------------------|----------|----------|
-| **Basic** | **0 XFG** | None | Public wallet address only | Standard | Basic network participation |
+| **Basic** | **0 XFG** | None | Public wallet address | Standard | Lite-wallet (SPV) remote connection services |
 | **𝞝lderfier** | **800 XFG** | 0x06 Tag Transaction | Custom name, hashed address, or standard address | **High** | Advanced verification and consensus |
 
 ### Tier Requirements

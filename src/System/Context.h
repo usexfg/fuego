@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <functional>
+#include <type_traits>
 #include <System/Dispatcher.h>
 #include <System/Event.h>
 #include <System/InterruptedException.h>

@@ -15,9 +15,9 @@
 #include <list>
 #include <boost/uuid/uuid.hpp>
 
+#include <System/Dispatcher.h>
 #include <System/Context.h>
 #include <System/ContextGroup.h>
-#include <System/Dispatcher.h>
 #include <System/Event.h>
 #include <System/Timer.h>
 #include <System/TcpConnection.h>
@@ -26,6 +26,7 @@
 #include "CryptoNoteCore/OnceInInterval.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "Common/CommandLine.h"
+#include "Common/StringTools.h"
 #include "Logging/LoggerRef.h"
 
 #include "ConnectionContext.h"
@@ -75,7 +76,7 @@ namespace CryptoNote
     using Clock = std::chrono::steady_clock;
     using TimePoint = Clock::time_point;
 
-    System::Context<void>* context;
+    void* context;
     PeerIdType peerId;
     System::TcpConnection connection;
 
@@ -89,7 +90,7 @@ namespace CryptoNote
     }
 
     P2pConnectionContext(P2pConnectionContext&& ctx) :
-      CryptoNoteConnectionContext(std::move(ctx)),
+      CryptoNoteConnectionContext(),
       context(ctx.context),
       peerId(ctx.peerId),
       connection(std::move(ctx.connection)),
@@ -193,7 +194,7 @@ namespace CryptoNote
     bool handleConfig(const NetNodeConfig& config);
     bool append_net_address(std::vector<NetworkAddress>& nodes, const std::string& addr);
     bool idle_worker();
-    bool handle_remote_peerlist(const std::list<PeerlistEntry>& peerlist, time_t local_time, const CryptoNoteConnectionContext& context);
+    bool handle_remote_peerlist(const std::list<PeerlistEntry>& peerlist, time_t local_time, const P2pConnectionContext& context);
     bool get_local_node_data(basic_node_data& node_data);
     bool merge_peerlist_with_local(const std::list<PeerlistEntry>& bs);
     bool fix_time_delta(std::list<PeerlistEntry>& local_peerlist, time_t local_time, int64_t& delta);
@@ -286,4 +287,11 @@ namespace CryptoNote
     std::map<uint32_t, uint64_t> m_host_fails_score;
     mutable std::mutex mutex;
   };
+}
+
+namespace std {
+inline std::ostream& operator << (std::ostream& s, const CryptoNote::P2pConnectionContext& context) {
+  return s << "[" << Common::ipAddressToString(context.m_remote_ip) << ":" <<
+    context.m_remote_port << (context.m_is_income ? " INC" : " OUT") << "] ";
+}
 }

@@ -22,9 +22,9 @@ public:
         m_config.shortWindow = 15;           // Rapid response
         m_config.mediumWindow = 45;          // Stability
         m_config.longWindow = 120;           // Trend analysis
-        m_config.minAdjustment = 0.5;        // 50% minimum
-        m_config.maxAdjustment = 4.0;        // 400% maximum
-        m_config.emergencyThreshold = 0.1;    // 10% emergency threshold
+        m_config.minAdjustment = 0.25;       // 25% minimum (more conservative)
+        m_config.maxAdjustment = 2.0;        // 200% maximum (more conservative)
+        m_config.emergencyThreshold = 0.5;   // 50% emergency threshold (more conservative)
         m_config.emergencyWindow = 5;        // 5-block emergency response
     }
     

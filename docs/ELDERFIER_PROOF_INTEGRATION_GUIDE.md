@@ -73,7 +73,11 @@ To reward Eldernodes for participating in consensus, configure and distribute pr
      - Issue a payment of `perNodeFee` XFG via the payment service or wallet RPC.
    - Optionally allocate the `remainder` to the treasury or burn it.
 
-5. **Record distributions**:
+5. **User Cost Breakdown**: When creating the burn-deposit transaction that locks up the proof fee, the user must also pay the network minimum transaction fee (0.008 XFG). Total outlay examples:
+   - **Small burn deposit**: 0.008 XFG proof fee + 0.008 XFG network fee = **0.016 XFG total**
+   - **Large burn deposit**: 0.8 XFG proof fee + 0.008 XFG network fee = **0.808 XFG total**
+
+6. **Record distributions**:
    - Log or store a record of which nodes were paid and the amounts.
    - Expose this data via metrics or a UI component for transparency.
 

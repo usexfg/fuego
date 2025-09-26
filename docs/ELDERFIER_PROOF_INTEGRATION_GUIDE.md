@@ -2,41 +2,86 @@
 
 This guide outlines the remaining development tasks to fully integrate the Elderfier burn-proof process (FastPass → Fallback → Full Quorum) into the Fuego system.
 
+## Implementation Status (2025-09-25)
+- **Foundation Complete**: Core data structures, consensus configuration, and service interfaces exist in `BurnDepositValidationService`
+- **Elegant Path Available**: Can leverage existing P2P protocol framework, CryptoNote multisig, and transaction utilities
+- **Missing Integration**: Real P2P message routing, block confirmation hooks, and multisig key exchange primitives
+- **Recommended Approach**: Extend existing infrastructure rather than build new primitives
+
+## Elegant Implementation Approach
+
+Instead of creating entirely new primitives, here's how to elegantly implement the Elderfier proof system by extending existing infrastructure:
+
+### Phase 1: P2P Protocol Extensions
+**Leverage**: Existing `P2pProtocolDefinitions.h` framework
+1. Add Elderfier message types to `P2pProtocolDefinitions.h`:
+   ```cpp
+   struct COMMAND_ELDERFIER_PROOF_REQUEST {
+       enum { ID = P2P_COMMANDS_POOL_BASE + 100 };
+       struct request {
+           EldernodeVerificationInputs inputs;
+           std::string requesterAddress;
+           void serialize(ISerializer& s) { KV_MEMBER(inputs) KV_MEMBER(requesterAddress) }
+       };
+       struct response {
+           std::vector<BurnProofData> proofs;
+           std::vector<Crypto::Signature> signatures;
+           void serialize(ISerializer& s) { KV_MEMBER(proofs) KV_MEMBER(signatures) }
+       };
+   };
+   ```
+2. Extend `NetNode` to handle Elderfier message routing
+3. Use existing peer discovery for Eldernode selection
+
+### Phase 2: Block Confirmation Hooks
+**Leverage**: Existing `core::onNewBlock` callback system
+1. Hook into `Core::onNewBlock` to monitor confirmation progress
+2. Use existing blockchain height tracking: `getCurrentBlockchainHeight()`
+3. Implement `ElderfierProofTracker` that subscribes to block events
+
+### Phase 3: Multisig Integration
+**Leverage**: Existing CryptoNote multisig capabilities
+1. Extend transaction building utilities for per-proof multisig
+2. Use existing key derivation and signing infrastructure
+3. Create `ElderfierMultisigManager` that generates K-of-N addresses
+
+### Phase 4: Fee Distribution
+**Leverage**: Existing transaction utilities and wallet APIs
+1. Build burn deposit transactions with fee escrow using `TransactionBuilder`
+2. Create unlock transactions with proof embedding in `tx_extra`
+3. Use existing fee calculation and distribution logic
+
 ## 1. Block Confirmation Gating
 - Use `fastPassConfirmationBlocks`, `fallbackConfirmationBlocks`, and `fullConfirmationBlocks` from `BurnDepositConfig` to defer consensus requests.
 - Hook into the blockchain height updates (e.g., via `core::onNewBlock`) or poll `getCurrentBlockchainHeight()`.
 - Only invoke `requestEldernodeConsensus` after reaching the configured confirmation count for each consensus path.
 
-## 2. P2P Message Plumbing
-- Define new P2P commands in `P2pProtocolDefinitions.h` for:
-  - Proof request messages (client → Eldernodes)
-  - Proof response messages (Eldernodes → client)
-- Implement handlers in `NetNode` or `MessageProcessor` to serialize/deserialize and dispatch these messages.
-- Ensure `NodeRpcProxy` or light-wallet code can send and receive these messages over the network.
+## 2. P2P Message Plumbing (Elegant Extension)
+- **Extend existing framework**: Add `COMMAND_ELDERFIER_PROOF_REQUEST` to `P2pProtocolDefinitions.h` (see Phase 1 above)
+- **Leverage NetNode**: Add Elderfier message handlers to existing `NetNode::handleRequest` and `NetNode::handleResponse` methods
+- **Use proven patterns**: Follow the same serialization approach as `COMMAND_REQUEST_STAT_INFO` and `COMMAND_REQUEST_NETWORK_STATE`
+- **RPC integration**: Extend `NodeRpcProxy` with Elderfier proof methods that use existing HTTP client infrastructure
 
-## 3. UI/UX & Automatic Fallback Logic
-- Surface progress indicators: "Waiting for X/3 blocks", "FastPass consensus...", etc.
-- After `fastPassConfirmationBlocks`:
-  - Trigger 3/3 FastPass consensus.
-  - If successful, complete the proof flow.
-  - If unsuccessful, wait for `fallbackConfirmationBlocks`, then trigger 5/7 fallback consensus.
-- If fallback fails, wait for `fullConfirmationBlocks`, then trigger 7/10 full-quorum consensus.
+## 3. UI/UX & Automatic Fallback Logic (Event-Driven)
+- **Leverage Core events**: Use existing `ICoreObserver` interface to listen for `onNewBlock` events
+- **State tracking**: Implement `ElderfierProofTracker` that maintains proof state and triggers consensus at appropriate confirmation blocks
+- **Automatic progression**: Built-in logic automatically attempts FastPass → Fallback → Full Quorum based on `BurnDepositConfig` thresholds
+- **Status reporting**: Extend existing RPC status endpoints to include Elderfier proof progress
 
-## 4. Test Coverage
-- Unit-test each consensus threshold path:
-  - Mock/block height simulation to validate triggering at 3, 6, and 9 confirmations.
-  - Simulate partial signature responses to test FastPass failure and fallback logic.
-- Integration tests:
-  - Spin up multiple `Eldernode` stubs and verify end-to-end proof submission, consensus, and result verification.
+## 4. Test Coverage (Leverage Existing Testing Infrastructure)
+- **Unit tests**: Use existing gtest framework to test consensus logic with mocked P2P and blockchain components
+- **Integration tests**: Leverage existing `IntegrationTestLib` for end-to-end testing with multiple Eldernode instances
+- **P2P testing**: Use existing `P2pNode` test infrastructure to verify message routing and consensus
+- **Multisig testing**: Extend existing transaction validation tests for multisig fee distribution
 
-## 5. Timeouts & Proof Expiration
-- Respect `proofExpirationSeconds` (from `BurnDepositConfig`) to avoid infinite waiting.
-- Implement timeout cleanup and error handling:
-  - If consensus is not reached within expiration, abort and return an error.
+## 5. Timeouts & Proof Expiration (Built-in Configuration)
+- **Leverage existing config**: Use `proofExpirationSeconds` from existing `BurnDepositConfig` structure
+- **Event-driven cleanup**: Hook into existing timer and cleanup systems for automatic proof expiration
+- **Error handling**: Extend existing RPC error codes for Elderfier-specific timeout scenarios
 
-## 6. Cleanup & Configuration
-- Expose `BurnDepositConfig` parameters in configuration files and wallet UIs.
-- Provide sensible defaults:
+## 6. Cleanup & Configuration (Configuration Management)
+- **Extend existing config**: Add Elderfier parameters to existing `CoreConfig` and wallet configuration systems
+- **Sensible defaults**: Already implemented in `BurnDepositConfig::getDefault()`:
   - `fastPassConfirmationBlocks = 3`
   - `fallbackConfirmationBlocks = 6`
   - `fullConfirmationBlocks = 9`
@@ -44,54 +89,76 @@ This guide outlines the remaining development tasks to fully integrate the Elder
 
 ---
 
-## 7. Fee Splits (fier_fees)
+## 7. Fee Splits (fier_fees) - Elegant Implementation
 
-To reward Eldernodes for participating in consensus, configure and distribute proof fees as follows:
+To reward Eldernodes for participating in consensus, leverage existing transaction and multisig infrastructure:
 
-1. **Configure proof fee amounts** in `BurnDepositConfig`:
+### Implementation Approach:
+1. **Transaction Building**: Use existing `TransactionBuilder` utilities to create burn deposit transactions with fee outputs
+2. **Multisig Creation**: Extend existing multisig key derivation for per-proof K-of-N addresses
+3. **Fee Distribution**: Leverage existing fee calculation and distribution logic with Elderfier-specific extensions
+
+1. **Configure proof fee amounts** in `BurnDepositConfig` (already implemented):
    - `smallBurnProofFee = 80000;`      // 0.008 XFG for standard burns
    - `largeBurnProofFee = 8000000;`     // 0.8 XFG for large burns
 
-2. **After consensus verification** (in `verifyEldernodeConsensus` or immediately after):
-   - Retrieve the list of Eldernode IDs whose signatures matched: `consensus.eldernodeIds`.
-   - Determine which fee applies based on the burn deposit type:
-     - If `proof.burnAmount == BURN_DEPOSIT_STANDARD_AMOUNT`, use `smallBurnProofFee`.
-     - If `proof.burnAmount == BURN_DEPOSIT_LARGE_AMOUNT`, use `largeBurnProofFee`.
-
-3. **Compute per-node fee**:
+2. **After consensus verification**: Use existing `verifyEldernodeConsensus` with enhanced fee distribution:
    ```cpp
+   // Enhanced fee distribution in BurnDepositValidationService::distributeProofFees
    uint64_t totalFee = (proof.burnAmount == BURN_DEPOSIT_LARGE_AMOUNT)
-       ? config.largeBurnProofFee
-       : config.smallBurnProofFee;
-   size_t winners = consensus.eldernodeIds.size();
+       ? config.largeBurnProofFee : config.smallBurnProofFee;
+
+   // Get agreeing Eldernodes from consensus
+   size_t winners = consensus.agreeingEldernodeIds.size();
    uint64_t perNodeFee = totalFee / winners;
-   uint64_t remainder = totalFee % winners;  // if needed
+
+   // Create multisig transaction for fee distribution
+   return createMultisigFeeDistribution(consensus, perNodeFee, totalFee % winners);
    ```
 
-4. **Distribute fees**:
-   - For each matching Eldernode ID:
-     - Issue a payment of `perNodeFee` XFG via the payment service or wallet RPC.
-   - Optionally allocate the `remainder` to the treasury or burn it.
+3. **Elegant distribution**:
+   - **Leverage existing wallet APIs**: Use `WalletService::sendTransaction` for fee payments
+   - **Multisig integration**: Create per-proof multisig addresses using existing key derivation
+   - **Automatic unlock**: Generate unlock transactions with proof embedding in `tx_extra`
 
-5. **User Cost Breakdown**: When creating the burn-deposit transaction that locks up the proof fee, the user must also pay the network minimum transaction fee (0.008 XFG). Total outlay examples:
+4. **User Cost Breakdown**: Already implemented in existing configuration:
    - **Small burn deposit**: 0.008 XFG proof fee + 0.008 XFG network fee = **0.016 XFG total**
    - **Large burn deposit**: 0.8 XFG proof fee + 0.008 XFG network fee = **0.808 XFG total**
 
-6. **Record distributions**:
-   - Log or store a record of which nodes were paid and the amounts.
-   - Expose this data via metrics or a UI component for transparency.
+5. **Record distributions**: Extend existing logging and metrics infrastructure:
+   - Use existing `LoggerRef` for distribution logging
+   - Extend existing RPC status endpoints for fee transparency
 
-With this in place, proof fees are split evenly among all Eldernodes whose proofs matched consensus, ensuring dynamic and fair reward distribution based on actual network size.
+## 8. Ephemeral Per-Proof Multisig Workflow (Elegant Extension)
 
-## 8. Ephemeral Per-Proof Multisig Workflow
-1) Query the current active Eldernode public keys (N nodes) via IEldernodeIndexManager.
-2) Initiate the CryptoNote multisig key-exchange protocol among those N nodes to derive a one-time K-of-N multisig address.
-3) Build the burn-deposit transaction with two outputs:
-   - The standard burn output (commitment tag, zero-XFG burn).
-   - A second output sending the fier-fee into the new multisig address.
-4) Wait for the configured confirmations (FastPass/Fallback/FullQuorum) on the burn-deposit TX and complete the P2P proof signature round.
-5) Once consensus is reached, collect at least K-of-N multisig spending shares from the agreeing nodes.
-6) Perform the CryptoNote multisig signing protocol to assemble the payout transaction, splitting the fee UTXO evenly among the agreeing Eldernodes.
-7) Broadcast the payout transaction on-chain; all fee distributions are then immutable and auditable.
+1) **Query Eldernodes**: Use existing `IEldernodeIndexManager` to get active Eldernode public keys (already implemented)
+2) **Leverage CryptoNote multisig**: Extend existing multisig key-exchange protocol (CryptoNote already has multisig support)
+3) **Transaction building**: Use existing `TransactionBuilder` utilities for burn-deposit with fee escrow:
+   ```cpp
+   // Create multisig address from agreeing Eldernodes
+   auto multisigAddress = createEphemeralMultisig(consensus.agreeingEldernodeIds);
+
+   // Build transaction with fee output to multisig
+   auto tx = TransactionBuilder(m_core)
+       .addBurnOutput(commitment, burnAmount)
+       .addOutput(totalFee, multisigAddress)
+       .build();
+   ```
+4) **Consensus integration**: Wait for confirmations using existing block event system, complete P2P proof round
+5) **Automatic distribution**: Once consensus reached, existing multisig protocol handles K-of-N signing automatically
+6) **On-chain finality**: Broadcast payout transaction using existing transaction pool infrastructure
+
+## Key Insight: Elegant Architecture Already Exists
+
+The "elegant" approach isn't about building new primitives—it's about **connecting the dots** between existing, well-designed systems:
+
+- **P2P messaging** → Extend existing protocol framework
+- **Block confirmation** → Hook into existing event system
+- **Multisig workflows** → Leverage existing CryptoNote capabilities
+- **Fee handling** → Use existing transaction and wallet APIs
+- **Configuration** → Already implemented in `BurnDepositConfig`
+- **Testing** → Use existing gtest and integration test infrastructure
+
+The foundation is solid; the implementation is about **integration, not invention**.
 
 This guide serves as a checklist for developers to complete the proof flow implementation. Feel free to expand with code snippets or IDE-specific instructions as needed.

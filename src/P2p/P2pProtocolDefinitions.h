@@ -287,6 +287,91 @@ namespace CryptoNote
     };
   };
 
+  /************************************************************************/
+  /* Elderfier Proof System Commands                                      */
+  /* Consensus Flow: FastPass(3/3) -> Fallback(6/8) -> Reject+Council   */
+  /************************************************************************/
+  struct COMMAND_REQUEST_ELDERFIER_PROOF
+  {
+    enum { ID = P2P_COMMANDS_POOL_BASE + 10 };
+
+    struct request
+    {
+      Crypto::Hash burn_tx_hash;
+      uint8_t consensus_path;  // FAST_PASS=0, FALLBACK=1, COUNCIL_REVIEW=2
+      uint64_t timestamp;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(burn_tx_hash)
+        KV_MEMBER(consensus_path)
+        KV_MEMBER(timestamp)
+      }
+    };
+
+    struct response
+    {
+      Crypto::Hash burn_tx_hash;
+      std::vector<uint8_t> proof_data;
+      std::vector<Crypto::PublicKey> participating_nodes;
+      Crypto::Signature threshold_signature;
+      uint8_t consensus_path;
+      bool is_success;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(burn_tx_hash)
+        serializeAsBinary(proof_data, "proof_data", s);
+        serializeAsBinary(participating_nodes, "participating_nodes", s);
+        KV_MEMBER(threshold_signature)
+        KV_MEMBER(consensus_path)
+        KV_MEMBER(is_success)
+      }
+    };
+  };
+
+  struct COMMAND_ELDERFIER_PROOF_SIGNATURE
+  {
+    enum { ID = P2P_COMMANDS_POOL_BASE + 11 };
+
+    struct request
+    {
+      Crypto::Hash burn_tx_hash;
+      std::vector<uint8_t> partial_signature;
+      Crypto::PublicKey signer_key;
+      uint8_t consensus_path;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(burn_tx_hash)
+        serializeAsBinary(partial_signature, "partial_signature", s);
+        KV_MEMBER(signer_key)
+        KV_MEMBER(consensus_path)
+      }
+    };
+  };
+
+  struct COMMAND_ELDERFIER_COUNCIL_VOTE
+  {
+    enum { ID = P2P_COMMANDS_POOL_BASE + 12 };
+
+    // Used when consensus fails - sends failed case to Elder Council for review
+    // This is async and doesn't block the rejection of the proof
+    struct request
+    {
+      Crypto::Hash burn_tx_hash;
+      uint8_t failure_reason;  // INVALID_PROOF=0, NETWORK_SYNC=1, BAD_ACTOR=2
+      std::vector<Crypto::PublicKey> non_responding_nodes;
+      std::string vote_choice;  // "INVALID" | "NETWORK_ISSUE" | "BAD_ACTOR" | "ALL_GOOD"
+      Crypto::Signature vote_signature;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(burn_tx_hash)
+        KV_MEMBER(failure_reason)
+        serializeAsBinary(non_responding_nodes, "non_responding_nodes", s);
+        KV_MEMBER(vote_choice)
+        KV_MEMBER(vote_signature)
+      }
+    };
+  };
+
 #endif
 
 

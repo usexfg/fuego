@@ -167,7 +167,7 @@ endif()
 # --------------------------
 # Additional Linux linking
 # --------------------------
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR (APPLE AND NOT ANDROID))
   target_link_libraries(SimpleWallet PRIVATE -lresolv)
   target_link_libraries(Daemon PRIVATE -lresolv)
   target_link_libraries(PaymentGateService PRIVATE -lresolv)
@@ -176,11 +176,11 @@ endif ()
 # --------------------------
 # Dependencies
 # --------------------------
-add_dependencies(Rpc version)
-add_dependencies(Daemon version)
-add_dependencies(SimpleWallet version)
-add_dependencies(PaymentGateService version)
-add_dependencies(P2P version)
+add_dependencies(Rpc generate_version)
+add_dependencies(Daemon generate_version)
+add_dependencies(SimpleWallet generate_version)
+add_dependencies(PaymentGateService generate_version)
+add_dependencies(P2P generate_version)
 
 # --------------------------
 # Output names

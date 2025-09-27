@@ -46,13 +46,13 @@ struct BurnDepositTransaction {
 
 ### 2. Threshold Signature Consensus Paths
 
-**Progressive Consensus with Elder Council Escalation:**
+**Progressive Consensus with Async Elder Council Review:**
 ```
-FastPass (3/3) → Fallback (6/8) → Elder Council Review
+FastPass (3/3) → Fallback (6/8) → REJECT + Async Council Review
      ↓              ↓                    ↓
-   Success        Success            Quorum Decision
+   Success        Success            Immediate Rejection
      ↓              ↓                    ↓
-  Distribute    Distribute         Action/Reject
+  Distribute    Distribute         + Council Review (async)
 ```
 
 **Implementation:**
@@ -100,10 +100,16 @@ struct FailedConsensusCase {
 };
 ```
 
+**Consensus Flow:**
+1. **FastPass (3/3)**: Attempt consensus with 3 Eldernodes
+2. **Fallback (6/8)**: If FastPass fails, attempt with 8 Eldernodes (6 required)
+3. **REJECT + Async Council Review**: If Fallback fails, immediately reject the proof and send failed case to Elder Council inbox for review (doesn't block the rejection)
+
 **Elder Council Quorum Rules:**
 - Minimum 8/10 Elderfiers must vote same choice
 - Voting options: `INVALID_PROOF | NETWORK_ISSUE | BAD_ACTOR | ALL_GOOD`
 - Council decisions trigger automatic actions (slashing, network alerts, etc.)
+- Failed consensus cases are sent to council inbox for review (async, doesn't block the rejection)
 
 ## Implementation Components
 

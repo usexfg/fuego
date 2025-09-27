@@ -1,143 +1,162 @@
 # Elderfier Proof Integration Dev Guide
 
-This guide outlines the remaining development tasks to fully integrate the Elderfier burn-proof process (FastPass → Fallback → Full Quorum) into the Fuego system.
+This guide outlines the remaining development tasks to fully integrate the Elderfier burn-proof process (FastPass → Fallback → Elder Council) into the Fuego system.
 
-## Implementation Status & Alternative Approach (2025-09-25)
+## Implementation Status (2025-09-27)
+- **Recommended Approach**: Use threshold signatures with single burn+fee transactions instead of complex per-proof multisig
+- **Architecture**: Leverage existing service node quorum engine with minimal new P2P messages
+- **Security**: On-chain proof storage enhances security through immutable audit trails
+- **Escalation**: Failed consensus cases escalate to Elder Council for human review
 
-### Current Limitations
-- Full Elderfier proof consensus, fier_fees settlement, and per-proof multisig payout logic remain **unimplemented** in the codebase.
-- The current repository lacks the necessary RPC, wallet, payout, and multisig primitives to support on-chain fee escrow, payout gating, and dynamic quorum thresholds.
-- Implementing the workflow described below requires new consensus hooks (`requestEldernodeConsensus`), multisig transaction builders, and fee distribution services that are not present; attempting to wire the guide verbatim would introduce dead calls.
+## Elegant Implementation Architecture
 
-### More Elegant Alternative: Simplified Fee Pool Approach
-Instead of complex per-proof multisig, consider this streamlined implementation:
+### 1. Single Burn+Fee Transaction Structure
+Replace complex multisig with atomic burn+fee transactions:
 
-#### 1. **Unified Consensus Threshold (7/10)**
-- Single consensus path: Require 7/10 active Eldernodes to agree on each proof
-- Eliminates FastPass/Fallback complexity while maintaining security
-- Faster settlement (only 9 block confirmations needed)
+```cpp
+struct BurnDepositTransaction {
+    std::vector<TransactionInput> inputs;
+    
+    // Two outputs in one transaction:
+    std::vector<TransactionOutput> outputs = {
+        // Output 0: Burn commitment (zero-value to burn address)
+        {
+            amount: burn_amount,           // 0.8 XFG or 8 XFG  
+            target: burn_commitment_key    // Provably unspendable
+        },
+        
+        // Output 1: Fier fee (locked until proof consensus)
+        {
+            amount: fier_fee,              // 0.008 XFG or 0.8 XFG
+            target: threshold_signature_key // Spendable by Elderfier consensus
+        }
+    };
+    
+    TransactionExtra extra = {
+        burn_type: SMALL_BURN | LARGE_BURN,
+        proof_request_id: H(tx_hash),
+        elderfier_quorum_keys: [P_FastPass, P_Fallback, P_Council]
+    };
+}
+```
 
-#### 2. **Fee Pool System**
-- Maintain an on-chain "Elderfier Fee Pool" contract/address
-- Burn deposits send fier_fees directly to the pool
-- Pool holds fees until Eldernode consensus proofs are submitted
+**User Cost Structure:**
+- **Small burn**: 0.008 XFG (burn) + 0.008 XFG (fier_fee) + 0.008 XFG (network) = **0.024 XFG total**
+- **Large burn**: 0.8 XFG (burn) + 0.8 XFG (fier_fee) + 0.008 XFG (network) = **1.608 XFG total**
 
-#### 3. **Direct Fee Claims**
-- Once consensus is reached, agreeing Eldernodes submit individual claim transactions
-- Each claim transaction includes the Eldernode's proof signature
-- Blockchain validates proof consensus before releasing funds
+### 2. Threshold Signature Consensus Paths
 
-#### 4. **Simplified User Flow**
-- User creates burn deposit with fier_fee (no multisig complexity)
-- Wait 9 blocks for consensus
-- Eldernodes automatically claim their fee shares
-- No ephemeral multisig creation or coordination required
+**Progressive Consensus with Elder Council Escalation:**
+```
+FastPass (3/3) → Fallback (6/8) → Elder Council Review
+     ↓              ↓                    ↓
+   Success        Success            Quorum Decision
+     ↓              ↓                    ↓
+  Distribute    Distribute         Action/Reject
+```
 
-#### Benefits of This Approach:
-- ✅ **Leverages existing primitives**: Uses standard Fuego transactions and RPC
-- ✅ **Reduced complexity**: No multisig key exchange or per-proof wallets
-- ✅ **Better UX**: Predictable 9-block settlement time
-- ✅ **Easier maintenance**: Simpler code paths and fewer failure modes
-- ✅ **FuegoTor compatible**: Works with existing privacy features
+**Implementation:**
+- Use MuSig2/FROST for aggregate public keys per consensus path
+- Deterministic Elder selection from `hash(burn_txid) mod ActiveElders`
+- Single unlock transaction with threshold signature (64 bytes vs 640+ for individual sigs)
 
-#### Implementation Priority:
-1. Build basic fee pool infrastructure in core/
-2. Add Eldernode claim transaction validation
-3. Integrate with existing burn deposit workflow
-4. Add consensus proof verification hooks
+### 3. Fake Request Prevention
 
-This approach achieves the same economic incentives while being much more practical to implement with the current codebase.
+**Multi-layer validation prevents abuse:**
 
-## 1. Block Confirmation Gating
-- Use `fastPassConfirmationBlocks`, `fallbackConfirmationBlocks`, and `fullConfirmationBlocks` from `BurnDepositConfig` to defer consensus requests.
-- Hook into the blockchain height updates (e.g., via `core::onNewBlock`) or poll `getCurrentBlockchainHeight()`.
-- Only invoke `requestEldernodeConsensus` after reaching the configured confirmation count for each consensus path.
+```cpp
+bool validateBurnTransaction(const Crypto::Hash& tx_hash) {
+    // 1. Transaction must exist on-chain
+    if (!blockchain.hasTransaction(tx_hash)) return false;
+    
+    // 2. Must be type 0x08 burn_deposit
+    if (tx.type != BURN_DEPOSIT_TYPE) return false;
+    
+    // 3. Must have valid burn commitment
+    if (!validateBurnCommitment(tx.extra)) return false;
+    
+    // 4. Must have required confirmations (3+ blocks)
+    if (getCurrentHeight() - tx.block_height < 3) return false;
+    
+    return true;
+}
+```
 
-## 2. P2P Message Plumbing
-- Define new P2P commands in `P2pProtocolDefinitions.h` for:
-  - Proof request messages (client → Eldernodes)
-  - Proof response messages (Eldernodes → client)
-- Implement handlers in `NetNode` or `MessageProcessor` to serialize/deserialize and dispatch these messages.
-- Ensure `NodeRpcProxy` or light-wallet code can send and receive these messages over the network.
+**Rate limiting and economic deterrents:**
+- Users pay fier_fee upfront (lost if submitting fake requests)
+- Max 10 proof requests per hour per IP
+- Exponential backoff for repeated fake requests
 
-## 3. UI/UX & Automatic Fallback Logic
-- Surface progress indicators: "Waiting for X/3 blocks", "FastPass consensus...", etc.
-- After `fastPassConfirmationBlocks`:
-  - Trigger 3/3 FastPass consensus.
-  - If successful, complete the proof flow.
-  - If unsuccessful, wait for `fallbackConfirmationBlocks`, then trigger 5/7 fallback consensus.
-- If fallback fails, wait for `fullConfirmationBlocks`, then trigger 7/10 full-quorum consensus.
+### 4. Elder Council Oversight
 
-## 4. Test Coverage
-- Unit-test each consensus threshold path:
-  - Mock/block height simulation to validate triggering at 3, 6, and 9 confirmations.
-  - Simulate partial signature responses to test FastPass failure and fallback logic.
-- Integration tests:
-  - Spin up multiple `Eldernode` stubs and verify end-to-end proof submission, consensus, and result verification.
+**Failed consensus escalation:**
+```cpp
+struct FailedConsensusCase {
+    Crypto::Hash burn_tx_hash;
+    uint8_t failure_reason;  // INVALID_PROOF | NETWORK_SYNC | BAD_ACTOR
+    std::vector<Crypto::PublicKey> non_responding_nodes;
+    uint64_t timestamp;
+    std::vector<ElderfierVote> council_votes;  // Requires >8 votes same choice
+};
+```
 
-## 5. Timeouts & Proof Expiration
-- Respect `proofExpirationSeconds` (from `BurnDepositConfig`) to avoid infinite waiting.
-- Implement timeout cleanup and error handling:
-  - If consensus is not reached within expiration, abort and return an error.
+**Elder Council Quorum Rules:**
+- Minimum 8/10 Elderfiers must vote same choice
+- Voting options: `INVALID_PROOF | NETWORK_ISSUE | BAD_ACTOR | ALL_GOOD`
+- Council decisions trigger automatic actions (slashing, network alerts, etc.)
 
-## 6. Cleanup & Configuration
-- Expose `BurnDepositConfig` parameters in configuration files and wallet UIs.
-- Provide sensible defaults:
-  - `fastPassConfirmationBlocks = 3`
-  - `fallbackConfirmationBlocks = 6`
-  - `fullConfirmationBlocks = 9`
-  - `proofExpirationSeconds = 3600`
+## Implementation Components
 
----
+### Core/Daemon Requirements
+- Extend service node quorum engine with `PROOF_QUORUM` type
+- Add quorum selection hook: `core::getProofQuorum(height, path)`
+- Implement threshold signature validation in transaction processing
 
-## 7. Fee Splits (fier_fees)
+### P2P Message Extensions
+**Minimal new messages (reuse existing infrastructure):**
+```
+ID   Direction     Purpose
+---- ------------- -----------------------------------------
+0x52 wallet → node RequestProofSign(tx_hash, path=FAST|FB|COUNCIL)
+0x53 node   → node ProofSignature(tx_hash, partial_sig, pubkey)
+0x54 node   → node CouncilVote(case_id, vote_choice, signature)
+```
 
-To reward Eldernodes for participating in consensus, configure and distribute proof fees as follows:
+### Wallet RPC Endpoints
+```cpp
+// Create atomic burn+fee transaction
+TransactionHash createBurnProofRequest(uint64_t burn_amount, BurnType type);
 
-1. **Configure proof fee amounts** in `BurnDepositConfig`:
-   - `smallBurnProofFee = 80000;`      // 0.008 XFG for standard burns
-   - `largeBurnProofFee = 8000000;`     // 0.8 XFG for large burns
+// Start consensus process
+bool submitProofBurn(const Crypto::Hash& txid);
 
-2. **After consensus verification** (in `verifyEldernodeConsensus` or immediately after):
-   - Retrieve the list of Eldernode IDs whose signatures matched: `consensus.eldernodeIds`.
-   - Determine which fee applies based on the burn deposit type:
-     - If `proof.burnAmount == BURN_DEPOSIT_STANDARD_AMOUNT`, use `smallBurnProofFee`.
-     - If `proof.burnAmount == BURN_DEPOSIT_LARGE_AMOUNT`, use `largeBurnProofFee`.
+// Check consensus status
+ProofStatus getProofStatus(const Crypto::Hash& txid);
+```
 
-3. **Compute per-node fee**:
-   ```cpp
-   uint64_t totalFee = (proof.burnAmount == BURN_DEPOSIT_LARGE_AMOUNT)
-       ? config.largeBurnProofFee
-       : config.smallBurnProofFee;
-   size_t winners = consensus.eldernodeIds.size();
-   uint64_t perNodeFee = totalFee / winners;
-   uint64_t remainder = totalFee % winners;  // if needed
-   ```
+### On-Chain Proof Storage
+**Compact proof format (99 bytes vs 640+ for individual signatures):**
+```cpp
+struct CompactElderfierProof {
+    Crypto::Hash burn_tx_hash;           // 32 bytes
+    uint8_t consensus_path;              // 1 byte (FastPass/Fallback/Council)
+    Crypto::Signature threshold_sig;     // 64 bytes  
+    std::vector<uint8_t> winner_bitmap;  // ~2 bytes for 10 Elderfiers
+};
+```
 
-4. **Distribute fees**:
-   - For each matching Eldernode ID:
-     - Issue a payment of `perNodeFee` XFG via the payment service or wallet RPC.
-   - Optionally allocate the `remainder` to the treasury or burn it.
+## Security Benefits
 
-5. **User Cost Breakdown**: When creating the burn-deposit transaction that locks up the proof fee, the user must also pay the network minimum transaction fee (0.008 XFG). Total outlay examples:
-   - **Small burn deposit**: 0.008 XFG proof fee + 0.008 XFG network fee = **0.016 XFG total**
-   - **Large burn deposit**: 0.8 XFG proof fee + 0.008 XFG network fee = **0.808 XFG total**
+1. **Immutable Audit Trail**: Prevents retroactive manipulation of consensus results
+2. **Double-Spend Prevention**: On-chain proofs can't be replayed
+3. **Economic Deterrent**: Upfront fier_fee payment deters fake requests
+4. **Elder Council Oversight**: Human review for edge cases and bad actors
+5. **Compact Footprint**: Threshold signatures minimize chain bloat
 
-6. **Record distributions**:
-   - Log or store a record of which nodes were paid and the amounts.
-   - Expose this data via metrics or a UI component for transparency.
+## Migration Path
 
-With this in place, proof fees are split evenly among all Eldernodes whose proofs matched consensus, ensuring dynamic and fair reward distribution based on actual network size.
+**Phase 1**: Implement threshold signature consensus with single-path payouts
+**Phase 2**: Add Elder Council voting and failed consensus escalation  
+**Phase 3**: Optimize with batched payouts and enhanced metrics
 
-## 8. Ephemeral Per-Proof Multisig Workflow
-1) Query the current active Eldernode public keys (N nodes) via IEldernodeIndexManager.
-2) Initiate the CryptoNote multisig key-exchange protocol among those N nodes to derive a one-time K-of-N multisig address.
-3) Build the burn-deposit transaction with two outputs:
-   - The standard burn output (commitment tag, zero-XFG burn).
-   - A second output sending the fier-fee into the new multisig address.
-4) Wait for the configured confirmations (FastPass/Fallback/FullQuorum) on the burn-deposit TX and complete the P2P proof signature round.
-5) Once consensus is reached, collect at least K-of-N multisig spending shares from the agreeing nodes.
-6) Perform the CryptoNote multisig signing protocol to assemble the payout transaction, splitting the fee UTXO evenly among the agreeing Eldernodes.
-7) Broadcast the payout transaction on-chain; all fee distributions are then immutable and auditable.
-
-This guide serves as a checklist for developers to complete the proof flow implementation. Feel free to expand with code snippets or IDE-specific instructions as needed.
+This approach eliminates multisig complexity while maintaining all security guarantees and providing a clear escalation path for disputed cases.

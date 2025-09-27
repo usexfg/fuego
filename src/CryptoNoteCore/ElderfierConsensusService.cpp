@@ -11,6 +11,7 @@
 #include <chrono>
 #include <thread>
 #include <optional>
+#include <iomanip>
 
 namespace CryptoNote {
 
@@ -134,6 +135,10 @@ bool ElderfierConsensusService::submitPartialSignature(const Crypto::Hash& burn_
                            << "/" << request.selected_elders.size()
                            << " for " << Common::podToHex(burn_tx_hash);
 
+    // TODO: In real implementation, we'd analyze if this signature conflicts with majority
+    // For now, record participation (correct/incorrect determination happens later)
+    recordElderfierParticipation(signer);
+
     // Check if we have enough signatures
     uint32_t required_signatures = 0;
     switch (request.path) {
@@ -217,24 +222,23 @@ std::vector<std::string> ElderfierConsensusService::getCouncilVotes(const Crypto
     return votes;
 }
 
-// Strike tracking implementation
+// Strike tracking implementation for Elderfiers who provide conflicting proofs
 void ElderfierConsensusService::recordConsensusFailure(const ConsensusFailureDetail& failure) {
     std::lock_guard<std::mutex> lock(m_strikes_mutex);
 
-    // Record strikes for non-responding Eldernodes
-    for (const auto& non_responder : failure.non_responding_elders) {
-        m_elderfier_strikes[non_responder]++;
+    uint64_t current_time = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
 
-        m_logger(Logging::WARNING) << "Elderfier " << Common::podToHex(non_responder)
-                                  << " strike count: " << m_elderfier_strikes[non_responder];
+    // TODO: In real implementation, we'd analyze which Elderfiers provided proofs
+    // that conflicted with the majority consensus and give them strikes
+    // For now, this logs the failure for council review
 
-        // Check if Elderfier has reached 3 strikes
-        if (m_elderfier_strikes[non_responder] >= 3) {
-            m_logger(Logging::ERROR) << "Elderfier " << Common::podToHex(non_responder)
-                                    << " has reached 3 strikes - should be slashed";
-            // TODO: Trigger slashing mechanism
-        }
-    }
+    m_logger(Logging::INFO) << "Recording consensus failure for "
+                           << Common::podToHex(failure.burn_tx_hash);
+    m_logger(Logging::INFO) << "Failure reason: " << failure.failure_reason
+                           << ", Selected: " << failure.selected_elders.size()
+                           << ", Responding: " << failure.responding_elders.size()
+                           << ", Non-responding: " << failure.non_responding_elders.size();
 
     // Also record the failure detail in the proof request
     {
@@ -246,21 +250,79 @@ void ElderfierConsensusService::recordConsensusFailure(const ConsensusFailureDet
     }
 }
 
+void ElderfierConsensusService::recordElderfierParticipation(const Crypto::PublicKey& elder_key) {
+    std::lock_guard<std::mutex> lock(m_strikes_mutex);
+
+    auto& record = m_elderfier_strikes[elder_key];
+    record.total_proofs_provided++;
+
+    uint64_t current_time = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+
+    if (record.first_strike_time == 0) {
+        record.first_strike_time = current_time;
+    }
+    record.last_strike_time = current_time;
+
+    m_logger(Logging::TRACE) << "Elderfier " << Common::podToHex(elder_key)
+                           << " participation recorded (proofs: " << record.total_proofs_provided << ")";
+}
+
 uint32_t ElderfierConsensusService::getElderfierStrikes(const Crypto::PublicKey& elder_key) {
     std::lock_guard<std::mutex> lock(m_strikes_mutex);
     auto it = m_elderfier_strikes.find(elder_key);
-    return (it != m_elderfier_strikes.end()) ? it->second : 0;
+    return (it != m_elderfier_strikes.end()) ? it->second.strike_count : 0;
 }
 
-std::vector<std::pair<Crypto::PublicKey, uint32_t>> ElderfierConsensusService::getAllStrikes() {
+StrikeRecord ElderfierConsensusService::getElderfierRecord(const Crypto::PublicKey& elder_key) {
+    std::lock_guard<std::mutex> lock(m_strikes_mutex);
+    auto it = m_elderfier_strikes.find(elder_key);
+    if (it != m_elderfier_strikes.end()) {
+        return it->second;
+    }
+
+    // Return empty record for Elderfiers with no strikes
+    StrikeRecord empty_record = {0, 0, 0, 0};
+    return empty_record;
+}
+
+std::vector<std::pair<Crypto::PublicKey, StrikeRecord>> ElderfierConsensusService::getAllStrikes() {
     std::lock_guard<std::mutex> lock(m_strikes_mutex);
 
-    std::vector<std::pair<Crypto::PublicKey, uint32_t>> strikes;
+    std::vector<std::pair<Crypto::PublicKey, StrikeRecord>> strikes;
     for (const auto& pair : m_elderfier_strikes) {
         strikes.push_back(pair);
     }
 
     return strikes;
+}
+
+std::string ElderfierConsensusService::generateCouncilReviewMessage(const Crypto::PublicKey& elder_key) {
+    const auto& record = getElderfierRecord(elder_key);
+
+    if (record.strike_count < 3) {
+        return ""; // Only generate messages for Elderfiers with 3+ strikes
+    }
+
+    std::ostringstream msg;
+    msg << "ELDERFIER COUNCIL REVIEW REQUIRED\n";
+    msg << "================================\n\n";
+    msg << "An Elderfier has provided proof AGAINST consensus " << record.strike_count
+        << " times in " << record.total_proofs_provided << " total proofs submitted.\n\n";
+    msg << "Elderfier ID: " << Common::podToHex(elder_key) << "\n";
+    msg << "Strike Count: " << record.strike_count << "\n";
+    msg << "Total Proofs Submitted: " << record.total_proofs_provided << "\n";
+    msg << "Strike Rate: " << std::fixed << std::setprecision(2)
+        << (static_cast<double>(record.strike_count) / record.total_proofs_provided * 100) << "%\n\n";
+
+    msg << "Please vote your decision for action:\n";
+    msg << "a) SLASH_ALL - Slash all Elderfiers with 3+ strikes\n";
+    msg << "b) SLASH_HALF - Slash 50% of Elderfiers with 3+ strikes\n";
+    msg << "c) SLASH_NONE - No slashing, continue monitoring\n";
+    msg << "d) REVIEW_MORE - Request additional investigation\n\n";
+    msg << "Reply with your vote (a/b/c/d) signed with your Elderfier key.";
+
+    return msg.str();
 }
 
 std::optional<ConsensusFailureDetail> ElderfierConsensusService::getDetailedFailureInfo(const Crypto::Hash& burn_tx_hash) {
@@ -286,15 +348,23 @@ ConsensusFailureDetail ElderfierConsensusService::createFailureDetail(const Proo
         std::chrono::system_clock::now().time_since_epoch()).count();
     detail.failure_reason = reason;
 
-    // Categorize responding vs non-responding Eldernodes
-    // In a real implementation, we'd track which Eldernodes actually responded
-    // For now, we'll simulate this based on signatures received
+    // In a real implementation, we'd track which Eldernodes actually responded to our P2P requests
+    // For now, we'll categorize based on whether they were selected but didn't contribute to consensus
+    // The key insight: strikes are for Elderfiers who were selected for consensus but failed to participate properly
+
+    // Non-responding = selected for consensus but didn't provide valid signatures
+    // This could be due to: network issues, malicious behavior, or being offline
     for (const auto& elder : request.selected_elders) {
-        // This is a simplified simulation - in reality we'd track actual responses
-        if (request.signatures_received > 0) {
-            detail.responding_elders.push_back(elder);
-        } else {
+        // TODO: In real implementation, track which specific Eldernodes responded vs didn't
+        // For now, simplified: if we got any signatures, assume some responded
+        // In production: track per-Eldernode response status
+        if (request.signatures_received == 0) {
+            // No signatures received - all selected Eldernodes are non-responding
             detail.non_responding_elders.push_back(elder);
+        } else {
+            // Some signatures received - in real implementation, check which specific Eldernodes responded
+            // For now, simplified: assume all selected Eldernodes either responded or didn't
+            detail.responding_elders.push_back(elder);
         }
     }
 

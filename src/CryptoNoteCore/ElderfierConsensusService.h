@@ -70,6 +70,7 @@ struct ConsensusResult {
 
 class ElderfierConsensusService : public IObservable<ElderfierConsensusService> {
 public:
+    struct StrikeRecord;
     ElderfierConsensusService(ICore& core, IEldernodeIndexManager& elderIndex, Logging::ILogger& logger);
     ~ElderfierConsensusService();
 
@@ -88,12 +89,21 @@ public:
     std::vector<std::string> getCouncilVotes(const Crypto::Hash& burn_tx_hash);
 
     // Strike tracking system
+    struct StrikeRecord {
+        uint32_t strike_count;
+        uint32_t total_rounds_participated;
+        uint64_t first_strike_time;
+        uint64_t last_strike_time;
+    };
     void recordConsensusFailure(const ConsensusFailureDetail& failure);
+    void recordElderfierParticipation(const Crypto::PublicKey& elder_key);
     uint32_t getElderfierStrikes(const Crypto::PublicKey& elder_key);
-    std::vector<std::pair<Crypto::PublicKey, uint32_t>> getAllStrikes();
+    StrikeRecord getElderfierRecord(const Crypto::PublicKey& elder_key);
+    std::vector<std::pair<Crypto::PublicKey, StrikeRecord>> getAllStrikes();
 
     // Council review with detailed failure information
     std::optional<ConsensusFailureDetail> getDetailedFailureInfo(const Crypto::Hash& burn_tx_hash);
+    std::string generateCouncilReviewMessage(const Crypto::PublicKey& elder_key);
 
 private:
     // Core references
@@ -117,8 +127,14 @@ private:
     std::unordered_map<Crypto::Hash, std::vector<std::pair<std::string, Crypto::Signature>>> m_council_votes;
     mutable std::mutex m_votes_mutex;
 
-    // Strike tracking for Elderfiers
-    std::unordered_map<Crypto::PublicKey, uint32_t> m_elderfier_strikes;
+    // Strike tracking for Elderfiers who provide conflicting proofs
+    struct StrikeRecord {
+        uint32_t strike_count;           // Times provided proof against majority consensus
+        uint32_t total_proofs_provided;  // Total proofs submitted (both correct and incorrect)
+        uint64_t first_strike_time;
+        uint64_t last_strike_time;
+    };
+    std::unordered_map<Crypto::PublicKey, StrikeRecord> m_elderfier_strikes;
     mutable std::mutex m_strikes_mutex;
 
     // Timer for consensus timeouts
@@ -133,6 +149,7 @@ private:
     void escalateToFallback(const Crypto::Hash& burn_tx_hash);
     void escalateToCouncil(const Crypto::Hash& burn_tx_hash);
     void cleanupExpiredProofs();
+    ConsensusFailureDetail createFailureDetail(const ProofRequest& request, const std::string& reason);
 
     // Timer thread
     void timerLoop();

@@ -106,9 +106,16 @@ struct FailedConsensusCase {
 3. **REJECT + Async Council Review**: If Fallback fails, immediately reject the proof and send detailed failure case to Elder Council inbox for review (doesn't block the rejection)
 
 **Strike-Based Governance System:**
-- **Strike Tracking**: Elderfiers accumulate strikes for non-participation or failures
+- **Strike Tracking**: Elderfiers accumulate strikes for providing proofs that conflict with majority consensus
 - **3 Strikes Rule**: Elderfiers with 3+ strikes are flagged for slashing
-- **Council Review**: Failed consensus cases include detailed logs of which Elderfiers responded, which didn't, and failure reasons
+- **Detailed Records**: System tracks total proofs submitted, strike rate, and timestamps
+- **Council Review**: Failed consensus cases include detailed logs of which Elderfiers provided conflicting proofs
+
+**Strike Management:**
+- Strikes are recorded for Elderfiers who submit proofs that conflict with majority consensus
+- Participation is tracked for all Elderfiers who submit proofs (both correct and incorrect)
+- Strike rate = (strikes / total_proofs_submitted) × 100%
+- When an Elderfier reaches 3+ strikes, a council review message is automatically generated
 
 **Elder Council Voting (Manual Process):**
 - **Minimum 8/10 Elderfiers** must vote same choice
@@ -119,6 +126,27 @@ struct FailedConsensusCase {
   - `SLASH_NONE`: No slashing, continue monitoring
   - `REVIEW_MORE`: Request additional investigation
 - **Detailed Review Messages**: Include logs of consensus attempts, responding/non-responding nodes, and penalty recommendations
+
+**Example Council Review Message:**
+```
+ELDERFIER COUNCIL REVIEW REQUIRED
+================================
+
+An Elderfier has provided proof AGAINST consensus 3 times in 15 total proofs submitted.
+
+Elderfier ID: a1b2c3d4e5f67890123456789012345678901234567890123456789012
+Strike Count: 3
+Total Proofs Submitted: 15
+Strike Rate: 20.00%
+
+Please vote your decision for action:
+a) SLASH_ALL - Slash all Elderfiers with 3+ strikes
+b) SLASH_HALF - Slash 50% of Elderfiers with 3+ strikes
+c) SLASH_NONE - No slashing, continue monitoring
+d) REVIEW_MORE - Request additional investigation
+
+Reply with your vote (a/b/c/d) signed with your Elderfier key.
+```
 
 ## Implementation Components
 
@@ -138,7 +166,7 @@ ID   Direction     Purpose
 ```
 
 ### Wallet RPC Endpoints
-```cpp
+   ```cpp
 // Create atomic burn+fee transaction
 TransactionHash createBurnProofRequest(uint64_t burn_amount, BurnType type);
 

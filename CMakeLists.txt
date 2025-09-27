@@ -47,6 +47,13 @@ configure_file(
 add_custom_target(generate_version DEPENDS "${PROJECT_BINARY_DIR}/version/version.h")
 include_directories(SYSTEM "${PROJECT_BINARY_DIR}/version")
 
+# Ensure core headers are found before platform-specific overlays
+include_directories(BEFORE
+  ${PROJECT_SOURCE_DIR}/src
+  ${PROJECT_SOURCE_DIR}/include
+  ${PROJECT_SOURCE_DIR}/external
+)
+
 if(APPLE OR FREEBSD)
     include_directories(SYSTEM /usr/include/malloc)
     if(POLICY CMP0042)

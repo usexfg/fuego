@@ -38,6 +38,17 @@ enum class ConsensusStatus {
     COUNCIL_REVIEW = 4
 };
 
+struct ConsensusFailureDetail {
+    Crypto::Hash burn_tx_hash;
+    ConsensusPath path_attempted;
+    std::vector<Crypto::PublicKey> selected_elders;
+    std::vector<Crypto::PublicKey> responding_elders;
+    std::vector<Crypto::PublicKey> non_responding_elders;
+    uint32_t signatures_received;
+    uint64_t failure_time;
+    std::string failure_reason; // "TIMEOUT", "INSUFFICIENT_SIGNATURES", "INVALID_SIGNATURES"
+};
+
 struct ProofRequest {
     Crypto::Hash burn_tx_hash;
     ConsensusPath path;
@@ -46,6 +57,7 @@ struct ProofRequest {
     std::vector<uint8_t> aggregated_signature;
     uint32_t signatures_received;
     ConsensusStatus status;
+    std::vector<ConsensusFailureDetail> failure_history;
 };
 
 struct ConsensusResult {
@@ -75,6 +87,14 @@ public:
     bool submitCouncilVote(const Crypto::Hash& burn_tx_hash, const std::string& vote_choice, const Crypto::Signature& signature);
     std::vector<std::string> getCouncilVotes(const Crypto::Hash& burn_tx_hash);
 
+    // Strike tracking system
+    void recordConsensusFailure(const ConsensusFailureDetail& failure);
+    uint32_t getElderfierStrikes(const Crypto::PublicKey& elder_key);
+    std::vector<std::pair<Crypto::PublicKey, uint32_t>> getAllStrikes();
+
+    // Council review with detailed failure information
+    std::optional<ConsensusFailureDetail> getDetailedFailureInfo(const Crypto::Hash& burn_tx_hash);
+
 private:
     // Core references
     ICore& m_core;
@@ -96,6 +116,10 @@ private:
     // Elder Council votes for failed consensus
     std::unordered_map<Crypto::Hash, std::vector<std::pair<std::string, Crypto::Signature>>> m_council_votes;
     mutable std::mutex m_votes_mutex;
+
+    // Strike tracking for Elderfiers
+    std::unordered_map<Crypto::PublicKey, uint32_t> m_elderfier_strikes;
+    mutable std::mutex m_strikes_mutex;
 
     // Timer for consensus timeouts
     std::atomic<bool> m_running;

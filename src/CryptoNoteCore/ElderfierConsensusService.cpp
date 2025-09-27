@@ -155,7 +155,8 @@ bool ElderfierConsensusService::submitPartialSignature(const Crypto::Hash& burn_
             m_logger(Logging::INFO) << "Consensus completed for " << Common::podToHex(burn_tx_hash)
                                    << " with " << request.signatures_received << " signatures";
         } else {
-            // Aggregation failed - mark as failed and escalate to council review
+            // Aggregation failed - record failure and escalate to council review
+            recordConsensusFailure(createFailureDetail(request, "INSUFFICIENT_SIGNATURES"));
             request.status = ConsensusStatus::FAILED;
             escalateToCouncil(burn_tx_hash);
         }
@@ -185,9 +186,9 @@ bool ElderfierConsensusService::submitCouncilVote(const Crypto::Hash& burn_tx_ha
                                                   const Crypto::Signature& signature) {
     std::lock_guard<std::mutex> lock(m_votes_mutex);
 
-    // Validate vote choice
-    if (vote_choice != "INVALID" && vote_choice != "NETWORK_ISSUE" &&
-        vote_choice != "BAD_ACTOR" && vote_choice != "ALL_GOOD") {
+    // Validate vote choice - now based on aggregate slashing decisions
+    if (vote_choice != "SLASH_ALL" && vote_choice != "SLASH_HALF" &&
+        vote_choice != "SLASH_NONE" && vote_choice != "REVIEW_MORE") {
         m_logger(Logging::WARNING) << "Invalid vote choice: " << vote_choice;
         return false;
     }
@@ -216,7 +217,91 @@ std::vector<std::string> ElderfierConsensusService::getCouncilVotes(const Crypto
     return votes;
 }
 
+// Strike tracking implementation
+void ElderfierConsensusService::recordConsensusFailure(const ConsensusFailureDetail& failure) {
+    std::lock_guard<std::mutex> lock(m_strikes_mutex);
+
+    // Record strikes for non-responding Eldernodes
+    for (const auto& non_responder : failure.non_responding_elders) {
+        m_elderfier_strikes[non_responder]++;
+
+        m_logger(Logging::WARNING) << "Elderfier " << Common::podToHex(non_responder)
+                                  << " strike count: " << m_elderfier_strikes[non_responder];
+
+        // Check if Elderfier has reached 3 strikes
+        if (m_elderfier_strikes[non_responder] >= 3) {
+            m_logger(Logging::ERROR) << "Elderfier " << Common::podToHex(non_responder)
+                                    << " has reached 3 strikes - should be slashed";
+            // TODO: Trigger slashing mechanism
+        }
+    }
+
+    // Also record the failure detail in the proof request
+    {
+        std::lock_guard<std::mutex> proofs_lock(m_proofs_mutex);
+        auto it = m_active_proofs.find(failure.burn_tx_hash);
+        if (it != m_active_proofs.end()) {
+            it->second.failure_history.push_back(failure);
+        }
+    }
+}
+
+uint32_t ElderfierConsensusService::getElderfierStrikes(const Crypto::PublicKey& elder_key) {
+    std::lock_guard<std::mutex> lock(m_strikes_mutex);
+    auto it = m_elderfier_strikes.find(elder_key);
+    return (it != m_elderfier_strikes.end()) ? it->second : 0;
+}
+
+std::vector<std::pair<Crypto::PublicKey, uint32_t>> ElderfierConsensusService::getAllStrikes() {
+    std::lock_guard<std::mutex> lock(m_strikes_mutex);
+
+    std::vector<std::pair<Crypto::PublicKey, uint32_t>> strikes;
+    for (const auto& pair : m_elderfier_strikes) {
+        strikes.push_back(pair);
+    }
+
+    return strikes;
+}
+
+std::optional<ConsensusFailureDetail> ElderfierConsensusService::getDetailedFailureInfo(const Crypto::Hash& burn_tx_hash) {
+    std::lock_guard<std::mutex> lock(m_proofs_mutex);
+
+    auto it = m_active_proofs.find(burn_tx_hash);
+    if (it == m_active_proofs.end() || it->second.failure_history.empty()) {
+        return std::nullopt;
+    }
+
+    // Return the most recent failure
+    return it->second.failure_history.back();
+}
+
 // Private methods
+
+ConsensusFailureDetail ElderfierConsensusService::createFailureDetail(const ProofRequest& request, const std::string& reason) {
+    ConsensusFailureDetail detail;
+    detail.burn_tx_hash = request.burn_tx_hash;
+    detail.path_attempted = request.path;
+    detail.selected_elders = request.selected_elders;
+    detail.failure_time = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    detail.failure_reason = reason;
+
+    // Categorize responding vs non-responding Eldernodes
+    // In a real implementation, we'd track which Eldernodes actually responded
+    // For now, we'll simulate this based on signatures received
+    for (const auto& elder : request.selected_elders) {
+        // This is a simplified simulation - in reality we'd track actual responses
+        if (request.signatures_received > 0) {
+            detail.responding_elders.push_back(elder);
+        } else {
+            detail.non_responding_elders.push_back(elder);
+        }
+    }
+
+    detail.signatures_received = request.signatures_received;
+
+    return detail;
+}
 
 std::vector<Crypto::PublicKey> ElderfierConsensusService::selectEldernodeQuorum(const Crypto::Hash& burn_tx_hash,
                                                                               ConsensusPath path) {
@@ -344,7 +429,8 @@ void ElderfierConsensusService::processConsensusTimeout(const Crypto::Hash& burn
             // FastPass timed out, escalate to Fallback
             escalateToFallback(burn_tx_hash);
         } else if (request.path == ConsensusPath::FALLBACK) {
-            // Fallback timed out, escalate to Council Review and mark as failed
+            // Fallback timed out - record failure and escalate to Council Review
+            recordConsensusFailure(createFailureDetail(request, "TIMEOUT"));
             request.status = ConsensusStatus::FAILED;
             escalateToCouncil(burn_tx_hash);
         }
@@ -391,8 +477,16 @@ void ElderfierConsensusService::escalateToCouncil(const Crypto::Hash& burn_tx_ha
     request.status = ConsensusStatus::FAILED;
     request.path = ConsensusPath::COUNCIL_REVIEW;
 
-    m_logger(Logging::INFO) << "Consensus failed for " << Common::podToHex(burn_tx_hash)
-                           << " - escalating to Elder Council review";
+    // Record the failure for council review
+    if (!request.failure_history.empty()) {
+        const auto& latest_failure = request.failure_history.back();
+
+        m_logger(Logging::INFO) << "Consensus failed for " << Common::podToHex(burn_tx_hash)
+                               << " - escalating to Elder Council review";
+        m_logger(Logging::INFO) << "Failure details: " << latest_failure.failure_reason
+                               << ", signatures received: " << latest_failure.signatures_received
+                               << ", non-responding nodes: " << latest_failure.non_responding_elders.size();
+    }
 }
 
 void ElderfierConsensusService::cleanupExpiredProofs() {

@@ -103,13 +103,22 @@ struct FailedConsensusCase {
 **Consensus Flow:**
 1. **FastPass (3/3)**: Attempt consensus with 3 Eldernodes
 2. **Fallback (6/8)**: If FastPass fails, attempt with 8 Eldernodes (6 required)
-3. **REJECT + Async Council Review**: If Fallback fails, immediately reject the proof and send failed case to Elder Council inbox for review (doesn't block the rejection)
+3. **REJECT + Async Council Review**: If Fallback fails, immediately reject the proof and send detailed failure case to Elder Council inbox for review (doesn't block the rejection)
 
-**Elder Council Quorum Rules:**
-- Minimum 8/10 Elderfiers must vote same choice
-- Voting options: `INVALID_PROOF | NETWORK_ISSUE | BAD_ACTOR | ALL_GOOD`
-- Council decisions trigger automatic actions (slashing, network alerts, etc.)
-- Failed consensus cases are sent to council inbox for review (async, doesn't block the rejection)
+**Strike-Based Governance System:**
+- **Strike Tracking**: Elderfiers accumulate strikes for non-participation or failures
+- **3 Strikes Rule**: Elderfiers with 3+ strikes are flagged for slashing
+- **Council Review**: Failed consensus cases include detailed logs of which Elderfiers responded, which didn't, and failure reasons
+
+**Elder Council Voting (Manual Process):**
+- **Minimum 8/10 Elderfiers** must vote same choice
+- **Aggregate Voting**: Council votes on slashing actions, not against specific Elderfiers
+- **Voting Options:**
+  - `SLASH_ALL`: Slash all Elderfiers with 3+ strikes
+  - `SLASH_HALF`: Slash 50% of Elderfiers with 3+ strikes
+  - `SLASH_NONE`: No slashing, continue monitoring
+  - `REVIEW_MORE`: Request additional investigation
+- **Detailed Review Messages**: Include logs of consensus attempts, responding/non-responding nodes, and penalty recommendations
 
 ## Implementation Components
 

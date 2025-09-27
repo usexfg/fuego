@@ -290,6 +290,7 @@ namespace CryptoNote
   /************************************************************************/
   /* Elderfier Proof System Commands                                      */
   /* Consensus Flow: FastPass(3/3) -> Fallback(6/8) -> Reject+Council   */
+  /* Council Review: Strike-based governance with aggregate voting       */
   /************************************************************************/
   struct COMMAND_REQUEST_ELDERFIER_PROOF
   {
@@ -354,18 +355,23 @@ namespace CryptoNote
 
     // Used when consensus fails - sends failed case to Elder Council for review
     // This is async and doesn't block the rejection of the proof
+    // Voting is on aggregate behavior: "there have been x strikes - should we slash all, slash half, or slash none"
     struct request
     {
       Crypto::Hash burn_tx_hash;
       uint8_t failure_reason;  // INVALID_PROOF=0, NETWORK_SYNC=1, BAD_ACTOR=2
       std::vector<Crypto::PublicKey> non_responding_nodes;
-      std::string vote_choice;  // "INVALID" | "NETWORK_ISSUE" | "BAD_ACTOR" | "ALL_GOOD"
+      std::vector<Crypto::PublicKey> responding_nodes;
+      uint32_t signatures_received;
+      std::string vote_choice;  // "SLASH_ALL" | "SLASH_HALF" | "SLASH_NONE" | "REVIEW_MORE" (aggregate slashing decisions)
       Crypto::Signature vote_signature;
 
       void serialize(ISerializer& s) {
         KV_MEMBER(burn_tx_hash)
         KV_MEMBER(failure_reason)
         serializeAsBinary(non_responding_nodes, "non_responding_nodes", s);
+        serializeAsBinary(responding_nodes, "responding_nodes", s);
+        KV_MEMBER(signatures_received)
         KV_MEMBER(vote_choice)
         KV_MEMBER(vote_signature)
       }

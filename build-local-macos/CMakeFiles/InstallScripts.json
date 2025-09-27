@@ -1,0 +1,13 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/aejt/fuego-cli-suite/build-local-macos/cmake_install.cmake",
+		"/Users/aejt/fuego-cli-suite/build-local-macos/external/cmake_install.cmake",
+		"/Users/aejt/fuego-cli-suite/build-local-macos/external/miniupnpc/cmake_install.cmake",
+		"/Users/aejt/fuego-cli-suite/build-local-macos/src/cmake_install.cmake",
+		"/Users/aejt/fuego-cli-suite/build-local-macos/src/EldernodeIndexManager/cmake_install.cmake",
+		"/Users/aejt/fuego-cli-suite/build-local-macos/src/BurnDepositValidationService/cmake_install.cmake",
+		"/Users/aejt/fuego-cli-suite/build-local-macos/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

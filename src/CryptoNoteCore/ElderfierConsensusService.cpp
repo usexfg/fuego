@@ -254,7 +254,7 @@ void ElderfierConsensusService::recordElderfierParticipation(const Crypto::Publi
     std::lock_guard<std::mutex> lock(m_strikes_mutex);
 
     auto& record = m_elderfier_strikes[elder_key];
-    record.total_proofs_provided++;
+    record.total_rounds_participated++;
 
     uint64_t current_time = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
@@ -265,7 +265,7 @@ void ElderfierConsensusService::recordElderfierParticipation(const Crypto::Publi
     record.last_strike_time = current_time;
 
     m_logger(Logging::TRACE) << "Elderfier " << Common::podToHex(elder_key)
-                           << " participation recorded (proofs: " << record.total_proofs_provided << ")";
+                           << " participation recorded (rounds: " << record.total_rounds_participated << ")";
 }
 
 uint32_t ElderfierConsensusService::getElderfierStrikes(const Crypto::PublicKey& elder_key) {
@@ -274,7 +274,7 @@ uint32_t ElderfierConsensusService::getElderfierStrikes(const Crypto::PublicKey&
     return (it != m_elderfier_strikes.end()) ? it->second.strike_count : 0;
 }
 
-StrikeRecord ElderfierConsensusService::getElderfierRecord(const Crypto::PublicKey& elder_key) {
+ElderfierConsensusService::StrikeRecord ElderfierConsensusService::getElderfierRecord(const Crypto::PublicKey& elder_key) {
     std::lock_guard<std::mutex> lock(m_strikes_mutex);
     auto it = m_elderfier_strikes.find(elder_key);
     if (it != m_elderfier_strikes.end()) {
@@ -286,7 +286,7 @@ StrikeRecord ElderfierConsensusService::getElderfierRecord(const Crypto::PublicK
     return empty_record;
 }
 
-std::vector<std::pair<Crypto::PublicKey, StrikeRecord>> ElderfierConsensusService::getAllStrikes() {
+std::vector<std::pair<Crypto::PublicKey, ElderfierConsensusService::StrikeRecord>> ElderfierConsensusService::getAllStrikes() {
     std::lock_guard<std::mutex> lock(m_strikes_mutex);
 
     std::vector<std::pair<Crypto::PublicKey, StrikeRecord>> strikes;
@@ -308,12 +308,14 @@ std::string ElderfierConsensusService::generateCouncilReviewMessage(const Crypto
     msg << "ELDERFIER COUNCIL REVIEW REQUIRED\n";
     msg << "================================\n\n";
     msg << "An Elderfier has provided proof AGAINST consensus " << record.strike_count
-        << " times in " << record.total_proofs_provided << " total proofs submitted.\n\n";
-    msg << "Elderfier ID: " << Common::podToHex(elder_key) << "\n";
+        << " times in " << record.total_rounds_participated << " total rounds participated.\n\n";
     msg << "Strike Count: " << record.strike_count << "\n";
-    msg << "Total Proofs Submitted: " << record.total_proofs_provided << "\n";
+    msg << "Total Rounds Participated: " << record.total_rounds_participated << "\n";
     msg << "Strike Rate: " << std::fixed << std::setprecision(2)
-        << (static_cast<double>(record.strike_count) / record.total_proofs_provided * 100) << "%\n\n";
+        << (static_cast<double>(record.strike_count) / record.total_rounds_participated * 100) << "%\n\n";
+    msg << "Evidence of conflicting proof submissions in consensus rounds:\n";
+    msg << "- Round participation with incorrect consensus proofs\n";
+    msg << "- Strike accumulation over multiple consensus attempts\n\n";
 
     msg << "Please vote your decision for action:\n";
     msg << "a) SLASH_ALL - Slash all Elderfiers with 3+ strikes\n";

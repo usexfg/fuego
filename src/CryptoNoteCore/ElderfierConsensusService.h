@@ -127,13 +127,7 @@ private:
     std::unordered_map<Crypto::Hash, std::vector<std::pair<std::string, Crypto::Signature>>> m_council_votes;
     mutable std::mutex m_votes_mutex;
 
-    // Strike tracking for Elderfiers who provide conflicting proofs
-    struct StrikeRecord {
-        uint32_t strike_count;           // Times provided proof against majority consensus
-        uint32_t total_proofs_provided;  // Total proofs submitted (both correct and incorrect)
-        uint64_t first_strike_time;
-        uint64_t last_strike_time;
-    };
+    // Strike tracking for Elderfiers
     std::unordered_map<Crypto::PublicKey, StrikeRecord> m_elderfier_strikes;
     mutable std::mutex m_strikes_mutex;
 

@@ -119,25 +119,29 @@ struct FailedConsensusCase {
 
 **Elder Council Voting (Manual Process):**
 - **Minimum 8/10 Elderfiers** must vote same choice
-- **Aggregate Voting**: Council votes on slashing actions, not against specific Elderfiers
+- **Anonymous Review**: Council reviews evidence without knowing which specific Elderfier is being reviewed
+- **Aggregate Voting**: Council votes on slashing actions based on strike patterns, not targeting individuals
 - **Voting Options:**
   - `SLASH_ALL`: Slash all Elderfiers with 3+ strikes
   - `SLASH_HALF`: Slash 50% of Elderfiers with 3+ strikes
   - `SLASH_NONE`: No slashing, continue monitoring
   - `REVIEW_MORE`: Request additional investigation
-- **Detailed Review Messages**: Include logs of consensus attempts, responding/non-responding nodes, and penalty recommendations
+- **Evidence-Based Review**: Messages include strike counts, participation rates, and consensus failure patterns without revealing Elderfier identities
 
 **Example Council Review Message:**
 ```
 ELDERFIER COUNCIL REVIEW REQUIRED
 ================================
 
-An Elderfier has provided proof AGAINST consensus 3 times in 15 total proofs submitted.
+An Elderfier has provided proof AGAINST consensus 3 times in 15 total rounds participated.
 
-Elderfier ID: a1b2c3d4e5f67890123456789012345678901234567890123456789012
 Strike Count: 3
-Total Proofs Submitted: 15
+Total Rounds Participated: 15
 Strike Rate: 20.00%
+
+Evidence of conflicting proof submissions in consensus rounds:
+- Round participation with incorrect consensus proofs
+- Strike accumulation over multiple consensus attempts
 
 Please vote your decision for action:
 a) SLASH_ALL - Slash all Elderfiers with 3+ strikes

@@ -150,3 +150,13 @@ After applying these fixes:
 - Monitoring scripts provide detailed troubleshooting information
 - Local testing scripts allow validation before pushing changes
 - Caching significantly improves build performance
+
+## 🌐 Alternative CI Options (No GitHub Credits)
+
+When GitHub Actions credits are exhausted, you can build on these services in parallel:
+
+- Azure Pipelines: add this repo in Azure DevOps, then enable `azure-pipelines.yml` at the root. It builds Linux, macOS, and Windows, installs Boost/Qt/ICU, runs CMake/Ninja, executes tests, and publishes artifacts.
+- AppVeyor: connect the repo at `appveyor.com`, enable the project, and it will pick up `appveyor.yml` to build on Windows, Ubuntu, and macOS with artifacts.
+- CircleCI: connect the repo at `circleci.com`, enable the project, and it will run `circleci/config.yml` for Linux, macOS, and Windows builds with artifacts.
+
+These configs mirror our GitHub Actions steps (ICU handling on macOS, vcpkg on Windows, Ninja, tests, and artifact upload) to keep behavior consistent across providers.

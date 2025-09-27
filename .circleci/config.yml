@@ -1,0 +1,167 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@5.0.0
+
+workflows:
+  build:
+    jobs:
+      - linux
+      - macos
+      - win
+
+jobs:
+  linux:
+    docker:
+      - image: cimg/base:stable
+    environment:
+      CMAKE_BUILD_TYPE: Release
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies (Ubuntu)
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y build-essential ninja-build pkg-config \
+                 libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
+                 libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
+                 libboost-all-dev libicu-dev
+      - run:
+          name: Configure
+          command: |
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DBUILD_TESTS=ON \
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
+      - run:
+          name: Build
+          command: cmake --build build --parallel
+      - run:
+          name: Tests
+          command: |
+            cd build
+            if [ -f "CTestTestfile.cmake" ]; then
+              ctest --output-on-failure --verbose
+            elif [ -f "test/CTestTestfile.cmake" ]; then
+              ctest --test-dir test --output-on-failure --verbose
+            else
+              echo "No tests configured"
+            fi
+      - store_artifacts:
+          path: build
+
+  macos:
+    macos:
+      xcode: 15.4.0
+    environment:
+      CMAKE_BUILD_TYPE: Release
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies (macOS)
+          command: |
+            brew update
+            brew install ninja boost qt@5 miniupnpc qrencode icu4c
+            echo "BOOST_ROOT=$(brew --prefix boost)" >> env.sh
+            if [ -d "$(brew --prefix)/opt/icu4c" ]; then
+              ICU_PREFIX="$(brew --prefix)/opt/icu4c"
+            elif [ -d "$(brew --prefix)/opt/icu4c@77" ]; then
+              ICU_PREFIX="$(brew --prefix)/opt/icu4c@77"
+            elif [ -d "$(brew --prefix)/opt/icu4c@76" ]; then
+              ICU_PREFIX="$(brew --prefix)/opt/icu4c@76"
+            else
+              ICU_PREFIX="$(brew --prefix icu4c)"
+            fi
+            echo "ICU_ROOT=$ICU_PREFIX" >> env.sh
+            echo "PATH=$ICU_PREFIX/bin:$PATH" >> env.sh
+            echo "PKG_CONFIG_PATH=$ICU_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH" >> env.sh
+            echo "LDFLAGS=-L$ICU_PREFIX/lib" >> env.sh
+            echo "CPPFLAGS=-I$ICU_PREFIX/include" >> env.sh
+      - run:
+          name: Configure
+          command: |
+            set -e
+            source ./env.sh || true
+            export PATH="$ICU_ROOT/bin:$PATH"
+            export PKG_CONFIG_PATH="$ICU_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH"
+            export LDFLAGS="-L$ICU_ROOT/lib $LDFLAGS"
+            export CPPFLAGS="-I$ICU_ROOT/include $CPPFLAGS"
+            cmake -S . -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
+              -DCMAKE_OSX_ARCHITECTURES=arm64 \
+              -DBOOST_ROOT="$BOOST_ROOT" \
+              -DBUILD_TESTS=ON \
+              -DICU_ROOT="$ICU_ROOT" \
+              -DCMAKE_PREFIX_PATH="$ICU_ROOT" \
+              -DCMAKE_LIBRARY_PATH="$ICU_ROOT/lib" \
+              -DCMAKE_INCLUDE_PATH="$ICU_ROOT/include" \
+              -DBoost_USE_STATIC_LIBS=ON \
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
+      - run:
+          name: Build
+          command: cmake --build build --parallel
+      - run:
+          name: Tests
+          command: |
+            cd build
+            if [ -f "CTestTestfile.cmake" ]; then
+              ctest --output-on-failure --verbose
+            elif [ -f "test/CTestTestfile.cmake" ]; then
+              ctest --test-dir test --output-on-failure --verbose
+            else
+              echo "No tests configured"
+            fi
+      - store_artifacts:
+          path: build
+
+  win:
+    executor: win/default
+    environment:
+      CMAKE_BUILD_TYPE: Release
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies (Windows)
+          shell: powershell.exe
+          command: |
+            choco install -y ninja
+            if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
+              git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+              cd C:/vcpkg
+              .\bootstrap-vcpkg.bat
+              .\vcpkg integrate install
+            }
+            C:/vcpkg/vcpkg.exe install --triplet x64-windows `
+              boost-filesystem boost-thread boost-date-time boost-chrono `
+              boost-regex boost-serialization boost-program-options `
+              boost-multi-index boost-uuid boost-asio boost-scope-exit `
+              boost-format icu openssl miniupnpc
+      - run:
+          name: Configure
+          shell: powershell.exe
+          command: |
+            cmake -S . -B build `
+              -G Ninja `
+              -DCMAKE_BUILD_TYPE=$env:CMAKE_BUILD_TYPE `
+              -DBUILD_TESTS=ON `
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
+      - run:
+          name: Build
+          shell: powershell.exe
+          command: cmake --build build --parallel
+      - run:
+          name: Tests
+          shell: powershell.exe
+          command: |
+            if (Test-Path "build/CTestTestfile.cmake") {
+              & ctest --test-dir build --output-on-failure --verbose
+            } elseif (Test-Path "build/test/CTestTestfile.cmake") {
+              & ctest --test-dir build/test --output-on-failure --verbose
+            } else {
+              echo "No tests configured"
+            }
+      - store_artifacts:
+          path: build

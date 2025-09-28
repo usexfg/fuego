@@ -35,6 +35,7 @@
 #include "Miner.h"
 #include "TransactionExtra.h"
 #include "IBlock.h"
+#include "EldernodeIndexManager/EldernodeIndexManagerImpl.h"
 
 #undef ERROR
 
@@ -75,6 +76,9 @@ core::core(const Currency &currency, i_cryptonote_protocol *pprotocol, Logging::
                                                                                                                                                                   m_miner(new miner(currency, *this, logger)),
                                                                                                                                                                   m_starter_message_showed(false)
 {
+  // Initialize Elderfier consensus system
+  m_eldernodeIndexManager = std::make_unique<EldernodeIndexManagerImpl>();
+  m_elderfierConsensusService = std::make_unique<ElderfierConsensusService>(*this, *m_eldernodeIndexManager, logger);
 
   set_cryptonote_protocol(pprotocol);
   m_blockchain.addObserver(this);

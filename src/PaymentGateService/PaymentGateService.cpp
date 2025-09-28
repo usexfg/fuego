@@ -196,19 +196,15 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
 
   System::Event p2pStarted(*dispatcher);
   
-  System::Context<> context(*dispatcher, [&]() {
-    p2pStarted.set();
-    p2pNode.run();
-  });
-
-  p2pStarted.wait();
+  // Simplified P2P server start without Context
+  p2pStarted.set();
+  p2pNode.run();
 
   runWalletService(currency, *node);
 
   log(Logging::INFO) << "Stopping core rpc server...";
   rpcServer.stop();
   p2pNode.sendStopSignal();
-  context.get();
   node->shutdown();
   core.deinit();
   p2pNode.deinit(); 

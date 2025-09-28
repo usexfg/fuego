@@ -17,9 +17,9 @@
 
 #pragma once
 
-namespace System {
+#include <System/Dispatcher.h>
 
-class Dispatcher;
+namespace System {
 
 class Event {
 public:

@@ -127,7 +127,7 @@ namespace CryptoNote
 		        const uint32_t UPGRADE_HEIGHT_V8                     = 800000; //Dragonborn (emission|deposits)
         const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //{Godflame}  (emission|UPX2|Fuego)
 		const uint32_t UPGRADE_HEIGHT_V10                            = 966996; //Dynamigos (dynamic RingCT, dynamic supply, dynamic difficulty (DMWD)) 		
-		const uint32_t UPGRADE_HEIGHT_V11                            = 987654; //Elderfire (XFG-STARK burn proofs, Elderfiers, Fuegotor, Elderfyre Stayking, Elder Council Inbox)
+		const uint32_t UPGRADE_HEIGHT_V11                            = 987654; //Elderfire (XFG-STARK burn proofs, Elderfiers, FuegoTor, Elderfyre Stayking, Elder Council Inbox)
 		const uint32_t UPGRADE_HEIGHT_DIGM                           =1000000; //{CURADI₲M} (DI₲M colored-coin, CURA colored-coin, XFG-C0DL3 bridge, BIP-41 Payment codes (PayNyms))
 
 				const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent            

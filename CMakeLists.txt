@@ -11,7 +11,6 @@ set(REFS " (HEAD -> master)")
 
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/version")
 configure_file("src/version.h.in" "${CMAKE_BINARY_DIR}/version/version.h")
-add_custom_target(version ALL)
 
 # --------------------------
 # C++ Standard
@@ -101,21 +100,21 @@ else()
         message(STATUS "Found ICU includes: ${ICU_INCLUDE_DIRS}")
         message(STATUS "Found ICU libraries: ${ICU_LIBRARIES}")
         include_directories(${ICU_INCLUDE_DIRS})
+
+        # On macOS, ensure we have the correct ICU library paths
+        if(APPLE)
+            if(ICU_DATA_LIBRARY)
+                message(STATUS "ICU Data Library: ${ICU_DATA_LIBRARY}")
+            endif()
+            if(ICU_I18N_LIBRARY)
+                message(STATUS "ICU I18N Library: ${ICU_I18N_LIBRARY}")
+            endif()
+            if(ICU_UC_LIBRARY)
+                message(STATUS "ICU UC Library: ${ICU_UC_LIBRARY}")
+            endif()
+        endif()
     else()
         message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
-    endif()
-    
-    # On macOS, ensure we have the correct ICU library paths
-    if(APPLE)
-        if(ICU_DATA_LIBRARY)
-            message(STATUS "ICU Data Library: ${ICU_DATA_LIBRARY}")
-        endif()
-        if(ICU_I18N_LIBRARY)
-            message(STATUS "ICU I18N Library: ${ICU_I18N_LIBRARY}")
-        endif()
-        if(ICU_UC_LIBRARY)
-            message(STATUS "ICU UC Library: ${ICU_UC_LIBRARY}")
-        endif()
     endif()
 endif()
 

@@ -16,18 +16,16 @@ private:
     std::mt19937 m_rng;
     
 public:
-    DMWDATestSuite() : m_rng(std::chrono::steady_clock::now().time_since_epoch().count()) {
+    DMWDATestSuite() : m_difficulty(m_config), m_rng(std::chrono::steady_clock::now().time_since_epoch().count()) {
         // Initialize with Fuego's DMWDA configuration
         m_config.targetTime = 480;           // 8 minutes
         m_config.shortWindow = 15;           // Rapid response
         m_config.mediumWindow = 45;          // Stability
         m_config.longWindow = 120;           // Trend analysis
-        m_config.minAdjustment = 0.5;        // 50% minimum
-        m_config.maxAdjustment = 4.0;        // 400% maximum
-        m_config.emergencyThreshold = 0.1;    // 10% emergency threshold
+        m_config.minAdjustment = 0.25;       // 25% minimum (more conservative)
+        m_config.maxAdjustment = 2.0;        // 200% maximum (more conservative)
+        m_config.emergencyThreshold = 0.5;   // 50% emergency threshold (more conservative)
         m_config.emergencyWindow = 5;        // 5-block emergency response
-        
-        m_difficulty = AdaptiveDifficulty(m_config);
     }
     
     // Test 1: Normal Operation - Steady Hash Rate

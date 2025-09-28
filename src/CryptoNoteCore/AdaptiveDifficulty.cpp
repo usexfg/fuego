@@ -2,6 +2,7 @@
 #include "CryptoNoteConfig.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numeric>
 
 namespace CryptoNote {
@@ -63,23 +64,41 @@ namespace CryptoNote {
         
         // Calculate current average difficulty
         uint32_t effectiveWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), m_config.mediumWindow);
+
+        // Prevent division by zero
+        if (effectiveWindow == 0) {
+            return 10000; // Minimum difficulty
+        }
+
         uint64_t avgDifficulty = (cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[0]) / effectiveWindow;
         
         // Calculate new difficulty
+        if (weightedSolveTime <= 0.0) {
+            return 10000; // Minimum difficulty for invalid solve time
+        }
+
         double difficultyRatio = static_cast<double>(m_config.targetTime) / weightedSolveTime;
-        
+
         // Apply bounds
-        difficultyRatio = std::max(m_config.minAdjustment, 
+        difficultyRatio = std::max(m_config.minAdjustment,
                                   std::min(m_config.maxAdjustment, difficultyRatio));
         
-        uint64_t newDifficulty = static_cast<uint64_t>(avgDifficulty * difficultyRatio);
-        
+        // Prevent overflow in multiplication
+        double calculatedDifficulty = static_cast<double>(avgDifficulty) * difficultyRatio;
+
+        // Clamp to prevent overflow
+        if (calculatedDifficulty > static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+            calculatedDifficulty = static_cast<double>(std::numeric_limits<uint64_t>::max());
+        }
+
+        uint64_t newDifficulty = static_cast<uint64_t>(calculatedDifficulty);
+
         // Apply smoothing to prevent oscillations
         if (timestamps.size() > 1) {
             uint64_t prevDifficulty = cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[effectiveWindow - 1];
             newDifficulty = applySmoothing(newDifficulty, prevDifficulty);
         }
-        
+
         // Minimum difficulty protection
         return std::max(static_cast<uint64_t>(10000), newDifficulty);
     }
@@ -96,16 +115,21 @@ namespace CryptoNote {
         
         for (uint32_t i = 1; i <= effectiveWindow; ++i) {
             int64_t solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i - 1]);
-            
+
             // Clamp solve time to prevent manipulation
-            solveTime = std::max(static_cast<int64_t>(m_config.targetTime / 10), 
+            solveTime = std::max(static_cast<int64_t>(m_config.targetTime / 10),
                                 std::min(static_cast<int64_t>(m_config.targetTime * 10), solveTime));
-            
+
             double weight = static_cast<double>(i);
             weightedSum += solveTime * weight;
             weightSum += weight;
         }
-        
+
+        // Prevent division by zero
+        if (weightSum == 0.0) {
+            return static_cast<double>(m_config.targetTime);
+        }
+
         return weightedSum / weightSum;
     }
 
@@ -136,24 +160,36 @@ namespace CryptoNote {
         const std::vector<uint64_t>& cumulativeDifficulties) {
         
         uint32_t emergencyWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), m_config.emergencyWindow);
-        
+
         if (emergencyWindow == 0) return 10000;
-        
+
         // Calculate recent solve time
         double recentSolveTime = static_cast<double>(timestamps[emergencyWindow] - timestamps[0]) / emergencyWindow;
-        
+
+        if (recentSolveTime <= 0.0) {
+            return 10000; // Minimum difficulty for invalid solve time
+        }
+
         // Calculate current difficulty
         uint64_t currentDifficulty = (cumulativeDifficulties[emergencyWindow] - cumulativeDifficulties[0]) / emergencyWindow;
         
         // Emergency adjustment
         double emergencyRatio = static_cast<double>(m_config.targetTime) / recentSolveTime;
-        
+
         // Apply emergency bounds
-        emergencyRatio = std::max(m_config.emergencyThreshold, 
+        emergencyRatio = std::max(m_config.emergencyThreshold,
                                  std::min(1.0 / m_config.emergencyThreshold, emergencyRatio));
-        
-        uint64_t emergencyDifficulty = static_cast<uint64_t>(currentDifficulty * emergencyRatio);
-        
+
+        // Prevent overflow in emergency calculation
+        double emergencyDifficultyCalc = static_cast<double>(currentDifficulty) * emergencyRatio;
+
+        // Clamp to prevent overflow
+        if (emergencyDifficultyCalc > static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+            emergencyDifficultyCalc = static_cast<double>(std::numeric_limits<uint64_t>::max());
+        }
+
+        uint64_t emergencyDifficulty = static_cast<uint64_t>(emergencyDifficultyCalc);
+
         return std::max(static_cast<uint64_t>(10000), emergencyDifficulty);
     }
 
@@ -202,7 +238,17 @@ namespace CryptoNote {
     uint64_t AdaptiveDifficulty::applySmoothing(uint64_t newDifficulty, uint64_t previousDifficulty) {
         // Apply exponential smoothing to prevent oscillations
         double alpha = 0.3; // Smoothing factor
-        return static_cast<uint64_t>(alpha * newDifficulty + (1.0 - alpha) * previousDifficulty);
+
+        // Prevent overflow by using double precision arithmetic
+        double smoothed = alpha * static_cast<double>(newDifficulty) +
+                         (1.0 - alpha) * static_cast<double>(previousDifficulty);
+
+        // Clamp to prevent overflow
+        if (smoothed > static_cast<double>(std::numeric_limits<uint64_t>::max())) {
+            return std::numeric_limits<uint64_t>::max();
+        }
+
+        return static_cast<uint64_t>(smoothed);
     }
 
     double AdaptiveDifficulty::calculateConfidenceScore(

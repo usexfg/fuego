@@ -35,6 +35,8 @@
 #include "System/Dispatcher.h"
 #include "CryptoNoteCore/MessageQueue.h"
 #include "CryptoNoteCore/BlockchainMessages.h"
+#include "CryptoNoteCore/ElderfierConsensusService.h"
+#include "IEldernodeIndexManager.h"
 
 #include <Logging/LoggerMessage.h>
 
@@ -203,5 +205,9 @@ namespace CryptoNote {
     std::atomic<bool> m_starter_message_showed;
     Tools::ObserverManager<ICoreObserver> m_observerManager;
      time_t start_time;
+
+    // Elderfier consensus system
+    std::unique_ptr<EldernodeIndexManagerImpl> m_eldernodeIndexManager;
+    std::unique_ptr<ElderfierConsensusService> m_elderfierConsensusService;
    };
 }

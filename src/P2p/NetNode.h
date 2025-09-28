@@ -163,6 +163,11 @@ namespace CryptoNote
     int handle_get_peer_id(int command, COMMAND_REQUEST_PEER_ID::request& arg, COMMAND_REQUEST_PEER_ID::response& rsp, P2pConnectionContext& context);
 #endif
 
+    // Elderfier consensus handlers
+    int handle_request_elderfier_proof(int command, COMMAND_REQUEST_ELDERFIER_PROOF::request& arg, COMMAND_REQUEST_ELDERFIER_PROOF::response& rsp, P2pConnectionContext& context);
+    int handle_elderfier_proof_signature(int command, COMMAND_ELDERFIER_PROOF_SIGNATURE::request& arg, P2pConnectionContext& context);
+    int handle_elderfier_council_vote(int command, COMMAND_ELDERFIER_COUNCIL_VOTE::request& arg, P2pConnectionContext& context);
+
     bool init_config();
     bool make_default_config();
     bool store_config();

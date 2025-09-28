@@ -272,6 +272,9 @@ namespace CryptoNote
       INVOKE_HANDLER(COMMAND_REQUEST_NETWORK_STATE, &NodeServer::handle_get_network_state)
       INVOKE_HANDLER(COMMAND_REQUEST_PEER_ID, &NodeServer::handle_get_peer_id)
 #endif
+      INVOKE_HANDLER(COMMAND_REQUEST_ELDERFIER_PROOF, &NodeServer::handle_request_elderfier_proof)
+      INVOKE_HANDLER(COMMAND_ELDERFIER_PROOF_SIGNATURE, &NodeServer::handle_elderfier_proof_signature)
+      INVOKE_HANDLER(COMMAND_ELDERFIER_COUNCIL_VOTE, &NodeServer::handle_elderfier_council_vote)
     default:
     {
       handled = false;
@@ -1247,6 +1250,55 @@ namespace CryptoNote
     return 1;
   }
 #endif
+
+  //-----------------------------------------------------------------------------------
+  // Elderfier consensus handlers
+  //-----------------------------------------------------------------------------------
+
+  int NodeServer::handle_request_elderfier_proof(int command, COMMAND_REQUEST_ELDERFIER_PROOF::request& arg, COMMAND_REQUEST_ELDERFIER_PROOF::response& rsp, P2pConnectionContext& context)
+  {
+    logger(TRACE) << context << "COMMAND_REQUEST_ELDERFIER_PROOF for " << Common::podToHex(arg.burn_tx_hash);
+
+    // TODO: Validate the burn transaction exists and has proper confirmations
+    // TODO: Check if we're an active Elderfier
+    // TODO: Generate and return proof signature
+
+    rsp.burn_tx_hash = arg.burn_tx_hash;
+    rsp.consensus_path = arg.consensus_path;
+    rsp.is_success = false; // Placeholder - would be true if proof generated successfully
+
+    // TODO: Generate threshold signature proof
+    // For now, return empty proof data
+    rsp.proof_data.clear();
+    rsp.participating_nodes.clear();
+
+    return 1;
+  }
+  //-----------------------------------------------------------------------------------
+
+  int NodeServer::handle_elderfier_proof_signature(int command, COMMAND_ELDERFIER_PROOF_SIGNATURE::request& arg, P2pConnectionContext& context)
+  {
+    logger(TRACE) << context << "COMMAND_ELDERFIER_PROOF_SIGNATURE for " << Common::podToHex(arg.burn_tx_hash);
+
+    // TODO: Validate the signature and add to consensus aggregation
+    // TODO: Check if we have enough signatures for consensus
+    // TODO: If consensus reached, broadcast result to network
+
+    return 1;
+  }
+  //-----------------------------------------------------------------------------------
+
+  int NodeServer::handle_elderfier_council_vote(int command, COMMAND_ELDERFIER_COUNCIL_VOTE::request& arg, P2pConnectionContext& context)
+  {
+    logger(TRACE) << context << "COMMAND_ELDERFIER_COUNCIL_VOTE for " << Common::podToHex(arg.burn_tx_hash);
+
+    // TODO: Validate the vote signature
+    // TODO: Add vote to council decision tracking
+    // TODO: Check if we have enough votes for a decision
+    // TODO: Execute slashing if council decision requires it
+
+    return 1;
+  }
 
   //-----------------------------------------------------------------------------------
 

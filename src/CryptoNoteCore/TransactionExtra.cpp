@@ -157,6 +157,7 @@ namespace CryptoNote
           transactionExtraFields.push_back(rec);
           break;
         }
+
         }
       }
     }
@@ -234,6 +235,7 @@ namespace CryptoNote
     {
       return appendDigmAlbumRecordToExtra(extra, t);
     }
+
   };
 
   bool writeTransactionExtra(std::vector<uint8_t> &tx_extra, const std::vector<TransactionExtraField> &tx_extra_fields)

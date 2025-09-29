@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Privacy Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -21,11 +21,12 @@
 #include <future>
 #include <memory>
 #include <mutex>
-#include <chrono>
+
 #include <boost/program_options/variables_map.hpp>
 
 #include "IWalletLegacy.h"
 #include "PasswordContainer.h"
+#include "DIGMSimpleWalletExtension.h"
 
 #include "Common/ConsoleHandler.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -106,6 +107,19 @@ namespace CryptoNote
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool payment_id(const std::vector<std::string> &args);
+
+    // DIGM Commands
+    bool digm_balance(const std::vector<std::string> &args);
+    bool digm_transactions(const std::vector<std::string> &args);
+    bool digm_outputs(const std::vector<std::string> &args);
+    bool transfer_digm(const std::vector<std::string> &args);
+    bool release_album(const std::vector<std::string> &args);
+    bool update_album(const std::vector<std::string> &args);
+    bool digm_info(const std::vector<std::string> &args);
+    bool list_albums(const std::vector<std::string> &args);
+    bool info_album(const std::vector<std::string> &args);
+    bool scan_digm(const std::vector<std::string> &args);
+    bool refresh_digm(const std::vector<std::string> &args);
 
     bool ask_wallet_create_if_needed();
     std::string resolveAlias(const std::string& aliasUrl);
@@ -193,6 +207,7 @@ namespace CryptoNote
     std::unique_ptr<CryptoNote::NodeRpcProxy> m_node;
     std::unique_ptr<CryptoNote::IWalletLegacy> m_wallet;
     refresh_progress_reporter_t m_refresh_progress_reporter;
+    std::unique_ptr<CryptoNote::DIGMSimpleWalletExtension> m_digm_extension;
 
     bool m_walletSynchronized;
     std::mutex m_walletSynchronizedMutex;

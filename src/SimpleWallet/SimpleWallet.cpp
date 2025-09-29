@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Privacy Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -629,6 +629,19 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
   m_consoleHandler.setHandler("payment_id", boost::bind(&simple_wallet::payment_id, this, _1), "Generate random Payment ID");
+  
+  // DIGM Commands
+  m_consoleHandler.setHandler("digm_balance", boost::bind(&simple_wallet::digm_balance, this, boost::arg<1>()), "Show DIGM token balance");
+  m_consoleHandler.setHandler("digm_transactions", boost::bind(&simple_wallet::digm_transactions, this, boost::arg<1>()), "Show DIGM transaction history");
+  m_consoleHandler.setHandler("digm_outputs", boost::bind(&simple_wallet::digm_outputs, this, boost::arg<1>()), "Show DIGM outputs");
+  m_consoleHandler.setHandler("transfer_digm", boost::bind(&simple_wallet::transfer_digm, this, boost::arg<1>()), "transfer_digm <addr> <amount> - Transfer DIGM tokens");
+  m_consoleHandler.setHandler("release_album", boost::bind(&simple_wallet::release_album, this, boost::arg<1>()), "release_album <title> <artist> <price> - Release album with DIGM signature");
+  m_consoleHandler.setHandler("update_album", boost::bind(&simple_wallet::update_album, this, boost::arg<1>()), "update_album <id> <price> - Update album metadata");
+  m_consoleHandler.setHandler("digm_info", boost::bind(&simple_wallet::digm_info, this, boost::arg<1>()), "Show DIGM token information");
+  m_consoleHandler.setHandler("list_albums", boost::bind(&simple_wallet::list_albums, this, boost::arg<1>()), "List all DIGM albums");
+  m_consoleHandler.setHandler("info_album", boost::bind(&simple_wallet::info_album, this, boost::arg<1>()), "info_album <id> - Show album information");
+  m_consoleHandler.setHandler("scan_digm", boost::bind(&simple_wallet::scan_digm, this, boost::arg<1>()), "Scan for DIGM transactions");
+  m_consoleHandler.setHandler("refresh_digm", boost::bind(&simple_wallet::refresh_digm, this, boost::arg<1>()), "Refresh DIGM balance");
 }
 
 /* This function shows the number of outputs in the wallet
@@ -823,6 +836,14 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     if (!writeAddressFile(walletAddressFile, m_wallet->getAddress())) {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
+
+    // Initialize DIGM extension for new wallet
+    m_digm_extension = std::make_unique<DIGMSimpleWalletExtension>();
+    if (m_digm_extension->initialize(m_wallet->getAddress())) {
+        logger(INFO, BRIGHT_WHITE) << "DIGM extension initialized successfully";
+    } else {
+        logger(WARNING, BRIGHT_YELLOW) << "Failed to initialize DIGM extension";
+    }
   } else if (!m_import_new.empty()) {
     std::string walletAddressFile = prepareWalletAddressFilename(m_import_new);
     boost::system::error_code ignore;
@@ -887,6 +908,14 @@ if (key_import) {
     if (!writeAddressFile(walletAddressFile, m_wallet->getAddress())) {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
+
+    // Initialize DIGM extension for imported wallet
+    m_digm_extension = std::make_unique<DIGMSimpleWalletExtension>();
+    if (m_digm_extension->initialize(m_wallet->getAddress())) {
+        logger(INFO, BRIGHT_WHITE) << "DIGM extension initialized successfully";
+    } else {
+        logger(WARNING, BRIGHT_YELLOW) << "Failed to initialize DIGM extension";
+    }
   } else {
     m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
 
@@ -901,6 +930,14 @@ if (key_import) {
     m_node->addObserver(static_cast<INodeObserver*>(this));
 
     logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
+
+    // Initialize DIGM extension
+    m_digm_extension = std::make_unique<DIGMSimpleWalletExtension>();
+    if (m_digm_extension->initialize(m_wallet->getAddress())) {
+        logger(INFO, BRIGHT_WHITE) << "DIGM extension initialized successfully";
+    } else {
+        logger(WARNING, BRIGHT_YELLOW) << "Failed to initialize DIGM extension";
+    }
 
     success_msg_writer() <<
       "**********************************************************************\n" <<
@@ -1371,6 +1408,11 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
   success_msg_writer() << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
     ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance());
+
+  // Add DIGM balance display
+  if (m_digm_extension) {
+    success_msg_writer() << m_digm_extension->get_digm_balance_str();
+  }
 
   return true;
 }
@@ -2133,4 +2175,96 @@ int main(int argc, char* argv[]) {
   }
   return 1;
   //CATCH_ENTRY_L0("main", 1);
+}
+
+//----------------------------------------------------------------------------------------------------
+// DIGM Command Implementations
+//----------------------------------------------------------------------------------------------------
+
+bool simple_wallet::digm_balance(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->show_digm_balance(args);
+}
+
+bool simple_wallet::digm_transactions(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->show_digm_transactions(args);
+}
+
+bool simple_wallet::digm_outputs(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->show_digm_outputs(args);
+}
+
+bool simple_wallet::transfer_digm(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->transfer_digm(args);
+}
+
+bool simple_wallet::release_album(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->release_album(args);
+}
+
+bool simple_wallet::update_album(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->update_album(args);
+}
+
+bool simple_wallet::digm_info(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->show_digm_info(args);
+}
+
+bool simple_wallet::list_albums(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->list_albums(args);
+}
+
+bool simple_wallet::info_album(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->info_album(args);
+}
+
+bool simple_wallet::scan_digm(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->scan_digm_transactions();
+}
+
+bool simple_wallet::refresh_digm(const std::vector<std::string>& args) {
+  if (!m_digm_extension) {
+    fail_msg_writer() << "DIGM extension not initialized";
+    return false;
+  }
+  return m_digm_extension->refresh_digm_balance();
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Privacy Council
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -946,6 +946,219 @@ struct K_COMMAND_RPC_CHECK_RESERVE_PROOF {
 			KV_MEMBER(spent)
 		}
 	};
+};
+
+// DIGM Token RPC Commands
+struct COMMAND_RPC_GET_DIGM_INFO {
+  typedef EMPTY_STRUCT request;
+
+  struct response {
+    uint64_t token_id;
+    std::string token_name;
+    uint64_t total_supply;
+    uint64_t circulating_supply;
+    uint64_t amount_per_output;
+    bool is_minted;
+    uint32_t mint_height;
+    std::string mint_transaction_hash;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(token_id)
+      KV_MEMBER(token_name)
+      KV_MEMBER(total_supply)
+      KV_MEMBER(circulating_supply)
+      KV_MEMBER(amount_per_output)
+      KV_MEMBER(is_minted)
+      KV_MEMBER(mint_height)
+      KV_MEMBER(mint_transaction_hash)
+      KV_MEMBER(status)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_DIGM_BALANCE {
+  struct request {
+    std::string address;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(address)
+    }
+  };
+
+  struct response {
+    uint64_t balance;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(balance)
+      KV_MEMBER(status)
+    }
+  };
+};
+
+struct COMMAND_RPC_MINT_DIGM_TOKENS {
+  struct request {
+    uint64_t amount;
+    std::string destination_address;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(amount)
+      KV_MEMBER(destination_address)
+    }
+  };
+
+  struct response {
+    std::string transaction_hash;
+    std::string status;
+    std::string status_message;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(transaction_hash)
+      KV_MEMBER(status)
+      KV_MEMBER(status_message)
+    }
+  };
+};
+
+struct COMMAND_RPC_TRANSFER_DIGM_TOKENS {
+  struct request {
+    std::string source_address;
+    std::string destination_address;
+    uint64_t amount;
+    uint64_t fee;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(source_address)
+      KV_MEMBER(destination_address)
+      KV_MEMBER(amount)
+      KV_MEMBER(fee)
+    }
+  };
+
+  struct response {
+    std::string transaction_hash;
+    std::string status;
+    std::string status_message;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(transaction_hash)
+      KV_MEMBER(status)
+      KV_MEMBER(status_message)
+    }
+  };
+};
+
+struct COMMAND_RPC_RELEASE_ALBUM {
+  struct request {
+    std::string artist_address;
+    uint64_t album_id;
+    uint64_t price_atomic;
+    std::string metadata_hash;
+    std::vector<uint8_t> signature;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(artist_address)
+      KV_MEMBER(album_id)
+      KV_MEMBER(price_atomic)
+      KV_MEMBER(metadata_hash)
+      KV_MEMBER(signature)
+    }
+  };
+
+  struct response {
+    std::string transaction_hash;
+    std::string status;
+    std::string status_message;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(transaction_hash)
+      KV_MEMBER(status)
+      KV_MEMBER(status_message)
+    }
+  };
+};
+
+struct COMMAND_RPC_UPDATE_ALBUM {
+  struct request {
+    std::string artist_address;
+    uint64_t album_id;
+    uint64_t new_price_atomic;
+    std::string new_metadata_hash;
+    uint32_t update_reason;
+    std::vector<uint8_t> signature;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(artist_address)
+      KV_MEMBER(album_id)
+      KV_MEMBER(new_price_atomic)
+      KV_MEMBER(new_metadata_hash)
+      KV_MEMBER(update_reason)
+      KV_MEMBER(signature)
+    }
+  };
+
+  struct response {
+    std::string transaction_hash;
+    std::string status;
+    std::string status_message;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(transaction_hash)
+      KV_MEMBER(status)
+      KV_MEMBER(status_message)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_ALBUM_INFO {
+  struct request {
+    uint64_t album_id;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(album_id)
+    }
+  };
+
+  struct response {
+    uint64_t album_id;
+    uint64_t price_atomic;
+    uint64_t timestamp;
+    std::string artist_address;
+    std::string metadata_hash;
+    bool is_active;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(album_id)
+      KV_MEMBER(price_atomic)
+      KV_MEMBER(timestamp)
+      KV_MEMBER(artist_address)
+      KV_MEMBER(metadata_hash)
+      KV_MEMBER(is_active)
+      KV_MEMBER(status)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_ARTIST_ALBUMS {
+  struct request {
+    std::string artist_address;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(artist_address)
+    }
+  };
+
+  struct response {
+    std::vector<uint64_t> album_ids;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(album_ids)
+      KV_MEMBER(status)
+    }
+  };
 };
 
 }

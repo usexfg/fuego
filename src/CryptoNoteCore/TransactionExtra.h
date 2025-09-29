@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Fuego Elder Council
+// Copyright (c) 2017-2025 Elderfire Privacy Group
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -34,15 +34,14 @@
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
 #define TX_EXTRA_MESSAGE_TAG                0x04
 #define TX_EXTRA_TTL                        0x05
-#define TX_EXTRA_ELDERFIER_DEPOSIT          0x06
+#define TX_EXTRA_ELDERFIER_DEPOSIT          0xEF
 #define TX_EXTRA_YIELD_COMMITMENT           0x07
 #define TX_EXTRA_HEAT_COMMITMENT            0x08
-#define TX_EXTRA_COLD_COMMITMENT            0x09
+#define TX_EXTRA_COLD_COMMITMENT            0xCD
 #define TX_EXTRA_DIGM_ALBUM_RECORD          0x0A
 #define TX_EXTRA_ALBUM_LICENSE              0x0B
 #define TX_EXTRA_CURATION_TAG               0x0C
 #define TX_EXTRA_WITNESS_TAG                0x1C
-
 
 
 namespace CryptoNote {
@@ -119,11 +118,22 @@ struct TransactionExtraAlbumLicense {
   bool serialize(ISerializer& serializer);
 };
 
+struct TransactionExtraDigmAlbumRecord {
+  std::string albumId;             // Album identifier (hash/uuid)
+  Crypto::Hash contentHash;         // SHA-256 of encrypted album blob
+  Crypto::PublicKey artistKey;      // Artist public key (from DI₲M coin)
+  Crypto::Signature artistSig;     // Signature over albumId||contentHash
+  uint64_t timestamp;               // Unix timestamp ms
+  uint32_t version;                 // protocol version
+  bool serialize(ISerializer& serializer);
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCuraColoredCoin, TransactionExtraAlbumLicense> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment, TransactionExtraCuraColoredCoin, TransactionExtraAlbumLicense, TransactionExtraWitness, TransactionExtraDigmAlbumRecord> TransactionExtraField;
+
 
 
 
@@ -156,6 +166,8 @@ bool appendCuraColoredCoinToExtra(std::vector<uint8_t>& tx_extra, const Transact
 bool getCuraColoredCoinFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraCuraColoredCoin& cura_tag);
 bool appendAlbumLicenseToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraAlbumLicense& license);
 bool getAlbumLicenseFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraAlbumLicense& license);
+bool appendDigmAlbumRecordToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDigmAlbumRecord& rec);
+bool getDigmAlbumRecordFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraDigmAlbumRecord& rec);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 //returns false if payment id is not found or parse error

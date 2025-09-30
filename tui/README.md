@@ -48,7 +48,7 @@ Full Elder Council access with read/write capabilities:
 - **View Consensus Requests** - All pending consensus items
 - **Vote on Pending Items** - Submit approve/reject votes on proposals
 - **Review Burn2Mint Requests** - Approve/deny burn consensus proofs
-- **Manage Stake & Rewards** - Claim rewards, increase stake amount
+- **Manage Stake** - View stake details, increase stake amount
 - **Update ENindex Keys** - Modify Elderfier ID registration
 
 ### Elderfyre Stayking Process
@@ -90,8 +90,6 @@ once your stake is confirmed (10 blocks)
 - `create_stake_deposit` - Create Elderfier stake transaction
 - `getAddresses` - Get wallet public address
 - `register_to_enindex` - Register to ENindex with ID
-- `get_rewards` - Check accumulated rewards
-- `claim_rewards` - Withdraw earned rewards
 - `increase_stake` - Add more XFG to stake
 - `get_elder_inbox` - Get Elder Council messages
 - `get_consensus_requests` - List pending consensus items
@@ -203,7 +201,7 @@ Complete **XFG → HEAT** minting flow:
 - Requires **10,000 XFG minimum stake**
 - Elderfier ID must be exactly **8 alphanumeric characters**
 - Elder Council access unlocked after 10 block confirmations
-- No private key required for viewing stake/rewards/inbox
+- No rewards for staking - voting power only
 - Perfect for menubar/tray app integration
 
 ### Burn2Mint Menu
@@ -231,10 +229,6 @@ The following RPC methods are called by the TUI but may need implementation:
 - `getAddresses` - Returns wallet public address
 - `register_to_enindex` - Registers Elderfier ID + stake to ENindex
 - `update_enindex` - Updates ENindex registration
-
-**Elderfier Rewards:**
-- `get_rewards` - Returns accumulated rewards summary
-- `claim_rewards` - Withdraws earned rewards to wallet
 - `increase_stake` - Adds more XFG to existing stake
 
 **Elder Council Inbox:**

@@ -352,15 +352,6 @@ func elderfierMenu(m model) model {
 	m.appendLog("Stake: " + fmt.Sprintf("%v", status))
 	m.appendLog("")
 	
-	// Rewards summary
-	rewards, err := walletRpcCall(walletRPCPort, "get_rewards", map[string]interface{}{})
-	if err != nil {
-		m.appendLog("⚠️  Rewards unavailable: " + err.Error())
-	} else {
-		m.appendLog("💰 Rewards: " + fmt.Sprintf("%v", rewards))
-	}
-	m.appendLog("")
-	
 	// Elder Council Inbox with voting/consensus
 	m.appendLog("📬 ELDER COUNCIL INBOX")
 	m.appendLog("─────────────────────────────────────")
@@ -378,7 +369,7 @@ func elderfierMenu(m model) model {
 	m.appendLog("  [1] View Consensus Requests")
 	m.appendLog("  [2] Vote on Pending Items")
 	m.appendLog("  [3] Review Burn2Mint Requests")
-	m.appendLog("  [4] Manage Stake & Rewards")
+	m.appendLog("  [4] Manage Stake")
 	m.appendLog("  [5] Update ENindex Keys")
 	m.appendLog("  [0] Return to Main Menu")
 	
@@ -394,7 +385,7 @@ func elderfierMenu(m model) model {
 	case 3:
 		return reviewBurn2MintRequests(m)
 	case 4:
-		return manageStakeRewards(m)
+		return manageStake(m)
 	case 5:
 		return updateENindexKeys(m)
 	case 0:
@@ -612,21 +603,19 @@ func reviewBurn2MintRequests(m model) model {
 	return m
 }
 
-// Manage Stake & Rewards
-func manageStakeRewards(m model) model {
+// Manage Stake
+func manageStake(m model) model {
 	m.appendLog("─────────────────────────────────────")
-	m.appendLog("  STAKE & REWARDS MANAGEMENT")
+	m.appendLog("  STAKE MANAGEMENT")
 	m.appendLog("─────────────────────────────────────")
 	
 	status, _ := walletRpcCall(walletRPCPort, "get_stake_status", map[string]interface{}{})
-	rewards, _ := walletRpcCall(walletRPCPort, "get_rewards", map[string]interface{}{})
 	
 	m.appendLog("Current Stake: " + fmt.Sprintf("%v", status))
-	m.appendLog("Pending Rewards: " + fmt.Sprintf("%v", rewards))
 	m.appendLog("")
 	m.appendLog("Options:")
-	m.appendLog("  [1] Claim Rewards")
-	m.appendLog("  [2] Increase Stake")
+	m.appendLog("  [1] Increase Stake")
+	m.appendLog("  [2] View Stake Details")
 	m.appendLog("  [0] Back")
 	
 	var choice int
@@ -635,13 +624,6 @@ func manageStakeRewards(m model) model {
 	
 	switch choice {
 	case 1:
-		res, err := walletRpcCall(walletRPCPort, "claim_rewards", map[string]interface{}{})
-		if err != nil {
-			m.appendLog("❌ Claim failed: " + err.Error())
-		} else {
-			m.appendLog("✅ Rewards claimed: " + fmt.Sprintf("%v", res))
-		}
-	case 2:
 		var addAmount float64
 		fmt.Print("Additional stake amount: ")
 		fmt.Scanln(&addAmount)
@@ -655,6 +637,8 @@ func manageStakeRewards(m model) model {
 		} else {
 			m.appendLog("✅ Stake increased: " + fmt.Sprintf("%v", res))
 		}
+	case 2:
+		m.appendLog("Stake Details: " + fmt.Sprintf("%v", status))
 	}
 	
 	return m

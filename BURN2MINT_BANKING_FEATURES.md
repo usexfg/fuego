@@ -101,7 +101,7 @@ ipcMain.handle('get-burn-history', async (event, { limit }) => {
 ## 🏦 Banking (CD Deposits)
 
 ### What It Does
-Certificate of Deposit system allowing users to lock XFG for fixed terms and earn guaranteed interest.
+Certificate of Deposit system allowing users to lock XFG for fixed terms and earn CD tokens. XFG principal is returned at maturity along with earned CD tokens.
 
 ### Features
 
@@ -113,25 +113,26 @@ Certificate of Deposit system allowing users to lock XFG for fixed terms and ear
 **Fixed Standard Term:** All CD deposits are locked for exactly 3 months (90 days) at 8% annual yield.
 
 **Deposit Tiers:**
-- 🥉 **Basic**: 80 XFG → +1.6 XFG interest
-- 🥈 **Standard**: 800 XFG → +16 XFG interest
-- 🥇 **Premium**: 8000 XFG → +160 XFG interest
+- 🥉 **Basic**: 80 XFG → +0.000064 CD
+- 🥈 **Standard**: 800 XFG → +0.00064 CD
+- 🥇 **Premium**: 8000 XFG → +0.0064 CD
 
-#### Interest Calculation
+#### CD Yield Calculation
 ```
-Interest = Principal × (APY / 100) × (Months / 12)
-Interest = Principal × 0.08 × 0.25
-Interest = Principal × 0.02
-Total = Principal + Interest
+CD Yield = XFG Amount × 0.0000008
+Or: CD Yield = XFG Amount / 1,250,000
+
+Users deposit XFG and earn CD tokens.
+XFG is returned at maturity along with earned CD.
 ```
 
 **Examples:**
 
-| Deposit | Interest (3 mo) | Maturity Value |
-|---------|-----------------|----------------|
-| 80 XFG  | 1.6 XFG        | 81.6 XFG      |
-| 800 XFG | 16 XFG         | 816 XFG       |
-| 8000 XFG| 160 XFG        | 8160 XFG      |
+| Deposit | CD Yield (3 mo) | Return |
+|---------|-----------------|--------|
+| 80 XFG  | 0.000064 CD    | 80 XFG + 0.000064 CD |
+| 800 XFG | 0.00064 CD     | 800 XFG + 0.00064 CD |
+| 8000 XFG| 0.0064 CD      | 8000 XFG + 0.0064 CD |
 
 ### User Flow
 
@@ -143,8 +144,8 @@ Total = Principal + Interest
 
 #### Managing CDs
 - **View all active CDs** with:
-  - Amount deposited
-  - Accrued interest
+  - Amount deposited (XFG)
+  - CD tokens earned
   - Lock status (🔒 Locked / ✅ Mature)
   - Unlock height
   - Creating transaction
@@ -152,7 +153,7 @@ Total = Principal + Interest
 - **Withdraw mature CDs**:
   - One-click withdrawal
   - Confirmation dialog
-  - Principal + interest returned
+  - Principal XFG + CD tokens returned
 
 ### Technical Implementation
 
@@ -184,9 +185,9 @@ ipcMain.handle('withdraw-cd-deposit', async (event, { depositId }) => {
 - **Withdraw UI**: Confirmation before action
 
 ### Security Features
-- ✅ Minimum deposit: 10 XFG
+- ✅ Minimum deposit: 80 XFG
 - ✅ Funds locked until maturity (blockchain-enforced)
-- ✅ Interest guaranteed by protocol
+- ✅ CD yield guaranteed by protocol
 - ✅ Withdrawal confirmation dialog
 - ✅ No early withdrawal (prevents gaming)
 
@@ -253,17 +254,17 @@ ipcMain.handle('withdraw-cd-deposit', async (event, { depositId }) => {
 │  📈 Yield: 8% APY                   │
 │  💵 Min: 80 XFG                     │
 │                                     │
-│  Preview:                           │
-│  • Deposit: 800 XFG                 │
-│  • Term: 3 months (8% APY)          │
-│  • Interest: 16 XFG                 │
-│  • Total: 816 XFG                   │
+  │  Preview:                           │
+  │  • Deposit: 800 XFG                 │
+  │  • Term: 3 months (8% APY)          │
+  │  • CD Yield: 0.00064 CD             │
+  │  • Return: 800 XFG + CD yield       │
 │                                     │
 │  [🏦 Create 3-Month CD Deposit]     │
 ├─────────────────────────────────────┤
-│  Active CDs:                        │
-│  • 800 XFG (+16) - 🔒 Locked        │
-│  • 80 XFG (+1.6) - ✅ [Withdraw]   │
+  │  Active CDs:                        │
+  │  • 800 XFG (+0.00064 CD) - 🔒      │
+  │  • 80 XFG (+0.000064 CD) - ✅ Withdraw │
 └─────────────────────────────────────┘
 ```
 
@@ -291,12 +292,12 @@ User's ETH Wallet
 User Wallet (XFG)
     ↓ (create_cd_deposit)
 Fuego Blockchain
-    ↓ (lock for term)
-Interest Accumulation
-    ↓ (protocol-guaranteed)
+    ↓ (lock for 3 months)
+CD Token Accumulation
+    ↓ (protocol-guaranteed, XFG × 0.0000008)
 Maturity Reached
     ↓ (withdrawDeposit)
-User Wallet (XFG + Interest)
+User Wallet (XFG + CD tokens)
 ```
 
 ---
@@ -316,10 +317,10 @@ User Wallet (XFG + Interest)
 1. Launch Electron wallet
 2. Navigate to **Banking** tab
 3. Select deposit amount (80, 800, or 8000 XFG)
-4. Review interest preview (auto-calculated)
+4. Review CD yield preview (auto-calculated)
 5. Click **Create 3-Month CD Deposit**
 6. Wait for maturity (90 days)
-7. Withdraw principal + interest
+7. Withdraw principal XFG + CD tokens
 
 ---
 
@@ -408,12 +409,12 @@ User Wallet (XFG + Interest)
 - [ ] View burn history
 
 ### Banking
-- [ ] Create 80 XFG CD (Basic tier)
-- [ ] Create 800 XFG CD (Standard tier)
-- [ ] Create 8000 XFG CD (Premium tier)
-- [ ] Interest calculator preview
-- [ ] View active CDs
-- [ ] Withdraw mature CD (after 3 months)
+- [ ] Create 80 XFG CD → verify 0.000064 CD yield shown
+- [ ] Create 800 XFG CD → verify 0.00064 CD yield shown
+- [ ] Create 8000 XFG CD → verify 0.0064 CD yield shown
+- [ ] CD yield calculator preview
+- [ ] View active CDs with CD tokens displayed
+- [ ] Withdraw mature CD → receive XFG + CD tokens
 - [ ] Attempt early withdrawal (should fail)
 - [ ] Test invalid amounts (should reject)
 
@@ -422,10 +423,12 @@ User Wallet (XFG + Interest)
 ## 🏆 Summary
 
 ✅ **Burn2Mint**: Complete GUI wizard for XFG → HEAT conversion
-✅ **Banking**: Full CD deposit system with yield generation
+✅ **Banking**: Full CD deposit system earning CD tokens
 ✅ **Integration**: Elderfier consensus + xfg-stark CLI
 ✅ **UX**: Beautiful step-by-step wizards
 ✅ **Security**: Validation, confirmations, audit trails
 ✅ **Production-ready**: Error handling, fallbacks, logging
+
+**CD Yield Formula:** XFG × 0.0000008 = CD tokens earned
 
 🔥 **Advanced DeFi features now available in Fuego Electron Wallet!** 🔥

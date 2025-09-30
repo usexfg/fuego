@@ -523,7 +523,7 @@
           <h3 style="margin-bottom: 20px;">🏦 Certificate of Deposit (CD) - Yield Deposits</h3>
           
           <div class="backup-warning" style="background: rgba(76, 175, 80, 0.1); border-left-color: #4CAF50;">
-            <strong>💰 Earn 8% APY:</strong> Lock your XFG for 3 months and earn guaranteed 8% annual yield.
+            <strong>💰 Earn CD Tokens:</strong> Lock your XFG for 3 months @ 8% APY and earn CD tokens. Your XFG is returned at maturity.
           </div>
 
           <div class="send-section">
@@ -553,8 +553,8 @@
             <div id="cdPreview" class="seed-display hidden" style="margin: 16px 0;">
               <p><strong>Deposit:</strong> <span id="cdPreviewAmount">0</span> XFG</p>
               <p><strong>Term:</strong> 3 months (8% APY)</p>
-              <p><strong>Est. Interest:</strong> <span id="cdPreviewInterest">0</span> XFG</p>
-              <p><strong>Maturity Value:</strong> <span id="cdPreviewTotal">0</span> XFG</p>
+              <p><strong>CD Yield:</strong> <span id="cdPreviewInterest">0</span> CD</p>
+              <p><strong>Return:</strong> <span id="cdPreviewTotal">0</span> XFG + CD yield</p>
             </div>
 
             <button class="btn btn-primary" onclick="createCd()" style="width: 100%;">
@@ -1004,6 +1004,7 @@ Next Steps:
     const STANDARD_CD_TERM = 3;  // months
     const STANDARD_CD_APY = 8;   // percent
     const MIN_CD_AMOUNT = 80;    // XFG
+    const CD_YIELD_RATE = 0.0000008; // CD per XFG (XFG / 1,250,000)
 
     function setCdAmount(amount) {
       document.getElementById('cdAmount').value = amount;
@@ -1011,12 +1012,11 @@ Next Steps:
     }
 
     function updateCdPreview(amount) {
-      const interest = (amount * (STANDARD_CD_APY / 100) * (STANDARD_CD_TERM / 12));
-      const total = amount + interest;
+      const cdYield = amount * CD_YIELD_RATE;
 
       document.getElementById('cdPreviewAmount').textContent = amount.toFixed(2);
-      document.getElementById('cdPreviewInterest').textContent = interest.toFixed(2);
-      document.getElementById('cdPreviewTotal').textContent = total.toFixed(2);
+      document.getElementById('cdPreviewInterest').textContent = cdYield.toFixed(6);
+      document.getElementById('cdPreviewTotal').textContent = amount.toFixed(2);
       document.getElementById('cdPreview').classList.remove('hidden');
     }
 
@@ -1058,8 +1058,10 @@ Next Steps:
       });
 
       if (result.status === 'success') {
+        const cdYield = (amount * CD_YIELD_RATE).toFixed(6);
         log(`✅ CD deposit created: ${result.txHash}`);
-        log(`   Expected interest: ${(amount * 0.08 * 0.25).toFixed(2)} XFG after 3 months`);
+        log(`   Deposit: ${amount} XFG for 3 months @ 8% APY`);
+        log(`   Expected yield: ${cdYield} CD after 3 months`);
         
         // Clear form
         document.getElementById('cdAmount').value = '';
@@ -1081,13 +1083,14 @@ Next Steps:
           const isLocked = deposit.locked;
           const statusColor = isLocked ? '#FF6B35' : '#4CAF50';
           const statusText = isLocked ? '🔒 Locked' : '✅ Mature';
+          const cdYield = (deposit.amount * CD_YIELD_RATE).toFixed(6);
           
           return `
             <div class="transaction-item" style="border-left: 3px solid ${statusColor};">
               <div class="tx-info">
                 <div class="tx-hash">${deposit.creatingTransactionHash}</div>
                 <div class="tx-details">
-                  ${statusText} • ${deposit.term} months • Block ${deposit.height} → ${deposit.unlockHeight}
+                  ${statusText} • ${deposit.term || 3} months • Block ${deposit.height} → ${deposit.unlockHeight}
                 </div>
               </div>
               <div style="text-align: right;">
@@ -1095,7 +1098,7 @@ Next Steps:
                   ${deposit.amount.toFixed(2)} XFG
                 </div>
                 <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">
-                  +${deposit.interest.toFixed(2)} interest
+                  +${cdYield} CD yield
                 </div>
                 ${!isLocked ? `
                   <button class="btn btn-secondary btn-small" onclick="withdrawCd(${deposit.id})" style="margin-top: 8px;">

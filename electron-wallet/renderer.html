@@ -523,36 +523,42 @@
           <h3 style="margin-bottom: 20px;">🏦 Certificate of Deposit (CD) - Yield Deposits</h3>
           
           <div class="backup-warning" style="background: rgba(76, 175, 80, 0.1); border-left-color: #4CAF50;">
-            <strong>💰 Earn Interest:</strong> Lock your XFG for a fixed term and earn guaranteed yields. Longer terms = higher APY.
+            <strong>💰 Earn 8% APY:</strong> Lock your XFG for 3 months and earn guaranteed 8% annual yield.
           </div>
 
           <div class="send-section">
             <h4 style="margin-bottom: 16px;">Create New CD</h4>
             
             <div class="form-group">
-              <label class="form-label">Deposit Amount (XFG)</label>
-              <input type="number" class="form-input" id="cdAmount" placeholder="Minimum 10 XFG" step="0.01">
+              <label class="form-label">Select Deposit Amount</label>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+                <button class="btn btn-secondary" onclick="setCdAmount(80)">80 XFG</button>
+                <button class="btn btn-secondary" onclick="setCdAmount(800)">800 XFG</button>
+                <button class="btn btn-secondary" onclick="setCdAmount(8000)">8000 XFG</button>
+              </div>
+              <input type="number" class="form-input" id="cdAmount" placeholder="80, 800, or 8000 XFG" step="1" min="80">
             </div>
 
             <div class="form-group">
-              <label class="form-label">Term Length</label>
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-                <button class="btn btn-secondary" onclick="selectCdTerm(1, 5)">1 Month (5% APY)</button>
-                <button class="btn btn-secondary" onclick="selectCdTerm(6, 8)">6 Months (8% APY)</button>
-                <button class="btn btn-secondary" onclick="selectCdTerm(12, 12)">12 Months (12% APY)</button>
+              <label class="form-label">Standard Term: 3 Months @ 8% APY</label>
+              <div style="padding: 16px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border-left: 4px solid #4CAF50;">
+                <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                  📅 <strong>Lock Period:</strong> 3 months (90 days)<br>
+                  📈 <strong>Annual Yield:</strong> 8% APY<br>
+                  💵 <strong>Minimum:</strong> 80 XFG
+                </p>
               </div>
-              <input type="number" class="form-input" id="cdTerm" placeholder="Term in months" style="margin-top: 12px;" readonly>
             </div>
 
             <div id="cdPreview" class="seed-display hidden" style="margin: 16px 0;">
               <p><strong>Deposit:</strong> <span id="cdPreviewAmount">0</span> XFG</p>
-              <p><strong>Term:</strong> <span id="cdPreviewTerm">0</span> months</p>
+              <p><strong>Term:</strong> 3 months (8% APY)</p>
               <p><strong>Est. Interest:</strong> <span id="cdPreviewInterest">0</span> XFG</p>
               <p><strong>Maturity Value:</strong> <span id="cdPreviewTotal">0</span> XFG</p>
             </div>
 
             <button class="btn btn-primary" onclick="createCd()" style="width: 100%;">
-              🏦 Create CD Deposit
+              🏦 Create 3-Month CD Deposit
             </button>
           </div>
 
@@ -625,8 +631,6 @@
     let currentBurnTx = null;
     let currentEldernodeProof = null;
     let currentStarkProof = null;
-    let selectedCdTerm = null;
-    let selectedCdApy = null;
 
     // Tab switching
     function switchTab(tab) {
@@ -996,24 +1000,21 @@ Next Steps:
     // BANKING (CD) Functions
     // ==========================================
 
-    function selectCdTerm(months, apy) {
-      selectedCdTerm = months;
-      selectedCdApy = apy;
-      document.getElementById('cdTerm').value = months;
-      
-      // Update preview if amount is set
-      const amount = parseFloat(document.getElementById('cdAmount').value);
-      if (amount) {
-        updateCdPreview(amount, months, apy);
-      }
+    // Standard CD terms
+    const STANDARD_CD_TERM = 3;  // months
+    const STANDARD_CD_APY = 8;   // percent
+    const MIN_CD_AMOUNT = 80;    // XFG
+
+    function setCdAmount(amount) {
+      document.getElementById('cdAmount').value = amount;
+      updateCdPreview(amount);
     }
 
-    function updateCdPreview(amount, term, apy) {
-      const interest = (amount * (apy / 100) * (term / 12));
+    function updateCdPreview(amount) {
+      const interest = (amount * (STANDARD_CD_APY / 100) * (STANDARD_CD_TERM / 12));
       const total = amount + interest;
 
       document.getElementById('cdPreviewAmount').textContent = amount.toFixed(2);
-      document.getElementById('cdPreviewTerm').textContent = term;
       document.getElementById('cdPreviewInterest').textContent = interest.toFixed(2);
       document.getElementById('cdPreviewTotal').textContent = total.toFixed(2);
       document.getElementById('cdPreview').classList.remove('hidden');
@@ -1025,8 +1026,10 @@ Next Steps:
       if (cdAmountInput) {
         cdAmountInput.addEventListener('input', (e) => {
           const amount = parseFloat(e.target.value);
-          if (amount && selectedCdTerm && selectedCdApy) {
-            updateCdPreview(amount, selectedCdTerm, selectedCdApy);
+          if (amount && amount >= MIN_CD_AMOUNT) {
+            updateCdPreview(amount);
+          } else {
+            document.getElementById('cdPreview').classList.add('hidden');
           }
         });
       }
@@ -1034,30 +1037,33 @@ Next Steps:
 
     async function createCd() {
       const amount = parseFloat(document.getElementById('cdAmount').value);
-      const term = parseInt(document.getElementById('cdTerm').value);
 
-      if (!amount || amount < 10) {
-        log('❌ Minimum CD deposit is 10 XFG');
+      if (!amount || amount < MIN_CD_AMOUNT) {
+        log(`❌ Minimum CD deposit is ${MIN_CD_AMOUNT} XFG`);
+        log(`   Accepted amounts: 80, 800, or 8000 XFG`);
         return;
       }
 
-      if (!term) {
-        log('❌ Please select a term');
+      // Validate specific amounts
+      const validAmounts = [80, 800, 8000];
+      if (!validAmounts.includes(amount)) {
+        log(`❌ Invalid amount. Please use: 80, 800, or 8000 XFG`);
         return;
       }
 
-      log(`Creating CD deposit: ${amount} XFG for ${term} months...`);
-      const result = await electronAPI.createCdDeposit({ amount, term });
+      log(`Creating 3-month CD deposit: ${amount} XFG @ 8% APY...`);
+      const result = await electronAPI.createCdDeposit({ 
+        amount, 
+        term: STANDARD_CD_TERM 
+      });
 
       if (result.status === 'success') {
         log(`✅ CD deposit created: ${result.txHash}`);
+        log(`   Expected interest: ${(amount * 0.08 * 0.25).toFixed(2)} XFG after 3 months`);
         
         // Clear form
         document.getElementById('cdAmount').value = '';
-        document.getElementById('cdTerm').value = '';
         document.getElementById('cdPreview').classList.add('hidden');
-        selectedCdTerm = null;
-        selectedCdApy = null;
 
         // Reload deposits
         setTimeout(loadCdDeposits, 2000);

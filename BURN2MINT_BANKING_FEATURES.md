@@ -105,33 +105,41 @@ Certificate of Deposit system allowing users to lock XFG for fixed terms and ear
 
 ### Features
 
-#### CD Terms & Rates
-| Term | APY | Min Deposit |
-|------|-----|-------------|
-| 1 Month | 5% | 10 XFG |
-| 6 Months | 8% | 10 XFG |
-| 12 Months | 12% | 10 XFG |
+#### Standard CD Terms
+| Term | APY | Allowed Amounts |
+|------|-----|-----------------|
+| 3 Months | 8% | 80, 800, or 8000 XFG |
+
+**Fixed Standard Term:** All CD deposits are locked for exactly 3 months (90 days) at 8% annual yield.
+
+**Deposit Tiers:**
+- 🥉 **Basic**: 80 XFG → +1.6 XFG interest
+- 🥈 **Standard**: 800 XFG → +16 XFG interest
+- 🥇 **Premium**: 8000 XFG → +160 XFG interest
 
 #### Interest Calculation
 ```
 Interest = Principal × (APY / 100) × (Months / 12)
+Interest = Principal × 0.08 × 0.25
+Interest = Principal × 0.02
 Total = Principal + Interest
 ```
 
-**Example:**
-- Deposit: 100 XFG
-- Term: 12 months @ 12% APY
-- Interest: 100 × 0.12 × 1 = 12 XFG
-- Maturity Value: 112 XFG
+**Examples:**
+
+| Deposit | Interest (3 mo) | Maturity Value |
+|---------|-----------------|----------------|
+| 80 XFG  | 1.6 XFG        | 81.6 XFG      |
+| 800 XFG | 16 XFG         | 816 XFG       |
+| 8000 XFG| 160 XFG        | 8160 XFG      |
 
 ### User Flow
 
 #### Creating a CD
-1. **Enter amount** (min 10 XFG)
-2. **Select term** (1, 6, or 12 months)
-3. **Preview calculation** (real-time)
-4. **Confirm deposit**
-5. **Funds locked** until maturity
+1. **Select amount** (80, 800, or 8000 XFG quick buttons)
+2. **Preview calculation** (real-time, 3 months @ 8% APY)
+3. **Confirm deposit**
+4. **Funds locked** for 3 months (90 days)
 
 #### Managing CDs
 - **View all active CDs** with:
@@ -233,25 +241,29 @@ ipcMain.handle('withdraw-cd-deposit', async (event, { depositId }) => {
 ┌─────────────────────────────────────┐
 │  🏦 Certificate of Deposit          │
 ├─────────────────────────────────────┤
-│  💰 Earn Interest: Lock XFG for     │
-│     guaranteed yields               │
+│  💰 Earn 8% APY: Lock XFG for       │
+│     3 months guaranteed yield       │
 ├─────────────────────────────────────┤
-│  Deposit Amount: [____] XFG         │
+│  Select Deposit Amount:             │
+│  [80 XFG] [800 XFG] [8000 XFG]     │
+│  [________________] XFG             │
 │                                     │
-│  Term: [1 Mo (5%)] [6 Mo (8%)]     │
-│        [12 Mo (12%)]                │
+│  Standard Term: 3 Months @ 8% APY   │
+│  📅 Lock: 90 days                   │
+│  📈 Yield: 8% APY                   │
+│  💵 Min: 80 XFG                     │
 │                                     │
 │  Preview:                           │
-│  • Deposit: 100 XFG                 │
-│  • Term: 12 months                  │
-│  • Interest: 12 XFG                 │
-│  • Total: 112 XFG                   │
+│  • Deposit: 800 XFG                 │
+│  • Term: 3 months (8% APY)          │
+│  • Interest: 16 XFG                 │
+│  • Total: 816 XFG                   │
 │                                     │
-│  [🏦 Create CD Deposit]             │
+│  [🏦 Create 3-Month CD Deposit]     │
 ├─────────────────────────────────────┤
 │  Active CDs:                        │
-│  • 100 XFG (+12) - 🔒 Locked        │
-│  • 50 XFG (+4) - ✅ [Withdraw]     │
+│  • 800 XFG (+16) - 🔒 Locked        │
+│  • 80 XFG (+1.6) - ✅ [Withdraw]   │
 └─────────────────────────────────────┘
 ```
 
@@ -303,12 +315,11 @@ User Wallet (XFG + Interest)
 ### Banking
 1. Launch Electron wallet
 2. Navigate to **Banking** tab
-3. Enter deposit amount (min 10 XFG)
-4. Select term (1, 6, or 12 months)
-5. Review interest preview
-6. Click **Create CD Deposit**
-7. Wait for maturity
-8. Withdraw principal + interest
+3. Select deposit amount (80, 800, or 8000 XFG)
+4. Review interest preview (auto-calculated)
+5. Click **Create 3-Month CD Deposit**
+6. Wait for maturity (90 days)
+7. Withdraw principal + interest
 
 ---
 
@@ -332,14 +343,19 @@ User Wallet (XFG + Interest)
 ### Banking Issues
 
 **CD creation fails:**
-- Ensure minimum 10 XFG deposit
-- Check wallet has sufficient balance
-- Verify term is selected
+- Only 80, 800, or 8000 XFG amounts accepted
+- Check wallet has sufficient balance (min 80 XFG)
+- Ensure you selected a valid tier amount
+
+**Invalid amount error:**
+- CD deposits must be exactly 80, 800, or 8000 XFG
+- Use the quick select buttons for convenience
+- Custom amounts are not permitted
 
 **Can't withdraw CD:**
 - CD must be mature (unlockHeight reached)
 - Check current block height
-- Locked CDs cannot be withdrawn early
+- Locked CDs cannot be withdrawn early (3-month lock)
 
 ---
 
@@ -353,11 +369,12 @@ User Wallet (XFG + Interest)
 - [ ] HEAT balance display
 
 ### Banking
-- [ ] Custom term selection
+- [ ] Additional deposit tiers
 - [ ] Compound interest option
 - [ ] Early withdrawal penalty system
 - [ ] CD transfer/trading
 - [ ] Interest history chart
+- [ ] Flexible term lengths (beyond 3 months)
 
 ---
 
@@ -391,13 +408,14 @@ User Wallet (XFG + Interest)
 - [ ] View burn history
 
 ### Banking
-- [ ] Create 1-month CD
-- [ ] Create 6-month CD
-- [ ] Create 12-month CD
+- [ ] Create 80 XFG CD (Basic tier)
+- [ ] Create 800 XFG CD (Standard tier)
+- [ ] Create 8000 XFG CD (Premium tier)
 - [ ] Interest calculator preview
 - [ ] View active CDs
-- [ ] Withdraw mature CD
+- [ ] Withdraw mature CD (after 3 months)
 - [ ] Attempt early withdrawal (should fail)
+- [ ] Test invalid amounts (should reject)
 
 ---
 

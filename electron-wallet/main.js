@@ -7,7 +7,9 @@ const fetch = require('node-fetch');
 let mainWindow;
 let nodeProcess = null;
 let walletProcess = null;
+let simpleWalletProcess = null;
 let nodeReady = false;
+let walletReady = false;
 
 const NODE_RPC_PORT = 18081;
 const WALLET_RPC_PORT = 18082;
@@ -29,13 +31,22 @@ function getDataDir() {
   return path.join(app.getPath('userData'), 'fuego-data');
 }
 
-// Ensure data directory exists
+// Get wallet directory
+function getWalletDir() {
+  return path.join(app.getPath('userData'), 'wallets');
+}
+
+// Ensure directories exist
 function ensureDataDir() {
   const dataDir = getDataDir();
+  const walletDir = getWalletDir();
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
-  return dataDir;
+  if (!fs.existsSync(walletDir)) {
+    fs.mkdirSync(walletDir, { recursive: true });
+  }
+  return { dataDir, walletDir };
 }
 
 // Create main window
@@ -64,11 +75,16 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
   ensureDataDir();
+  // Auto-start node on launch
+  setTimeout(() => {
+    startNode();
+  }, 1000);
 });
 
 app.on('window-all-closed', () => {
   if (nodeProcess) nodeProcess.kill();
   if (walletProcess) walletProcess.kill();
+  if (simpleWalletProcess) simpleWalletProcess.kill();
   app.quit();
 });
 
@@ -92,6 +108,9 @@ async function jsonRpc(port, method, params = {}) {
       })
     });
     const data = await response.json();
+    if (data.error) {
+      throw new Error(data.error.message || JSON.stringify(data.error));
+    }
     return data.result || data;
   } catch (error) {
     console.error('RPC Error:', error);
@@ -99,54 +118,120 @@ async function jsonRpc(port, method, params = {}) {
   }
 }
 
-// IPC Handlers
-ipcMain.handle('start-node', async () => {
+// Start node process
+function startNode() {
   if (nodeProcess) {
+    mainWindow.webContents.send('node-log', 'Node already running');
     return { status: 'already-running', message: 'Node is already running' };
   }
 
   const dataDir = getDataDir();
   const fuegodPath = getBinaryPath('fuegod');
   
-  return new Promise((resolve) => {
-    nodeProcess = spawn(fuegodPath, [
-      `--data-dir=${dataDir}`,
-      `--rpc-bind-port=${NODE_RPC_PORT}`,
-      '--restricted-rpc',
-      '--enable-cors=*',
-      '--log-level=1'
-    ]);
+  nodeProcess = spawn(fuegodPath, [
+    `--data-dir=${dataDir}`,
+    `--rpc-bind-port=${NODE_RPC_PORT}`,
+    '--restricted-rpc',
+    '--enable-cors=*',
+    '--log-level=1'
+  ]);
 
-    nodeProcess.stdout.on('data', (data) => {
-      const msg = data.toString();
-      console.log('[NODE]', msg);
-      mainWindow.webContents.send('node-log', msg);
-      
-      if (msg.includes('Core initialized OK') || msg.includes('Node started')) {
-        nodeReady = true;
-      }
-    });
-
-    nodeProcess.stderr.on('data', (data) => {
-      console.error('[NODE ERROR]', data.toString());
-      mainWindow.webContents.send('node-error', data.toString());
-    });
-
-    nodeProcess.on('close', (code) => {
-      console.log(`Node process exited with code ${code}`);
-      nodeProcess = null;
-      nodeReady = false;
-      mainWindow.webContents.send('node-stopped');
-    });
-
-    setTimeout(() => {
-      resolve({ 
-        status: 'starting', 
-        message: 'Node is starting...',
-        port: NODE_RPC_PORT 
-      });
-    }, 1000);
+  nodeProcess.stdout.on('data', (data) => {
+    const msg = data.toString();
+    console.log('[NODE]', msg);
+    mainWindow.webContents.send('node-log', msg);
+    
+    if (msg.includes('Core initialized OK') || msg.includes('Node started')) {
+      nodeReady = true;
+      mainWindow.webContents.send('node-ready');
+      // Auto-start wallet after node is ready
+      setTimeout(startWalletRPC, 2000);
+    }
   });
+
+  nodeProcess.stderr.on('data', (data) => {
+    console.error('[NODE ERROR]', data.toString());
+    mainWindow.webContents.send('node-error', data.toString());
+  });
+
+  nodeProcess.on('close', (code) => {
+    console.log(`Node process exited with code ${code}`);
+    nodeProcess = null;
+    nodeReady = false;
+    mainWindow.webContents.send('node-stopped');
+  });
+
+  return { 
+    status: 'starting', 
+    message: 'Node is starting...',
+    port: NODE_RPC_PORT 
+  };
+}
+
+// Start wallet RPC
+function startWalletRPC() {
+  if (walletProcess) {
+    return { status: 'already-running' };
+  }
+
+  const walletDir = getWalletDir();
+  const walletdPath = getBinaryPath('walletd');
+  const walletFile = path.join(walletDir, 'wallet.bin');
+
+  walletProcess = spawn(walletdPath, [
+    `--container-file=${walletFile}`,
+    `--container-password=`,
+    `--rpc-bind-port=${WALLET_RPC_PORT}`,
+    `--daemon-address=127.0.0.1:${NODE_RPC_PORT}`,
+    '--log-level=1'
+  ]);
+
+  walletProcess.stdout.on('data', (data) => {
+    const msg = data.toString();
+    console.log('[WALLET]', msg);
+    mainWindow.webContents.send('wallet-log', msg);
+    
+    if (msg.includes('Wallet loading is finished') || msg.includes('walletd started')) {
+      walletReady = true;
+      mainWindow.webContents.send('wallet-ready');
+      // Load wallet info
+      setTimeout(loadWalletInfo, 1000);
+    }
+  });
+
+  walletProcess.stderr.on('data', (data) => {
+    console.error('[WALLET ERROR]', data.toString());
+    mainWindow.webContents.send('wallet-error', data.toString());
+  });
+
+  walletProcess.on('close', (code) => {
+    console.log(`Wallet process exited with code ${code}`);
+    walletProcess = null;
+    walletReady = false;
+    mainWindow.webContents.send('wallet-stopped');
+  });
+
+  return { status: 'started', port: WALLET_RPC_PORT };
+}
+
+// Load wallet info
+async function loadWalletInfo() {
+  try {
+    const addresses = await jsonRpc(WALLET_RPC_PORT, 'getAddresses');
+    if (addresses && addresses.addresses && addresses.addresses.length > 0) {
+      mainWindow.webContents.send('wallet-info', {
+        address: addresses.addresses[0],
+        hasWallet: true
+      });
+    }
+  } catch (error) {
+    console.error('Failed to load wallet info:', error);
+  }
+}
+
+// IPC Handlers
+ipcMain.handle('start-node', async () => {
+  return startNode();
 });
 
 ipcMain.handle('stop-node', async () => {
@@ -167,13 +252,14 @@ ipcMain.handle('get-node-status', async () => {
   }
 
   try {
-    const info = await jsonRpc(NODE_RPC_PORT, 'get_info');
+    const info = await jsonRpc(NODE_RPC_PORT, 'getinfo');
     return {
       running: true,
       height: info.height || 0,
-      peers: info.incoming_connections_count + info.outgoing_connections_count || 0,
+      peers: (info.incoming_connections_count || 0) + (info.outgoing_connections_count || 0),
       difficulty: info.difficulty || 0,
-      hashrate: info.hashrate || 0
+      hashrate: info.hashrate || 0,
+      tx_pool_size: info.tx_pool_size || 0
     };
   } catch (error) {
     return { running: false, height: 0, peers: 0 };
@@ -181,36 +267,12 @@ ipcMain.handle('get-node-status', async () => {
 });
 
 ipcMain.handle('start-wallet-rpc', async () => {
-  if (walletProcess) {
-    return { status: 'already-running' };
-  }
-
-  const dataDir = getDataDir();
-  const walletdPath = getBinaryPath('walletd');
-  const walletFile = path.join(dataDir, 'wallet.bin');
-
-  walletProcess = spawn(walletdPath, [
-    `--container-file=${walletFile}`,
-    `--container-password=`,
-    `--rpc-bind-port=${WALLET_RPC_PORT}`,
-    '--daemon-port=' + NODE_RPC_PORT,
-    '--log-level=1'
-  ]);
-
-  walletProcess.stdout.on('data', (data) => {
-    console.log('[WALLET]', data.toString());
-  });
-
-  walletProcess.stderr.on('data', (data) => {
-    console.error('[WALLET ERROR]', data.toString());
-  });
-
-  return { status: 'started', port: WALLET_RPC_PORT };
+  return startWalletRPC();
 });
 
 ipcMain.handle('create-wallet', async (event, password) => {
-  const dataDir = getDataDir();
-  const walletFile = path.join(dataDir, 'wallet.bin');
+  const walletDir = getWalletDir();
+  const walletFile = path.join(walletDir, 'wallet.bin');
   
   // Check if wallet already exists
   if (fs.existsSync(walletFile)) {
@@ -221,9 +283,11 @@ ipcMain.handle('create-wallet', async (event, password) => {
   }
 
   try {
-    // Create wallet via RPC
-    await jsonRpc(WALLET_RPC_PORT, 'create_address');
-    const addresses = await jsonRpc(WALLET_RPC_PORT, 'get_addresses');
+    // Create new address via RPC
+    const result = await jsonRpc(WALLET_RPC_PORT, 'createAddress');
+    const addresses = await jsonRpc(WALLET_RPC_PORT, 'getAddresses');
+    
+    // Save wallet (walletd automatically saves)
     
     return {
       status: 'created',
@@ -237,7 +301,7 @@ ipcMain.handle('create-wallet', async (event, password) => {
 
 ipcMain.handle('get-balance', async () => {
   try {
-    const balance = await jsonRpc(WALLET_RPC_PORT, 'get_balance');
+    const balance = await jsonRpc(WALLET_RPC_PORT, 'getBalance');
     return {
       available: (balance.availableBalance || 0) / 100000000,
       locked: (balance.lockedAmount || 0) / 100000000
@@ -249,22 +313,23 @@ ipcMain.handle('get-balance', async () => {
 
 ipcMain.handle('get-address', async () => {
   try {
-    const addresses = await jsonRpc(WALLET_RPC_PORT, 'get_addresses');
-    return { address: addresses.addresses[0] };
+    const addresses = await jsonRpc(WALLET_RPC_PORT, 'getAddresses');
+    return { address: addresses.addresses[0] || '' };
   } catch (error) {
     return { address: '' };
   }
 });
 
-ipcMain.handle('send-transaction', async (event, { address, amount, fee = 0.1 }) => {
+ipcMain.handle('send-transaction', async (event, { address, amount, fee = 0.01 }) => {
   try {
     const amountAtomic = Math.floor(amount * 100000000);
     const feeAtomic = Math.floor(fee * 100000000);
     
-    const result = await jsonRpc(WALLET_RPC_PORT, 'send_transaction', {
+    const result = await jsonRpc(WALLET_RPC_PORT, 'sendTransaction', {
       transfers: [{ address, amount: amountAtomic }],
       fee: feeAtomic,
-      anonymity: 4
+      anonymity: 4,
+      changeAddress: ''
     });
     
     return {
@@ -280,7 +345,144 @@ ipcMain.handle('send-transaction', async (event, { address, amount, fee = 0.1 })
   }
 });
 
+ipcMain.handle('get-transactions', async (event, { limit = 50 }) => {
+  try {
+    const result = await jsonRpc(WALLET_RPC_PORT, 'getTransactions', {
+      firstBlockIndex: 0,
+      blockCount: 1000000
+    });
+    
+    const items = result.items || [];
+    const transactions = items.slice(0, limit).map(tx => ({
+      hash: tx.transactionHash,
+      timestamp: tx.timestamp,
+      amount: (tx.amount || 0) / 100000000,
+      fee: (tx.fee || 0) / 100000000,
+      blockHeight: tx.blockIndex,
+      confirmations: tx.confirmations || 0
+    }));
+    
+    return { transactions };
+  } catch (error) {
+    return { transactions: [] };
+  }
+});
+
+ipcMain.handle('get-mnemonic', async () => {
+  try {
+    const result = await jsonRpc(WALLET_RPC_PORT, 'getMnemonicSeed', {
+      address: ''
+    });
+    
+    return {
+      status: 'success',
+      seed: result.mnemonicSeed
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      message: error.message
+    };
+  }
+});
+
+ipcMain.handle('restore-wallet', async (event, { seed }) => {
+  const walletDir = getWalletDir();
+  const walletFile = path.join(walletDir, 'wallet.bin');
+  
+  // Check if wallet already exists
+  if (fs.existsSync(walletFile)) {
+    return { 
+      status: 'error', 
+      message: 'Wallet already exists. Delete existing wallet first.' 
+    };
+  }
+
+  try {
+    // This would need special handling - typically requires restarting walletd
+    // with --mnemonic-seed parameter or using importKey
+    return {
+      status: 'error',
+      message: 'Wallet restore requires restart. Please use command-line wallet for restore.'
+    };
+  } catch (error) {
+    return { status: 'error', message: error.message };
+  }
+});
+
+ipcMain.handle('delete-wallet', async () => {
+  const walletDir = getWalletDir();
+  const walletFile = path.join(walletDir, 'wallet.bin');
+  
+  try {
+    // Stop wallet first
+    if (walletProcess) {
+      walletProcess.kill();
+      walletProcess = null;
+      walletReady = false;
+    }
+    
+    // Delete wallet file
+    if (fs.existsSync(walletFile)) {
+      fs.unlinkSync(walletFile);
+    }
+    
+    // Also delete related files
+    const walletKeys = walletFile + '.keys';
+    const walletAddress = walletFile + '.address.txt';
+    if (fs.existsSync(walletKeys)) fs.unlinkSync(walletKeys);
+    if (fs.existsSync(walletAddress)) fs.unlinkSync(walletAddress);
+    
+    return {
+      status: 'success',
+      message: 'Wallet deleted successfully'
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      message: error.message
+    };
+  }
+});
+
+ipcMain.handle('export-keys', async () => {
+  try {
+    const result = await jsonRpc(WALLET_RPC_PORT, 'getViewKey');
+    const spendResult = await jsonRpc(WALLET_RPC_PORT, 'getSpendKeys', {
+      address: ''
+    });
+    
+    return {
+      status: 'success',
+      viewKey: result.viewSecretKey,
+      spendKey: spendResult.spendSecretKey
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      message: error.message
+    };
+  }
+});
+
 ipcMain.handle('open-dialog', async (event, options) => {
   const result = await dialog.showMessageBox(mainWindow, options);
   return result;
+});
+
+ipcMain.handle('save-file', async (event, { content, filename }) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    defaultPath: filename,
+    filters: [
+      { name: 'Text Files', extensions: ['txt'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+  
+  if (!result.canceled && result.filePath) {
+    fs.writeFileSync(result.filePath, content);
+    return { status: 'success', path: result.filePath };
+  }
+  
+  return { status: 'cancelled' };
 });

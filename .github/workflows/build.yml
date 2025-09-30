@@ -2,10 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master, dynamigo-release-v10 ]
+    branches: [ master, dynamigo-release-v10, dynamigo ]
   pull_request:
     branches: [ master ]
-  workflow_dispatch:
 
 jobs:
   build:

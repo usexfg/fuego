@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fuego Wallet</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      color: #ffffff;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 20px 30px;
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .fire-icon {
+      font-size: 32px;
+    }
+
+    .node-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #666;
+      transition: all 0.3s;
+    }
+
+    .status-dot.active {
+      background: #4CAF50;
+      box-shadow: 0 0 10px #4CAF50;
+    }
+
+    main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(255, 107, 53, 0.3);
+    }
+
+    .balance-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .balance-amount {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .balance-usd {
+      font-size: 18px;
+      opacity: 0.8;
+    }
+
+    .address-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .address-label {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .address-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .address-text {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      word-break: break-all;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .send-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #FF6B35;
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .logs {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .status-bar {
+      padding: 12px 30px;
+      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.7;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 107, 53, 0.5);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 107, 53, 0.7);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span class="fire-icon">🔥</span>
+        <span>Fuego Wallet</span>
+      </div>
+      <div class="node-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Node Offline</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="balance-card">
+        <div class="balance-label">Total Balance</div>
+        <div class="balance-amount" id="balanceAmount">0.00 XFG</div>
+        <div class="balance-usd" id="balanceLocked">Locked: 0.00 XFG</div>
+      </div>
+
+      <div class="address-section">
+        <div class="address-label">Your Address</div>
+        <div class="address-display">
+          <div class="address-text" id="addressText">No wallet loaded</div>
+          <button class="btn btn-secondary btn-small" onclick="copyAddress()">📋 Copy</button>
+        </div>
+      </div>
+
+      <div class="actions-grid">
+        <button class="btn btn-primary" onclick="startNode()">🚀 Start Node</button>
+        <button class="btn btn-secondary" onclick="createWallet()">➕ Create Wallet</button>
+        <button class="btn btn-secondary" onclick="refresh()">🔄 Refresh</button>
+        <button class="btn btn-secondary" onclick="stopNode()">⏹️ Stop Node</button>
+      </div>
+
+      <div class="send-section">
+        <h3 style="margin-bottom: 20px;">Send XFG</h3>
+        <div class="form-group">
+          <label class="form-label">Recipient Address</label>
+          <input type="text" class="form-input" id="sendAddress" placeholder="fuego...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount (XFG)</label>
+          <input type="number" class="form-input" id="sendAmount" placeholder="0.00" step="0.01">
+        </div>
+        <button class="btn btn-primary" onclick="sendTransaction()" style="width: 100%;">📤 Send Transaction</button>
+      </div>
+
+      <div class="logs" id="logs">
+        <div class="log-entry">Ready to start...</div>
+      </div>
+    </main>
+
+    <div class="status-bar">
+      <div class="status-item">
+        <span>Height:</span>
+        <span id="blockHeight">0</span>
+      </div>
+      <div class="status-item">
+        <span>Peers:</span>
+        <span id="peerCount">0</span>
+      </div>
+      <div class="status-item">
+        <span>Synced:</span>
+        <span id="syncStatus">No</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { electronAPI } = window;
+
+    // State
+    let nodeRunning = false;
+    let walletAddress = '';
+
+    // Start node
+    async function startNode() {
+      log('Starting node...');
+      const result = await electronAPI.startNode();
+      log(result.message);
+      
+      if (result.status === 'starting' || result.status === 'already-running') {
+        nodeRunning = true;
+        updateNodeStatus(true);
+        
+        // Auto-start wallet RPC after node starts
+        setTimeout(async () => {
+          await electronAPI.startWalletRpc();
+          log('Wallet RPC started');
+          await loadWallet();
+        }, 3000);
+      }
+    }
+
+    // Stop node
+    async function stopNode() {
+      const result = await electronAPI.stopNode();
+      log(result.message);
+      nodeRunning = false;
+      updateNodeStatus(false);
+    }
+
+    // Create wallet
+    async function createWallet() {
+      log('Creating wallet...');
+      const result = await electronAPI.createWallet('');
+      
+      if (result.status === 'created') {
+        walletAddress = result.address;
+        document.getElementById('addressText').textContent = walletAddress;
+        log(`Wallet created: ${walletAddress}`);
+      } else {
+        log(result.message);
+      }
+    }
+
+    // Load wallet
+    async function loadWallet() {
+      const result = await electronAPI.getAddress();
+      if (result.address) {
+        walletAddress = result.address;
+        document.getElementById('addressText').textContent = walletAddress;
+        log(`Wallet loaded: ${walletAddress}`);
+        await refresh();
+      }
+    }
+
+    // Refresh balance
+    async function refresh() {
+      const balance = await electronAPI.getBalance();
+      document.getElementById('balanceAmount').textContent = `${balance.available.toFixed(8)} XFG`;
+      document.getElementById('balanceLocked').textContent = `Locked: ${balance.locked.toFixed(8)} XFG`;
+      
+      // Update node status
+      const status = await electronAPI.getNodeStatus();
+      document.getElementById('blockHeight').textContent = status.height;
+      document.getElementById('peerCount').textContent = status.peers;
+      document.getElementById('syncStatus').textContent = status.running ? 'Yes' : 'No';
+      updateNodeStatus(status.running);
+    }
+
+    // Send transaction
+    async function sendTransaction() {
+      const address = document.getElementById('sendAddress').value;
+      const amount = parseFloat(document.getElementById('sendAmount').value);
+      
+      if (!address || !amount) {
+        log('Please enter address and amount');
+        return;
+      }
+      
+      log(`Sending ${amount} XFG to ${address}...`);
+      const result = await electronAPI.sendTransaction({ address, amount });
+      
+      if (result.status === 'success') {
+        log(`Transaction sent! Hash: ${result.transactionHash}`);
+        document.getElementById('sendAddress').value = '';
+        document.getElementById('sendAmount').value = '';
+        setTimeout(refresh, 2000);
+      } else {
+        log(`Error: ${result.message}`);
+      }
+    }
+
+    // Copy address
+    function copyAddress() {
+      if (walletAddress) {
+        navigator.clipboard.writeText(walletAddress);
+        log('Address copied to clipboard');
+      }
+    }
+
+    // Update node status indicator
+    function updateNodeStatus(running) {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      
+      if (running) {
+        dot.classList.add('active');
+        text.textContent = 'Node Running';
+      } else {
+        dot.classList.remove('active');
+        text.textContent = 'Node Offline';
+      }
+    }
+
+    // Log message
+    function log(message) {
+      const logs = document.getElementById('logs');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logs.appendChild(entry);
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    // Listen to node logs
+    electronAPI.onNodeLog((data) => {
+      log(`[NODE] ${data.trim()}`);
+    });
+
+    electronAPI.onNodeError((data) => {
+      log(`[ERROR] ${data.trim()}`);
+    });
+
+    electronAPI.onNodeStopped(() => {
+      log('Node stopped');
+      updateNodeStatus(false);
+    });
+
+    // Auto-refresh every 5 seconds
+    setInterval(() => {
+      if (nodeRunning) {
+        refresh();
+      }
+    }, 5000);
+
+    // Initial load
+    log('Fuego Wallet ready');
+  </script>
+</body>
+</html>

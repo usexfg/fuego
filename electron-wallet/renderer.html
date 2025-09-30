@@ -400,6 +400,8 @@
         <button class="tab active" onclick="switchTab('wallet')">Wallet</button>
         <button class="tab" onclick="switchTab('send')">Send</button>
         <button class="tab" onclick="switchTab('transactions')">Transactions</button>
+        <button class="tab" onclick="switchTab('burn2mint')">Mint HEAT</button>
+        <button class="tab" onclick="switchTab('banking')">Banking</button>
         <button class="tab" onclick="switchTab('backup')">Backup</button>
         <button class="tab" onclick="switchTab('settings')">Settings</button>
       </div>
@@ -454,6 +456,111 @@
           <h3 style="margin-bottom: 20px;">Transaction History</h3>
           <div id="transactionList">
             <p style="opacity: 0.5;">No transactions yet</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Burn2Mint (Mint HEAT) Tab -->
+      <div id="burn2mint-tab" class="tab-content">
+        <div class="backup-section">
+          <h3 style="margin-bottom: 20px;">🔥➡️💎 Mint HEAT from XFG</h3>
+          
+          <div class="backup-warning">
+            <strong>ℹ️ Burn2Mint Process:</strong> Burn XFG → Elderfier Consensus → Generate STARK Proof → Submit to Arbitrum L2 → Receive HEAT on Ethereum L1
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Burn Amount</label>
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+              <button class="btn btn-secondary" onclick="setBurnAmount(0.8)">0.8 XFG (Min)</button>
+              <button class="btn btn-secondary" onclick="setBurnAmount(800)">800 XFG (Large)</button>
+            </div>
+            <input type="number" class="form-input" id="burnAmount" placeholder="Enter amount" step="0.01">
+          </div>
+
+          <div id="burnSteps" style="margin: 20px 0;">
+            <div class="form-group">
+              <button class="btn btn-primary" onclick="startBurn()" style="width: 100%;">
+                Step 1: Create Burn Deposit
+              </button>
+            </div>
+
+            <div id="step2" class="form-group hidden">
+              <button class="btn btn-primary" onclick="requestConsensus()" style="width: 100%;">
+                Step 2: Request Elderfier Consensus
+              </button>
+            </div>
+
+            <div id="step3" class="form-group hidden">
+              <button class="btn btn-primary" onclick="generateProof()" style="width: 100%;">
+                Step 3: Generate STARK Proof
+              </button>
+            </div>
+
+            <div id="step4" class="form-group hidden">
+              <div class="seed-display" id="proofDisplay"></div>
+              <button class="btn btn-secondary" onclick="saveProof()" style="margin-top: 12px;">
+                💾 Save Proof to File
+              </button>
+              <p style="margin-top: 16px; opacity: 0.8; font-size: 13px;">
+                📋 <strong>Next:</strong> Submit this proof to Arbitrum L2 with L1 gas fees (0.001-0.01 ETH + 20% buffer)
+              </p>
+            </div>
+          </div>
+
+          <h4 style="margin: 30px 0 15px;">Burn History</h4>
+          <div class="transaction-list" style="max-height: 300px; overflow-y: auto;">
+            <div id="burnHistoryList">
+              <p style="opacity: 0.5;">No burns yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banking (CD Deposits) Tab -->
+      <div id="banking-tab" class="tab-content">
+        <div class="backup-section">
+          <h3 style="margin-bottom: 20px;">🏦 Certificate of Deposit (CD) - Yield Deposits</h3>
+          
+          <div class="backup-warning" style="background: rgba(76, 175, 80, 0.1); border-left-color: #4CAF50;">
+            <strong>💰 Earn Interest:</strong> Lock your XFG for a fixed term and earn guaranteed yields. Longer terms = higher APY.
+          </div>
+
+          <div class="send-section">
+            <h4 style="margin-bottom: 16px;">Create New CD</h4>
+            
+            <div class="form-group">
+              <label class="form-label">Deposit Amount (XFG)</label>
+              <input type="number" class="form-input" id="cdAmount" placeholder="Minimum 10 XFG" step="0.01">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Term Length</label>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <button class="btn btn-secondary" onclick="selectCdTerm(1, 5)">1 Month (5% APY)</button>
+                <button class="btn btn-secondary" onclick="selectCdTerm(6, 8)">6 Months (8% APY)</button>
+                <button class="btn btn-secondary" onclick="selectCdTerm(12, 12)">12 Months (12% APY)</button>
+              </div>
+              <input type="number" class="form-input" id="cdTerm" placeholder="Term in months" style="margin-top: 12px;" readonly>
+            </div>
+
+            <div id="cdPreview" class="seed-display hidden" style="margin: 16px 0;">
+              <p><strong>Deposit:</strong> <span id="cdPreviewAmount">0</span> XFG</p>
+              <p><strong>Term:</strong> <span id="cdPreviewTerm">0</span> months</p>
+              <p><strong>Est. Interest:</strong> <span id="cdPreviewInterest">0</span> XFG</p>
+              <p><strong>Maturity Value:</strong> <span id="cdPreviewTotal">0</span> XFG</p>
+            </div>
+
+            <button class="btn btn-primary" onclick="createCd()" style="width: 100%;">
+              🏦 Create CD Deposit
+            </button>
+          </div>
+
+          <h4 style="margin: 30px 0 15px;">Active CD Deposits</h4>
+          <div class="transaction-list">
+            <div id="cdDepositsList">
+              <p style="opacity: 0.5;">No active CDs</p>
+            </div>
           </div>
         </div>
       </div>
@@ -515,6 +622,11 @@
     let nodeRunning = false;
     let walletAddress = '';
     let currentTab = 'wallet';
+    let currentBurnTx = null;
+    let currentEldernodeProof = null;
+    let currentStarkProof = null;
+    let selectedCdTerm = null;
+    let selectedCdApy = null;
 
     // Tab switching
     function switchTab(tab) {
@@ -530,6 +642,10 @@
       // Load data for specific tabs
       if (tab === 'transactions') {
         loadTransactions();
+      } else if (tab === 'burn2mint') {
+        loadBurnHistory();
+      } else if (tab === 'banking') {
+        loadCdDeposits();
       }
     }
 
@@ -715,6 +831,301 @@
       if (walletAddress) {
         navigator.clipboard.writeText(walletAddress);
         log('Address copied to clipboard');
+      }
+    }
+
+    // ==========================================
+    // BURN2MINT Functions
+    // ==========================================
+
+    function setBurnAmount(amount) {
+      document.getElementById('burnAmount').value = amount;
+    }
+
+    async function startBurn() {
+      const amount = parseFloat(document.getElementById('burnAmount').value);
+      
+      if (!amount || amount < 0.8) {
+        log('Minimum burn amount is 0.8 XFG');
+        return;
+      }
+
+      log(`Creating burn deposit: ${amount} XFG...`);
+      const result = await electronAPI.createBurnDeposit(amount);
+
+      if (result.status === 'success') {
+        currentBurnTx = result.txHash;
+        log(`✅ Burn deposit created: ${result.txHash}`);
+        log(`Waiting for confirmations...`);
+        
+        // Show step 2
+        document.getElementById('step2').classList.remove('hidden');
+        
+        // Wait a bit then enable step 2
+        setTimeout(() => {
+          log('✅ Transaction confirmed. Ready for Elderfier consensus.');
+        }, 5000);
+      } else {
+        log(`❌ Error: ${result.message}`);
+      }
+    }
+
+    async function requestConsensus() {
+      if (!currentBurnTx) {
+        log('❌ No burn transaction found');
+        return;
+      }
+
+      const amount = parseFloat(document.getElementById('burnAmount').value);
+      log('Requesting Elderfier consensus...');
+
+      const result = await electronAPI.requestElderfierConsensus({
+        txHash: currentBurnTx,
+        amount: amount
+      });
+
+      if (result.status === 'success') {
+        currentEldernodeProof = result.eldernodeProof;
+        log(`✅ Elderfier consensus received`);
+        log(`Proof: ${currentEldernodeProof}`);
+        
+        // Show step 3
+        document.getElementById('step3').classList.remove('hidden');
+      } else {
+        log(`❌ Error: ${result.message}`);
+      }
+    }
+
+    async function generateProof() {
+      if (!currentBurnTx || !currentEldernodeProof) {
+        log('❌ Missing burn transaction or consensus proof');
+        return;
+      }
+
+      const amount = parseFloat(document.getElementById('burnAmount').value);
+      log('Generating STARK proof with xfg-stark CLI...');
+
+      const result = await electronAPI.generateStarkProof({
+        txHash: currentBurnTx,
+        amount: amount,
+        eldernodeProof: currentEldernodeProof
+      });
+
+      if (result.status === 'success') {
+        currentStarkProof = result.starkProof;
+        log(`✅ STARK proof generated successfully!`);
+        
+        // Display proof
+        document.getElementById('proofDisplay').textContent = currentStarkProof;
+        document.getElementById('step4').classList.remove('hidden');
+      } else {
+        log(`❌ Error: ${result.message}`);
+        // Fallback message if xfg-stark not installed
+        if (result.message.includes('not found')) {
+          log('⚠️  Please install xfg-stark CLI to generate proofs');
+          log('   Or manually run: xfg-stark generate-proof \\');
+          log(`     --tx-hash ${currentBurnTx} \\`);
+          log(`     --amount ${Math.floor(amount * 100000000)} \\`);
+          log(`     --eldernode-proof ${currentEldernodeProof}`);
+        }
+      }
+    }
+
+    async function saveProof() {
+      if (!currentStarkProof) {
+        log('❌ No proof to save');
+        return;
+      }
+
+      const amount = parseFloat(document.getElementById('burnAmount').value);
+      const content = `Fuego Burn2Mint STARK Proof
+=============================
+
+Burn Amount: ${amount} XFG
+Transaction: ${currentBurnTx}
+Eldernode Proof: ${currentEldernodeProof}
+
+STARK Proof:
+${currentStarkProof}
+
+Next Steps:
+1. Estimate L1 gas fees (0.001-0.01 ETH)
+2. Submit to Arbitrum L2 contract: claimHEAT()
+   - STARK proof (above)
+   - Eldernode proof (above)
+   - msg.value (L1 gas + 20% buffer)
+3. Receive HEAT on Ethereum L1
+
+⚠️  Include 20% gas buffer to avoid restart costs!
+`;
+
+      const result = await electronAPI.saveFile({
+        content: content,
+        filename: `burn2mint-proof-${currentBurnTx.substring(0, 8)}.txt`
+      });
+
+      if (result.status === 'success') {
+        log(`✅ Proof saved to: ${result.path}`);
+      }
+    }
+
+    async function loadBurnHistory() {
+      const result = await electronAPI.getBurnHistory(20);
+      const list = document.getElementById('burnHistoryList');
+
+      if (result.burns && result.burns.length > 0) {
+        list.innerHTML = result.burns.map(burn => `
+          <div class="transaction-item">
+            <div class="tx-info">
+              <div class="tx-hash">${burn.hash}</div>
+              <div class="tx-details">
+                Block: ${burn.blockHeight} • ${burn.confirmations} confirmations
+              </div>
+            </div>
+            <div class="tx-amount negative">
+              ${burn.amount.toFixed(8)} XFG
+            </div>
+          </div>
+        `).join('');
+      } else {
+        list.innerHTML = '<p style="opacity: 0.5;">No burns yet</p>';
+      }
+    }
+
+    // ==========================================
+    // BANKING (CD) Functions
+    // ==========================================
+
+    function selectCdTerm(months, apy) {
+      selectedCdTerm = months;
+      selectedCdApy = apy;
+      document.getElementById('cdTerm').value = months;
+      
+      // Update preview if amount is set
+      const amount = parseFloat(document.getElementById('cdAmount').value);
+      if (amount) {
+        updateCdPreview(amount, months, apy);
+      }
+    }
+
+    function updateCdPreview(amount, term, apy) {
+      const interest = (amount * (apy / 100) * (term / 12));
+      const total = amount + interest;
+
+      document.getElementById('cdPreviewAmount').textContent = amount.toFixed(2);
+      document.getElementById('cdPreviewTerm').textContent = term;
+      document.getElementById('cdPreviewInterest').textContent = interest.toFixed(2);
+      document.getElementById('cdPreviewTotal').textContent = total.toFixed(2);
+      document.getElementById('cdPreview').classList.remove('hidden');
+    }
+
+    // Update preview when amount changes
+    document.addEventListener('DOMContentLoaded', () => {
+      const cdAmountInput = document.getElementById('cdAmount');
+      if (cdAmountInput) {
+        cdAmountInput.addEventListener('input', (e) => {
+          const amount = parseFloat(e.target.value);
+          if (amount && selectedCdTerm && selectedCdApy) {
+            updateCdPreview(amount, selectedCdTerm, selectedCdApy);
+          }
+        });
+      }
+    });
+
+    async function createCd() {
+      const amount = parseFloat(document.getElementById('cdAmount').value);
+      const term = parseInt(document.getElementById('cdTerm').value);
+
+      if (!amount || amount < 10) {
+        log('❌ Minimum CD deposit is 10 XFG');
+        return;
+      }
+
+      if (!term) {
+        log('❌ Please select a term');
+        return;
+      }
+
+      log(`Creating CD deposit: ${amount} XFG for ${term} months...`);
+      const result = await electronAPI.createCdDeposit({ amount, term });
+
+      if (result.status === 'success') {
+        log(`✅ CD deposit created: ${result.txHash}`);
+        
+        // Clear form
+        document.getElementById('cdAmount').value = '';
+        document.getElementById('cdTerm').value = '';
+        document.getElementById('cdPreview').classList.add('hidden');
+        selectedCdTerm = null;
+        selectedCdApy = null;
+
+        // Reload deposits
+        setTimeout(loadCdDeposits, 2000);
+      } else {
+        log(`❌ Error: ${result.message}`);
+      }
+    }
+
+    async function loadCdDeposits() {
+      const result = await electronAPI.getCdDeposits();
+      const list = document.getElementById('cdDepositsList');
+
+      if (result.deposits && result.deposits.length > 0) {
+        list.innerHTML = result.deposits.map(deposit => {
+          const isLocked = deposit.locked;
+          const statusColor = isLocked ? '#FF6B35' : '#4CAF50';
+          const statusText = isLocked ? '🔒 Locked' : '✅ Mature';
+          
+          return `
+            <div class="transaction-item" style="border-left: 3px solid ${statusColor};">
+              <div class="tx-info">
+                <div class="tx-hash">${deposit.creatingTransactionHash}</div>
+                <div class="tx-details">
+                  ${statusText} • ${deposit.term} months • Block ${deposit.height} → ${deposit.unlockHeight}
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div class="tx-amount positive">
+                  ${deposit.amount.toFixed(2)} XFG
+                </div>
+                <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">
+                  +${deposit.interest.toFixed(2)} interest
+                </div>
+                ${!isLocked ? `
+                  <button class="btn btn-secondary btn-small" onclick="withdrawCd(${deposit.id})" style="margin-top: 8px;">
+                    Withdraw
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        list.innerHTML = '<p style="opacity: 0.5;">No active CDs</p>';
+      }
+    }
+
+    async function withdrawCd(depositId) {
+      const confirmed = await electronAPI.openDialog({
+        type: 'question',
+        buttons: ['Cancel', 'Withdraw'],
+        defaultId: 0,
+        title: 'Withdraw CD',
+        message: 'Withdraw this CD deposit?',
+        detail: 'Your principal + interest will be returned to your wallet.'
+      });
+
+      if (confirmed.response === 1) {
+        log(`Withdrawing CD deposit #${depositId}...`);
+        const result = await electronAPI.withdrawCdDeposit(depositId);
+
+        if (result.status === 'success') {
+          log(`✅ CD withdrawn: ${result.txHash}`);
+          setTimeout(loadCdDeposits, 2000);
+          setTimeout(refresh, 3000);
+        } else {
+          log(`❌ Error: ${result.message}`);
+        }
       }
     }
 

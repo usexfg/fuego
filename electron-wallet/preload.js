@@ -25,6 +25,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMnemonic: () => ipcRenderer.invoke('get-mnemonic'),
   exportKeys: () => ipcRenderer.invoke('export-keys'),
   
+  // Burn2Mint (Mint HEAT)
+  createBurnDeposit: (amount) => ipcRenderer.invoke('create-burn-deposit', { amount }),
+  requestElderfierConsensus: (data) => ipcRenderer.invoke('request-elderfier-consensus', data),
+  generateStarkProof: (data) => ipcRenderer.invoke('generate-stark-proof', data),
+  getBurnHistory: (limit) => ipcRenderer.invoke('get-burn-history', { limit }),
+  
+  // Banking (CD Deposits)
+  createCdDeposit: (data) => ipcRenderer.invoke('create-cd-deposit', data),
+  getCdDeposits: () => ipcRenderer.invoke('get-cd-deposits'),
+  withdrawCdDeposit: (depositId) => ipcRenderer.invoke('withdraw-cd-deposit', { depositId }),
+  
   // Dialogs
   openDialog: (options) => ipcRenderer.invoke('open-dialog', options),
   saveFile: (data) => ipcRenderer.invoke('save-file', data),

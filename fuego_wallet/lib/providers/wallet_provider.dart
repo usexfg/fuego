@@ -418,6 +418,64 @@ class WalletProvider extends ChangeNotifier {
     }
   }
 
+  // Messaging Operations
+  Future<bool> sendMessage({
+    required String recipientAddress,
+    required String message,
+    bool selfDestruct = false,
+    int? destructTime,
+  }) async {
+    try {
+      final success = await _rpcService.sendMessage(
+        recipientAddress: recipientAddress,
+        message: message,
+        selfDestruct: selfDestruct,
+        destructTime: destructTime,
+      );
+      
+      if (success) {
+        // Message sent successfully
+        return true;
+      } else {
+        _setError('Failed to send message');
+        return false;
+      }
+    } catch (e) {
+      _setError('Failed to send message: $e');
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> loadMessages() async {
+    try {
+      final messages = await _rpcService.getMessages();
+      
+      // Transform messages for UI consumption
+      return messages.map((msg) {
+        return {
+          'id': msg['id'] ?? '',
+          'type': msg['type'] ?? 'received', // 'received' or 'sent'
+          'address': msg['address'] ?? '',
+          'content': msg['content'] ?? '',
+          'preview': _generateMessagePreview(msg['content'] as String? ?? ''),
+          'timestamp': msg['timestamp'] ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          'unread': msg['unread'] ?? false,
+          'self_destruct': msg['self_destruct'] ?? false,
+          'attachment': msg['attachment'] ?? false,
+        };
+      }).toList();
+    } catch (e) {
+      _setError('Failed to load messages: $e');
+      return [];
+    }
+  }
+
+  String _generateMessagePreview(String content) {
+    if (content.isEmpty) return 'Encrypted message';
+    if (content.length <= 50) return content;
+    return '${content.substring(0, 50)}...';
+  }
+
   // Helper methods
   void _setLoading(bool loading) {
     _isLoading = loading;

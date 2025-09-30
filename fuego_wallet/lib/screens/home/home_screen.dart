@@ -167,15 +167,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         );
                       },
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.settings,
-                        color: AppTheme.textSecondary,
-                      ),
-                      onPressed: () {
-                        // TODO: Navigate to settings
-                      },
-                    ),
                   ],
                 ),
                 

@@ -38,6 +38,7 @@
 
 #include <System/Dispatcher.h>
 #include <System/Ipv4Address.h>
+#include "ElderfierMenuSystem.h"
 
 std::string remote_fee_address;
 namespace CryptoNote
@@ -106,6 +107,7 @@ namespace CryptoNote
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool payment_id(const std::vector<std::string> &args);
+    bool elderfire(const std::vector<std::string> &args);
 
     bool ask_wallet_create_if_needed();
     std::string resolveAlias(const std::string& aliasUrl);

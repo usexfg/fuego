@@ -629,6 +629,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
   m_consoleHandler.setHandler("payment_id", boost::bind(&simple_wallet::payment_id, this, _1), "Generate random Payment ID");
+  m_consoleHandler.setHandler("elderfire", boost::bind(&simple_wallet::elderfire, this, boost::arg<1>()), "Access Elderfier system - requires node running with --set-fee-address");
 }
 
 /* This function shows the number of outputs in the wallet
@@ -663,6 +664,40 @@ bool simple_wallet::set_log(const std::vector<std::string> &args) {
 bool key_import = true;
 bool simple_wallet::payment_id(const std::vector<std::string> &args) {
   success_msg_writer() << "Payment ID: " << Crypto::rand<Crypto::Hash>();
+  return true;
+}
+
+bool simple_wallet::elderfire(const std::vector<std::string> &args) {
+  // Check if node is running with --set-fee-address by checking fee address
+  std::string feeAddress = getFeeAddress();
+  
+  if (feeAddress.empty()) {
+    fail_msg_writer() << "Elderfier system requires node to be running with --set-fee-address flag";
+    logger(INFO, BRIGHT_YELLOW) << "To access Elderfier features:";
+    logger(INFO, BRIGHT_YELLOW) << "1. Stop your current fuegod instance";
+    logger(INFO, BRIGHT_YELLOW) << "2. Start fuegod with --set-fee-address <your_fee_address>";
+    logger(INFO, BRIGHT_YELLOW) << "3. Restart wallet and try 'elderfire' command again";
+    return true;
+  }
+
+  logger(INFO, BRIGHT_GREEN) << "Fee address detected: " << feeAddress;
+  logger(INFO, BRIGHT_GREEN) << "Elderfier system access granted!";
+  
+  // Create and show the Elderfier menu system
+  try {
+    CryptoNote::ElderfierMenuSystem menuSystem(m_currency, m_wallet.get(), logger);
+    
+    if (menuSystem.isNodeConfiguredForElderfiers(feeAddress)) {
+      success_msg_writer() << "Launching Elderfier menu system...";
+      menuSystem.showElderfierMenu();
+      success_msg_writer() << "Returned from Elderfier menu system.";
+    } else {
+      fail_msg_writer() << "Node configuration check failed for Elderfier system";
+    }
+  } catch (const std::exception& e) {
+    fail_msg_writer() << "Error launching Elderfier menu: " << e.what();
+  }
+  
   return true;
 }
 

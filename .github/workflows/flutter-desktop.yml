@@ -1,0 +1,135 @@
+name: Flutter Desktop Build
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'firefly͖͖wallet/**'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'firefly͖͖wallet/**'
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    name: Build Firefly Wallet (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Enable macOS desktop support
+        run: flutter config --enable-macos-desktop
+
+      - name: Navigate to Flutter project
+        run: |
+          # Handle the special characters in directory name
+          cd "firefly͖͖wallet"
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: firefly͖͖wallet
+
+      - name: Build macOS desktop app
+        run: flutter build macos --release
+        working-directory: firefly͖͖wallet
+
+      - name: Create app archive
+        run: |
+          cd firefly͖͖wallet/build/macos/Build/Products/Release
+          zip -r Firefly-Wallet-macOS.zip "Firefly Wallet.app"
+        working-directory: firefly͖͖wallet
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefly-wallet-macos
+          path: firefly͖͖wallet/build/macos/Build/Products/Release/Firefly-Wallet-macOS.zip
+          retention-days: 30
+
+  build-windows:
+    name: Build Firefly Wallet (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Enable Windows desktop support
+        run: flutter config --enable-windows-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: firefly͖͖wallet
+
+      - name: Build Windows desktop app
+        run: flutter build windows --release
+        working-directory: firefly͖͖wallet
+
+      - name: Create app archive
+        run: |
+          cd build\windows\runner\Release
+          Compress-Archive -Path * -DestinationPath ..\..\..\..\Firefly-Wallet-Windows.zip
+        working-directory: firefly͖͖wallet
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefly-wallet-windows
+          path: firefly͖͖wallet/Firefly-Wallet-Windows.zip
+          retention-days: 30
+
+  build-linux:
+    name: Build Firefly Wallet (Linux)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Enable Linux desktop support
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+          flutter config --enable-linux-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: firefly͖͖wallet
+
+      - name: Build Linux desktop app
+        run: flutter build linux --release
+        working-directory: firefly͖͖wallet
+
+      - name: Create app archive
+        run: |
+          cd build/linux/x64/release/bundle
+          tar -czf ../../../../Firefly-Wallet-Linux.tar.gz *
+        working-directory: firefly͖͖wallet
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefly-wallet-linux
+          path: firefly͖͖wallet/Firefly-Wallet-Linux.tar.gz
+          retention-days: 30

@@ -36,8 +36,8 @@ namespace CryptoNote
 		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;	
 		const uint64_t DIFFICULTY_TARGET_DRGL = 81;
 		const unsigned EMISSION_SPEED_FACTOR = 18;
-                const unsigned EMISSION_SPEED_FACTOR_FANGO = 19;  //major version 8
-                const unsigned EMISSION_SPEED_FACTOR_FUEGO = 20;   //major version 9
+        const unsigned EMISSION_SPEED_FACTOR_FANGO = 19;  //major version 8
+        const unsigned EMISSION_SPEED_FACTOR_FUEGO = 20;   //major version 9
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT  = 60 * 60 * 2;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1 = DIFFICULTY_TARGET_DRGL * 6;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2 = DIFFICULTY_TARGET * 2;
@@ -55,7 +55,7 @@ namespace CryptoNote
 		const size_t   MINIMUM_MIXIN = 2;
 
 		const size_t   CRYPTONOTE_COIN_VERSION                       = 1;
-		const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT 	     = 7;
+		const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT 	         = 7;
 		const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
 		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 800000; //size of block (bytes) after reward for block is calculated in block-size
 		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2  = 800000;
@@ -70,17 +70,26 @@ namespace CryptoNote
 		const size_t   DIFFICULTY_WINDOW_V2                          = 18;  // blocks  Zawy v1.0
 		const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
 		const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fuego (~180 block per day)
+		const size_t   DIFFICULTY_WINDOW_V5                          = 45;  // blocks  Zawy-LWMA1 Fuego (~180 block per day)
 
 		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
-               // const uint64_t MIN_TX_MIXIN_SIZE_V9                          = 8;
+	    const uint64_t MIN_TX_MIXIN_SIZE_V10                         = 8;  // MixMax privacy starting from BlockMajorVersion 10
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;
-		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
+        		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;    // 800 XFG (8,000,000,000 8B heat) CD / YIELD
+		        const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
                 const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
                 const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
                 const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
+                 // Burn transaction constants
+				const uint32_t DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
+                const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 8M heat)
+		        const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 8M heat)
+		        const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 800 * COIN;  // Large burn: 800 XFG (8,000,000,000 8B heat)
+                // User-friendly deposit term constants
+                const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+                const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
@@ -115,9 +124,10 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-                const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
+        const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
-                const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
+        const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
+
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -168,7 +178,7 @@ namespace CryptoNote
 	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1075740; /* "TEST" is address prefix */
 	
 	// Network IDs - Different network IDs prevent mainnet/testnet cross-communication
-	const boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0x46, 0x55, 0x45, 0x47, 0x4f, 0x20, 0x4e, 0x45, 0x54, 0x57, 0x4f, 0x52, 0x4b, 0x20, 0x20, 0x20 } }; // "FUEGO NETWORK   "
+	const boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0x46, 0x55, 0x45, 0x47, 0x4f, 0x20, 0x4e, 0x45, 0x54, 0x57, 0x4f, 0x52, 0x4b, 0x20, 0x20, 0x20 } }; // " MAINNET   "
 	const boost::uuids::uuid CRYPTONOTE_NETWORK_TESTNET = { { 0x54, 0x45, 0x53, 0x54, 0x20, 0x46, 0x55, 0x45, 0x47, 0x4f, 0x20, 0x4e, 0x45, 0x54, 0x20, 0x20 } }; // "TEST FUEGO NET  "
 
 	/* P2P Network Configuration Section - This defines our current P2P network version

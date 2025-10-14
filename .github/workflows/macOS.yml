@@ -12,26 +12,27 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13
+          - os: macos-12
             arch: intel
             arch_flag: x86_64
           - os: macos-14
             arch: apple
             arch_flag: arm64
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Build
         id: build
         run: |
+          set -e
           build_folder="build/"
           xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
           release_name="fuego-cli-macOS-${{ matrix.arch }}-v$xfg_ver"
-          brew install gcc boost
+          brew install gcc boost cmake
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..
-          make -j4
+          make -j$(sysctl -n hw.ncpu)
           mkdir "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" ); done
@@ -45,7 +46,7 @@ jobs:
           echo "xfg_version=${xfg_ver}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}

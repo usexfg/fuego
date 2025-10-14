@@ -10,25 +10,26 @@ jobs:
     name: Ubuntu 22.04
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Build
         id: build
         run: |
+          set -e
           sudo fallocate -l 6G /swapfile
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
           sudo swapon /swapfile
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++-dev libboost-all-dev
+          sudo apt-get install -y build-essential libstdc++-dev libboost-all-dev cmake
           build_folder="build/debug"
           xfg_version=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           xfg_ver_folder=$(echo $xfg_version | sed 's/\.//g')
           release_name=fuego-cli-ubuntu-2204-v"$xfg_version"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake ../..
-          make -j2
+          cmake ../.. -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
           mkdir -p "$release_name/$xfg_ver_folder"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
@@ -43,7 +44,7 @@ jobs:
           echo "xfg_version=${xfg_version}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}

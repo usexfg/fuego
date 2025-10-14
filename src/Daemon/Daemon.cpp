@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 Fuego Developers
+// Copyright (c) 2019-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -62,8 +62,8 @@ namespace
   const command_line::arg_descriptor<std::string> arg_enable_cors = { "enable-cors", "Adds header 'Access-Control-Allow-Origin' to the daemon's RPC responses. Uses the value as domain. Use * for all", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2}; // info level
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
-  const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
-    "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag. "
+  const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored & "
+    "network id is changed. The wallet must also be launched with --testnet flag. "
     "Testnet uses different default ports: P2P=20808, RPC=28180", false};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
@@ -98,26 +98,6 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   consoleLogger.insert("pattern", "%D %T %L ");
 
   return loggerConfiguration;
-}
-
-void renameDataDir() {
-  std::string concealXDir = Tools::getDefaultDataDirectory();
-  boost::filesystem::path concealXDirPath(concealXDir);
-  if (boost::filesystem::exists(concealXDirPath)) {
-    return;
-  }
-
-  std::string dataDirPrefix = concealXDir.substr(0, concealXDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
-  boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
-
-  if (boost::filesystem::exists(cediDirPath)) {
-    boost::filesystem::rename(cediDirPath, concealXDirPath);
-  } else {
-    boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
-    if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
-		boost::filesystem::rename(BcediDirPath, concealXDirPath);
-    }
-  }
 }
 
 int main(int argc, char* argv[])
@@ -223,7 +203,7 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		logger(INFO, BRIGHT_MAGENTA) <<
+		logger(INFO, BRIGHT_BLUE) <<
 #ifdef _WIN32
 " \n"		
 "       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n" 
@@ -325,7 +305,7 @@ int main(int argc, char* argv[])
       return 1;
     }
 
-    logger(INFO) << "P2p server initialized OK";
+    logger(INFO, BRIGHT_GREEN) << "P2P server init OK";
 
     // initialize core here
     logger(INFO) << "Initializing core...";
@@ -334,14 +314,14 @@ int main(int argc, char* argv[])
       return 1;
     }
 
-    logger(INFO) << "Core initialized OK";
+    logger(INFO, BRIGHT_GREEN) << "Core init OK";
 
     // start components
     if (!command_line::has_arg(vm, arg_console)) {
       dch.start_handling();
     }
 
-    logger(INFO) << "Starting core rpc server on address " << rpcConfig.getBindAddress();
+    logger(INFO) << "Starting core RPC server on address " << rpcConfig.getBindAddress();
   
     /* Set address for remote node fee */
   	if (command_line::has_arg(vm, arg_set_fee_address)) {

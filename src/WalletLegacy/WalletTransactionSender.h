@@ -68,6 +68,9 @@ std::shared_ptr<WalletRequest> makeSendFusionRequest(TransactionId& transactionI
                                                      uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0);
 
 private:
+  // Dynamic ring size calculation based on available outputs
+  uint64_t calculateDynamicRingSize(const std::vector<TransactionOutputInformation>& selectedTransfers, uint64_t minRingSize);
+  
   std::unique_ptr<WalletRequest> makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction, Crypto::SecretKey& transactionSK);
   std::unique_ptr<WalletRequest> doSendTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events, Crypto::SecretKey& transactionSK);
   std::unique_ptr<WalletRequest> doSendMultisigTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events);

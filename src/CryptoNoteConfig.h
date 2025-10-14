@@ -94,7 +94,7 @@ namespace CryptoNote
 		const double   DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
 
 		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
-               // const uint64_t MIN_TX_MIXIN_SIZE_V9                          = 8;
+		const uint64_t MIN_TX_MIXIN_SIZE_V10                         = 8;  // Enhanced privacy starting from BlockMajorVersion 10
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 

@@ -69,9 +69,9 @@ namespace CryptoNote {
         double confidence = calculateConfidenceScore(timestamps, cumulativeDifficulties);
         
         // Adaptive weighting based on network conditions
-        double shortWeight = 0.4 * confidence;
-        double mediumWeight = 0.4 * confidence;
-        double longWeight = 0.2 * (1.0 - confidence);
+        double shortWeight = CryptoNote::parameters::DMWDA_WEIGHT_SHORT * confidence;
+        double mediumWeight = CryptoNote::parameters::DMWDA_WEIGHT_MEDIUM * confidence;
+        double longWeight = CryptoNote::parameters::DMWDA_WEIGHT_LONG * (1.0 - confidence);
         
         // Calculate weighted average solve time
         double weightedSolveTime = (shortLWMA * shortWeight + 
@@ -217,8 +217,8 @@ namespace CryptoNote {
         if (timestamps.size() < 5) return false;
         
         // Calculate recent vs historical solve times
-        uint32_t recentWindow = std::min(5u, static_cast<uint32_t>(timestamps.size() - 1));
-        uint32_t historicalWindow = std::min(20u, static_cast<uint32_t>(timestamps.size() - 1));
+        uint32_t recentWindow = std::min(CryptoNote::parameters::DMWDA_RECENT_WINDOW_SIZE, static_cast<uint32_t>(timestamps.size() - 1));
+        uint32_t historicalWindow = std::min(CryptoNote::parameters::DMWDA_HISTORICAL_WINDOW_SIZE, static_cast<uint32_t>(timestamps.size() - 1));
         
         double recentSolveTime = static_cast<double>(timestamps[recentWindow] - timestamps[0]) / recentWindow;
         double historicalSolveTime = static_cast<double>(timestamps[historicalWindow] - timestamps[historicalWindow - recentWindow]) / recentWindow;
@@ -226,7 +226,8 @@ namespace CryptoNote {
         // Detect if recent solve time is significantly different
         double ratio = recentSolveTime / historicalSolveTime;
         
-        return (ratio < 0.1 || ratio > 10.0); // 10x change threshold
+        double threshold = CryptoNote::parameters::DMWDA_HASH_RATE_CHANGE_THRESHOLD;
+        return (ratio < (1.0 / threshold) || ratio > threshold); // Configurable change threshold
     }
 
     bool AdaptiveDifficulty::detectBlockStealingAttempt(
@@ -237,24 +238,25 @@ namespace CryptoNote {
         
         // Detect suspiciously fast consecutive blocks
         uint32_t fastBlockCount = 0;
-        uint32_t checkBlocks = std::min(static_cast<uint32_t>(5), static_cast<uint32_t>(timestamps.size() - 1));
+        uint32_t checkBlocks = std::min(CryptoNote::parameters::DMWDA_BLOCK_STEALING_CHECK_BLOCKS, static_cast<uint32_t>(timestamps.size() - 1));
         
         for (size_t i = 1; i <= checkBlocks; ++i) {
             int64_t solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i - 1]);
             
-            // If blocks are coming too fast (less than 5% of target time = ~24 seconds)
-            if (solveTime < static_cast<int64_t>(m_config.targetTime / 20)) {
+            // If blocks are coming too fast (configurable threshold)
+            double timeThreshold = CryptoNote::parameters::DMWDA_BLOCK_STEALING_TIME_THRESHOLD;
+            if (solveTime < static_cast<int64_t>(m_config.targetTime * timeThreshold)) {
                 fastBlockCount++;
             }
         }
         
-        // Trigger if more than 2 blocks in 5 are suspiciously fast
-        return fastBlockCount >= 2;
+        // Trigger if more than threshold blocks are suspiciously fast
+        return fastBlockCount >= CryptoNote::parameters::DMWDA_BLOCK_STEALING_THRESHOLD;
     }
 
     uint64_t AdaptiveDifficulty::applySmoothing(uint64_t newDifficulty, uint64_t previousDifficulty) {
         // Apply exponential smoothing to prevent oscillations
-        double alpha = 0.3; // Smoothing factor
+        double alpha = CryptoNote::parameters::DMWDA_SMOOTHING_FACTOR; // Smoothing factor
 
         // Prevent overflow by using double precision arithmetic
         double smoothed = alpha * static_cast<double>(newDifficulty) +
@@ -272,7 +274,7 @@ namespace CryptoNote {
         const std::vector<uint64_t>& timestamps,
         const std::vector<uint64_t>& difficulties) {
         
-        if (timestamps.size() < 3) return 0.5;
+        if (timestamps.size() < 3) return CryptoNote::parameters::DMWDA_DEFAULT_CONFIDENCE;
         
         // Calculate coefficient of variation for solve times
         std::vector<double> solveTimes;
@@ -291,19 +293,20 @@ namespace CryptoNote {
         double coefficientOfVariation = std::sqrt(variance) / mean;
         
         // Convert to confidence score (lower variation = higher confidence)
-        return std::max(0.1, std::min(1.0, 1.0 - coefficientOfVariation));
+        return std::max(CryptoNote::parameters::DMWDA_CONFIDENCE_MIN, 
+                       std::min(CryptoNote::parameters::DMWDA_CONFIDENCE_MAX, 1.0 - coefficientOfVariation));
     }
 
     AdaptiveDifficulty::DifficultyConfig getDefaultFuegoConfig() {
         AdaptiveDifficulty::DifficultyConfig config;
         config.targetTime = CryptoNote::parameters::DIFFICULTY_TARGET; // 480 seconds
-        config.shortWindow = 15;    // Rapid response
-        config.mediumWindow = 45;   // Current window
-        config.longWindow = 120;    // Trend analysis
-        config.minAdjustment = 0.5; // 50% minimum change
-        config.maxAdjustment = 4.0; // 400% maximum change
-        config.emergencyThreshold = 0.1; // 10% emergency threshold
-        config.emergencyWindow = 5; // Emergency response window
+        config.shortWindow = CryptoNote::parameters::DMWDA_SHORT_WINDOW;    // Rapid response
+        config.mediumWindow = CryptoNote::parameters::DMWDA_MEDIUM_WINDOW;   // Current window
+        config.longWindow = CryptoNote::parameters::DMWDA_LONG_WINDOW;    // Trend analysis
+        config.minAdjustment = CryptoNote::parameters::DMWDA_MIN_ADJUSTMENT; // 50% minimum change
+        config.maxAdjustment = CryptoNote::parameters::DMWDA_MAX_ADJUSTMENT; // 400% maximum change
+        config.emergencyThreshold = CryptoNote::parameters::DMWDA_EMERGENCY_THRESHOLD; // 10% emergency threshold
+        config.emergencyWindow = CryptoNote::parameters::DMWDA_EMERGENCY_WINDOW; // Emergency response window
         
         return config;
     }

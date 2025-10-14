@@ -70,6 +70,29 @@ namespace CryptoNote
 		const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
 		const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fuego (~180 block per day)
 
+		// DMWDA (Dynamic Multi-Window Difficulty Algorithm) parameters
+		const uint32_t DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
+		const uint32_t DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
+		const uint32_t DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
+		const uint32_t DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
+		const double   DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
+		const double   DMWDA_MAX_ADJUSTMENT                          = 4.0;  // Maximum difficulty adjustment (400%)
+		const double   DMWDA_EMERGENCY_THRESHOLD                     = 0.1;  // Emergency threshold (10%)
+		const double   DMWDA_SMOOTHING_FACTOR                        = 0.3;  // Smoothing factor for oscillations prevention
+		const double   DMWDA_CONFIDENCE_MIN                          = 0.1;  // Minimum confidence score
+		const double   DMWDA_CONFIDENCE_MAX                          = 1.0;  // Maximum confidence score
+		const double   DMWDA_ADJUSTMENT_RANGE                        = 0.3;  // Adjustment range for confidence-based bounds
+		const double   DMWDA_WEIGHT_SHORT                            = 0.4;  // Weight for short window
+		const double   DMWDA_WEIGHT_MEDIUM                           = 0.4;  // Weight for medium window
+		const double   DMWDA_WEIGHT_LONG                             = 0.2;  // Weight for long window
+		const double   DMWDA_HASH_RATE_CHANGE_THRESHOLD              = 10.0; // Hash rate change threshold for anomaly detection
+		const double   DMWDA_DEFAULT_CONFIDENCE                      = 0.5;  // Default confidence score
+		const uint32_t DMWDA_RECENT_WINDOW_SIZE                      = 5;    // Recent window size for anomaly detection
+		const uint32_t DMWDA_HISTORICAL_WINDOW_SIZE                  = 20;   // Historical window size for anomaly detection
+		const uint32_t DMWDA_BLOCK_STEALING_CHECK_BLOCKS             = 5;    // Number of blocks to check for stealing attempts
+		const uint32_t DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
+		const double   DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
+
 		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
                // const uint64_t MIN_TX_MIXIN_SIZE_V9                          = 8;
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;

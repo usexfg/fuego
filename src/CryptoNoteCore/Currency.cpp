@@ -1136,10 +1136,10 @@ namespace CryptoNote
 		// Copyright (c) 2024 Fuego Privacy Group
 		
 		const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET; // 480 seconds
-		const uint32_t SHORT_WINDOW = 15;   // Rapid response window
-		const uint32_t MEDIUM_WINDOW = 45;  // Stability window  
-		const uint32_t LONG_WINDOW = 120;   // Trend analysis window
-		const uint32_t EMERGENCY_WINDOW = 5; // Emergency response window
+		const uint32_t SHORT_WINDOW = CryptoNote::parameters::DMWDA_SHORT_WINDOW;   // Rapid response window
+		const uint32_t MEDIUM_WINDOW = CryptoNote::parameters::DMWDA_MEDIUM_WINDOW;  // Stability window  
+		const uint32_t LONG_WINDOW = CryptoNote::parameters::DMWDA_LONG_WINDOW;   // Trend analysis window
+		const uint32_t EMERGENCY_WINDOW = CryptoNote::parameters::DMWDA_EMERGENCY_WINDOW; // Emergency response window
 		
 		// Early chain protection
 		if (timestamps.size() < 3) {
@@ -1158,8 +1158,9 @@ namespace CryptoNote
 			uint64_t recentTime = timestamps[EMERGENCY_WINDOW] - timestamps[0];
 			uint64_t expectedTime = EMERGENCY_WINDOW * T;
 			
-			// If recent blocks are 10x faster or slower than expected
-			if (recentTime < expectedTime / 10 || recentTime > expectedTime * 10) {
+			// If recent blocks are significantly faster or slower than expected
+			double emergencyThreshold = CryptoNote::parameters::DMWDA_EMERGENCY_THRESHOLD;
+			if (recentTime < expectedTime * emergencyThreshold || recentTime > expectedTime / emergencyThreshold) {
 				emergencyMode = true;
 			}
 		}
@@ -1171,7 +1172,8 @@ namespace CryptoNote
 			uint64_t avgDifficulty = (cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[0]) / effectiveWindow;
 			
 			double emergencyRatio = static_cast<double>(T) / recentSolveTime;
-			emergencyRatio = std::max(0.1, std::min(10.0, emergencyRatio)); // 10x bounds
+			double emergencyThreshold = CryptoNote::parameters::DMWDA_EMERGENCY_THRESHOLD;
+			emergencyRatio = std::max(emergencyThreshold, std::min(1.0 / emergencyThreshold, emergencyRatio)); // Config-based bounds
 			
 			return std::max(static_cast<uint64_t>(10000), 
 							static_cast<uint64_t>(avgDifficulty * emergencyRatio));
@@ -1204,7 +1206,7 @@ namespace CryptoNote
 		double longLWMA = calculateLWMA(LONG_WINDOW);
 		
 		// Calculate confidence score based on solve time variance
-		double confidence = 1.0;
+		double confidence = CryptoNote::parameters::DMWDA_CONFIDENCE_MAX;
 		if (timestamps.size() >= 10) {
 			std::vector<double> solveTimes;
 			for (size_t i = 1; i < std::min(static_cast<size_t>(10), timestamps.size()); ++i) {
@@ -1219,13 +1221,14 @@ namespace CryptoNote
 			variance /= solveTimes.size();
 			
 			double coefficientOfVariation = std::sqrt(variance) / mean;
-			confidence = std::max(0.1, std::min(1.0, 1.0 - coefficientOfVariation));
+			confidence = std::max(CryptoNote::parameters::DMWDA_CONFIDENCE_MIN, 
+								std::min(CryptoNote::parameters::DMWDA_CONFIDENCE_MAX, 1.0 - coefficientOfVariation));
 		}
 		
 		// Adaptive weighting based on confidence
-		double shortWeight = 0.4 * confidence;
-		double mediumWeight = 0.4 * confidence;
-		double longWeight = 0.2 * (1.0 - confidence);
+		double shortWeight = CryptoNote::parameters::DMWDA_WEIGHT_SHORT * confidence;
+		double mediumWeight = CryptoNote::parameters::DMWDA_WEIGHT_MEDIUM * confidence;
+		double longWeight = CryptoNote::parameters::DMWDA_WEIGHT_LONG * (1.0 - confidence);
 		
 		// Calculate weighted average solve time
 		double weightedSolveTime = (shortLWMA * shortWeight + 
@@ -1241,8 +1244,9 @@ namespace CryptoNote
 		double difficultyRatio = static_cast<double>(T) / weightedSolveTime;
 		
 		// Apply adaptive bounds based on confidence
-		double minAdjustment = 0.5 + (0.3 * (1.0 - confidence)); // 0.5 to 0.8
-		double maxAdjustment = 4.0 - (2.0 * (1.0 - confidence));  // 2.0 to 4.0
+		double adjustmentRange = CryptoNote::parameters::DMWDA_ADJUSTMENT_RANGE;
+		double minAdjustment = CryptoNote::parameters::DMWDA_MIN_ADJUSTMENT + (adjustmentRange * (1.0 - confidence)); // Config min to min+range
+		double maxAdjustment = CryptoNote::parameters::DMWDA_MAX_ADJUSTMENT - (2.0 * (1.0 - confidence));  // Config max-2.0 to max
 		
 		difficultyRatio = std::max(minAdjustment, std::min(maxAdjustment, difficultyRatio));
 		
@@ -1251,7 +1255,7 @@ namespace CryptoNote
 		// Apply smoothing to prevent oscillations
 		if (timestamps.size() > 1 && difficulties.size() > 0) {
 			uint64_t prevDifficulty = difficulties.back();
-			double alpha = 0.3; // Smoothing factor
+			double alpha = CryptoNote::parameters::DMWDA_SMOOTHING_FACTOR; // Smoothing factor
 			newDifficulty = static_cast<uint64_t>(alpha * newDifficulty + (1.0 - alpha) * prevDifficulty);
 		}
 		

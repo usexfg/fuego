@@ -36,6 +36,7 @@
 #include "P2pConnectionProxy.h"
 #include "P2pContext.h"
 #include "P2pContextOwner.h"
+#include "P2pNetworks.h"
 
 using namespace Common;
 using namespace Logging;

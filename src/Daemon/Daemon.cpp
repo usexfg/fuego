@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 Fuego Developers
+// Copyright (c) 2019-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -64,7 +64,7 @@ namespace
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
   const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
     "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag. "
-    "Testnet uses different default ports: P2P=" + std::to_string(P2P_DEFAULT_PORT_TESTNET) + ", RPC=" + std::to_string(RPC_DEFAULT_PORT_TESTNET), false};
+    "Testnet uses different default ports: P2P="20808", RPC="28280, false};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
 
@@ -98,26 +98,6 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   consoleLogger.insert("pattern", "%D %T %L ");
 
   return loggerConfiguration;
-}
-
-void renameDataDir() {
-  std::string concealXDir = Tools::getDefaultDataDirectory();
-  boost::filesystem::path concealXDirPath(concealXDir);
-  if (boost::filesystem::exists(concealXDirPath)) {
-    return;
-  }
-
-  std::string dataDirPrefix = concealXDir.substr(0, concealXDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
-  boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
-
-  if (boost::filesystem::exists(cediDirPath)) {
-    boost::filesystem::rename(cediDirPath, concealXDirPath);
-  } else {
-    boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
-    if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
-		boost::filesystem::rename(BcediDirPath, concealXDirPath);
-    }
-  }
 }
 
 int main(int argc, char* argv[])

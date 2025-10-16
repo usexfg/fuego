@@ -146,6 +146,16 @@ if(STATIC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
+if(APPLE)
+  # Try to find Boost in Homebrew directories
+  set(HOMEBREW_BOOST_ROOT "/opt/homebrew/opt/boost")
+  if(EXISTS "${HOMEBREW_BOOST_ROOT}")
+    set(Boost_ROOT "${HOMEBREW_BOOST_ROOT}")
+    set(Boost_INCLUDE_DIR "${HOMEBREW_BOOST_ROOT}/include")
+    set(Boost_LIBRARY_DIR "${HOMEBREW_BOOST_ROOT}/lib")
+  endif()
+endif()
+
 # Set policy to use legacy FindBoost module for Boost 1.70+ compatibility
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 OLD)

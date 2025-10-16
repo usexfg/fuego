@@ -15,21 +15,20 @@ jobs:
       - name: Build
         id: build
         run: |
-          set -e
           sudo fallocate -l 6G /swapfile
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
           sudo swapon /swapfile
           sudo apt-get update
-          sudo apt-get install -y build-essential libstdc++-dev libboost-all-dev cmake
+          sudo apt-get install -y build-essential libstdc++-11-dev libboost-all-dev
           build_folder="build/debug"
           xfg_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
           release_name=fuego-cli-ubuntu-2404-v"$xfg_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake ../.. -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
+          cmake ../..
+          make -j4
           mkdir -p "$release_name/$xfg_ver_folder"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
@@ -44,13 +43,14 @@ jobs:
           echo "xfg_version=${xfg_ver}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           files: ${{ steps.build.outputs.asset_path }}
-          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}
+          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}
           body: |
-            **${{ steps.build.outputs.release_name }}**
-            ${{ steps.build.outputs.sha256 }}
+            🐧 [Download for Ubuntu 24.04](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
           append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

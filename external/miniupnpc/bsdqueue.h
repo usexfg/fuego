@@ -1,9 +1,9 @@
-/*	$OpenBSD: queue.h,v 1.31 2005/11/25 08:06:25 otto Exp $	*/
-/*	$NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $	*/
+/*    $OpenBSD: queue.h,v 1.31 2005/11/25 08:06:25 otto Exp $    */
+/*    $NetBSD: queue.h,v 1.11 1996/05/16 05:17:14 mycroft Exp $  */
 
 /*
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

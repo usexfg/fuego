@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -33,6 +33,8 @@
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
 #define TX_EXTRA_MESSAGE_TAG                0x04
 #define TX_EXTRA_TTL                        0x05
+#define TX_EXTRA_YIELD_COMMITMENT           0x07
+#define TX_EXTRA_HEAT_COMMITMENT            0x08
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
@@ -70,11 +72,29 @@ struct TransactionExtraTTL {
   uint64_t ttl;
 };
 
+struct TransactionExtraHeatCommitment {
+  Crypto::Hash commitment;
+  uint64_t amount;
+  std::vector<uint8_t> metadata;
+  
+  bool serialize(ISerializer& serializer);
+};
+
+struct TransactionExtraYieldCommitment {
+  Crypto::Hash commitment;
+  uint64_t amount;
+  uint32_t term_months;
+  std::string yield_scheme;
+  std::vector<uint8_t> metadata;
+  
+  bool serialize(ISerializer& serializer);
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL, TransactionExtraHeatCommitment, TransactionExtraYieldCommitment> TransactionExtraField;
 
 
 
@@ -108,5 +128,15 @@ bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<
 //returns false if payment id is not found or parse error
 bool getPaymentIdFromTxExtra(const std::vector<uint8_t>& extra, Crypto::Hash& paymentId);
 bool parsePaymentId(const std::string& paymentIdString, Crypto::Hash& paymentId);
+
+// HEAT commitment helper functions
+bool createTxExtraWithHeatCommitment(const Crypto::Hash& commitment, uint64_t amount, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
+bool addHeatCommitmentToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraHeatCommitment& commitment);
+bool getHeatCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraHeatCommitment& commitment);
+
+// Yield commitment helper functions
+bool createTxExtraWithYieldCommitment(const Crypto::Hash& commitment, uint64_t amount, uint32_t term_months, const std::string& yield_scheme, const std::vector<uint8_t>& metadata, std::vector<uint8_t>& extra);
+bool addYieldCommitmentToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraYieldCommitment& commitment);
+bool getYieldCommitmentFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraYieldCommitment& commitment);
 
 }

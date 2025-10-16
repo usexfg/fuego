@@ -37,24 +37,27 @@ typedef enum { PortMappingEltNone,
        PortMappingEntry, NewRemoteHost,
        NewExternalPort, NewProtocol,
        NewInternalPort, NewInternalClient,
-       NewEnabled, NewDescription,
+              NewEnabled, NewDescription,
        NewLeaseTime } portMappingElt;
 
-struct PortMapping {
-	LIST_ENTRY(PortMapping) entries;
-	UNSIGNED_INTEGER leaseTime;
-	unsigned short externalPort;
-	unsigned short internalPort;
-	char remoteHost[64];
-	char internalClient[64];
-	char description[64];
-	char protocol[4];
-	unsigned char enabled;
-};
+/* Forward declaration for LIST_HEAD macro */
+struct PortMapping;
 
 struct PortMappingParserData {
-	LIST_HEAD(portmappinglisthead, PortMapping) head;
-	portMappingElt curelt;
+        LIST_HEAD(PortMappingHead, PortMapping) head;
+        portMappingElt curelt;
+};
+
+struct PortMapping {
+        LIST_ENTRY(PortMapping) entries;
+        UNSIGNED_INTEGER leaseTime;
+        unsigned short externalPort;
+        unsigned short internalPort;
+        char remoteHost[64];
+        char internalClient[64];
+        char description[64];
+        char protocol[4];
+        unsigned char enabled;
 };
 
 LIBSPEC void

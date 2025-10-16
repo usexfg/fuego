@@ -156,6 +156,28 @@ if(APPLE)
   endif()
 endif()
 
+# Windows Boost configuration
+if(WIN32)
+  # Check for environment variable first
+  if(DEFINED ENV{BOOST_ROOT})
+    set(BOOST_ROOT "$ENV{BOOST_ROOT}")
+    set(Boost_ROOT "$ENV{BOOST_ROOT}")
+    set(Boost_INCLUDE_DIR "$ENV{BOOST_INCLUDEDIR}")
+    set(Boost_LIBRARY_DIR "$ENV{BOOST_LIBRARYDIR}")
+  else()
+    # Fallback to common Boost installation paths
+    set(BOOST_ROOT "C:/thirdparties/boost-1.83.0")
+    set(Boost_ROOT "C:/thirdparties/boost-1.83.0")
+    set(Boost_INCLUDE_DIR "C:/thirdparties/boost-1.83.0/boost")
+    set(Boost_LIBRARY_DIR "C:/thirdparties/boost-1.83.0/stage/lib")
+  endif()
+
+  # Additional Windows-specific Boost configuration
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_MULTITHREADED ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+endif()
+
 # Set policy to use legacy FindBoost module for Boost 1.70+ compatibility
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 OLD)

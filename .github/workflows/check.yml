@@ -39,10 +39,12 @@ jobs:
       - name: Download and Install Boost 1.83
         run: |
           $Url = "https://github.com/boostorg/boost/releases/download/boost-1.83.0/boost-1.83.0.zip"
-          $OutputPath = "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\boost-installer.exe"
+          $OutputPath = "C:\Users\runneradmin\AppData\Local\Temp\boost-1.83.0.zip"
+          $ExtractPath = "C:\thirdparties\boost-1.83.0"
           curl -L $Url -o $OutputPath
+          Expand-Archive -Path $OutputPath -DestinationPath $ExtractPath -Force
           Start-Process -Wait -FilePath $OutputPath "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\\thirdparties\\boost-1.83.0"
-    
+
       - name: Build
         shell: powershell
         id: build

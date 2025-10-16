@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2024 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2018-2019 The Ryo Currency developers
@@ -195,10 +195,6 @@ namespace CryptoNote
 	const int RPC_DEFAULT_PORT_TESTNET = 28180;
 	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
 	
-	// Network IDs - Different network IDs prevent mainnet/testnet cross-communication
-	const boost::uuids::uuid CRYPTONOTE_NETWORK = { { 0x46, 0x55, 0x45, 0x47, 0x4f, 0x20, 0x4e, 0x45, 0x54, 0x57, 0x4f, 0x52, 0x4b, 0x20, 0x20, 0x20 } }; // "FUEGO NETWORK   "
-	const boost::uuids::uuid CRYPTONOTE_NETWORK_TESTNET = { { 0x54, 0x45, 0x53, 0x54, 0x20, 0x46, 0x55, 0x45, 0x47, 0x4f, 0x20, 0x4e, 0x45, 0x54, 0x20, 0x20 } }; // "TEST FUEGO NET  "
-
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;

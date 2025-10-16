@@ -62,9 +62,11 @@ namespace
   const command_line::arg_descriptor<std::string> arg_enable_cors = { "enable-cors", "Adds header 'Access-Control-Allow-Origin' to the daemon's RPC responses. Uses the value as domain. Use * for all", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2}; // info level
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
-  const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
-    "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag. "
-    "Testnet uses different default ports: P2P="20808", RPC="28280, false};
+  const command_line::arg_descriptor<bool> arg_testnet_on = {
+    "testnet",
+    "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored. Testnet uses different default ports: P2P=20808, RPC=28280.",
+    false
+};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
 
@@ -111,7 +113,6 @@ int main(int argc, char* argv[])
   LoggerRef logger(logManager, "daemon");
 
   try {
-    renameDataDir();
 
     po::options_description desc_cmd_only("Command line options");
     po::options_description desc_cmd_sett("Command line options and settings options");

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2023 Fuego Developers
+// Copyright (c) 2019-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -62,8 +62,11 @@ namespace
   const command_line::arg_descriptor<std::string> arg_enable_cors = { "enable-cors", "Adds header 'Access-Control-Allow-Origin' to the daemon's RPC responses. Uses the value as domain. Use * for all", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2}; // info level
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
-  const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
-    "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag.", false};
+  const command_line::arg_descriptor<bool> arg_testnet_on = {
+    "testnet",
+    "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored. Testnet uses different default ports: P2P=20808, RPC=28280.",
+    false
+};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
 
@@ -99,26 +102,6 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   return loggerConfiguration;
 }
 
-void renameDataDir() {
-  std::string concealXDir = Tools::getDefaultDataDirectory();
-  boost::filesystem::path concealXDirPath(concealXDir);
-  if (boost::filesystem::exists(concealXDirPath)) {
-    return;
-  }
-
-  std::string dataDirPrefix = concealXDir.substr(0, concealXDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
-  boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
-
-  if (boost::filesystem::exists(cediDirPath)) {
-    boost::filesystem::rename(cediDirPath, concealXDirPath);
-  } else {
-    boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
-    if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
-		boost::filesystem::rename(BcediDirPath, concealXDirPath);
-    }
-  }
-}
-
 int main(int argc, char* argv[])
 {
 
@@ -130,7 +113,6 @@ int main(int argc, char* argv[])
   LoggerRef logger(logManager, "daemon");
 
   try {
-    renameDataDir();
 
     po::options_description desc_cmd_only("Command line options");
     po::options_description desc_cmd_sett("Command line options and settings options");
@@ -275,10 +257,27 @@ int main(int argc, char* argv[])
     NetNodeConfig netNodeConfig;
     netNodeConfig.init(vm);
     netNodeConfig.setTestnet(testnet_mode);
+    
+    // Set testnet-specific default ports if not explicitly configured
+    if (testnet_mode) {
+      if (netNodeConfig.getBindPort() == 0) {
+        netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
+      }
+    } else {
+      if (netNodeConfig.getBindPort() == 0) {
+        netNodeConfig.setBindPort(P2P_DEFAULT_PORT);
+      }
+    }
+    
     MinerConfig minerConfig;
     minerConfig.init(vm);
     RpcServerConfig rpcConfig;
     rpcConfig.init(vm);
+    
+    // Set testnet-specific RPC port if not explicitly configured
+    if (testnet_mode && rpcConfig.bindPort == RPC_DEFAULT_PORT) {
+      rpcConfig.bindPort = RPC_DEFAULT_PORT_TESTNET;
+    }
 
     if (!coreConfig.configFolderDefaulted) {
       if (!Tools::directoryExists(coreConfig.configFolder)) {

@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <initializer_list>
+#include <boost/uuid/uuid.hpp>
 
 namespace CryptoNote
 {
@@ -40,7 +41,7 @@ namespace CryptoNote
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT  = 60 * 60 * 2;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1 = DIFFICULTY_TARGET_DRGL * 6;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2 = DIFFICULTY_TARGET * 2;
-		const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE = 8;
+		const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE = 10;
 		const size_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW = 60;
 		const size_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1 = 11; /* LWMA3 */
 
@@ -159,7 +160,9 @@ namespace CryptoNote
 
         const char CRYPTONOTE_NAME[] = "fuego";
 	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
-	const char GENESIS_COINBASE_TX_HEX_TESTNET[] = "01000000000000000001ff00000000000000000108c6d378c2480000000000000000000000000000000000000000000000000000000000000000000021010000000000000000000000000000000000000000000000000000000000000000";
+	
+	// Testnet Genesis Block
+	const char GENESIS_COINBASE_TX_HEX_TESTNET[] = "";
 
 	const uint8_t  TRANSACTION_VERSION_1                         =  1;
 	const uint8_t  TRANSACTION_VERSION_2                         =  2;
@@ -187,6 +190,11 @@ namespace CryptoNote
 	const int P2P_DEFAULT_PORT = 10808;
  	const int RPC_DEFAULT_PORT = 18180;
 
+	// Testnet Configuration
+	const int P2P_DEFAULT_PORT_TESTNET = 20808;
+	const int RPC_DEFAULT_PORT_TESTNET = 28180;
+	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
+	
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;
@@ -223,6 +231,12 @@ namespace CryptoNote
  		"207.244.247.64:10808",
 	        "216.145.66.224:10808"
 			
+	};
+	
+	// Testnet Seed Nodes
+	const std::initializer_list<const char *> SEED_NODES_TESTNET = {
+		"127.0.0.1:20808",  // Local testnet node - replace with actual testnet seed nodes
+		// Add more testnet seed nodes here as they become available
 	};
 
 	struct CheckpointData
@@ -285,9 +299,9 @@ namespace CryptoNote
  			{ 752411, "8675187b8a7bdf73ac93ac9d86f37315c0780a41ff4c0aa671f5d809b6c5b631" },
  			{ 752593, "e270b1419d5ae8589ea8fdb148a6de6b02637432e76a1b23258324754a16f46f" },
 			{ 777777, "82cbbe5436b1f273b4b7b3ebe6517cfe4ddff33dd365e438cc44f456f43fa71b" },
-		    { 800001, "ee744efcc80fe4a483b21bf6918f72bfa19ca2b4324b51786c522428acffce98" },
- 	        { 810000, "ca66bed2600a0750f4dafe8ec7a8e4581b2ab9df326cc8f321ffd96bc2947b2c" },
-	        { 820000, "6bb848f23668412e35c7bdcd60cd0aea70761d11f1f41204a1b8ca2d808e79d7" },
+		        { 800001, "ee744efcc80fe4a483b21bf6918f72bfa19ca2b4324b51786c522428acffce98" },
+ 	         	{ 810000, "ca66bed2600a0750f4dafe8ec7a8e4581b2ab9df326cc8f321ffd96bc2947b2c" },
+	        	{ 820000, "6bb848f23668412e35c7bdcd60cd0aea70761d11f1f41204a1b8ca2d808e79d7" },
 			{ 826421, "9a0158c87c062c63a675c65eda91c10bb6d7b68b854be783aa85b2cbbf3b8a55" },
 			{ 830000, "cee38b0701df9f26a938f6c65a1f233d1f810e5f19eb1b4cb87b15d514342064" },
 			{ 840000, "ec767b0e56d7002966e3184e197b3da06c5f94484bf6218781a38f59a75bfaab" },

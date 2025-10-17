@@ -313,11 +313,11 @@ namespace CryptoNote
 	    const int RPC_DEFAULT_PORT_TESTNET = 28280;
 	    const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
         // TESTNET DEPOSIT PARAMS
-        const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * COIN;
+        const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * parameters::COIN; // 8 XFG
 	    const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
         const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
-        const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
-        const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		 /* 3 month standard */
+        const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480
+        const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		 
 
         // DMWDA TESTNET parameters
 		const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window

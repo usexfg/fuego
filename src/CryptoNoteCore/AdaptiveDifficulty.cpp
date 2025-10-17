@@ -50,12 +50,13 @@ namespace CryptoNote {
         }
         
         // Use multi-window adaptive algorithm
-        return calculateMultiWindowDifficulty(timestamps, cumulativeDifficulties);
+        return calculateMultiWindowDifficulty(timestamps, cumulativeDifficulties, testnet);
     }
 
     uint64_t AdaptiveDifficulty::calculateMultiWindowDifficulty(
         const std::vector<uint64_t>& timestamps,
-        const std::vector<uint64_t>& cumulativeDifficulties) {
+        const std::vector<uint64_t>& cumulativeDifficulties,
+        bool testnet) {
         
         // Calculate LWMA for different windows
         double shortLWMA = calculateLWMA(timestamps, cumulativeDifficulties, m_config.shortWindow);

@@ -75,7 +75,8 @@ namespace CryptoNote {
         // Calculate difficulty using multiple windows
         uint64_t calculateMultiWindowDifficulty(
             const std::vector<uint64_t>& timestamps,
-            const std::vector<uint64_t>& cumulativeDifficulties
+            const std::vector<uint64_t>& cumulativeDifficulties,
+            bool testnet = false
         );
         
         // Calculate LWMA for a specific window

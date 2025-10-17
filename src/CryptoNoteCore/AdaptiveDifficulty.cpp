@@ -31,7 +31,8 @@ namespace CryptoNote {
     uint64_t AdaptiveDifficulty::calculateNextDifficulty(
         uint32_t height,
         const std::vector<uint64_t>& timestamps,
-        const std::vector<uint64_t>& cumulativeDifficulties) {
+        const std::vector<uint64_t>& cumulativeDifficulties,
+        bool testnet) {
         
         // Early chain protection
         if (timestamps.size() < 3) {
@@ -66,12 +67,12 @@ namespace CryptoNote {
         // double mediumEMA = calculateEMA(timestamps, m_config.mediumWindow, 0.1);
         
         // Weighted combination based on confidence
-        double confidence = calculateConfidenceScore(timestamps, cumulativeDifficulties);
+        double confidence = calculateConfidenceScore(timestamps, cumulativeDifficulties, testnet);
         
         // Adaptive weighting based on network conditions
-        double shortWeight = CryptoNote::parameters::DMWDA_WEIGHT_SHORT * confidence;
-        double mediumWeight = CryptoNote::parameters::DMWDA_WEIGHT_MEDIUM * confidence;
-        double longWeight = CryptoNote::parameters::DMWDA_WEIGHT_LONG * (1.0 - confidence);
+        double shortWeight = (testnet ? CryptoNote::parameters::TESTNET_DMWDA_WEIGHT_SHORT : CryptoNote::parameters::DMWDA_WEIGHT_SHORT) * confidence;
+        double mediumWeight = (testnet ? CryptoNote::parameters::TESTNET_DMWDA_WEIGHT_MEDIUM : CryptoNote::parameters::DMWDA_WEIGHT_MEDIUM) * confidence;
+        double longWeight = (testnet ? CryptoNote::parameters::TESTNET_DMWDA_WEIGHT_LONG : CryptoNote::parameters::DMWDA_WEIGHT_LONG) * (1.0 - confidence);
         
         // Calculate weighted average solve time
         double weightedSolveTime = (shortLWMA * shortWeight + 
@@ -113,7 +114,7 @@ namespace CryptoNote {
         // Apply smoothing to prevent oscillations
         if (timestamps.size() > 1) {
             uint64_t prevDifficulty = cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[effectiveWindow - 1];
-            newDifficulty = applySmoothing(newDifficulty, prevDifficulty);
+            newDifficulty = applySmoothing(newDifficulty, prevDifficulty, testnet);
         }
 
         // Minimum difficulty protection
@@ -217,8 +218,8 @@ namespace CryptoNote {
         if (timestamps.size() < 5) return false;
         
         // Calculate recent vs historical solve times
-        uint32_t recentWindow = std::min(CryptoNote::parameters::DMWDA_RECENT_WINDOW_SIZE, static_cast<uint32_t>(timestamps.size() - 1));
-        uint32_t historicalWindow = std::min(CryptoNote::parameters::DMWDA_HISTORICAL_WINDOW_SIZE, static_cast<uint32_t>(timestamps.size() - 1));
+        uint32_t recentWindow = std::min(testnet ? CryptoNote::parameters::TESTNET_DMWDA_RECENT_WINDOW_SIZE : CryptoNote::parameters::DMWDA_RECENT_WINDOW_SIZE, static_cast<uint32_t>(timestamps.size() - 1));
+        uint32_t historicalWindow = std::min(testnet ? CryptoNote::parameters::TESTNET_DMWDA_HISTORICAL_WINDOW_SIZE : CryptoNote::parameters::DMWDA_HISTORICAL_WINDOW_SIZE, static_cast<uint32_t>(timestamps.size() - 1));
         
         double recentSolveTime = static_cast<double>(timestamps[recentWindow] - timestamps[0]) / recentWindow;
         double historicalSolveTime = static_cast<double>(timestamps[historicalWindow] - timestamps[historicalWindow - recentWindow]) / recentWindow;
@@ -226,7 +227,7 @@ namespace CryptoNote {
         // Detect if recent solve time is significantly different
         double ratio = recentSolveTime / historicalSolveTime;
         
-        double threshold = CryptoNote::parameters::DMWDA_HASH_RATE_CHANGE_THRESHOLD;
+        double threshold = testnet ? CryptoNote::parameters::TESTNET_DMWDA_HASH_RATE_CHANGE_THRESHOLD : CryptoNote::parameters::DMWDA_HASH_RATE_CHANGE_THRESHOLD;
         return (ratio < (1.0 / threshold) || ratio > threshold); // Configurable change threshold
     }
 
@@ -244,19 +245,19 @@ namespace CryptoNote {
             int64_t solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i - 1]);
             
             // If blocks are coming too fast (configurable threshold)
-            double timeThreshold = CryptoNote::parameters::DMWDA_BLOCK_STEALING_TIME_THRESHOLD;
+            double timeThreshold = testnet ? CryptoNote::parameters::TESTNET_DMWDA_BLOCK_STEALING_TIME_THRESHOLD : CryptoNote::parameters::DMWDA_BLOCK_STEALING_TIME_THRESHOLD;
             if (solveTime < static_cast<int64_t>(m_config.targetTime * timeThreshold)) {
                 fastBlockCount++;
             }
         }
         
         // Trigger if more than threshold blocks are suspiciously fast
-        return fastBlockCount >= CryptoNote::parameters::DMWDA_BLOCK_STEALING_THRESHOLD;
+        return fastBlockCount >= (testnet ? CryptoNote::parameters::TESTNET_DMWDA_BLOCK_STEALING_THRESHOLD : CryptoNote::parameters::DMWDA_BLOCK_STEALING_THRESHOLD);
     }
 
-    uint64_t AdaptiveDifficulty::applySmoothing(uint64_t newDifficulty, uint64_t previousDifficulty) {
+    uint64_t AdaptiveDifficulty::applySmoothing(uint64_t newDifficulty, uint64_t previousDifficulty, bool testnet) {
         // Apply exponential smoothing to prevent oscillations
-        double alpha = CryptoNote::parameters::DMWDA_SMOOTHING_FACTOR; // Smoothing factor
+        double alpha = testnet ? CryptoNote::parameters::TESTNET_DMWDA_SMOOTHING_FACTOR : CryptoNote::parameters::DMWDA_SMOOTHING_FACTOR; // Smoothing factor
 
         // Prevent overflow by using double precision arithmetic
         double smoothed = alpha * static_cast<double>(newDifficulty) +
@@ -272,9 +273,10 @@ namespace CryptoNote {
 
     double AdaptiveDifficulty::calculateConfidenceScore(
         const std::vector<uint64_t>& timestamps,
-        const std::vector<uint64_t>& difficulties) {
+        const std::vector<uint64_t>& difficulties,
+        bool testnet) {
         
-        if (timestamps.size() < 3) return CryptoNote::parameters::DMWDA_DEFAULT_CONFIDENCE;
+        if (timestamps.size() < 3) return testnet ? CryptoNote::parameters::TESTNET_DMWDA_DEFAULT_CONFIDENCE : CryptoNote::parameters::DMWDA_DEFAULT_CONFIDENCE;
         
         // Calculate coefficient of variation for solve times
         std::vector<double> solveTimes;
@@ -293,20 +295,33 @@ namespace CryptoNote {
         double coefficientOfVariation = std::sqrt(variance) / mean;
         
         // Convert to confidence score (lower variation = higher confidence)
-        return std::max(CryptoNote::parameters::DMWDA_CONFIDENCE_MIN, 
-                       std::min(CryptoNote::parameters::DMWDA_CONFIDENCE_MAX, 1.0 - coefficientOfVariation));
+        return std::max(testnet ? CryptoNote::parameters::TESTNET_DMWDA_CONFIDENCE_MIN : CryptoNote::parameters::DMWDA_CONFIDENCE_MIN, 
+                       std::min(testnet ? CryptoNote::parameters::TESTNET_DMWDA_CONFIDENCE_MAX : CryptoNote::parameters::DMWDA_CONFIDENCE_MAX, 1.0 - coefficientOfVariation));
     }
 
-    AdaptiveDifficulty::DifficultyConfig getDefaultFuegoConfig() {
+    AdaptiveDifficulty::DifficultyConfig getDefaultFuegoConfig(bool testnet) {
         AdaptiveDifficulty::DifficultyConfig config;
         config.targetTime = CryptoNote::parameters::DIFFICULTY_TARGET; // 480 seconds
-        config.shortWindow = CryptoNote::parameters::DMWDA_SHORT_WINDOW;    // Rapid response
-        config.mediumWindow = CryptoNote::parameters::DMWDA_MEDIUM_WINDOW;   // Current window
-        config.longWindow = CryptoNote::parameters::DMWDA_LONG_WINDOW;    // Trend analysis
-        config.minAdjustment = CryptoNote::parameters::DMWDA_MIN_ADJUSTMENT; // 50% minimum change
-        config.maxAdjustment = CryptoNote::parameters::DMWDA_MAX_ADJUSTMENT; // 400% maximum change
-        config.emergencyThreshold = CryptoNote::parameters::DMWDA_EMERGENCY_THRESHOLD; // 10% emergency threshold
-        config.emergencyWindow = CryptoNote::parameters::DMWDA_EMERGENCY_WINDOW; // Emergency response window
+        
+        if (testnet) {
+            // Use testnet-specific DMWDA parameters
+            config.shortWindow = CryptoNote::parameters::TESTNET_DMWDA_SHORT_WINDOW;    // Rapid response
+            config.mediumWindow = CryptoNote::parameters::TESTNET_DMWDA_MEDIUM_WINDOW;   // Current window
+            config.longWindow = CryptoNote::parameters::TESTNET_DMWDA_LONG_WINDOW;    // Trend analysis
+            config.minAdjustment = CryptoNote::parameters::TESTNET_DMWDA_MIN_ADJUSTMENT; // 50% minimum change
+            config.maxAdjustment = CryptoNote::parameters::TESTNET_DMWDA_MAX_ADJUSTMENT; // 400% maximum change
+            config.emergencyThreshold = CryptoNote::parameters::TESTNET_DMWDA_EMERGENCY_THRESHOLD; // 10% emergency threshold
+            config.emergencyWindow = CryptoNote::parameters::TESTNET_DMWDA_EMERGENCY_WINDOW; // Emergency response window
+        } else {
+            // Use mainnet DMWDA parameters
+            config.shortWindow = CryptoNote::parameters::DMWDA_SHORT_WINDOW;    // Rapid response
+            config.mediumWindow = CryptoNote::parameters::DMWDA_MEDIUM_WINDOW;   // Current window
+            config.longWindow = CryptoNote::parameters::DMWDA_LONG_WINDOW;    // Trend analysis
+            config.minAdjustment = CryptoNote::parameters::DMWDA_MIN_ADJUSTMENT; // 50% minimum change
+            config.maxAdjustment = CryptoNote::parameters::DMWDA_MAX_ADJUSTMENT; // 400% maximum change
+            config.emergencyThreshold = CryptoNote::parameters::DMWDA_EMERGENCY_THRESHOLD; // 10% emergency threshold
+            config.emergencyWindow = CryptoNote::parameters::DMWDA_EMERGENCY_WINDOW; // Emergency response window
+        }
         
         return config;
     }

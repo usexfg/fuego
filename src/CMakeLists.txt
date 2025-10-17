@@ -67,6 +67,8 @@ target_link_libraries(testnet-wallet-cli
     Http
     Rpc
     System
+    Logging
+    Serialization
     ${Boost_LIBRARIES}
 )
 set_target_properties(testnet-wallet-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src")

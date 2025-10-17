@@ -196,6 +196,17 @@ namespace CryptoNote
 			
 	};
 
+	// Testnet Configuration
+	const int P2P_DEFAULT_PORT_TESTNET = 20808;
+	const int RPC_DEFAULT_PORT_TESTNET = 28180;
+	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
+
+	// Testnet Seed Nodes
+	const std::initializer_list<const char *> SEED_NODES_TESTNET = {
+	    "127.0.0.1:20808",  // Local testnet node - replace with actual testnet seed nodes
+	    // Add more testnet seed nodes here as they become available
+	};
+
 	struct CheckpointData
 	{
 		uint32_t height;

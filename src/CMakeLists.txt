@@ -55,6 +55,21 @@ add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})
 
+# Add TestnetWallet executable
+add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
+target_link_libraries(testnet-wallet-cli 
+    Wallet
+    WalletLegacy
+    Common
+    Crypto
+    CryptoNoteCore
+    Http
+    Rpc
+    System
+    ${Boost_LIBRARIES}
+)
+set_target_properties(testnet-wallet-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src")
+
 if (MSVC)
   target_link_libraries(System ws2_32)
 endif ()

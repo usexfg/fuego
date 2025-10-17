@@ -76,11 +76,11 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 # Default command
 ENTRYPOINT ["fuegod"]
-CMD ["--data-dir=/home/fuego/.fuego", "--rpc-bind-ip=0.0.0.0", "--rpc-bind-port=28180"]
+CMD ["--data-dir=/home/fuego/.fuego", "--rpc-bind-ip=0.0.0.0", "--rpc-bind-port=18180"]
 
 # Labels for metadata
-LABEL maintainer="Fuego Development Team"
-LABEL description="Fuego Cryptocurrency Node"
+LABEL maintainer="Fuego Developers"
+LABEL description="Fuego L1 Privacy P2P Blockchain Node"
 LABEL version="latest"
 LABEL org.opencontainers.image.source="https://github.com/usexfg/fuego"
 LABEL org.opencontainers.image.documentation="https://github.com/usexfg/fuego"

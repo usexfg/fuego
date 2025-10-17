@@ -17,6 +17,9 @@
 
 #include "Currency.h"
 #include <cctype>
+#include <algorithm>
+#include <numeric>
+#include <cmath>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/math/special_functions/round.hpp>
 #include <boost/lexical_cast.hpp>
@@ -798,7 +801,10 @@ namespace CryptoNote
 	difficulty_type Currency::nextDifficulty(uint32_t height, uint8_t blockMajorVersion, std::vector<uint64_t> timestamps,
 		std::vector<difficulty_type> cumulativeDifficulties) const {
 
-		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_7) {
+		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_10) {
+			return nextDifficultyV6(height, blockMajorVersion, timestamps, cumulativeDifficulties);
+		}
+		else if (blockMajorVersion >= BLOCK_MAJOR_VERSION_7) {
 			return nextDifficultyV5(height, blockMajorVersion, timestamps, cumulativeDifficulties);
 		}
 		else if (blockMajorVersion >= BLOCK_MAJOR_VERSION_4) {
@@ -1119,6 +1125,142 @@ namespace CryptoNote
 			   }
 
 			   return  next_D;
+	}
+
+	difficulty_type Currency::nextDifficultyV6(uint32_t height, uint8_t blockMajorVersion,
+		std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulativeDifficulties) const {
+		
+		// Adaptive Multi-Window Difficulty Algorithm (AMWDA) - V10
+		// Designed for fast adaptation, large swing handling, and block stealing prevention
+		// Activated at BlockMajorVersion 10 (height 969696) alongside Enhanced Privacy
+		// Copyright (c) 2024 Fuego Privacy Group
+		
+		const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET; // 480 seconds
+		const uint32_t SHORT_WINDOW = CryptoNote::parameters::DMWDA_SHORT_WINDOW;   // Rapid response window
+		const uint32_t MEDIUM_WINDOW = CryptoNote::parameters::DMWDA_MEDIUM_WINDOW;  // Stability window  
+		const uint32_t LONG_WINDOW = CryptoNote::parameters::DMWDA_LONG_WINDOW;   // Trend analysis window
+		const uint32_t EMERGENCY_WINDOW = CryptoNote::parameters::DMWDA_EMERGENCY_WINDOW; // Emergency response window
+		
+		// Early chain protection
+		if (timestamps.size() < 3) {
+			return 10000;
+		}
+		
+		// Convert cumulative difficulties to individual difficulties
+		std::vector<difficulty_type> difficulties;
+		for (size_t i = 1; i < cumulativeDifficulties.size(); ++i) {
+			difficulties.push_back(cumulativeDifficulties[i] - cumulativeDifficulties[i-1]);
+		}
+		
+		// Detect emergency conditions (sudden hash rate changes)
+		bool emergencyMode = false;
+		if (timestamps.size() >= EMERGENCY_WINDOW + 1) {
+			uint64_t recentTime = timestamps[EMERGENCY_WINDOW] - timestamps[0];
+			uint64_t expectedTime = EMERGENCY_WINDOW * T;
+			
+			// If recent blocks are significantly faster or slower than expected
+			double emergencyThreshold = CryptoNote::parameters::DMWDA_EMERGENCY_THRESHOLD;
+			if (recentTime < expectedTime * emergencyThreshold || recentTime > expectedTime / emergencyThreshold) {
+				emergencyMode = true;
+			}
+		}
+		
+		// Emergency response
+		if (emergencyMode) {
+			uint32_t effectiveWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), EMERGENCY_WINDOW);
+			double recentSolveTime = static_cast<double>(timestamps[effectiveWindow] - timestamps[0]) / effectiveWindow;
+			uint64_t avgDifficulty = (cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[0]) / effectiveWindow;
+			
+			double emergencyRatio = static_cast<double>(T) / recentSolveTime;
+			double emergencyThreshold = CryptoNote::parameters::DMWDA_EMERGENCY_THRESHOLD;
+			emergencyRatio = std::max(emergencyThreshold, std::min(1.0 / emergencyThreshold, emergencyRatio)); // Config-based bounds
+			
+			return std::max(static_cast<uint64_t>(10000), 
+							static_cast<uint64_t>(avgDifficulty * emergencyRatio));
+		}
+		
+		// Multi-window LWMA calculation
+		auto calculateLWMA = [&](uint32_t windowSize) -> double {
+			uint32_t effectiveWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), windowSize);
+			double weightedSum = 0.0;
+			double weightSum = 0.0;
+			
+			for (uint32_t i = 1; i <= effectiveWindow; ++i) {
+				int64_t solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i-1]);
+				
+				// Clamp solve time to prevent manipulation
+				solveTime = std::max(static_cast<int64_t>(T / 10), 
+									std::min(static_cast<int64_t>(T * 10), solveTime));
+				
+				double weight = static_cast<double>(i);
+				weightedSum += solveTime * weight;
+				weightSum += weight;
+			}
+			
+			return weightedSum / weightSum;
+		};
+		
+		// Calculate LWMA for different windows
+		double shortLWMA = calculateLWMA(SHORT_WINDOW);
+		double mediumLWMA = calculateLWMA(MEDIUM_WINDOW);
+		double longLWMA = calculateLWMA(LONG_WINDOW);
+		
+		// Calculate confidence score based on solve time variance
+		double confidence = CryptoNote::parameters::DMWDA_CONFIDENCE_MAX;
+		if (timestamps.size() >= 10) {
+			std::vector<double> solveTimes;
+			for (size_t i = 1; i < std::min(static_cast<size_t>(10), timestamps.size()); ++i) {
+				solveTimes.push_back(static_cast<double>(timestamps[i] - timestamps[i-1]));
+			}
+			
+			double mean = std::accumulate(solveTimes.begin(), solveTimes.end(), 0.0) / solveTimes.size();
+			double variance = 0.0;
+			for (double st : solveTimes) {
+				variance += (st - mean) * (st - mean);
+			}
+			variance /= solveTimes.size();
+			
+			double coefficientOfVariation = std::sqrt(variance) / mean;
+			confidence = std::max(CryptoNote::parameters::DMWDA_CONFIDENCE_MIN, 
+								std::min(CryptoNote::parameters::DMWDA_CONFIDENCE_MAX, 1.0 - coefficientOfVariation));
+		}
+		
+		// Adaptive weighting based on confidence
+		double shortWeight = CryptoNote::parameters::DMWDA_WEIGHT_SHORT * confidence;
+		double mediumWeight = CryptoNote::parameters::DMWDA_WEIGHT_MEDIUM * confidence;
+		double longWeight = CryptoNote::parameters::DMWDA_WEIGHT_LONG * (1.0 - confidence);
+		
+		// Calculate weighted average solve time
+		double weightedSolveTime = (shortLWMA * shortWeight + 
+								   mediumLWMA * mediumWeight + 
+								   longLWMA * longWeight) / 
+								   (shortWeight + mediumWeight + longWeight);
+		
+		// Calculate current average difficulty
+		uint32_t effectiveWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), MEDIUM_WINDOW);
+		uint64_t avgDifficulty = (cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[0]) / effectiveWindow;
+		
+		// Calculate new difficulty
+		double difficultyRatio = static_cast<double>(T) / weightedSolveTime;
+		
+		// Apply adaptive bounds based on confidence
+		double adjustmentRange = CryptoNote::parameters::DMWDA_ADJUSTMENT_RANGE;
+		double minAdjustment = CryptoNote::parameters::DMWDA_MIN_ADJUSTMENT + (adjustmentRange * (1.0 - confidence)); // Config min to min+range
+		double maxAdjustment = CryptoNote::parameters::DMWDA_MAX_ADJUSTMENT - (2.0 * (1.0 - confidence));  // Config max-2.0 to max
+		
+		difficultyRatio = std::max(minAdjustment, std::min(maxAdjustment, difficultyRatio));
+		
+		uint64_t newDifficulty = static_cast<uint64_t>(avgDifficulty * difficultyRatio);
+		
+		// Apply smoothing to prevent oscillations
+		if (timestamps.size() > 1 && difficulties.size() > 0) {
+			uint64_t prevDifficulty = difficulties.back();
+			double alpha = CryptoNote::parameters::DMWDA_SMOOTHING_FACTOR; // Smoothing factor
+			newDifficulty = static_cast<uint64_t>(alpha * newDifficulty + (1.0 - alpha) * prevDifficulty);
+		}
+		
+		// Minimum difficulty protection
+		return std::max(static_cast<uint64_t>(10000), newDifficulty);
 	}
 
 

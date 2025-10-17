@@ -146,10 +146,48 @@ if(STATIC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
+if(APPLE)
+  # Try to find Boost in Homebrew directories
+  set(HOMEBREW_BOOST_ROOT "/opt/homebrew/opt/boost")
+  if(EXISTS "${HOMEBREW_BOOST_ROOT}")
+    set(Boost_ROOT "${HOMEBREW_BOOST_ROOT}")
+    set(Boost_INCLUDE_DIR "${HOMEBREW_BOOST_ROOT}/include")
+    set(Boost_LIBRARY_DIR "${HOMEBREW_BOOST_ROOT}/lib")
+  endif()
+endif()
+
+# Windows Boost configuration
+if(WIN32)
+  # Check for environment variable first
+  if(DEFINED ENV{BOOST_ROOT})
+    set(BOOST_ROOT "$ENV{BOOST_ROOT}")
+    set(Boost_ROOT "$ENV{BOOST_ROOT}")
+    set(Boost_INCLUDE_DIR "$ENV{BOOST_INCLUDEDIR}")
+    set(Boost_LIBRARY_DIR "$ENV{BOOST_LIBRARYDIR}")
+  else()
+    # Fallback to common Boost installation paths
+    set(BOOST_ROOT "C:/thirdparties/boost-1.83.0")
+    set(Boost_ROOT "C:/thirdparties/boost-1.83.0")
+    set(Boost_INCLUDE_DIR "C:/thirdparties/boost-1.83.0/boost")
+    set(Boost_LIBRARY_DIR "C:/thirdparties/boost-1.83.0/stage/lib")
+  endif()
+
+  # Additional Windows-specific Boost configuration
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_MULTITHREADED ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+endif()
+
+# Set policy to use legacy FindBoost module for Boost 1.70+ compatibility
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
+
 #set(Boost_DEBUG on)
 find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
+# Platform-specific Boost library configurations
 if(MINGW)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
 elseif(APPLE)

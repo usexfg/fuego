@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 Fuego Developers
+// Copyright (c) 2019-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -328,7 +328,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
 
 
 std::cout << std::endl
-         << "FUEGO |" << (m_core.currency().isTestnet() ? " LOCAL Testnet - " : " MAINNET | ")
+         << "FUEGO |" << (m_core.currency().isTestnet() ? " Testnet - " : " MAINNET | ")
          << (synced ? "synced " : "syncing ") << height << "/" << last_known_block_index 
          << " (" << get_sync_percentage(height, last_known_block_index) << "%) "<< std::endl;
 std::cout << "**************************************************"<< std::endl;

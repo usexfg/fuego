@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2025 Fuego Developers
+// Copyright (c) 2019-2023 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -20,7 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include "DaemonCommandsHandler.h"
+#include "../Daemon/DaemonCommandsHandler.h"
 
 #include "Common/SignalHandler.h"
 #include "Common/PathTools.h"
@@ -53,7 +53,7 @@ namespace po = boost::program_options;
 
 namespace
 {
-  const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", std::string(CryptoNote::CRYPTONOTE_NAME) + ".conf"};
+  const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", std::string("testnet") + ".conf"};
   const command_line::arg_descriptor<bool>        arg_os_version  = {"os-version", ""};
   const command_line::arg_descriptor<std::string> arg_log_file    = {"log-file", "", ""};
   const command_line::arg_descriptor<std::string> arg_set_fee_address = { "fee-address", "Set a fee address for remote nodes", "" };
@@ -62,11 +62,7 @@ namespace
   const command_line::arg_descriptor<std::string> arg_enable_cors = { "enable-cors", "Adds header 'Access-Control-Allow-Origin' to the daemon's RPC responses. Uses the value as domain. Use * for all", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2}; // info level
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
-  const command_line::arg_descriptor<bool> arg_testnet_on = {
-    "testnet",
-    "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored. Testnet uses different default ports: P2P=20808, RPC=28280.",
-    false
-};
+  // Testnet mode is always enabled for testnetd
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
 
@@ -102,6 +98,26 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   return loggerConfiguration;
 }
 
+void renameDataDir() {
+  std::string concealXDir = Tools::getDefaultDataDirectory();
+  boost::filesystem::path concealXDirPath(concealXDir);
+  if (boost::filesystem::exists(concealXDirPath)) {
+    return;
+  }
+
+  std::string dataDirPrefix = concealXDir.substr(0, concealXDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
+  boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
+
+  if (boost::filesystem::exists(cediDirPath)) {
+    boost::filesystem::rename(cediDirPath, concealXDirPath);
+  } else {
+    boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
+    if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
+		boost::filesystem::rename(BcediDirPath, concealXDirPath);
+    }
+  }
+}
+
 int main(int argc, char* argv[])
 {
 
@@ -113,9 +129,13 @@ int main(int argc, char* argv[])
   LoggerRef logger(logManager, "daemon");
 
   try {
+    renameDataDir();
 
-    po::options_description desc_cmd_only("Command line options");
-    po::options_description desc_cmd_sett("Command line options and settings options");
+  po::options_description desc_cmd_only("Command line options");
+  po::options_description desc_cmd_sett("Command line options and settings options");
+
+  desc_cmd_sett.add_options()("enable-blockchain-indexes,i", po::bool_switch()->default_value(false), "Enable blockchain indexes");
+  desc_cmd_sett.add_options()("enable-autosave,a", po::bool_switch()->default_value(false), "Enable blockchain autosave every 720 blocks");
 
    desc_cmd_sett.add_options()("enable-blockchain-indexes,i", po::bool_switch()->default_value(false), "Enable blockchain indexes");
    desc_cmd_sett.add_options()("enable-autosave,a", po::bool_switch()->default_value(false), "Enable blockchain autosave every 720 blocks");
@@ -132,7 +152,7 @@ int main(int argc, char* argv[])
    command_line::add_arg(desc_cmd_sett, arg_log_level);
    command_line::add_arg(desc_cmd_sett, arg_console);
    command_line::add_arg(desc_cmd_sett, arg_set_view_key);
-   command_line::add_arg(desc_cmd_sett, arg_testnet_on);
+   // Testnet mode is always enabled for testnetd
    command_line::add_arg(desc_cmd_sett, arg_enable_cors);
 
    command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
@@ -150,12 +170,12 @@ int main(int argc, char* argv[])
    bool r = command_line::handle_error_helper(desc_options, [&]() {
      po::store(po::parse_command_line(argc, argv, desc_options), vm);
 
-     if (command_line::get_arg(vm, command_line::arg_help))
-     {
-       std::cout << "Fuego || " << PROJECT_VERSION_LONG << ENDL;
-       std::cout << desc_options << std::endl;
-       return false;
-     }
+    if (command_line::get_arg(vm, command_line::arg_help))
+    {
+      std::cout << "Fuego Testnet || " << PROJECT_VERSION_LONG << ENDL;
+      std::cout << desc_cmd_sett << std::endl;
+      return false;
+    }
 
      if (command_line::get_arg(vm, arg_print_genesis_tx))
      {
@@ -193,7 +213,7 @@ int main(int argc, char* argv[])
     auto cfgLogFile = Common::NativePathToGeneric(command_line::get_arg(vm, arg_log_file));
 
     if (cfgLogFile.empty()) {
-      cfgLogFile = Common::ReplaceExtenstion(modulePath, ".log");
+      cfgLogFile = "testnet.log";
     } else {
       if (!Common::HasParentPath(cfgLogFile)) {
         cfgLogFile = Common::CombinePath(Common::GetPathDirectory(modulePath), cfgLogFile);
@@ -204,7 +224,7 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		logger(INFO, BRIGHT_MAGENTA) <<
+		logger(INFO, BRIGHT_WHITE) <<
 #ifdef _WIN32
 " \n"		
 "       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n" 
@@ -224,7 +244,7 @@ int main(int argc, char* argv[])
 " ██       ██████  ███████  ██████   ██████  \n"
 #endif
 			"\n"
-			<< "             "  PROJECT_VERSION_LONG "\n"
+			<< "             "  PROJECT_VERSION_LONG " - TESTNET\n"
 			"\n";
 
     if (command_line_preprocessor(vm, logger)) {
@@ -233,14 +253,12 @@ int main(int argc, char* argv[])
 
     logger(INFO) << "Module folder: " << argv[0];
 
-    bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
-    if (testnet_mode) {
-      logger(INFO) << "Starting in testnet mode!";
-    }
+    // Force testnet mode for testnetd
+    logger(INFO) << "Starting in TESTNET mode!";
 
     //create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
-    currencyBuilder.testnet(testnet_mode);
+    currencyBuilder.testnet(true);
 
     try {
       currencyBuilder.currency();
@@ -256,28 +274,11 @@ int main(int argc, char* argv[])
     coreConfig.init(vm);
     NetNodeConfig netNodeConfig;
     netNodeConfig.init(vm);
-    netNodeConfig.setTestnet(testnet_mode);
-    
-    // Set testnet-specific default ports if not explicitly configured
-    if (testnet_mode) {
-      if (netNodeConfig.getBindPort() == 0) {
-        netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
-      }
-    } else {
-      if (netNodeConfig.getBindPort() == 0) {
-        netNodeConfig.setBindPort(P2P_DEFAULT_PORT);
-      }
-    }
-    
+    netNodeConfig.setTestnet(true);
     MinerConfig minerConfig;
     minerConfig.init(vm);
     RpcServerConfig rpcConfig;
     rpcConfig.init(vm);
-    
-    // Set testnet-specific RPC port if not explicitly configured
-    if (testnet_mode && rpcConfig.bindPort == RPC_DEFAULT_PORT) {
-      rpcConfig.bindPort = RPC_DEFAULT_PORT_TESTNET;
-    }
 
     if (!coreConfig.configFolderDefaulted) {
       if (!Tools::directoryExists(coreConfig.configFolder)) {

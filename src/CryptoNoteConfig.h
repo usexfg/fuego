@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2024 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2018 The Monero project
 // Copyright (c) 2018-2019 The Ryo Currency developers
@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <initializer_list>
+#include <boost/uuid/uuid.hpp>
 
 namespace CryptoNote
 {
@@ -70,8 +71,31 @@ namespace CryptoNote
 		const size_t   DIFFICULTY_WINDOW_V3                          = 60;  // blocks  Zawy-LWMA1
 		const size_t   DIFFICULTY_WINDOW_V4                          = 45;  // blocks  Zawy-LWMA1 Fuego (~180 block per day)
 
+		// DMWDA (Dynamic Multi-Window Difficulty Algorithm) parameters
+		const uint32_t DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
+		const uint32_t DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
+		const uint32_t DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
+		const uint32_t DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
+		const double   DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
+		const double   DMWDA_MAX_ADJUSTMENT                          = 4.0;  // Maximum difficulty adjustment (400%)
+		const double   DMWDA_EMERGENCY_THRESHOLD                     = 0.1;  // Emergency threshold (10%)
+		const double   DMWDA_SMOOTHING_FACTOR                        = 0.3;  // Smoothing factor for oscillations prevention
+		const double   DMWDA_CONFIDENCE_MIN                          = 0.1;  // Minimum confidence score
+		const double   DMWDA_CONFIDENCE_MAX                          = 1.0;  // Maximum confidence score
+		const double   DMWDA_ADJUSTMENT_RANGE                        = 0.3;  // Adjustment range for confidence-based bounds
+		const double   DMWDA_WEIGHT_SHORT                            = 0.4;  // Weight for short window
+		const double   DMWDA_WEIGHT_MEDIUM                           = 0.4;  // Weight for medium window
+		const double   DMWDA_WEIGHT_LONG                             = 0.2;  // Weight for long window
+		const double   DMWDA_HASH_RATE_CHANGE_THRESHOLD              = 10.0; // Hash rate change threshold for anomaly detection
+		const double   DMWDA_DEFAULT_CONFIDENCE                      = 0.5;  // Default confidence score
+		const uint32_t DMWDA_RECENT_WINDOW_SIZE                      = 5;    // Recent window size for anomaly detection
+		const uint32_t DMWDA_HISTORICAL_WINDOW_SIZE                  = 20;   // Historical window size for anomaly detection
+		const uint32_t DMWDA_BLOCK_STEALING_CHECK_BLOCKS             = 5;    // Number of blocks to check for stealing attempts
+		const uint32_t DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
+		const double   DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
+
 		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
-               // const uint64_t MIN_TX_MIXIN_SIZE_V9                          = 8;
+		const uint64_t MIN_TX_MIXIN_SIZE_V10                         = 8;  // Enhanced privacy starting from BlockMajorVersion 10
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
@@ -136,6 +160,9 @@ namespace CryptoNote
 
         const char CRYPTONOTE_NAME[] = "fuego";
 	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
+	
+	// Testnet Genesis Block
+	const char GENESIS_COINBASE_TX_HEX_TESTNET[] = "";
 
 	const uint8_t  TRANSACTION_VERSION_1                         =  1;
 	const uint8_t  TRANSACTION_VERSION_2                         =  2;
@@ -148,6 +175,11 @@ namespace CryptoNote
 	const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
 	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8; 
 	const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;
+	const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
+	const uint8_t  BLOCK_MAJOR_VERSION_11                        = 11;
+	const uint8_t  BLOCK_MAJOR_VERSION_12                        = 12;
+	const uint8_t  BLOCK_MAJOR_VERSION_13                        = 13;
+	const uint8_t  BLOCK_MAJOR_VERSION_14                        = 14;
 	const uint8_t  BLOCK_MINOR_VERSION_0 			     =  0;
 	const uint8_t  BLOCK_MINOR_VERSION_1 			     =  1;
 
@@ -158,6 +190,11 @@ namespace CryptoNote
 	const int P2P_DEFAULT_PORT = 10808;
  	const int RPC_DEFAULT_PORT = 18180;
 
+	// Testnet Configuration
+	const int P2P_DEFAULT_PORT_TESTNET = 20808;
+	const int RPC_DEFAULT_PORT_TESTNET = 28180;
+	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
+	
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;
@@ -194,6 +231,12 @@ namespace CryptoNote
  		"207.244.247.64:10808",
 	        "216.145.66.224:10808"
 			
+	};
+	
+	// Testnet Seed Nodes
+	const std::initializer_list<const char *> SEED_NODES_TESTNET = {
+		"127.0.0.1:20808",  // Local testnet node - replace with actual testnet seed nodes
+		// Add more testnet seed nodes here as they become available
 	};
 
 	// Testnet Configuration

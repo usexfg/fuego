@@ -65,7 +65,8 @@ namespace CryptoNote {
         // Anti-block-stealing mechanism
         bool detectBlockStealingAttempt(
             const std::vector<uint64_t>& timestamps,
-            const std::vector<uint64_t>& difficulties
+            const std::vector<uint64_t>& difficulties,
+            bool testnet = false
         );
 
     private:
@@ -94,7 +95,8 @@ namespace CryptoNote {
         // Detect hash rate anomalies
         bool detectHashRateAnomaly(
             const std::vector<uint64_t>& timestamps,
-            const std::vector<uint64_t>& difficulties
+            const std::vector<uint64_t>& difficulties,
+            bool testnet = false
         );
         
         // Apply smoothing to prevent oscillations

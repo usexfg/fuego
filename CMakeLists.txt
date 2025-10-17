@@ -157,6 +157,24 @@ if(APPLE)
     set(CMAKE_PREFIX_PATH "${HOMEBREW_BOOST_ROOT}" ${CMAKE_PREFIX_PATH})
     # Force CMake to use the legacy FindBoost module
     set(Boost_NO_BOOST_CMAKE ON)
+    # For Homebrew Boost, we need to manually set the libraries
+    set(Boost_LIBRARIES "")
+    # Find individual Boost libraries manually
+    find_library(BOOST_SYSTEM_LIB boost_system PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_FILESYSTEM_LIB boost_filesystem PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_THREAD_LIB boost_thread PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_DATE_TIME_LIB boost_date_time PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_CHRONO_LIB boost_chrono PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_REGEX_LIB boost_regex PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_SERIALIZATION_LIB boost_serialization PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_PROGRAM_OPTIONS_LIB boost_program_options PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    
+    if(BOOST_SYSTEM_LIB AND BOOST_FILESYSTEM_LIB AND BOOST_THREAD_LIB AND BOOST_DATE_TIME_LIB AND BOOST_CHRONO_LIB AND BOOST_REGEX_LIB AND BOOST_SERIALIZATION_LIB AND BOOST_PROGRAM_OPTIONS_LIB)
+      set(Boost_LIBRARIES "${BOOST_SYSTEM_LIB};${BOOST_FILESYSTEM_LIB};${BOOST_THREAD_LIB};${BOOST_DATE_TIME_LIB};${BOOST_CHRONO_LIB};${BOOST_REGEX_LIB};${BOOST_SERIALIZATION_LIB};${BOOST_PROGRAM_OPTIONS_LIB}")
+      set(Boost_FOUND TRUE)
+      set(Boost_INCLUDE_DIRS "${HOMEBREW_BOOST_ROOT}/include")
+      set(Boost_LIBRARY_DIRS "${HOMEBREW_BOOST_ROOT}/lib")
+    endif()
   endif()
 endif()
 
@@ -193,7 +211,9 @@ if(POLICY CMP0074)
 endif()
 
 #set(Boost_DEBUG on)
-find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+if(NOT Boost_FOUND)
+  find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 # Platform-specific Boost library configurations

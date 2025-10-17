@@ -153,6 +153,10 @@ if(APPLE)
     set(Boost_ROOT "${HOMEBREW_BOOST_ROOT}")
     set(Boost_INCLUDE_DIR "${HOMEBREW_BOOST_ROOT}/include")
     set(Boost_LIBRARY_DIR "${HOMEBREW_BOOST_ROOT}/lib")
+    # Set CMAKE_PREFIX_PATH to help CMake find Boost components
+    set(CMAKE_PREFIX_PATH "${HOMEBREW_BOOST_ROOT}" ${CMAKE_PREFIX_PATH})
+    # Force CMake to use the legacy FindBoost module
+    set(Boost_NO_BOOST_CMAKE ON)
   endif()
 endif()
 
@@ -181,6 +185,11 @@ endif()
 # Set policy to use legacy FindBoost module for Boost 1.70+ compatibility
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 OLD)
+endif()
+
+# Set policy to suppress CMP0074 warning about Boost_ROOT
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
 endif()
 
 #set(Boost_DEBUG on)

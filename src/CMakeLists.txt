@@ -60,16 +60,17 @@ add_executable(Optimizer ${Optimizer})
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
 target_link_libraries(testnet-wallet-cli 
     Wallet
-    WalletLegacy
-    Common
-    Crypto
-    CryptoNoteCore
-    Http
+    NodeRpcProxy
+    Transfers
     Rpc
+    Http
+    CryptoNoteCore
     System
     Logging
-    Serialization
+    Common
+    Crypto
     ${Boost_LIBRARIES}
+    Serialization
 )
 set_target_properties(testnet-wallet-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src")
 

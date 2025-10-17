@@ -192,7 +192,7 @@ namespace CryptoNote
 
 	// Testnet Configuration
 	const int P2P_DEFAULT_PORT_TESTNET = 20808;
-	const int RPC_DEFAULT_PORT_TESTNET = 28180;
+	const int RPC_DEFAULT_PORT_TESTNET = 28280;
 	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
 	
 	/* P2P Network Configuration Section - This defines our current P2P network version
@@ -239,10 +239,6 @@ namespace CryptoNote
 		// Add more testnet seed nodes here as they become available
 	};
 
-	// Testnet Configuration
-	const int P2P_DEFAULT_PORT_TESTNET = 20808;
-	const int RPC_DEFAULT_PORT_TESTNET = 28180;
-	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
 
 	// Testnet Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES_TESTNET = {

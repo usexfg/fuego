@@ -233,6 +233,51 @@ namespace CryptoNote
 	    "216.145.66.224:10808"			
 	};
 
+	// ---------------  begin TESTNET CONFIG ------------------------------------------------------------
+
+	// TESTNET Seed Nodes
+	const std::initializer_list<const char *> SEED_NODES_TESTNET = {
+		"127.0.0.1:20808",  // Local testnet node - replace with actual testnet seed nodes
+		// Add more testnet seed nodes as they become available
+		};
+
+ 	
+ 	const char GENESIS_COINBASE_TX_HEX_TESTNET[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210136834e176c3994ebc8622152e76b8093e0b896aa06f790e6f93eba661edefe6a";
+ 	const int P2P_DEFAULT_PORT_TESTNET = 20808;
+ 	const int RPC_DEFAULT_PORT_TESTNET = 28280;
+ 	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
+ 	// TESTNET DEPOSIT PARAMS
+  	const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * parameters::COIN; // 8 XFG
+ 	const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
+ 	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
+ 	const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480
+ 	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		 
+
+ 	// DMWDA TESTNET parameters
+ 	const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
+ 	const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
+ 	const uint32_t TESTNET_DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
+ 	const uint32_t TESTNET_DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
+ 	const double   TESTNET_DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
+ 	const double   TESTNET_DMWDA_MAX_ADJUSTMENT                          = 4.0;  // Maximum difficulty adjustment (400%)
+ 	const double   TESTNET_DMWDA_EMERGENCY_THRESHOLD                     = 0.1;  // Emergency threshold (10%)
+ 	const double   TESTNET_DMWDA_SMOOTHING_FACTOR                        = 0.3;  // Smoothing factor for oscillations prevention
+ 	const double   TESTNET_DMWDA_CONFIDENCE_MIN                          = 0.1;  // Minimum confidence score
+ 	const double   TESTNET_DMWDA_CONFIDENCE_MAX                          = 1.0;  // Maximum confidence score
+ 	const double   TESTNET_DMWDA_ADJUSTMENT_RANGE                        = 0.3;  // Adjustment range for confidence-based bounds
+ 	const double   TESTNET_DMWDA_WEIGHT_SHORT                            = 0.4;  // Weight for short window
+ 	const double   TESTNET_DMWDA_WEIGHT_MEDIUM                           = 0.4;  // Weight for medium window
+ 	const double   TESTNET_DMWDA_WEIGHT_LONG                             = 0.2;  // Weight for long window
+ 	const double   TESTNET_DMWDA_HASH_RATE_CHANGE_THRESHOLD              = 10.0; // Hash rate change threshold for anomaly detection
+ 	const double   TESTNET_DMWDA_DEFAULT_CONFIDENCE                      = 0.5;  // Default confidence score
+ 	const uint32_t TESTNET_DMWDA_RECENT_WINDOW_SIZE                      = 5;    // Recent window size for anomaly detection
+ 	const uint32_t TESTNET_DMWDA_HISTORICAL_WINDOW_SIZE                  = 20;   // Historical window size for anomaly detection
+ 	const uint32_t TESTNET_DMWDA_BLOCK_STEALING_CHECK_BLOCKS             = 5;    // Number of blocks to check for stealing attempts
+ 	const uint32_t TESTNET_DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
+ 	const double   TESTNET_DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
+
+ 	// ---------------  end TESTNET CONFIG ------------------------------------------------------------
+	
 	struct CheckpointData
 	{
 		uint32_t height;
@@ -305,47 +350,6 @@ namespace CryptoNote
 
 
  		};
-
-
-	    // TESTNET Config
-	    const char GENESIS_COINBASE_TX_HEX_TESTNET[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210136834e176c3994ebc8622152e76b8093e0b896aa06f790e6f93eba661edefe6a";
-	    const int P2P_DEFAULT_PORT_TESTNET = 20808;
-	    const int RPC_DEFAULT_PORT_TESTNET = 28280;
-	    const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
-        // TESTNET DEPOSIT PARAMS
-        const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * parameters::COIN; // 8 XFG
-	    const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
-        const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
-        const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480
-        const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		 
-
-        // DMWDA TESTNET parameters
-		const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
-		const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
-		const uint32_t TESTNET_DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
-		const uint32_t TESTNET_DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
-		const double   TESTNET_DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
-		const double   TESTNET_DMWDA_MAX_ADJUSTMENT                          = 4.0;  // Maximum difficulty adjustment (400%)
-		const double   TESTNET_DMWDA_EMERGENCY_THRESHOLD                     = 0.1;  // Emergency threshold (10%)
-		const double   TESTNET_DMWDA_SMOOTHING_FACTOR                        = 0.3;  // Smoothing factor for oscillations prevention
-		const double   TESTNET_DMWDA_CONFIDENCE_MIN                          = 0.1;  // Minimum confidence score
-		const double   TESTNET_DMWDA_CONFIDENCE_MAX                          = 1.0;  // Maximum confidence score
-		const double   TESTNET_DMWDA_ADJUSTMENT_RANGE                        = 0.3;  // Adjustment range for confidence-based bounds
-		const double   TESTNET_DMWDA_WEIGHT_SHORT                            = 0.4;  // Weight for short window
-		const double   TESTNET_DMWDA_WEIGHT_MEDIUM                           = 0.4;  // Weight for medium window
-		const double   TESTNET_DMWDA_WEIGHT_LONG                             = 0.2;  // Weight for long window
-		const double   TESTNET_DMWDA_HASH_RATE_CHANGE_THRESHOLD              = 10.0; // Hash rate change threshold for anomaly detection
-		const double   TESTNET_DMWDA_DEFAULT_CONFIDENCE                      = 0.5;  // Default confidence score
-		const uint32_t TESTNET_DMWDA_RECENT_WINDOW_SIZE                      = 5;    // Recent window size for anomaly detection
-		const uint32_t TESTNET_DMWDA_HISTORICAL_WINDOW_SIZE                  = 20;   // Historical window size for anomaly detection
-		const uint32_t TESTNET_DMWDA_BLOCK_STEALING_CHECK_BLOCKS             = 5;    // Number of blocks to check for stealing attempts
-		const uint32_t TESTNET_DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
-		const double   TESTNET_DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
-       
-		// TESTNET Seed Nodes
-	    const std::initializer_list<const char *> SEED_NODES_TESTNET = {
-		"127.0.0.1:20808",  // Local testnet node - replace with actual testnet seed nodes
-		// Add more testnet seed nodes as they become available
 
 	};
 

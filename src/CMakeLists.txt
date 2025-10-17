@@ -60,6 +60,7 @@ add_executable(Optimizer ${Optimizer})
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
 target_link_libraries(testnet-wallet-cli 
     Wallet
+    SimpleWallet
     NodeRpcProxy
     Transfers
     Rpc
@@ -86,6 +87,7 @@ target_link_libraries(Optimizer PaymentGate Rpc Http CryptoNoteCore Logging Seri
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
   target_link_libraries(SimpleWallet -lresolv)
+  target_link_libraries(testnet-wallet-cli -lresolv)
   target_link_libraries(Daemon -lresolv)
   target_link_libraries(TestnetDaemon -lresolv)
   target_link_libraries(PaymentGateService -lresolv)

@@ -247,7 +247,7 @@ namespace CryptoNote
  	const int RPC_DEFAULT_PORT_TESTNET = 28280;
  	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
  	// TESTNET DEPOSIT PARAMS
-  	const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * parameters::COIN; // 8 XFG
+  	const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * parameters::COIN; // 8 TESTNET coins
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480
@@ -347,11 +347,7 @@ namespace CryptoNote
 			{ 888888, "b818f74d11ab6b16f86455986b3078217dd2eb0cac3de9b9a0c3111ebb07b9dc" },
 			{ 895000, "2bc71e117bf0544ec1c4a193a0c012c106f0bedc0c27b62feeef944bb16b83e3" }
 
-
-
- 		};
-
-	};
+		};
 
 } // namespace CryptoNote
 

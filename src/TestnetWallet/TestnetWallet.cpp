@@ -79,7 +79,7 @@ const command_line::arg_descriptor<std::string> arg_daemon_host = { "daemon-host
 const command_line::arg_descriptor<std::string> arg_password = { "password", "Wallet password (testnet)", std::string("") };
 const command_line::arg_descriptor<uint16_t>    arg_daemon_port = { "daemon-port", "Use daemon instance at port <arg> instead of default", 0 };
 const command_line::arg_descriptor<uint32_t>    arg_log_level = { "set_log", "", INFO, true };
-const command_line::arg_descriptor<bool>        arg_testnet = { "testnet", "Use testnet by default", true };
+const command_line::arg_descriptor<bool>        arg_testnet = { "testnet", "Always use testnet mode (hardcoded)", true };
 const command_line::arg_descriptor< std::vector<std::string> > arg_command = { "command", "" };
 
 bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port) {
@@ -221,7 +221,7 @@ struct TransferCommand {
               return true;
             }
 
-            std::string address = CryptoNote::getAccountAddressAsStr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, 
+            std::string address = CryptoNote::getAccountAddressAsStr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET, 
                                                                     addr);   
             arg = address;
           }
@@ -678,7 +678,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   if (m_daemon_host.empty())
     m_daemon_host = "localhost";
   if (!m_daemon_port)
-    m_daemon_port = RPC_DEFAULT_PORT;
+    m_daemon_port = RPC_DEFAULT_PORT_TESTNET; // Use testnet port by default
 
   if (!m_daemon_address.empty()) 
   {
@@ -1016,7 +1016,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     m_wallet->getAccountKeys(keys);
 
     std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
-    std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+    std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET, secretKeysData);
 
     logger(INFO, BRIGHT_GREEN) << "fuego-wallet-cli is an open-source, client-side, free wallet which allows you to send & receive Fuego instantly on the blockchain. Only YOU are in control of your funds & your private keys. When you generate a new wallet, send, receive or deposit Fuego - everything happens locally. Your seed is never transmitted, received or stored. IT IS IMPERATIVE that you write down, print, or save your seed phrase somewhere safe. The backup of keys is your responsibility only. If you lose your seed, your account can NOT be recovered. Freedom isn't free - You must truly act as your own bank." << std::endl << std::endl;
 
@@ -1472,7 +1472,7 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
   std::string keys = Common::asString(ba);
 
   /* create the integrated address the same way you make a public address */
-  std::string integratedAddress = Tools::Base58::encode_addr (CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
+  std::string integratedAddress = Tools::Base58::encode_addr (CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET,
                                                               paymentID + keys
   );
 
@@ -1489,7 +1489,7 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   m_wallet->getAccountKeys(keys);
 
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
-  std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+  std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET, secretKeysData);
 
   logger(INFO, BRIGHT_GREEN) << std::endl << "fuego-wallet-cli is an open-source, client-side, free wallet which allows you to send & receive Fuego instantly on the blockchain. You are in control of your funds & your private keys. When you generate a new wallet, login, send, receive or deposit $XFG - everything happens locally. Your seed is never transmitted, received or stored. That's why IT IS IMPERATIVE to write down, print or save your seed somewhere safe. The backup of keys is your responsibility only. If you lose your seed, your account can not be recovered. Freedom isn't free - the cost is you must truly act as your own bank." << std::endl << std::endl;
 
@@ -2021,7 +2021,7 @@ int main(int argc, char* argv[]) {
   logger(INFO, BRIGHT_GREEN) << "fuego-wallet-cli -" << PROJECT_VERSION_LONG;
 
   CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
-    testnet(command_line::get_arg(vm, arg_testnet)).currency();
+    testnet(true).currency(); // Always true for TestnetWallet
 
   if (command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_bind_port)) {
     //runs wallet with rpc interface
@@ -2048,7 +2048,7 @@ int main(int argc, char* argv[]) {
     if (daemon_host.empty())
       daemon_host = "localhost";
     if (!daemon_port)
-      daemon_port = RPC_DEFAULT_PORT;
+      daemon_port = RPC_DEFAULT_PORT_TESTNET; // Use testnet port by default
 
     if (!daemon_address.empty()) {
       if (!parseUrlAddress(daemon_address, daemon_host, daemon_port)) {

@@ -27,39 +27,29 @@ jobs:
           build_folder="build/"
           xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
           release_name="fuego-cli-macOS-${{ matrix.arch }}-v$xfg_ver"
-          brew install gcc boost
-          # Uninstall ccache if present to avoid --D option error
-          brew uninstall ccache 2>/dev/null || echo "ccache not installed via brew"
-          # Completely disable ccache to avoid --D option error
-          export CCACHE_DISABLE=1
-          export CCACHE_DIR=""
-          export CCACHE_PREFIX=""
-          export CCACHE_PREFIX_CPP=""
-          export CCACHE_COMPRESS=""
-          export CCACHE_COMPRESSLEVEL=""
-          export CCACHE_CPP2=""
-          export CCACHE_HARDLINK=""
-          export CCACHE_HASHDIR=""
-          export CCACHE_IGNOREOPTIONS=""
-          export CCACHE_LOGFILE=""
-          export CCACHE_MAXSIZE=""
-          export CCACHE_READONLY=""
-          export CCACHE_RECACHE=""
-          export CCACHE_SLOPPINESS=""
-          export CCACHE_UMASK=""
-          export CCACHE_VERBOSE=""
+          
+          # Install dependencies
+          brew install gcc boost cmake
+          
+          # Set environment variables for consistent builds
           export CC="clang"
           export CXX="clang++"
-          # Remove any ccache wrapper from PATH temporarily
-          export PATH=$(echo $PATH | tr ':' '\n' | grep -v ccache | tr '\n' ':' | sed 's/:$//')
-          # Ensure no ccache wrapper is used
-          which ccache >/dev/null 2>&1 && echo "ccache found but disabled" || echo "ccache not found"
+          export CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+          
           mkdir "$build_folder"
           cd "$build_folder"
-          # Clear any existing CMake cache to avoid ccache detection
-          rm -rf CMakeCache.txt CMakeFiles/ 2>/dev/null || true
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} -DCMAKE_C_COMPILER_LAUNCHER="" -DCMAKE_CXX_COMPILER_LAUNCHER="" ..
-          make -j4
+          
+          # Configure with proper macOS settings
+          cmake \
+            -DCMAKE_C_FLAGS="-mmacosx-version-min=13.0" \
+            -DCMAKE_CXX_FLAGS="-mmacosx-version-min=13.0" \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="13.0" \
+            -DCMAKE_BUILD_TYPE=Release \
+            ..
+          
+          # Build with proper parallelization
+          make -j$(sysctl -n hw.ncpu)
           mkdir "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" ); done

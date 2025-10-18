@@ -198,7 +198,7 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		logger(INFO, BRIGHT_MAGENTA) <<
+		logger(INFO, BRIGHT_WHITE) <<
 #ifdef _WIN32
 " \n"		
 "       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n" 
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
       }
     } else {
       if (netNodeConfig.getBindPort() == 0) {
-        netNodeConfig.setBindPort(P2P_DEFAULT_PORT);
+        netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
       }
     }
     

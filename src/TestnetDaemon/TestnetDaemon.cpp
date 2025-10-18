@@ -255,16 +255,13 @@ int main(int argc, char* argv[])
       if (netNodeConfig.getBindPort() == 0) {
         netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
       }
-    } else {
-      if (netNodeConfig.getBindPort() == 0) {
-        netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
-      }
-    }
-    
+    } 
+
     MinerConfig minerConfig;
     minerConfig.init(vm);
     RpcServerConfig rpcConfig;
     rpcConfig.init(vm);
+
     
     // Set testnet-specific RPC port if not explicitly configured
     if (testnet_mode && rpcConfig.bindPort == RPC_DEFAULT_PORT) {

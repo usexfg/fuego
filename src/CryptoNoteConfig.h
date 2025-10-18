@@ -252,12 +252,13 @@ namespace CryptoNote
 	const uint64_t TESTNET_BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 TEST (8,000,000 atomic units)
 	const uint64_t TESTNET_BURN_DEPOSIT_LARGE_AMOUNT = 8000000000;  // 800 TEST (8,000,000,000 atomic units)
     const uint32_t TESTNET_DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
-    const uint32_t TESTNET_DEPOSIT_TERM_YIELD = TESTNET_DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
     const uint32_t TESTNET_DEPOSIT_TERM_BURN = TESTNET_DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480
- 	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		 
+ 	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		
+    const uint32_t TESTNET_DEPOSIT_TERM_YIELD = TESTNET_DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+
  	// DMWDA TESTNET parameters
  	const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
  	const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  

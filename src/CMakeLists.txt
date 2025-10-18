@@ -16,6 +16,7 @@ file(GLOB_RECURSE P2p P2p/*)
 file(GLOB_RECURSE Rpc Rpc/*)
 file(GLOB_RECURSE Serialization Serialization/*)
 file(GLOB_RECURSE SimpleWallet SimpleWallet/*)
+file(GLOB_RECURSE SimpleWalletLib SimpleWallet/PasswordContainer.*)
 file(GLOB_RECURSE Transfers Transfers/*)
 file(GLOB_RECURSE Wallet Wallet/*)
 file(GLOB_RECURSE WalletLegacy WalletLegacy/*)
@@ -46,6 +47,7 @@ add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
 add_library(Serialization STATIC ${Serialization})
 add_library(System STATIC ${System})
 add_library(Transfers STATIC ${Transfers})
+add_library(SimpleWalletLib STATIC ${SimpleWalletLib})
 add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
@@ -60,7 +62,7 @@ add_executable(Optimizer ${Optimizer})
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
 target_link_libraries(testnet-wallet-cli 
     Wallet
-    SimpleWallet
+    SimpleWalletLib
     NodeRpcProxy
     Transfers
     Rpc

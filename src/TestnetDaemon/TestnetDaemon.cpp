@@ -250,6 +250,11 @@ int main(int argc, char* argv[])
     netNodeConfig.init(vm);
     netNodeConfig.setTestnet(testnet_mode);
     
+    // Set testnet-specific P2P port if not explicitly configured
+    if (testnet_mode && netNodeConfig.getBindPort() == P2P_DEFAULT_PORT) {
+      netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
+    }
+    
     // Set testnet-specific default ports if not explicitly configured
     if (testnet_mode) {
       if (netNodeConfig.getBindPort() == 0) {

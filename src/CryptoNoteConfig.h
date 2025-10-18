@@ -103,13 +103,14 @@ namespace CryptoNote
 		// MAINNET DEPOSITS
 		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;
         const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
-		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 atomic units)
-		const uint64_t BURN_DEPOSIT_8000_AMOUNT = 8000 * COIN;  // 8000 XFG (80,000,000,000 atomic units)
+		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 HEAT)
+		const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 800 * COIN;  // 800 XFG (8,000,000,000 HEAT)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
         const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
         const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
         const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
-
+        const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+        const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
 		const uint64_t MULTIPLIER_FACTOR = 100;		 /* legacy deposits */
@@ -146,7 +147,7 @@ namespace CryptoNote
         const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
         const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
-        const uint32_t UPGRADE_HEIGHT_V9                             = 980000; //Dynamigo  (dmwda|dynamaxin|ethernalXFG)
+        const uint32_t UPGRADE_HEIGHT_V10                            = 980000; //Dynamigo  (dmwda|dynamaxin|ethernalXFG)
 
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -246,12 +247,12 @@ namespace CryptoNote
  	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "TEST" address prefix */
  	// TESTNET DEPOSIT PARAMS
   	const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * parameters::COIN; // 8 TESTNET coins
-    const uint64_t TESTNET_BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
-	const uint64_t TESTNET_BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 atomic units)
-	const uint64_t TESTNET_BURN_DEPOSIT_8000_AMOUNT = 8000 * COIN;  // 8000 XFG (80,000,000,000 atomic units)
+    const uint64_t TESTNET_BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 TEST (8,000,000 atomic units)
+	const uint64_t TESTNET_BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 TEST (8,000,000 atomic units)
+	const uint64_t TESTNET_BURN_DEPOSIT_LARGE_AMOUNT = 800 * COIN;  // 8000 TEST (80,000,000,000 atomic units)
     const uint32_t TESTNET_DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
-    const uint32_t TESTNET_DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
-    const uint32_t TESTNET_DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
+    const uint32_t TESTNET_DEPOSIT_TERM_YIELD = TESTNET_DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+    const uint32_t TESTNET_DEPOSIT_TERM_BURN = TESTNET_DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480

@@ -102,6 +102,9 @@ namespace CryptoNote
         
 		// MAINNET DEPOSITS
 		const uint64_t DEPOSIT_MIN_AMOUNT = 800 * COIN;
+        const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
+		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 atomic units)
+		const uint64_t BURN_DEPOSIT_8000_AMOUNT = 8000 * COIN;  // 8000 XFG (80,000,000,000 atomic units)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
         const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
         const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
@@ -143,6 +146,8 @@ namespace CryptoNote
         const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
         const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
+        const uint32_t UPGRADE_HEIGHT_V9                             = 980000; //Dynamigo  (dmwda|dynamaxin|ethernalXFG)
+
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -176,14 +181,7 @@ namespace CryptoNote
 	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8; 
 	const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;
 	const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
-	const uint8_t  BLOCK_MAJOR_VERSION_11                        = 11;
-	const uint8_t  BLOCK_MAJOR_VERSION_12                        = 12;
-	const uint8_t  BLOCK_MAJOR_VERSION_13                        = 13;
-	const uint8_t  BLOCK_MAJOR_VERSION_14                        = 14;
-	const uint8_t  BLOCK_MAJOR_VERSION_15                        = 15;
-	const uint8_t  BLOCK_MAJOR_VERSION_16                        = 16;
-	const uint8_t  BLOCK_MAJOR_VERSION_17                        = 17;
-	const uint8_t  BLOCK_MAJOR_VERSION_18                        = 18;
+
 
 	const uint8_t  BLOCK_MINOR_VERSION_0 			             =  0;
 	const uint8_t  BLOCK_MINOR_VERSION_1 			             =  1;
@@ -233,7 +231,7 @@ namespace CryptoNote
 	    "216.145.66.224:10808"			
 	};
 
-	// ---------------  begin TESTNET CONFIG ------------------------------------------------------------
+	// ---------------  TESTNET CONFIGS -----------------------------------------------------
 
 	// TESTNET Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES_TESTNET = {
@@ -241,18 +239,23 @@ namespace CryptoNote
 		// Add more testnet seed nodes as they become available
 		};
 
- 	
+ 	// TESTNET DEFAULTS 
  	const char GENESIS_COINBASE_TX_HEX_TESTNET[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210136834e176c3994ebc8622152e76b8093e0b896aa06f790e6f93eba661edefe6a";
  	const int P2P_DEFAULT_PORT_TESTNET = 20808;
  	const int RPC_DEFAULT_PORT_TESTNET = 28280;
- 	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "test" address prefix */
+ 	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "TEST" address prefix */
  	// TESTNET DEPOSIT PARAMS
   	const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 8 * parameters::COIN; // 8 TESTNET coins
+    const uint64_t TESTNET_BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
+	const uint64_t TESTNET_BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 atomic units)
+	const uint64_t TESTNET_BURN_DEPOSIT_8000_AMOUNT = 8000 * COIN;  // 8000 XFG (80,000,000,000 atomic units)
+    const uint32_t TESTNET_DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
+    const uint32_t TESTNET_DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+    const uint32_t TESTNET_DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		 
-
  	// DMWDA TESTNET parameters
  	const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
  	const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
@@ -276,7 +279,7 @@ namespace CryptoNote
  	const uint32_t TESTNET_DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
  	const double   TESTNET_DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
 
- 	// ---------------  end TESTNET CONFIG ------------------------------------------------------------
+ 	// -------------------------------------- TESTNET CONFIG ------------------------------------------------------------
 	
 	struct CheckpointData
 	{

@@ -1,0 +1,102 @@
+name: Build Fuego
+
+on:
+  push:
+    branches: [ master, integrated-tesnet ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        # Install Boost and other dependencies
+        # Handle CMake conflict by uninstalling existing version first
+        brew uninstall cmake || true
+        brew install boost cmake
+        
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
+        
+    - name: Build
+      run: |
+        cd build
+        make -j$(sysctl -n hw.ncpu)
+        
+
+  build-ubuntu-22:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev libgtest-dev
+        
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
+        
+    - name: Build
+      run: |
+        cd build
+        make -j$(nproc)
+        
+
+  build-ubuntu-24:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libboost-all-dev libssl-dev libgtest-dev
+        
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
+        
+    - name: Build
+      run: |
+        cd build
+        make -j$(nproc)
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        # Install Visual Studio Build Tools
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
+        choco install cmake -y
+        # Install boost via Chocolatey (try different package name)
+        choco install boost-msvc-14.3 -y || choco install boost -y
+        # Refresh environment variables using PowerShell
+        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+        
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
+        
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release --parallel
+        

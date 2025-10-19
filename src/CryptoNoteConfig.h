@@ -232,14 +232,17 @@ namespace CryptoNote
 		"3.16.217.33:10808",
  		 "80.89.228.157:10808",
  		   "207.244.247.64:10808",
-	       "216.145.66.224:10808"			
+	        "216.145.66.224:10808"			
 	};
 
 	// ---------------  TESTNET CONFIGS -----------------------------------------------------
 
 	// TESTNET Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES_TESTNET = {
-		"127.0.0.1:20808",  // Local testnet node - replace with actual testnet seed nodes
+		"3.16.217.33:20808",
+ 		 "80.89.228.157:20808",
+ 		   "207.244.247.64:20808",
+	        "216.145.66.224:20808"	
 		// Add more testnet seed nodes as they become available
 		};
 
@@ -249,42 +252,45 @@ namespace CryptoNote
  	const int RPC_DEFAULT_PORT_TESTNET = 28280;
  	const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET = 1753192; /* "TEST" address prefix */
  	// TESTNET DEPOSIT PARAMS
-  const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 80000000; // 8 TESTNET coins
-  const uint64_t TESTNET_BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 TEST (8,000,000 atomic units)
+    const uint64_t TESTNET_DEPOSIT_MIN_AMOUNT = 80000000; // 8 TESTNET coins
+    const uint64_t TESTNET_BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 TEST (8,000,000 atomic units)
 	const uint64_t TESTNET_BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 TEST (8,000,000 atomic units)
 	const uint64_t TESTNET_BURN_DEPOSIT_LARGE_AMOUNT = 8000000000;  // 800 TEST (8,000,000,000 atomic units)
-  const uint32_t TESTNET_DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
-  const uint32_t TESTNET_DEPOSIT_TERM_BURN = TESTNET_DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
+    const uint32_t TESTNET_DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
+    const uint32_t TESTNET_DEPOSIT_TERM_BURN = TESTNET_DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM = 8;  //blocks		 /* one month=5480
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		
-  const uint32_t TESTNET_DEPOSIT_TERM_YIELD = TESTNET_DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
-
- 	// DMWDA TESTNET parameters
- 	const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
- 	const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
- 	const uint32_t TESTNET_DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
- 	const uint32_t TESTNET_DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
- 	const double   TESTNET_DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
- 	const double   TESTNET_DMWDA_MAX_ADJUSTMENT                          = 4.0;  // Maximum difficulty adjustment (400%)
- 	const double   TESTNET_DMWDA_EMERGENCY_THRESHOLD                     = 0.1;  // Emergency threshold (10%)
- 	const double   TESTNET_DMWDA_SMOOTHING_FACTOR                        = 0.3;  // Smoothing factor for oscillations prevention
- 	const double   TESTNET_DMWDA_CONFIDENCE_MIN                          = 0.1;  // Minimum confidence score
- 	const double   TESTNET_DMWDA_CONFIDENCE_MAX                          = 1.0;  // Maximum confidence score
- 	const double   TESTNET_DMWDA_ADJUSTMENT_RANGE                        = 0.3;  // Adjustment range for confidence-based bounds
- 	const double   TESTNET_DMWDA_WEIGHT_SHORT                            = 0.4;  // Weight for short window
+    const uint32_t TESTNET_DEPOSIT_TERM_YIELD = TESTNET_DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+//__________________________________________________________________________________________________________________________
+                                     	// DMWDA TESTNET parameters
+//--------------------------------------------------------------------------------------------------------------------------
+ 		const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
+ 		const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
+ 		const uint32_t TESTNET_DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
+ 		const uint32_t TESTNET_DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
+ 		const double   TESTNET_DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
+ 		const double   TESTNET_DMWDA_MAX_ADJUSTMENT                          = 4.0;  // Maximum difficulty adjustment (400%)
+ 		const double   TESTNET_DMWDA_EMERGENCY_THRESHOLD                     = 0.1;  // Emergency threshold (10%)
+ 		const double   TESTNET_DMWDA_SMOOTHING_FACTOR                        = 0.3;  // Smoothing factor for oscillations prevention
+ 		const double   TESTNET_DMWDA_CONFIDENCE_MIN                          = 0.1;  // Minimum confidence score
+ 		const double   TESTNET_DMWDA_CONFIDENCE_MAX                          = 1.0;  // Maximum confidence score
+ 	    const double   TESTNET_DMWDA_DEFAULT_CONFIDENCE                      = 0.5;  // Default confidence score
+ 	
+	const double   TESTNET_DMWDA_WEIGHT_SHORT                            = 0.4;  // Weight for short window
  	const double   TESTNET_DMWDA_WEIGHT_MEDIUM                           = 0.4;  // Weight for medium window
  	const double   TESTNET_DMWDA_WEIGHT_LONG                             = 0.2;  // Weight for long window
- 	const double   TESTNET_DMWDA_HASH_RATE_CHANGE_THRESHOLD              = 10.0; // Hash rate change threshold for anomaly detection
- 	const double   TESTNET_DMWDA_DEFAULT_CONFIDENCE                      = 0.5;  // Default confidence score
+ 	const double   TESTNET_DMWDA_ADJUSTMENT_RANGE                        = 0.3;  // Adjustment range for confidence-based bounds
  	const uint32_t TESTNET_DMWDA_RECENT_WINDOW_SIZE                      = 5;    // Recent window size for anomaly detection
  	const uint32_t TESTNET_DMWDA_HISTORICAL_WINDOW_SIZE                  = 20;   // Historical window size for anomaly detection
  	const uint32_t TESTNET_DMWDA_BLOCK_STEALING_CHECK_BLOCKS             = 5;    // Number of blocks to check for stealing attempts
- 	const uint32_t TESTNET_DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
  	const double   TESTNET_DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
 
- 	// -------------------------------------- TESTNET CONFIG ------------------------------------------------------------
+ 	const uint32_t TESTNET_DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
+	const double   TESTNET_DMWDA_HASH_RATE_CHANGE_THRESHOLD              = 10.0; // Hash rate change threshold for anomaly detection
+
+ 	// -------------------------------------- TESTNET CONFIGS ------------------------------------------------------------
 	
 	struct CheckpointData
 	{
@@ -353,7 +359,16 @@ namespace CryptoNote
 			{ 830000, "cee38b0701df9f26a938f6c65a1f233d1f810e5f19eb1b4cb87b15d514342064" },
 			{ 840000, "ec767b0e56d7002966e3184e197b3da06c5f94484bf6218781a38f59a75bfaab" },
 			{ 888888, "b818f74d11ab6b16f86455986b3078217dd2eb0cac3de9b9a0c3111ebb07b9dc" },
-			{ 895000, "2bc71e117bf0544ec1c4a193a0c012c106f0bedc0c27b62feeef944bb16b83e3" }
+			{ 895000, "2bc71e117bf0544ec1c4a193a0c012c106f0bedc0c27b62feeef944bb16b83e3" },
+			( 900000, "1cacd4c442ddc836020f5d21c9540cac8890a0d7bf7e9a6ed5b6615f0a564afa" },
+			{ 910000, "99de18bcc18f47c2d4676f29b1ca01ae604c237bddfa8970da42b683705289b2" },
+			{ 920000, "fb58c246ead757e74dc6b8eb54f52b86ec5f475aa2978abc9729adbfd939bbb5" },
+			{ 930000, "bf4bdf3888e2593db332708e25c7de2bb8eabfb11d5df9324df666c338804629" },
+			{ 940000, "f5c0bfd2f0f4c166dc3de05af75b7616f73a9e24ed8ab7c504c1aac4203eb817" },
+			{ 950000, "c23a6da74e4d1ec8b2bc1debac5578d7c12ea70f3b03a692a62cab8d3c4431e1" },
+			{ 960000, "1ac7447e9819be997209b0bd3fa56edeca31f4cd33068a1808db3ab2c6705f18" },
+			{ 970000, "96f8735193c5435254d32c03d25b3747e059931cd3382c436d91b61cb6c6b871" }
+
 
 		};
 

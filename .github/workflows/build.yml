@@ -4,7 +4,7 @@ name: CI
 
 on:
   push:
-    branches: [ master, fix/sysapi ]
+    branches: [ master, integrated-testnet ]
   pull_request:
     branches: [ master ]
 

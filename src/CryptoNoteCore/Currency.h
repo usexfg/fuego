@@ -461,7 +461,16 @@ public:
   CurrencyBuilder& txPoolFileName(const std::string& val) { m_currency.m_txPoolFileName = val; return *this; }
   CurrencyBuilder& blockchinIndicesFileName(const std::string& val) { m_currency.m_blockchinIndicesFileName = val; return *this; }
   
-  CurrencyBuilder& testnet(bool val) { m_currency.m_testnet = val; return *this; }
+  CurrencyBuilder& testnet(bool val) { 
+    m_currency.m_testnet = val; 
+    
+    // Set testnet-specific address prefix when testnet mode is enabled
+    if (val) {
+      publicAddressBase58Prefix(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET);
+    }
+    
+    return *this; 
+  }
 
   private:
     Currency m_currency;

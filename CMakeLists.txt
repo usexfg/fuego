@@ -172,7 +172,7 @@ endif()
 
 #set(Boost_DEBUG on)
 
-find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+find_package(Boost 1.55 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 # Apply LTO and linker optimizations after dependencies are resolved

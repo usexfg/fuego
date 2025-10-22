@@ -1,5 +1,4 @@
 add_definitions(-DSTATICLIB)
-include_directories(${CMAKE_SOURCE_DIR}/external/parallel_hashmap)
 
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
 file(GLOB_RECURSE Common Common/*)
@@ -69,6 +68,17 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
   target_link_libraries(Daemon -lresolv)
   target_link_libraries(PaymentGateService -lresolv)
 endif ()
+
+# iOS-specific linking for mobile profile
+if(APPLE AND MOBILE_PROFILE)
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(SimpleWallet OpenSSL::Crypto)
+  target_link_libraries(Daemon OpenSSL::Crypto)
+  target_link_libraries(PaymentGateService OpenSSL::Crypto)
+  target_link_options(SimpleWallet PRIVATE -ObjC)
+  target_link_options(Daemon PRIVATE -ObjC)
+  target_link_options(PaymentGateService PRIVATE -ObjC)
+endif()
 
 add_dependencies(Rpc version)
 add_dependencies(Daemon version)

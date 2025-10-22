@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
+
 include(CheckCXXCompilerFlag)
 set(VERSION "0.2")
 # Packaged from main commits
@@ -17,7 +18,31 @@ set(CMAKE_SUPPRESS_REGENERATION ON)
 
 project(fuegoX)
 
-include_directories(include src external "${CMAKE_BINARY_DIR}/version")
+# Set threading variables early for all platforms
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+if(APPLE)
+  # Apple systems need threading variables set before any find_package calls
+  set(CMAKE_THREAD_LIBS_INIT "")
+  set(CMAKE_HAVE_THREADS_PTHREAD_ARG ON)
+  set(Threads_FOUND TRUE)
+  set(CMAKE_USE_PTHREADS_INIT TRUE)
+endif()
+
+option(MOBILE_PROFILE "Optimize build for size and mobile devices" OFF)
+
+if(MOBILE_PROFILE)
+  message(STATUS "Configuring mobile-optimized build")
+  # Size-focused compiler flags (without LTO for now)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -fdata-sections -ffunction-sections -DMOBILE_PROFILE=1")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -fdata-sections -ffunction-sections -DMOBILE_PROFILE=1")
+  # ARM optimizations when building for ARM
+  if(ARM)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+crypto")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a+crypto")
+  endif()
+endif()
+
+include_directories(include src external "${CMAKE_BINARY_DIR}/version" "${PROJECT_SOURCE_DIR}/external/parallel-hashmap/parallel_hashmap")
 
 if(APPLE OR FREEBSD)
   include_directories(SYSTEM /usr/include/malloc)
@@ -146,18 +171,28 @@ if(STATIC)
 endif()
 
 #set(Boost_DEBUG on)
+
 find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-if(MINGW)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
-elseif(APPLE)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES}")
-elseif(NOT MSVC)
-  set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
+# Apply LTO and linker optimizations after dependencies are resolved
+if(MOBILE_PROFILE)
+  message(STATUS "Applying mobile build optimizations (LTO, linker)")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+  # On Apple use dead_strip instead of --gc-sections
+  if(APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-dead_strip")
+  else()
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
+  endif()
 endif()
 
-# option(BUILD_TESTS "Build tests." ON)
+if(MINGW)
+  set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
+endif()
+
+#option(BUILD_TESTS "Build tests." ON)
 
 if(BUILD_TESTS)
   add_subdirectory(tests)

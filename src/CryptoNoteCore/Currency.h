@@ -223,8 +223,7 @@ public:
 
   bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
                         uint64_t &reward, int64_t &emissionChange) const;
-    uint64_t calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const;
-    uint64_t calculateTotalTransactionInterest(const Transaction &tx, uint32_t height) const;
+    // Interest functions removed - no on-chain interest calculation
     uint64_t getTransactionInputAmount(const TransactionInput &in, uint32_t height) const;
     uint64_t getTransactionAllInputsAmount(const Transaction &tx, uint32_t height) const;
     bool getTransactionFee(const Transaction &tx, uint64_t &fee, uint32_t height) const;
@@ -256,18 +255,11 @@ public:
   uint64_t convertHeatToXfg(uint64_t heatAmount) const;
   uint64_t getHeatConversionRate() const { return m_heatConversionRate; }
 
-  // Dynamic money supply methods
+  // Money supply methods
   uint64_t getBaseMoneySupply() const { return m_baseMoneySupply; }
-  	uint64_t getTotalSupply() const;
-	uint64_t getCirculatingSupply() const;
-	uint64_t getBlockRewardSupply() const;
-  uint64_t getTotalBurnedXfg() const { return m_totalBurnedXfg; }
-  uint64_t getTotalRebornXfg() const { return m_totalRebornXfg; }
-  void addBurnedXfg(uint64_t amount);
-  void addRebornXfg(uint64_t amount);
+  uint64_t getEternalFlame() const { return m_ethernalXFG; }
+  void addEternalFlame(uint64_t amount);
   double getBurnPercentage() const;
-  double getRebornPercentage() const;
-  double getSupplyIncreasePercentage() const;
 
   // Network validation
   uint64_t getFuegoNetworkId() const { return m_fuegoNetworkId; }
@@ -365,13 +357,9 @@ private:
   // HEAT token conversion
   uint64_t m_heatConversionRate;
 
-  // Dynamic money supply
+  // Money supply
   uint64_t m_baseMoneySupply;
-  uint64_t m_totalBurnedXfg;
-  uint64_t m_totalRebornXfg;
-  	uint64_t m_totalSupply;
-  uint64_t m_circulatingSupply;
-  uint64_t m_blockRewardSupply;
+  uint64_t m_ethernalXFG;
 
   // Network validation - using hash of the full network ID
   uint64_t m_fuegoNetworkId;
@@ -506,13 +494,9 @@ public:
   // HEAT conversion builder
   CurrencyBuilder& heatConversionRate(uint64_t val) { m_currency.m_heatConversionRate = val; return *this; }
 
-  // Dynamic money supply builders
+  // Money supply builders
   CurrencyBuilder& baseMoneySupply(uint64_t val) { m_currency.m_baseMoneySupply = val; return *this; }
-  CurrencyBuilder& totalBurnedXfg(uint64_t val) { m_currency.m_totalBurnedXfg = val; return *this; }
-  CurrencyBuilder& totalRebornXfg(uint64_t val) { m_currency.m_totalRebornXfg = val; return *this; }
-  	CurrencyBuilder& totalSupply(uint64_t val) { m_currency.m_totalSupply = val; return *this; }
-  CurrencyBuilder& circulatingSupply(uint64_t val) { m_currency.m_circulatingSupply = val; return *this; }
-  CurrencyBuilder& blockRewardSupply(uint64_t val) { m_currency.m_blockRewardSupply = val; return *this; }
+  CurrencyBuilder& ethernalXFG(uint64_t val) { m_currency.m_ethernalXFG = val; return *this; }
 
   // Network validation builder
   CurrencyBuilder& fuegoNetworkId(uint64_t val) { m_currency.m_fuegoNetworkId = val; return *this; }

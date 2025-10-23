@@ -7,15 +7,14 @@
 
 namespace CryptoNote {
 
-    // Adaptive Difficulty Algorithm for Fuego
-    // Addresses: Fast adaptation, large swings, block stealing prevention
+    // Adaptive Multi-Window Difficulty (DMWD) algorithm for Fuego
     
     class AdaptiveDifficulty {
     public:
         struct DifficultyConfig {
             uint64_t targetTime;           // Target block time (480 seconds)
             uint32_t shortWindow;          // Short window for rapid response (15 blocks)
-            uint32_t mediumWindow;        // Medium window for stability (45 blocks)
+            uint32_t mediumWindow;         // Medium window for stability (45 blocks)
             uint32_t longWindow;           // Long window for trend analysis (120 blocks)
             double minAdjustment;          // Minimum difficulty adjustment (0.5x)
             double maxAdjustment;          // Maximum difficulty adjustment (4.0x)
@@ -89,7 +88,7 @@ namespace CryptoNote {
         );
     };
 
-    // Default configuration for Fuego
+    // Default config
     AdaptiveDifficulty::DifficultyConfig getDefaultFuegoConfig();
 
 } // namespace CryptoNote

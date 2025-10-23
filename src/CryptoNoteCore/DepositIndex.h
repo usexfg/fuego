@@ -52,8 +52,8 @@ public:
   // Combined statistics
   struct DepositStats {
     uint64_t totalDeposits;
-    uint64_t totalBurnedXfg;
-    uint64_t regularDeposits;  // totalDeposits - totalBurnedXfg
+    uint64_t ethernalXFG;
+    uint64_t regularDeposits;  // totalDeposits - ethernalXFG
   };
   
   DepositStats getStats() const;
@@ -83,6 +83,6 @@ private:
   
   // Integrated burned XFG tracking
   std::vector<BurnedXfgEntry> m_burnedXfgEntries;
-  BurnedAmount m_totalBurnedXfg;
+  BurnedAmount m_ethernalXFG;
 };
 }

@@ -1,19 +1,19 @@
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 //
-// This file is part of Bytecoin.
+// This file is part of Fuego.
 //
-// Bytecoin is free software: you can redistribute it and/or modify
+// Fuego is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Bytecoin is distributed in the hope that it will be useful,
+// Fuego is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 //
 // You should have received a copy of the GNU Lesser General Public License
-// along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
+// along with Fuego.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -64,6 +64,7 @@ public:
   Dispatcher(const Dispatcher&) = delete;
   ~Dispatcher();
   Dispatcher& operator=(const Dispatcher&) = delete;
+  
   void clear();
   void dispatch();
   NativeContext* getCurrentContext() const;
@@ -77,7 +78,7 @@ public:
   // system-dependent
   int getEpoll() const;
   NativeContext& getReusableContext();
-  void pushReusableContext(NativeContext&);
+  void pushReusableContext(NativeContext& context);
   int getTimer();
   void pushTimer(int timer);
 
@@ -115,9 +116,10 @@ private:
   NativeContext* lastResumingContext;
   NativeContext* firstReusableContext;
   size_t runningContextCount;
+  bool m_stopped;
 
   void contextProcedure(void* ucontext);
   static void contextProcedureStatic(void* context);
 };
 
-}
+} // namespace System

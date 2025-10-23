@@ -39,12 +39,12 @@ BurnDepositValidationResult BurnDepositValidationResult::failure(const std::stri
 // BurnDepositConfig implementation
 BurnDepositConfig BurnDepositConfig::getDefault() {
     BurnDepositConfig config;
-    config.minimumBurnAmount = 1000000;  // 1 XFG minimum
-    config.maximumBurnAmount = 1000000000000;  // 1M XFG maximum
+    config.minimumBurnAmount = 8000000;  // 0.8 XFG minimum
+    config.maximumBurnAmount = 8000000000;  // 800 XFG maximum
     config.proofExpirationSeconds = 3600;  // 1 hour
     config.requireProofValidation = true;
     config.treasuryAddress = "";
-    config.fastPassConsensusThreshold = 2;  // 2/2 fast pass Eldernodes
+    config.fastPassConsensusThreshold = 2;  // 2/2 fastpass Eldernodes
     config.fallbackConsensusThreshold = 4;  // 4/5 fallback Eldernodes
     config.totalEldernodes = 5;     // Total Eldernodes in network
     config.enableDualValidation = true;  // Both commitment and burn amount validation

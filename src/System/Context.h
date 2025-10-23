@@ -17,135 +17,244 @@
 
 #pragma once
 
-#include <System/Dispatcher.h>
-#include <System/Event.h>
-#include <System/InterruptedException.h>
+#include "Dispatcher.h"
+#include "Event.h"
+#include "InterruptedException.h"
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 
 namespace System {
 
 template<typename ResultType = void>
 class Context {
 public:
-  Context(Dispatcher& dispatcher, std::function<ResultType()>&& target) : 
-    dispatcher(dispatcher), target(std::move(target)), ready(dispatcher), bindingContext(dispatcher.getReusableContext()) {
-    bindingContext.interrupted = false;
-    bindingContext.groupNext = nullptr;
-    bindingContext.groupPrev = nullptr;
-    bindingContext.group = nullptr;
-    bindingContext.procedure = [this] {
-      try {
-        new(resultStorage) ResultType(this->target());
-      } catch (...) {
-        exceptionPointer = std::current_exception();
-      }
+  // Forward declarations of helper structs
+  struct ThreadFunctor;
+  struct WaitPredicate;
 
-      ready.set();
-    };
+  Context(Dispatcher& dispatcher, const std::function<ResultType()>& target);
+  ~Context();
 
-    dispatcher.pushContext(&bindingContext);
-  }
-
-  Context(const Context&) = delete;  
-  Context& operator=(const Context&) = delete;
-
-  ~Context() {
-    interrupt();
-    wait();
-    dispatcher.pushReusableContext(bindingContext);
-  }
-
-  ResultType& get() {
-    wait();
-    if (exceptionPointer != nullptr) {
-      std::rethrow_exception(exceptionPointer);
-    }
-
-    return *reinterpret_cast<ResultType*>(resultStorage);
-  }
-
-  void interrupt() {
-    dispatcher.interrupt(&bindingContext);
-  }
-
-  void wait() {
-    for (;;) {
-      try {
-        ready.wait();
-        break;
-      } catch (InterruptedException&) {
-        interrupt();
-      }
-    }
-  }
+  ResultType& get();
+  void interrupt();
+  void wait();
 
 private:
+  Context(const Context&);
+  Context& operator=(const Context&);
+
   uint8_t resultStorage[sizeof(ResultType)];
   Dispatcher& dispatcher;
   std::function<ResultType()> target;
   Event ready;
-  NativeContext& bindingContext;
+  std::thread thread;
+  std::mutex mutex;
+  std::condition_variable cv;
+  std::atomic<bool> completed;
+  std::atomic<bool> interrupted;
   std::exception_ptr exceptionPointer;
+
+  // Helper structs defined after the class
+  friend struct ThreadFunctor;
+  friend struct WaitPredicate;
 };
 
+// Void specialization
 template<>
 class Context<void> {
 public:
-  Context(Dispatcher& dispatcher, std::function<void()>&& target) :
-    dispatcher(dispatcher), target(std::move(target)), ready(dispatcher), bindingContext(dispatcher.getReusableContext()) {
-    bindingContext.interrupted = false;
-    bindingContext.groupNext = nullptr;
-    bindingContext.groupPrev = nullptr;
-    bindingContext.group = nullptr;
-    bindingContext.procedure = [this] {
-      try {
-        this->target();
-      } catch (...) {
-        exceptionPointer = std::current_exception();
-      }
+  // Forward declarations of helper structs
+  struct ThreadFunctor;
+  struct WaitPredicate;
 
-      ready.set();
-    };
+  Context(Dispatcher& dispatcher, const std::function<void()>& target);
+  ~Context();
 
-    dispatcher.pushContext(&bindingContext);
-  }
-
-  Context(const Context&) = delete;
-  Context& operator=(const Context&) = delete;
-
-  ~Context() {
-    interrupt();
-    wait();
-    dispatcher.pushReusableContext(bindingContext);
-  }
-
-  void get() {
-    wait();
-    if (exceptionPointer != nullptr) {
-      std::rethrow_exception(exceptionPointer);
-    }
-  }
-
-  void interrupt() {
-    dispatcher.interrupt(&bindingContext);
-  }
-
-  void wait() {
-    for (;;) {
-      try {
-        ready.wait();
-        break;
-      } catch (InterruptedException&) {
-        interrupt();
-      }
-    }
-  }
+  void get();
+  void interrupt();
+  void wait();
 
 private:
+  Context(const Context&);
+  Context& operator=(const Context&);
+
   Dispatcher& dispatcher;
   std::function<void()> target;
   Event ready;
-  NativeContext& bindingContext;
+  std::thread thread;
+  std::mutex mutex;
+  std::condition_variable cv;
+  std::atomic<bool> completed;
+  std::atomic<bool> interrupted;
   std::exception_ptr exceptionPointer;
+
+  // Helper structs defined after the class
+  friend struct ThreadFunctor;
+  friend struct WaitPredicate;
 };
 
+// Helper structs for non-void Context
+template<typename ResultType>
+struct Context<ResultType>::ThreadFunctor {
+  Context<ResultType>* context;
+  ThreadFunctor(Context<ResultType>* ctx) : context(ctx) {}
+  
+  void operator()() {
+    try {
+      if (!std::is_void<ResultType>::value) {
+        new(context->resultStorage) ResultType(context->target());
+      } else {
+        context->target();
+      }
+    } catch (...) {
+      context->exceptionPointer = std::current_exception();
+    }
+    
+    {
+      std::lock_guard<std::mutex> lock(context->mutex);
+      context->completed = true;
+    }
+    context->cv.notify_one();
+    context->ready.set();
+  }
+};
+
+template<typename ResultType>
+struct Context<ResultType>::WaitPredicate {
+  Context<ResultType>* context;
+  WaitPredicate(Context<ResultType>* ctx) : context(ctx) {}
+  
+  bool operator()() const {
+    return context->completed || context->interrupted;
+  }
+};
+
+// Helper structs for void Context
+struct Context<void>::ThreadFunctor {
+  Context<void>* context;
+  ThreadFunctor(Context<void>* ctx) : context(ctx) {}
+  
+  void operator()() {
+    try {
+      context->target();
+    } catch (...) {
+      context->exceptionPointer = std::current_exception();
+    }
+    
+    {
+      std::lock_guard<std::mutex> lock(context->mutex);
+      context->completed = true;
+    }
+    context->cv.notify_one();
+    context->ready.set();
+  }
+};
+
+struct Context<void>::WaitPredicate {
+  Context<void>* context;
+  WaitPredicate(Context<void>* ctx) : context(ctx) {}
+  
+  bool operator()() const {
+    return context->completed || context->interrupted;
+  }
+};
+
+// Template method implementations
+template<typename ResultType>
+Context<ResultType>::Context(Dispatcher& dispatcher, const std::function<ResultType()>& target) :
+  dispatcher(dispatcher), 
+  target(target), 
+  ready(dispatcher),
+  completed(false),
+  interrupted(false) {
+    
+  thread = std::thread(ThreadFunctor(this));
 }
+
+template<typename ResultType>
+Context<ResultType>::~Context() {
+  interrupt();
+  wait();
+  if (thread.joinable()) {
+    thread.join();
+  }
+}
+
+template<typename ResultType>
+ResultType& Context<ResultType>::get() {
+  wait();
+  if (exceptionPointer != 0) {
+    std::rethrow_exception(exceptionPointer);
+  }
+
+  if (!std::is_void<ResultType>::value) {
+    return *reinterpret_cast<ResultType*>(resultStorage);
+  }
+}
+
+template<typename ResultType>
+void Context<ResultType>::interrupt() {
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    interrupted = true;
+  }
+  cv.notify_one();
+}
+
+template<typename ResultType>
+void Context<ResultType>::wait() {
+  std::unique_lock<std::mutex> lock(mutex);
+  cv.wait(lock, WaitPredicate(this));
+
+  if (interrupted) {
+    dispatcher.interrupt();
+  }
+}
+
+// Void specialization implementation
+inline Context<void>::Context(Dispatcher& dispatcher, const std::function<void()>& target) :
+  dispatcher(dispatcher), 
+  target(target), 
+  ready(dispatcher),
+  completed(false),
+  interrupted(false) {
+    
+  thread = std::thread(ThreadFunctor(this));
+}
+
+inline Context<void>::~Context() {
+  interrupt();
+  wait();
+  if (thread.joinable()) {
+    thread.join();
+  }
+}
+
+inline void Context<void>::get() {
+  wait();
+  if (exceptionPointer != 0) {
+    std::rethrow_exception(exceptionPointer);
+  }
+}
+
+inline void Context<void>::interrupt() {
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    interrupted = true;
+  }
+  cv.notify_one();
+}
+
+inline void Context<void>::wait() {
+  std::unique_lock<std::mutex> lock(mutex);
+  cv.wait(lock, WaitPredicate(this));
+
+  if (interrupted) {
+    dispatcher.interrupt();
+  }
+}
+
+}  // namespace System

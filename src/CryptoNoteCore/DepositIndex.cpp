@@ -28,10 +28,10 @@
 
 namespace CryptoNote {
 
-DepositIndex::DepositIndex() : blockCount(0), m_totalBurnedXfg(0) {
+DepositIndex::DepositIndex() : blockCount(0), m_ethernalXFG(0) {
 }
 
-DepositIndex::DepositIndex(DepositHeight expectedHeight) : blockCount(0), m_totalBurnedXfg(0) {
+DepositIndex::DepositIndex(DepositHeight expectedHeight) : blockCount(0), m_ethernalXFG(0) {
   index.reserve(expectedHeight + 1);
 }
 
@@ -159,7 +159,7 @@ auto DepositIndex::depositInterestAtHeight(DepositHeight height) const -> Deposi
 
 // Enhanced burned XFG tracking methods
 DepositIndex::BurnedAmount DepositIndex::getBurnedXfgAmount() const {
-  return m_totalBurnedXfg;
+  return m_ethernalXFG;
 }
 
 DepositIndex::BurnedAmount DepositIndex::getBurnedXfgAtHeight(DepositHeight height) const {
@@ -182,18 +182,18 @@ void DepositIndex::addForeverDeposit(BurnedAmount amount, DepositHeight height) 
   // pushBlock(static_cast<DepositAmount>(amount), 0);
   
   // Add to burned XFG tracking (new functionality)
-  m_totalBurnedXfg += amount;
+  m_ethernalXFG += amount;
   
   if (!m_burnedXfgEntries.empty() && m_burnedXfgEntries.back().height == height) {
     // Update existing entry
     m_burnedXfgEntries.back().amount += amount;
-    m_burnedXfgEntries.back().cumulative_burned = m_totalBurnedXfg;
+    m_burnedXfgEntries.back().cumulative_burned = m_ethernalXFG;
   } else {
     // Create new entry
     m_burnedXfgEntries.push_back({
       height,
       amount,
-      m_totalBurnedXfg
+      m_ethernalXFG
     });
   }
 }
@@ -203,15 +203,15 @@ void DepositIndex::addForeverDeposit(BurnedAmount amount, DepositHeight height) 
 DepositIndex::DepositStats DepositIndex::getStats() const {
   DepositStats stats;
   stats.totalDeposits = static_cast<uint64_t>(fullDepositAmount());
-  stats.totalBurnedXfg = m_totalBurnedXfg;
-  stats.regularDeposits = stats.totalDeposits > stats.totalBurnedXfg ? 
-    stats.totalDeposits - stats.totalBurnedXfg : 0;
+  stats.ethernalXFG = m_ethernalXFG;
+  stats.regularDeposits = stats.totalDeposits > stats.ethernalXFG ? 
+    stats.totalDeposits - stats.ethernalXFG : 0;
   return stats;
 }
 
 void DepositIndex::serialize(ISerializer& s) {
   s(blockCount, "blockCount");
-  s(m_totalBurnedXfg, "totalBurnedXfg");
+  s(m_ethernalXFG, "ethernalXFG");
   
   if (s.type() == ISerializer::INPUT) {
     readSequence<DepositIndexEntry>(std::back_inserter(index), "index", s);

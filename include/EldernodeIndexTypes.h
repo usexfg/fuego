@@ -1,3 +1,19 @@
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2020-2025 Elderfire Privacy Group
+// Copyright (c) 2011-2017 The Cryptonote developers
+//
+// This file is part of Fuego.
+//
+// Fuego is free software distributed in the hope that it
+// will be useful- but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You are encouraged to redistribute it and/or modify it
+// under the terms of the GNU General Public License v3 or later
+// versions as published by the Free Software Foundation.
+// You should receive a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>
+
+
 #pragma once
 
 #include <cstdint>
@@ -12,8 +28,8 @@ namespace CryptoNote {
 // Service ID types for Elderfier nodes
 enum class ServiceIdType : uint8_t {
     STANDARD_ADDRESS = 0,    // Standard fee address (like basic Eldernodes)
-    CUSTOM_NAME = 1,         // Custom name (exactly 8 letters, all caps) - links to hashed address
-    HASHED_ADDRESS = 2       // Hashed public fee address (for privacy)
+    CUSTOM_NAME = 1,         // Custom name (exactly 8 letters, all caps) - links to hashed public fee address
+    HASHED_ADDRESS = 2       // Hashed public fee address (for added privacy)
 };
 
 // Service ID structure for Elderfier nodes
@@ -71,8 +87,16 @@ struct MempoolSecurityWindow {
 // Vote types for Elder Council decisions
 enum class ElderCouncilVoteType : uint8_t {
     SLASH_ALL = 1,      // Slash/burn ALL of Elderfier's stake
-    SLASH_HALF = 2,      // Slash/burn HALF of Elderfier's stake  
-    SLASH_NONE = 3       // Slash/burn NONE of Elderfier's stake
+    SLASH_HALF = 2,      // Slash/burn HALF of Elderfier's stake
+    SLASH_NONE = 3,      // Slash/burn NONE of Elderfier's stake (default)
+    GOOD_KEEPALL = 4     // No slashing - acknowledge good participation
+};
+
+// Consensus types for Elderfier messages (0xEF transactions)
+enum class ElderfierConsensusType : uint8_t {
+    QUORUM = 1,         // Requires >80% Elder Council agreement (for slashing)
+    PROOF = 2,          // Requires cryptographic proof validation
+    WITNESS = 3         // Requires witness attestation
 };
 
 // Elder Council voting system
@@ -296,22 +320,29 @@ struct DepositValidationResult {
     static DepositValidationResult failure(const std::string& error);
 };
 
-// Slashing configuration
+// Slashing configuration - ONLY BURN ALLOWED
 enum class SlashingDestination : uint8_t {
-    BURN = 0,           // Burn slashed stakes (remove from circulation)
-    TREASURY = 1,       // Send to network treasury address
-    REDISTRIBUTE = 2,   // Redistribute to other Eldernodes
-    CHARITY = 3         // Send to charity/community fund address
+    BURN = 0,           // Burn slashed stakes (remove from circulation) - ONLY OPTION
+    // DEPRECATED: Other destinations removed to prevent perverse incentives
+    // TREASURY = 1,    // DEPRECATED: No longer allowed
+    // REDISTRIBUTE = 2, // DEPRECATED: No longer allowed
+    // CHARITY = 3      // DEPRECATED: No longer allowed
 };
 
 struct SlashingConfig {
     SlashingDestination destination;
     std::string destinationAddress; // Address for treasury/charity
-    uint64_t slashingPercentage;    // Percentage of stake to slash (e.g., 50 = 50%)
+    uint64_t slashingPercentage;    // Default percentage of stake to slash (legacy)
+    uint64_t halfSlashPercentage;   // Percentage for SLASH_HALF votes (default 50%)
+    uint64_t fullSlashPercentage;   // Percentage for SLASH_ALL votes (default 100%)
     bool enableSlashing;            // Whether slashing is enabled
-    
+    bool allowForceSlashing;        // Whether Elder Council can slash outside security window
+
     static SlashingConfig getDefault();
     bool isValid() const;
+
+    // Get slashing percentage based on vote type
+    uint64_t getSlashingPercentage(ElderCouncilVoteType voteType = ElderCouncilVoteType::SLASH_ALL) const;
 };
 
 // Note: Old stake proof configuration removed - now using 0x06 tag deposits for Elderfiers

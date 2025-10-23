@@ -2147,19 +2147,14 @@ namespace PaymentService
       return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions, knownBlockCount);
     }
 
-    // Add new methods for dynamic money supply
+    // Money supply stats - simplified
     std::error_code WalletService::getMoneySupplyStats(GetMoneySupplyStats::Response &response)
     {
       try
       {
         response.baseMoneySupply = currency.getBaseMoneySupply();
-        response.totalBurnedXfg = currency.getTotalBurnedXfg();
-        response.totalRebornXfg = currency.getTotalRebornXfg();
-        		response.totalMoneySupply = currency.getTotalSupply();
-        response.circulatingSupply = currency.getCirculatingSupply();
+        response.ethernalXFG = currency.getEternalFlame();
         response.burnPercentage = currency.getBurnPercentage();
-        response.rebornPercentage = currency.getRebornPercentage();
-        response.supplyIncreasePercentage = currency.getSupplyIncreasePercentage();
         
         return std::error_code();
       }
@@ -2184,11 +2179,21 @@ namespace PaymentService
       }
     }
 
+    // Removed getCirculatingSupply - no longer needed
+
     std::error_code WalletService::getCirculatingSupply(uint64_t &circulatingSupply)
     {
       try
       {
-        circulatingSupply = currency.getCirculatingSupply();
+        // Calculate circulating supply using base money supply and ethernal XFG
+        uint64_t baseTotalSupply = currency.getBaseMoneySupply();
+        uint64_t ethernalXFG = currency.getEternalFlame();
+        uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
+        
+        uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
+        uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
+        circulatingSupply = realTotalSupply - totalDepositAmount;
+        
         return std::error_code();
       }
       catch (std::exception &e)
@@ -2198,11 +2203,11 @@ namespace PaymentService
       }
     }
 
-    std::error_code WalletService::getTotalBurnedXfg(uint64_t &totalBurnedXfg)
+    std::error_code WalletService::getEternalFlame(uint64_t &ethernalXFG)
     {
       try
       {
-        totalBurnedXfg = currency.getTotalBurnedXfg();
+        ethernalXFG = currency.getEternalFlame();
         return std::error_code();
       }
       catch (std::exception &e)
@@ -2212,19 +2217,7 @@ namespace PaymentService
       }
     }
 
-    std::error_code WalletService::getTotalRebornXfg(uint64_t &totalRebornXfg)
-    {
-      try
-      {
-        totalRebornXfg = currency.getTotalRebornXfg();
-        return std::error_code();
-      }
-      catch (std::exception &e)
-      {
-        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting total reborn XFG: " << e.what();
-        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-      }
-    }
+    // Removed getTotalRebornXfg - no longer needed
 
     std::error_code WalletService::getBurnPercentage(double &burnPercentage)
     {
@@ -2240,33 +2233,9 @@ namespace PaymentService
       }
     }
 
-    std::error_code WalletService::getRebornPercentage(double &rebornPercentage)
-    {
-      try
-      {
-        rebornPercentage = currency.getRebornPercentage();
-        return std::error_code();
-      }
-      catch (std::exception &e)
-      {
-        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting reborn percentage: " << e.what();
-        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-      }
-    }
+    // Removed getRebornPercentage - no longer needed
 
-    std::error_code WalletService::getSupplyIncreasePercentage(double &supplyIncreasePercentage)
-    {
-      try
-      {
-        supplyIncreasePercentage = currency.getSupplyIncreasePercentage();
-        return std::error_code();
-      }
-      catch (std::exception &e)
-      {
-        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting supply increase percentage: " << e.what();
-        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-      }
-    }
+    // Removed getSupplyIncreasePercentage - no longer needed
 
 
         
@@ -2423,13 +2392,13 @@ namespace PaymentService
   {
     try
     {
-      // realTotalSupply = baseTotalSupply - totalBurnedXfg
+      // realTotalSupply = baseTotalSupply - ethernalXFG
       uint64_t baseTotalSupply = currency.getBaseMoneySupply();
-      uint64_t totalBurnedXfg = currency.getTotalBurnedXfg();
+      uint64_t ethernalXFG = currency.getEternalFlame();
       
       response.baseTotalSupply = baseTotalSupply;
-      response.totalBurnedXfg = totalBurnedXfg;
-      response.realTotalSupply = baseTotalSupply - totalBurnedXfg;
+      response.ethernalXFG = ethernalXFG;
+      response.realTotalSupply = baseTotalSupply - ethernalXFG;
       
       // Format amount for display
       response.formattedAmount = formatAmount(response.realTotalSupply);
@@ -2447,13 +2416,13 @@ namespace PaymentService
   {
     try
     {
-      // totalDepositAmount = currentAmount in deposits - totalBurnedXfg
+      // totalDepositAmount = currentAmount in deposits - ethernalXFG
       uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
-      uint64_t totalBurnedXfg = currency.getTotalBurnedXfg();
+      uint64_t ethernalXFG = currency.getEternalFlame();
       
       response.currentDepositAmount = currentDepositAmount;
-      response.totalBurnedXfg = totalBurnedXfg;
-      response.totalDepositAmount = currentDepositAmount - totalBurnedXfg;
+      response.ethernalXFG = ethernalXFG;
+      response.totalDepositAmount = currentDepositAmount - ethernalXFG;
       
       // Format amount for display
       response.formattedAmount = formatAmount(response.totalDepositAmount);
@@ -2473,11 +2442,11 @@ namespace PaymentService
     {
       // circulatingSupply = realTotalSupply - totalDepositAmount
       uint64_t baseTotalSupply = currency.getBaseMoneySupply();
-      uint64_t totalBurnedXfg = currency.getTotalBurnedXfg();
+      uint64_t ethernalXFG = currency.getEternalFlame();
       uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
       
-      uint64_t realTotalSupply = baseTotalSupply - totalBurnedXfg;
-      uint64_t totalDepositAmount = currentDepositAmount - totalBurnedXfg;
+      uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
+      uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
       uint64_t circulatingSupply = realTotalSupply - totalDepositAmount;
       
       response.realTotalSupply = realTotalSupply;
@@ -2496,15 +2465,15 @@ namespace PaymentService
     }
   }
 
-  std::error_code WalletService::getTotalBurnedXfg(GetTotalBurnedXfg::Response &response)
+  std::error_code WalletService::getEternalFlame(GetEthernalXFG::Response &response)
   {
     try
     {
-      // totalBurnedXfg = Total burned XFG
-      response.totalBurnedXfg = currency.getTotalBurnedXfg();
+      // ethernalXFG = Total burned XFG
+      response.ethernalXFG = currency.getEternalFlame();
       
       // Format amount for display
-      response.formattedAmount = formatAmount(response.totalBurnedXfg);
+      response.formattedAmount = formatAmount(response.ethernalXFG);
       
       return std::error_code();
     }
@@ -2521,12 +2490,12 @@ namespace PaymentService
     {
       // Get all supply components
       uint64_t baseTotalSupply = currency.getBaseMoneySupply();
-      uint64_t totalBurnedXfg = currency.getTotalBurnedXfg();
+      uint64_t ethernalXFG = currency.getEternalFlame();
       uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
       
       // Calculate derived values
-      uint64_t realTotalSupply = baseTotalSupply - totalBurnedXfg;
-      uint64_t totalDepositAmount = currentDepositAmount - totalBurnedXfg;
+      uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
+      uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
       uint64_t circulatingSupply = realTotalSupply - totalDepositAmount;
       
       // Set raw values
@@ -2534,7 +2503,7 @@ namespace PaymentService
       response.realTotalSupply = realTotalSupply;
       response.totalDepositAmount = totalDepositAmount;
       response.circulatingSupply = circulatingSupply;
-      response.totalBurnedXfg = totalBurnedXfg;
+      response.ethernalXFG = ethernalXFG;
       response.currentDepositAmount = currentDepositAmount;
       
       // Format amounts for display
@@ -2542,11 +2511,11 @@ namespace PaymentService
       response.realTotalSupplyFormatted = formatAmount(realTotalSupply);
       response.totalDepositAmountFormatted = formatAmount(totalDepositAmount);
       response.circulatingSupplyFormatted = formatAmount(circulatingSupply);
-      response.totalBurnedXfgFormatted = formatAmount(totalBurnedXfg);
+      response.ethernalXFGFormatted = formatAmount(ethernalXFG);
       response.currentDepositAmountFormatted = formatAmount(currentDepositAmount);
       
       // Calculate percentages
-      response.burnPercentage = (baseTotalSupply > 0) ? (totalBurnedXfg * 100.0 / baseTotalSupply) : 0.0;
+      response.burnPercentage = (baseTotalSupply > 0) ? (ethernalXFG * 100.0 / baseTotalSupply) : 0.0;
       response.depositPercentage = (realTotalSupply > 0) ? (totalDepositAmount * 100.0 / realTotalSupply) : 0.0;
       response.circulatingPercentage = (realTotalSupply > 0) ? (circulatingSupply * 100.0 / realTotalSupply) : 0.0;
       

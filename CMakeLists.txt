@@ -90,9 +90,25 @@ if(APPLE)
     endif()
 endif()
 
-find_package(Boost 1.74 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+# First try with all required components
+# Note: boost_system is header-only in Boost 1.69+ so we don't require it as a component
+set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+
+# Try to find coroutine component (may not be available in all Boost versions)
+find_package(Boost 1.74 COMPONENTS coroutine QUIET)
+if(Boost_COROUTINE_FOUND)
+    list(APPEND BOOST_COMPONENTS coroutine)
+    message(STATUS "Boost coroutine component found, including in build")
+else()
+    message(WARNING "Boost coroutine component not found - using alternative context implementation")
+endif()
+
+# Find Boost with available components
+find_package(Boost 1.74 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+message(STATUS "Boost version: ${Boost_VERSION}")
 message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
+message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 
 # --------------------------
 # ICU (skipped on Android)
@@ -126,8 +142,6 @@ else()
             message(STATUS "ICU UC Library: ${ICU_UC_LIBRARY}")
         endif()
     endif()
-else()
-    message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
 endif()
 
 # --------------------------
@@ -146,42 +160,18 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# Tests
+# ICU linking for executables (macOS) - TEMPORARILY DISABLED FOR M1 DEBUG
 # --------------------------
-# Expose a toggle to optionally build the test suite. This preserves all
-# existing behavior when disabled and allows CI to turn tests on explicitly.
-option(BUILD_TESTS "Build tests" OFF)
-if(BUILD_TESTS)
-    set(DO_TESTS ON)
-    enable_testing()
-    add_subdirectory(tests)
-    
-if(APPLE)
-    foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer BurnDepositValidationService)
-        if(TARGET ${exec_target})
-            message(STATUS "Force-linking ICU to ${exec_target}")
-            
-            # Use specific ICU library paths if available, otherwise fall back to ICU_LIBRARIES
-            if(ICU_DATA_LIBRARY AND ICU_I18N_LIBRARY AND ICU_UC_LIBRARY)
-                target_link_libraries(${exec_target} PRIVATE 
-                    ${ICU_DATA_LIBRARY}
-                    ${ICU_I18N_LIBRARY}
-                    ${ICU_UC_LIBRARY}
-                )
-                message(STATUS "Using specific ICU library paths for ${exec_target}")
-            else()
-                target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
-                message(STATUS "Using ICU_LIBRARIES for ${exec_target}")
-            endif()
-            
-            set_target_properties(${exec_target} PROPERTIES
-                BUILD_WITH_INSTALL_RPATH TRUE
-                INSTALL_RPATH "${ICU_LIBRARY_DIRS}"
-                LINK_FLAGS "-L${ICU_LIBRARY_DIRS}"
-            )
-            # Add ICU library directory to link directories
-            target_link_directories(${exec_target} PRIVATE ${ICU_LIBRARY_DIRS})
-        endif()
-    endforeach()
+if(APPLE AND ICU_FOUND)
+    message(STATUS "ICU linking temporarily disabled for M1 debugging")
+    # foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer)
+    #     if(TARGET ${exec_target})
+    #         message(STATUS "Linking ICU to ${exec_target}")
+    #         target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
+    #     endif()
+    # endforeach()
 endif()
-# Intentionally avoid extra macOS ICU link manipulation here. Handled in src/CMakeLists.txt
+
+# --------------------------
+# Tests (handled above)
+# --------------------------

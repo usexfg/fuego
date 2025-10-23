@@ -70,7 +70,7 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
   IGDdatas igdData;
   char lanAddress[64];
   result = UPNP_GetValidIGD(deviceList, &urls, &igdData, lanAddress, sizeof lanAddress);
-  freeUPNPDevlist(deviceList);
+    freeUPNPDevlist(deviceList);
   if (result != 0) {
     if (result == 1) {
       std::ostringstream portString;
@@ -89,7 +89,7 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
       logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
     }
 
-    FreeUPNPUrls(&urls);
+      FreeUPNPUrls(&urls);
   } else {
     logger(INFO) <<  "No IGD was found.";
   }
@@ -1539,9 +1539,9 @@ namespace CryptoNote
         ctx.m_is_income = true;
         ctx.m_started = time(nullptr);
 
-        auto addressAndPort = ctx.connection.getPeerAddressAndPort();
-        ctx.m_remote_ip = hostToNetwork(addressAndPort.first.getValue());
-        ctx.m_remote_port = addressAndPort.second;
+          auto addressAndPort = ctx.connection.getPeerAddressAndPort();
+          ctx.m_remote_ip = hostToNetwork(addressAndPort.first.getValue());
+          ctx.m_remote_port = addressAndPort.second;
 
         auto iter = m_connections.emplace(ctx.m_connection_id, std::move(ctx)).first;
         const boost::uuids::uuid& connectionId = iter->first;

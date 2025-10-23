@@ -549,7 +549,7 @@ namespace CryptoNote
       deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
       uint32_t height = transactionInfo.blockHeight;
 
-      deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, height);
+      // Interest calculation removed - no on-chain interest
 
       deposit.locked = true;
       DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());

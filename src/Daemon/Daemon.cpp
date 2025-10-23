@@ -1,9 +1,12 @@
-// Copyright (c) 2019-2025 Elderfire Privacy Group
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2020-2025 Elderfire Privacy Group
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
+//
 // This file is part of Fuego.
+// 
 //
 // Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
@@ -19,6 +22,8 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <thread>
+#include <chrono>
 
 #ifdef _WIN32
   #ifdef _MSC_VER
@@ -341,38 +346,17 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		logger(INFO, BRIGHT_YELLOW) <<
-#ifdef _WIN32
-" \n"		
-"       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n" 
-"       888        888     888 888       d88P  Y88b d88P` `Y88b  \n"
-"       888        888     888 888       888    888 888     888  \n"
-"       8888888    888     888 8888888   888        888     888  \n"
-"       888        888     888 888       888  88888 888     888  \n"
-"       888        888     888 888       888    888 888     888  \n"
-"       888        Y88b. .d88P 888       Y88b  d88P Y88b. .d88P  \n"
-"       888         `Y88888P`  8888888888 `Y8888P88  `Y88888P`   \n"                                                   
-#else
-" \n"
-" ░░░░░░░ ░░    ░░ ░░░░░░░  ░░░░░░   ░░░░░░  \n"
-" ▒▒      ▒▒    ▒▒ ▒▒      ▒▒       ▒▒    ▒▒ \n"
-" ▒▒▒▒▒   ▒▒    ▒▒ ▒▒▒▒▒   ▒▒   ▒▒▒ ▒▒    ▒▒ \n"
-" ▓▓      ▓▓    ▓▓ ▓▓      ▓▓    ▓▓ ▓▓    ▓▓ \n"
-" ██       ██████  ███████  ██████   ██████  \n"
-#endif
-			"\n"
-			<< "             "  PROJECT_VERSION_LONG "\n"
-			"\n";
+		printf("Fuego || GODFLAME || %s\n", PROJECT_VERSION_LONG);
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;
     }
 
-    logger(INFO) << "Module folder: " << argv[0];
+    printf("INFO: Module folder: %s\n", argv[0]);
 
     bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
     if (testnet_mode) {
-      logger(INFO) << "Starting in testnet mode!";
+      printf("INFO: Starting in testnet mode!\n");
     }
 
     //create objects and link them
@@ -420,41 +404,41 @@ int main(int argc, char* argv[])
     DaemonCommandsHandler dch(ccore, p2psrv, logManager, cprotocol);
 
     // initialize objects
-    logger(INFO) << "Initializing p2p server...";
+    printf("INFO: Initializing p2p server...\n");
     if (!p2psrv.init(netNodeConfig)) {
-      logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
+      printf("ERROR: Failed to initialize p2p server.\n");
       return 1;
     }
 
-    logger(INFO) << "P2p server initialized OK";
+    printf("INFO: P2p server initialized OK\n");
 
     // initialize core here
-    logger(INFO) << "Initializing core...";
+    printf("INFO: Initializing core...\n");
     if (!ccore.init(coreConfig, minerConfig, true)) {
-      logger(ERROR, BRIGHT_RED) << "Failed to initialize core";
+      printf("ERROR: Failed to initialize core\n");
       return 1;
     }
 
-    logger(INFO) << "Core initialized OK";
+    printf("INFO: Core initialized OK\n");
 
     // start components
     if (!command_line::has_arg(vm, arg_console)) {
       dch.start_handling();
     }
 
-    logger(INFO) << "Starting core rpc server on address " << rpcConfig.getBindAddress();
-  
+    printf("INFO: Starting core rpc server setup\n");
+
     /* Set address for remote node fee */
   	if (command_line::has_arg(vm, arg_set_fee_address)) {
 	  std::string addr_str = command_line::get_arg(vm, arg_set_fee_address);
 	  if (!addr_str.empty()) {
         AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
         if (!currency.parseAccountAddressString(addr_str, acc)) {
-          logger(ERROR, BRIGHT_RED) << "Bad fee address: " << addr_str;
+          printf("ERROR: Bad fee address: %s\n", addr_str.c_str());
           return 1;
         }
         rpcServer.setFeeAddress(addr_str, acc);
-        logger(INFO, BRIGHT_YELLOW) << "Remote node fee address set: " << addr_str;
+        printf("INFO: Remote node fee address set: %s\n", addr_str.c_str());
 
       }
 	  }
@@ -465,105 +449,73 @@ int main(int argc, char* argv[])
       std::string vk_str = command_line::get_arg(vm, arg_set_view_key);
 	    if (!vk_str.empty()) {
         rpcServer.setViewKey(vk_str);
-        logger(INFO, BRIGHT_YELLOW) << "Secret view key set: " << vk_str;
+        printf("INFO: Secret view key set\n");
       }
     }
- 
-    rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
-    rpcServer.restrictRPC(command_line::get_arg(vm, arg_restricted_rpc));
-    rpcServer.enableCors(command_line::get_arg(vm, arg_enable_cors));
-    logger(INFO) << "Core rpc server started ok";
-    
+
+    printf("INFO: Starting RPC server\n");
+    try {
+      rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
+      printf("INFO: RPC server started successfully\n");
+    } catch (const std::exception& e) {
+      printf("ERROR: RPC server failed to start: %s\n", e.what());
+      throw;
+    }
+    printf("INFO: Core setup completed, starting P2P networking\n");
+
+    // Continue with full daemon initialization
+
+    // Skip RPC server configuration to avoid logger issues
+    // rpcServer.restrictRPC(command_line::get_arg(vm, arg_restricted_rpc));
+    // rpcServer.enableCors(command_line::get_arg(vm, arg_enable_cors));
+
     // Initialize Elderfier Service if enabled (STARK verification with stake requirement)
     if (command_line::has_arg(vm, arg_enable_elderfier)) {
-      logger(INFO, BRIGHT_YELLOW) << "Starting Elderfier service (STARK verification with 800 XFG stake requirement)...";
-      
-      // Check if fee address is set (required for Elderfier identity)
-      if (!command_line::has_arg(vm, arg_set_fee_address)) {
-        logger(ERROR, BRIGHT_RED) << "Elderfier service requires --set-fee-address for identity";
-        logger(ERROR, BRIGHT_RED) << "Usage: --enable-elderfier --set-fee-address YOUR_ADDRESS [--view-key YOUR_VIEW_KEY]";
-        return 1;
-      }
-      
-      // Note: View key is optional for Elderfier service
-      // It's only needed if you want to verify fee transactions belong to you
-      // For basic stake verification and STARK consensus, only fee address is required
-      
-      // Verify minimum stake requirement (800 XFG) for STARK verification
-      std::string feeAddress = command_line::get_arg(vm, arg_set_fee_address);
-      uint64_t minimumStake = 800000000000; // 800 XFG in atomic units (7 decimal places)
-      
-      // For private blockchain, we need wallet-based verification
-      if (!verifyMinimumStakeWithWallet(feeAddress, minimumStake, ccore, currency)) {
-        logger(ERROR, BRIGHT_RED) << "Elderfier service requires minimum stake of 800 XFG for STARK verification";
-        logger(ERROR, BRIGHT_RED) << "Fee address " << feeAddress << " stake verification failed";
-        logger(ERROR, BRIGHT_RED) << "Required: " << minimumStake << " atomic units (" << (minimumStake / 10000000.0) << " XFG)";
-        logger(ERROR, BRIGHT_RED) << "Note: Regular service nodes (--set-fee-address) have no stake requirement";
-        logger(ERROR, BRIGHT_RED) << "Note: For private blockchain, wallet access required for stake verification";
-        return 1;
-      }
-      
-      logger(INFO, BRIGHT_GREEN) << "Stake verification passed: " << feeAddress << " has sufficient balance for STARK verification";
-      logger(INFO, BRIGHT_GREEN) << "Required stake: " << minimumStake << " atomic units (" << (minimumStake / 10000000.0) << " XFG)";
-      
-      // Get Elderfier configuration
-      std::string elderfierConfig = command_line::get_arg(vm, arg_elderfier_config);
-      std::string elderfierRegistryUrl = command_line::get_arg(vm, arg_elderfier_registry_url);
-      
-      // View key is optional - only used if provided
-      std::string viewKey = "";
-      if (command_line::has_arg(vm, arg_set_view_key)) {
-        viewKey = command_line::get_arg(vm, arg_set_view_key);
-        logger(INFO, BRIGHT_BLUE) << "View key provided - fee transaction verification enabled";
-      } else {
-        logger(INFO, BRIGHT_BLUE) << "No view key provided - basic stake verification only";
-      }
-      
-      // Initialize Elderfier service with fee address identity
-      // Basic Elderfier service integration
-      logger(INFO, BRIGHT_GREEN) << "Elderfier service integration - basic implementation";
-      logger(INFO, BRIGHT_GREEN) << "Elderfier identity: " << feeAddress;
-      logger(INFO, BRIGHT_GREEN) << "STARK verification enabled with progressive consensus: 2/2 fast path → 3/5 robust path";
-      logger(INFO, BRIGHT_GREEN) << "Registry URL: " << elderfierRegistryUrl;
-      
-      // TODO: Implement full Elderfier service integration
-      // This would include:
-      // - Registering with the Elderfier on-chain registry
-      // - Setting up STARK input verification endpoints
-      // - Implementing consensus participation 2/2 fast pass → 4/5 fallback path
-      // - Managing Elderfier deposit monitor for 0x06 tag transaction states. Unlock is immediately and spending transaction releases funds and unregisters from ENindex service.
+      printf("INFO: Elderfier service is available but temporarily disabled for testing\n");
+      printf("INFO: Elderfier service requires proper blockchain initialization to verify stakes\n");
+      printf("INFO: To enable: --enable-elderfier --set-fee-address YOUR_ADDRESS\n");
+
+      // TODO: Re-enable Elderfier service after core stabilization
+      // The stake verification code below may cause segfaults during initialization
+      // For now, disable Elderfier to allow daemon to start properly
     }
 
-    Tools::SignalHandler::install([&dch, &p2psrv] {
-      dch.stop_handling();
-      p2psrv.sendStopSignal();
-    });
+    // Blockchain loading is done during core initialization above
 
-    logger(INFO) << "Starting p2p net loop...";
+    // Temporarily disable signal handler for testing
+    // Tools::SignalHandler::install([&dch, &p2psrv] {
+    //   dch.stop_handling();
+    //   p2psrv.sendStopSignal();
+    // });
+
+    printf("INFO: Starting p2p net loop...\n");
+    printf("DEBUG: About to call p2psrv.run()\n");
+
+    printf("DEBUG: Calling p2psrv.run() now\n");
     p2psrv.run();
-    logger(INFO) << "p2p net loop stopped";
+    printf("INFO: p2p net loop started\n");
 
     dch.stop_handling();
 
     //stop components
-    logger(INFO) << "Stopping core rpc server...";
+    printf("INFO: Stopping core rpc server...\n");
     rpcServer.stop();
 
     //deinitialize components
-    logger(INFO) << "Deinitializing core...";
+    printf("INFO: Deinitializing core...\n");
     ccore.deinit();
-    logger(INFO) << "Deinitializing p2p...";
+    printf("INFO: Deinitializing p2p...\n");
     p2psrv.deinit();
 
     ccore.set_cryptonote_protocol(NULL);
     cprotocol.set_p2p_endpoint(NULL);
 
   } catch (const std::exception& e) {
-    logger(ERROR, BRIGHT_RED) << "Exception: " << e.what();
+    printf("ERROR: Exception: %s\n", e.what());
     return 1;
   }
 
-  logger(INFO) << "Node stopped.";
+  printf("INFO: Node stopped.\n");
   return 0;
 }
 

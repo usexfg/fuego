@@ -91,7 +91,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("getRealTotalSupply", jsonHandler<GetRealTotalSupply::Request, GetRealTotalSupply::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetRealTotalSupply, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getTotalDepositAmount", jsonHandler<GetTotalDepositAmount::Request, GetTotalDepositAmount::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetTotalDepositAmount, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getCirculatingSupply", jsonHandler<GetCirculatingSupply::Request, GetCirculatingSupply::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetCirculatingSupply, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getTotalBurnedXfg", jsonHandler<GetTotalBurnedXfg::Request, GetTotalBurnedXfg::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetTotalBurnedXfg, this, std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("getEternalFlame", jsonHandler<GetEthernalXFG::Request, GetEthernalXFG::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetEthernalXFG, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getDynamicSupplyOverview", jsonHandler<GetDynamicSupplyOverview::Request, GetDynamicSupplyOverview::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetDynamicSupplyOverview, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("estimateFusion", jsonHandler<EstimateFusion::Request, EstimateFusion::Response>(std::bind(&PaymentServiceJsonRpcServer::handleEstimateFusion, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("sendFusionTransaction", jsonHandler<SendFusionTransaction::Request, SendFusionTransaction::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSendFusionTransaction, this, std::placeholders::_1, std::placeholders::_2)));
@@ -586,9 +586,9 @@ std::error_code PaymentServiceJsonRpcServer::handleGetCirculatingSupply(const Ge
   return service.getCirculatingSupply(response);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetTotalBurnedXfg(const GetTotalBurnedXfg::Request& request, GetTotalBurnedXfg::Response& response)
+std::error_code PaymentServiceJsonRpcServer::handleGetEthernalXFG(const GetEthernalXFG::Request& request, GetEthernalXFG::Response& response)
 {
-  return service.getTotalBurnedXfg(response);
+  return service.getEternalFlame(response);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDynamicSupplyOverview(const GetDynamicSupplyOverview::Request& request, GetDynamicSupplyOverview::Response& response)

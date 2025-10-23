@@ -227,6 +227,7 @@ namespace CryptoNote
     void onIdle();
     void timedSyncLoop();
     void timeoutLoop();
+    void connectionWorker();
 
     template<typename T>
     void safeInterrupt(T& obj);
@@ -258,6 +259,7 @@ namespace CryptoNote
     System::ContextGroup m_workingContextGroup;
     System::Event m_stopEvent;
     System::Timer m_idleTimer;
+    System::Timer m_connTimer;
     System::Timer m_timeoutTimer;
     System::TcpListener m_listener;
     Logging::LoggerRef logger;

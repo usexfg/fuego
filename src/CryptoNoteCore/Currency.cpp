@@ -87,7 +87,7 @@ namespace CryptoNote
 			m_upgradeHeightV7 = 7;	
 			m_upgradeHeightV8 = 8;
                      m_upgradeHeightV9 = 9;
-                     m_upgradeHeightV10 = 969696;
+                     m_upgradeHeightV10 = 10;
 
       m_blocksFileName = "testnet_" + m_blocksFileName;
       m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
@@ -182,10 +182,25 @@ namespace CryptoNote
 		uint64_t fee, uint32_t height, uint64_t& reward, int64_t& emissionChange) const {
 		unsigned int m_emissionSpeedFactor = emissionSpeedFactor(blockMajorVersion);
 
-    assert(alreadyGeneratedCoins <= m_moneySupply);
+    // Calculate emission while accounting for burns)
+    uint64_t Osavvirsak = alreadyGeneratedCoins - getEternalFlame();
+    Osavvirsak = std::max(Osavvirsak, 0ULL);  // Prevent negative values
+
+    assert(Osavvirsak <= m_moneySupply);
     assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));
 
-    uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
+    uint64_t baseReward = (m_moneySupply - Osavvirsak) >> m_emissionSpeedFactor;
+
+    // Debug output for reward calculation analysis
+    static uint32_t lastDebugHeight = 0;
+    if (height % 1000 == 0 && height != lastDebugHeight) {
+        lastDebugHeight = height;
+        printf("BLOCK %u: alreadyGen=%llu, burned=%llu, osavvirsak=%llu, baseReward=%llu\n",
+               height, (unsigned long long)alreadyGeneratedCoins,
+               (unsigned long long)getEternalFlame(),
+               (unsigned long long)Osavvirsak,
+               (unsigned long long)baseReward);
+    }
     size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
     medianSize = std::max(medianSize, blockGrantedFullRewardZone);
     if (currentBlockSize > UINT64_C(2) * medianSize)
@@ -208,52 +223,7 @@ namespace CryptoNote
 
   /* ---------------------------------------------------------------------------------------------------- */
 
-  uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const
-  {
-
-    /* deposits 3.0 and investments 1.0 
-    if (term % 21900 == 0)
-    {
-      return calculateInterestV3(amount, term);
-    }
-
-    // deposits 2.0 and investments 1.0 
-    if (term % 64800 == 0)
-    {
-      return calculateInterestV2(amount, term);
-    }
-
-    if (term % 5040 == 0)
-    {
-      return calculateInterestV2(amount, term);
-    }
-*/
-    uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
-    uint64_t bHi;
-    uint64_t bLo = mul128(amount, a, &bHi);
-    uint64_t cHi;
-    uint64_t cLo;
-    uint64_t offchaininterest = 0;
-    assert(std::numeric_limits<uint32_t>::max() / 100 > m_depositMaxTerm);
-    div128_32(bHi, bLo, static_cast<uint32_t>(100 * m_depositMaxTerm), &cHi, &cLo);
-    assert(cHi == 0);
-
-    // early deposit multiplier 
-    uint64_t interestHi;
-    uint64_t interestLo;
-    if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK)
-    {
-      interestLo = mul128(cLo, CryptoNote::parameters::MULTIPLIER_FACTOR, &interestHi);
-      assert(interestHi == 0);
-    }
-    else
-    {
-      interestHi = cHi;
-      interestLo = cLo;
-    }
-    (void)interestLo; // Suppress unused variable warning
-    return offchaininterest;
-  }
+  // calculateInterest function removed - no on-chain interest calculation
 
   /* ---------------------------------------------------------------------------------------------------- */
 /*
@@ -377,23 +347,7 @@ namespace CryptoNote
 */
   /* ---------------------------------------------------------------------------------------------------- */
 
-  uint64_t Currency::calculateTotalTransactionInterest(const Transaction &tx, uint32_t height) const
-  {
-    uint64_t interest = 0;
-    for (const TransactionInput &input : tx.inputs)
-    {
-      if (input.type() == typeid(MultisignatureInput))
-      {
-        const MultisignatureInput &multisignatureInput = boost::get<MultisignatureInput>(input);
-        if (multisignatureInput.term != 0)
-        {
-          interest += calculateInterest(multisignatureInput.amount, multisignatureInput.term, height);
-        }
-      }
-    }
-
-    return interest;
-  }
+  // calculateTotalTransactionInterest function removed - no on-chain interest calculation
 
   /* ---------------------------------------------------------------------------------------------------- */
 
@@ -406,14 +360,8 @@ namespace CryptoNote
     else if (in.type() == typeid(MultisignatureInput))
     {
       const MultisignatureInput &multisignatureInput = boost::get<MultisignatureInput>(in);
-      if (multisignatureInput.term == 0)
-      {
-        return multisignatureInput.amount;
-      }
-      else
-      {
-        return multisignatureInput.amount + calculateInterest(multisignatureInput.amount, multisignatureInput.term, height);
-      }
+      // Return original amount only - no interest calculation
+      return multisignatureInput.amount;
     }
       else if (in.type() == typeid(BaseInput))
     {
@@ -461,7 +409,10 @@ namespace CryptoNote
 
     if (amount_out > amount_in)
     {
-      // interest shows up in the output of the W/D transactions and W/Ds always have min fee
+      // interest shows up in the output of W/D transaction and W/Ds always have min fee
+      // find when deposit transactino is created and tack-on W/D fee with other banking fee and txn fee. (+ remote fee if applicable)
+      // rather than busting deposit amount with W/D fee, let's add it to fees? but that will change the output amount of the deposit transaction.
+
       if (tx.inputs.size() > 0 && tx.outputs.size() > 0 && amount_out > amount_in + parameters::MINIMUM_FEE)
       {
         fee = parameters::MINIMUM_FEE;
@@ -1421,13 +1372,9 @@ namespace CryptoNote
     // HEAT conversion rate (0.8 XFG = 8M HEAT)
     heatConversionRate(10000000);
 
-    // Dynamic money supply initialization
+    // Money supply initialization
     baseMoneySupply(parameters::MONEY_SUPPLY);
-    totalBurnedXfg(0);
-    totalRebornXfg(0);
-    totalSupply(parameters::MONEY_SUPPLY);
-    circulatingSupply(parameters::MONEY_SUPPLY);
-    blockRewardSupply(parameters::MONEY_SUPPLY);
+    ethernalXFG(0);
 
     // Fuego network ID - using hash of the full network ID for uint64_t compatibility
     fuegoNetworkIdString("93385046440755750514194170694064996624");
@@ -1586,71 +1533,9 @@ namespace CryptoNote
 		return (heatAmount * 800000000) / 10000000;
 	}
 
-	uint64_t Currency::getTotalSupply() const {
-		// Total supply = Base money supply - Burned XFG
-		return m_baseMoneySupply - m_totalBurnedXfg;
-	}
-
-	uint64_t Currency::getCirculatingSupply() const {
-		// Circulating supply = Total supply - Locked deposits (excluding burn deposits)
-		// Note: Locked deposits calculation is handled separately in DepositIndex
-		return getTotalSupply();
-	}
-
-	uint64_t Currency::getBlockRewardSupply() const {
-		// Block reward supply = Base money supply (includes all reborn amounts)
-		// This allows burned XFG to be redistributed through mining rewards
-		return m_baseMoneySupply;
-	}
-
-	void Currency::addBurnedXfg(uint64_t amount) {
-		if (amount == 0) return;
-		
-		m_totalBurnedXfg += amount;
-		addRebornXfg(amount); // Automatically add as reborn XFG
-		
-		// Increase base money supply by the burned amount
-		m_baseMoneySupply += amount;
-		
-		// Recalculate supplies
-		m_totalSupply = getTotalSupply();
-		m_circulatingSupply = getCirculatingSupply();
-		m_blockRewardSupply = getBlockRewardSupply();
-		
-		// Set money supply for block rewards to base money supply (includes reborn amounts)
-		// This allows burned XFG to be redistributed through mining rewards
-		m_moneySupply = m_blockRewardSupply;
-	}
-
-	void Currency::addRebornXfg(uint64_t amount) {
-		if (amount == 0) return;
-		
-		m_totalRebornXfg += amount;
-		
-		// Recalculate supplies
-		m_totalSupply = getTotalSupply();
-		m_circulatingSupply = getCirculatingSupply();
-		m_blockRewardSupply = getBlockRewardSupply();
-		
-		// Set money supply for block rewards to base money supply (includes reborn amounts)
-		// This allows burned XFG to be redistributed through mining rewards
-		m_moneySupply = m_blockRewardSupply;
-	}
-
 	double Currency::getBurnPercentage() const {
 		if (m_baseMoneySupply == 0) return 0.0;
-		return (static_cast<double>(m_totalBurnedXfg) / static_cast<double>(m_baseMoneySupply)) * 100.0;
-	}
-
-	double Currency::getRebornPercentage() const {
-		if (m_baseMoneySupply == 0) return 0.0;
-		return (static_cast<double>(m_totalRebornXfg) / static_cast<double>(m_baseMoneySupply)) * 100.0;
-	}
-
-	double Currency::getSupplyIncreasePercentage() const {
-		if (m_baseMoneySupply == 0) return 0.0;
-		uint64_t totalSupply = getTotalSupply();
-		return (static_cast<double>(totalSupply - m_baseMoneySupply) / static_cast<double>(m_baseMoneySupply)) * 100.0;
+		return (static_cast<double>(m_ethernalXFG) / static_cast<double>(m_baseMoneySupply)) * 100.0;
 	}
 
 	bool Currency::validateNetworkId(uint64_t networkId) const {

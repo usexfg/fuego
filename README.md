@@ -1,22 +1,23 @@
 <img title="The Long Night Is Coming" src="https://github.com/usexfg/fuego-data/blob/master/fuego-images/fuegoline.gif?raw=true"><img/>
-### Fuego is open-source decentralized P2P privacy cryptocurrency built by advocates for freedom thru sound money.
+### Fuego is open-source peer-to-peer decentralized privacy cryptocurrency built by advocates for freedom thru sound money and free open-source software.
 
 Based upon the CryptoNote protocol & philosophy.
 
 #### Resources
 
--   Web: <https://usexfg.org>
+-   [Website](https://usexfg.org)
 -   Explorer: <http://fuego.spaceportx.net>
 -   Explorer: <https://explore-xfg.loudmining.com>
 -   Explorer: [http://radioactive.sytes.net](http://radioactive.sytes.net:8000/index.html)
--   Discord: <https://discord.gg/5UJcJJg>
--   Twitter: <https://twitter.com/useXFG>
--   Medium: <https://medium.com/@usexfg>
--   Bitcoin Talk: <https://bitcointalk.org/index.php?topic=2712001>
+-   [Discord](https://discord.gg/5UJcJJg)
+-   [Twitter](https://twitter.com/useXFG)
+-   [Medium](https://medium.com/@usexfg)
+-   [Bitcoin Talk](https://bitcointalk.org/index.php?topic=2712001)
 
  ______________________________
  
 
+<sup>"Working software is the primary measure of progress." [‣]</sup>
 
 ##### Master Status   
 [![Build check](https://github.com/usexfg/fuego/actions/workflows/check.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/check.yml)
@@ -29,8 +30,11 @@ Based upon the CryptoNote protocol & philosophy.
 
 [![Windows](https://github.com/usexfg/fuego/actions/workflows/windows.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/windows.yml)
 
-<sup>"Working software is the primary measure of progress." [‣]</sup>
+[![Docker Images](https://github.com/usexfg/fuego/actions/workflows/docker.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/docker.yml)
 
+[![Android (Termux)](https://github.com/usexfg/fuego/actions/workflows/termux.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/termux.yml)
+
+[![Raspberry Pi (ARM64)](https://github.com/usexfg/fuego/actions/workflows/raspberry-pi.yml/badge.svg)](https://github.com/usexfg/fuego/actions/workflows/raspberry-pi.yml)
 
 [‣]:http://agilemanifesto.org/
 

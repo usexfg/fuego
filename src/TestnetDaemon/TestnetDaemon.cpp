@@ -20,7 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include "DaemonCommandsHandler.h"
+#include "Daemon/DaemonCommandsHandler.h"
 
 #include "Common/SignalHandler.h"
 #include "Common/PathTools.h"
@@ -62,11 +62,6 @@ namespace
   const command_line::arg_descriptor<std::string> arg_enable_cors = { "enable-cors", "Adds header 'Access-Control-Allow-Origin' to the daemon's RPC responses. Uses the value as domain. Use * for all", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2}; // info level
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
-  const command_line::arg_descriptor<bool> arg_testnet_on = {
-    "testnet",
-    "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored. Testnet uses different default ports: P2P=20808, RPC=28280.",
-    false
-};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
 
@@ -132,7 +127,6 @@ int main(int argc, char* argv[])
    command_line::add_arg(desc_cmd_sett, arg_log_level);
    command_line::add_arg(desc_cmd_sett, arg_console);
    command_line::add_arg(desc_cmd_sett, arg_set_view_key);
-   command_line::add_arg(desc_cmd_sett, arg_testnet_on);
    command_line::add_arg(desc_cmd_sett, arg_enable_cors);
 
    command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
@@ -204,7 +198,7 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		logger(INFO, BRIGHT_MAGENTA) <<
+		logger(INFO, BRIGHT_WHITE) <<
 #ifdef _WIN32
 " \n"		
 "       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n" 
@@ -233,11 +227,9 @@ int main(int argc, char* argv[])
 
     logger(INFO) << "Module folder: " << argv[0];
 
-    bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
-    if (testnet_mode) {
-      logger(INFO) << "Starting in testnet mode!";
-    }
-
+    bool testnet_mode = true; // Always true for TestnetDaemon
+    logger(INFO) << "Starting in testnet mode!";
+    
     //create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
     currencyBuilder.testnet(testnet_mode);
@@ -258,16 +250,28 @@ int main(int argc, char* argv[])
     netNodeConfig.init(vm);
     netNodeConfig.setTestnet(testnet_mode);
     
-    // Set mainnet default port if not explicitly configured
-    if (netNodeConfig.getBindPort() == 0) {
-      netNodeConfig.setBindPort(P2P_DEFAULT_PORT);
+    // Set testnet-specific P2P port if not explicitly configured
+    if (testnet_mode && netNodeConfig.getBindPort() == P2P_DEFAULT_PORT) {
+      netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
     }
     
+    // Set testnet-specific default ports if not explicitly configured
+    if (testnet_mode) {
+      if (netNodeConfig.getBindPort() == 0) {
+        netNodeConfig.setBindPort(P2P_DEFAULT_PORT_TESTNET);
+      }
+    } 
+
     MinerConfig minerConfig;
     minerConfig.init(vm);
     RpcServerConfig rpcConfig;
     rpcConfig.init(vm);
+
     
+    // Set testnet-specific RPC port if not explicitly configured
+    if (testnet_mode && rpcConfig.bindPort == RPC_DEFAULT_PORT) {
+      rpcConfig.bindPort = RPC_DEFAULT_PORT_TESTNET;
+    }
 
     if (!coreConfig.configFolderDefaulted) {
       if (!Tools::directoryExists(coreConfig.configFolder)) {

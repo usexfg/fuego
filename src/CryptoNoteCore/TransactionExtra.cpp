@@ -171,6 +171,16 @@ namespace CryptoNote
       appendTTLToExtra(extra, t.ttl);
       return true;
     }
+
+    bool operator()(const TransactionExtraHeatCommitment &t)
+    {
+      return addHeatCommitmentToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraYieldCommitment &t)
+    {
+      return addYieldCommitmentToExtra(extra, t);
+    }
   };
 
   bool writeTransactionExtra(std::vector<uint8_t> &tx_extra, const std::vector<TransactionExtraField> &tx_extra_fields)
@@ -447,6 +457,126 @@ namespace CryptoNote
   {
     s(data, "data");
     return true;
+  }
+
+  // HEAT commitment serialization
+  bool TransactionExtraHeatCommitment::serialize(ISerializer &s)
+  {
+    s(commitment, "commitment");
+    s(amount, "amount");
+    s(metadata, "metadata");
+    return true;
+  }
+
+  // Yield commitment serialization
+  bool TransactionExtraYieldCommitment::serialize(ISerializer &s)
+  {
+    s(commitment, "commitment");
+    s(amount, "amount");
+    s(term_months, "term_months");
+    s(yield_scheme, "yield_scheme");
+    s(metadata, "metadata");
+    return true;
+  }
+
+  // HEAT commitment helper functions
+  bool addHeatCommitmentToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraHeatCommitment &commitment)
+  {
+    tx_extra.push_back(TX_EXTRA_HEAT_COMMITMENT);
+    
+    // Serialize commitment hash (32 bytes)
+    tx_extra.insert(tx_extra.end(), commitment.commitment.data, commitment.commitment.data + sizeof(commitment.commitment.data));
+    
+    // Serialize amount (8 bytes, little-endian)
+    uint64_t amount = commitment.amount;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
+      amount >>= 8;
+    }
+    
+    // Serialize metadata size and data
+    uint8_t metadataSize = static_cast<uint8_t>(commitment.metadata.size());
+    tx_extra.push_back(metadataSize);
+    
+    if (metadataSize > 0) {
+      tx_extra.insert(tx_extra.end(), commitment.metadata.begin(), commitment.metadata.end());
+    }
+    
+    return true;
+  }
+
+  bool createTxExtraWithHeatCommitment(const Crypto::Hash &commitment, uint64_t amount, const std::vector<uint8_t> &metadata, std::vector<uint8_t> &extra)
+  {
+    TransactionExtraHeatCommitment heatCommitment;
+    heatCommitment.commitment = commitment;
+    heatCommitment.amount = amount;
+    heatCommitment.metadata = metadata;
+    
+    return addHeatCommitmentToExtra(extra, heatCommitment);
+  }
+
+  bool getHeatCommitmentFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraHeatCommitment &commitment)
+  {
+    // Implementation would parse the extra field to extract HEAT commitment
+    // This is a placeholder - full implementation would need proper parsing logic
+    return false;
+  }
+
+  // Yield commitment helper functions
+  bool addYieldCommitmentToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraYieldCommitment &commitment)
+  {
+    tx_extra.push_back(TX_EXTRA_YIELD_COMMITMENT);
+    
+    // Serialize commitment hash (32 bytes)
+    tx_extra.insert(tx_extra.end(), commitment.commitment.data, commitment.commitment.data + sizeof(commitment.commitment.data));
+    
+    // Serialize amount (8 bytes, little-endian)
+    uint64_t amount = commitment.amount;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
+      amount >>= 8;
+    }
+    
+    // Serialize term_months (4 bytes, little-endian)
+    uint32_t term_months = commitment.term_months;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(term_months & 0xFF));
+      term_months >>= 8;
+    }
+    
+    // Serialize yield_scheme length and string
+    uint8_t schemeLen = static_cast<uint8_t>(commitment.yield_scheme.size());
+    tx_extra.push_back(schemeLen);
+    tx_extra.insert(tx_extra.end(), commitment.yield_scheme.begin(), commitment.yield_scheme.end());
+    
+    // Serialize metadata size and data
+    uint8_t metadataSize = static_cast<uint8_t>(commitment.metadata.size());
+    tx_extra.push_back(metadataSize);
+    
+    if (metadataSize > 0) {
+      tx_extra.insert(tx_extra.end(), commitment.metadata.begin(), commitment.metadata.end());
+    }
+    
+    return true;
+  }
+
+  bool createTxExtraWithYieldCommitment(const Crypto::Hash &commitment, uint64_t amount, uint32_t term_months, const std::string &yield_scheme, const std::vector<uint8_t> &metadata, std::vector<uint8_t> &extra)
+  {
+    TransactionExtraYieldCommitment yieldCommitment;
+    yieldCommitment.commitment = commitment;
+    yieldCommitment.amount = amount;
+    yieldCommitment.term_months = term_months;
+    yieldCommitment.yield_scheme = yield_scheme;
+    yieldCommitment.metadata = metadata;
+    
+    return addYieldCommitmentToExtra(extra, yieldCommitment);
+  }
+
+  bool getYieldCommitmentFromExtra(const std::vector<uint8_t> &tx_extra, TransactionExtraYieldCommitment &commitment)
+  {
+    // Implementation would parse the extra field to extract yield commitment
+    // This is a placeholder - full implementation would need proper parsing logic
+    return false;
   }
 
 } // namespace CryptoNote

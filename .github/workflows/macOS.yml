@@ -27,11 +27,29 @@ jobs:
           build_folder="build/"
           xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
           release_name="fuego-cli-macOS-${{ matrix.arch }}-v$xfg_ver"
-          brew install gcc boost
+          
+          # Install dependencies
+          brew install gcc boost cmake
+          
+          # Set environment variables for consistent builds
+          export CC="clang"
+          export CXX="clang++"
+          export CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+          
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..
-          make -j4
+          
+          # Configure with proper macOS settings
+          cmake \
+            -DCMAKE_C_FLAGS="-mmacosx-version-min=13.0" \
+            -DCMAKE_CXX_FLAGS="-mmacosx-version-min=13.0" \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="13.0" \
+            -DCMAKE_BUILD_TYPE=Release \
+            ..
+          
+          # Build with proper parallelization
+          make -j$(sysctl -n hw.ncpu)
           mkdir "$release_name"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && strip "$f" && exeFiles+=( "$f" ); done
@@ -48,10 +66,11 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ steps.build.outputs.asset_path }}
-          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}
+          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}
           body: |
-            **${{ steps.build.outputs.release_name }}**
-            ${{ steps.build.outputs.sha256 }}
+            🍏 [Download for macOS](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
           append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

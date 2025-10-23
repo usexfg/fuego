@@ -32,6 +32,11 @@ if(MSVC)
   include_directories(src/Platform/Windows)
 elseif(APPLE)
   include_directories(src/Platform/OSX)
+  # Set minimum macOS version to match the build environment
+  if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS version")
+  endif()
+  message(STATUS "Building for macOS ${CMAKE_OSX_DEPLOYMENT_TARGET}")
 else()
 	include_directories(src/Platform/Linux)
 	include(TestCXXAcceptsFlag)
@@ -146,10 +151,81 @@ if(STATIC)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()
 
+if(APPLE)
+  # Try to find Boost in Homebrew directories
+  set(HOMEBREW_BOOST_ROOT "/opt/homebrew/opt/boost")
+  if(EXISTS "${HOMEBREW_BOOST_ROOT}")
+    set(Boost_ROOT "${HOMEBREW_BOOST_ROOT}")
+    set(Boost_INCLUDE_DIR "${HOMEBREW_BOOST_ROOT}/include")
+    set(Boost_LIBRARY_DIR "${HOMEBREW_BOOST_ROOT}/lib")
+    # Set CMAKE_PREFIX_PATH to help CMake find Boost components
+    set(CMAKE_PREFIX_PATH "${HOMEBREW_BOOST_ROOT}" ${CMAKE_PREFIX_PATH})
+    # Force CMake to use the legacy FindBoost module
+    set(Boost_NO_BOOST_CMAKE ON)
+    # For Homebrew Boost, we need to manually set the libraries
+    set(Boost_LIBRARIES "")
+    # Find individual Boost libraries manually (skip system as it doesn't exist in Boost 1.89.0)
+    find_library(BOOST_FILESYSTEM_LIB boost_filesystem PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_THREAD_LIB boost_thread PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_DATE_TIME_LIB boost_date_time PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_CHRONO_LIB boost_chrono PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_REGEX_LIB boost_regex PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_SERIALIZATION_LIB boost_serialization PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    find_library(BOOST_PROGRAM_OPTIONS_LIB boost_program_options PATHS "${HOMEBREW_BOOST_ROOT}/lib" NO_DEFAULT_PATH)
+    
+    if(BOOST_FILESYSTEM_LIB AND BOOST_THREAD_LIB AND BOOST_DATE_TIME_LIB AND BOOST_CHRONO_LIB AND BOOST_REGEX_LIB AND BOOST_SERIALIZATION_LIB AND BOOST_PROGRAM_OPTIONS_LIB)
+      set(Boost_LIBRARIES "${BOOST_FILESYSTEM_LIB};${BOOST_THREAD_LIB};${BOOST_DATE_TIME_LIB};${BOOST_CHRONO_LIB};${BOOST_REGEX_LIB};${BOOST_SERIALIZATION_LIB};${BOOST_PROGRAM_OPTIONS_LIB}")
+      set(Boost_FOUND TRUE)
+      set(Boost_INCLUDE_DIRS "${HOMEBREW_BOOST_ROOT}/include")
+      set(Boost_LIBRARY_DIRS "${HOMEBREW_BOOST_ROOT}/lib")
+    endif()
+  endif()
+endif()
+
+# Windows Boost configuration
+if(WIN32)
+  # Check for environment variable first
+  if(DEFINED ENV{BOOST_ROOT})
+    set(BOOST_ROOT "$ENV{BOOST_ROOT}")
+    set(Boost_ROOT "$ENV{BOOST_ROOT}")
+    set(Boost_INCLUDE_DIR "$ENV{BOOST_INCLUDEDIR}")
+    set(Boost_LIBRARY_DIR "$ENV{BOOST_LIBRARYDIR}")
+  else()
+    # Fallback to common Boost installation paths
+    set(BOOST_ROOT "C:/thirdparties/boost-1.83.0")
+    set(Boost_ROOT "C:/thirdparties/boost-1.83.0")
+    set(Boost_INCLUDE_DIR "C:/thirdparties/boost-1.83.0/boost")
+    set(Boost_LIBRARY_DIR "C:/thirdparties/boost-1.83.0/stage/lib")
+  endif()
+
+  # Additional Windows-specific Boost configuration
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_MULTITHREADED ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+endif()
+
+# Set policy to use legacy FindBoost module for Boost 1.70+ compatibility
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
+
+# Set policy to suppress CMP0074 warning about Boost_ROOT
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
+endif()
+
 #set(Boost_DEBUG on)
-find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+if(NOT Boost_FOUND)
+  if(APPLE)
+    # For macOS, skip system component as it doesn't exist in Boost 1.89.0
+    find_package(Boost 1.55 REQUIRED COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+  else()
+    find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+  endif()
+endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
+# Platform-specific Boost library configurations
 if(MINGW)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock")
 elseif(APPLE)

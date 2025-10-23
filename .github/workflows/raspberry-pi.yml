@@ -36,13 +36,29 @@ jobs:
 
       - name: Download and Build Boost for ARM64
         run: |
-          wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2
-          tar -xjf boost_1_72_0.tar.bz2
-          cd boost_1_72_0
+          BOOST_VERSION=1.83.0
+          BOOST_VERSION_UNDERSCORE=${BOOST_VERSION//./_}
+          BOOST_URL="https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2/download"
+          wget --retry-connrefused --waitretry=5 --timeout=30 --tries=5 -O boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 "$BOOST_URL"
+          file boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
+          if ! file boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 | grep -q 'bzip2 compressed data'; then
+            echo "Downloaded file is not a valid bzip2 archive."
+            exit 1
+          fi
+          tar -xjf boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
+          cd boost_${BOOST_VERSION_UNDERSCORE}
           echo "using gcc : arm : aarch64-linux-gnu-g++ ;" > user-config.jam
           ./bootstrap.sh
           ./b2 --user-config=user-config.jam toolset=gcc-arm target-os=linux architecture=arm address-model=64 --prefix=/tmp/boost-arm64 install
           cd ..
+
+      - name: Patch Boost to fix PTHREAD_STACK_MIN preprocessor issue
+        run: |
+          # Patch Boost to fix PTHREAD_STACK_MIN preprocessor issue
+          BOOST_HEADER="boost/context/posix/stack_traits.hpp"
+          if grep -q '#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)' $BOOST_HEADER; then
+            sed -i 's/#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)/#if defined(PTHREAD_STACK_MIN)/' $BOOST_HEADER
+          fi
 
       - name: Build
         id: build
@@ -72,10 +88,12 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ${{ steps.build.outputs.asset_path }}
-          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_ver }}
+          name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}
           body: |
-            **${{ steps.build.outputs.release_name }}**
-            ${{ steps.build.outputs.sha256 }}
+            🍓 [Download for Raspberry Pi](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
           append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+

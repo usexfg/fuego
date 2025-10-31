@@ -1,8 +1,8 @@
-# Adaptive Multi-Window Difficulty Algorithm (AMWDA)
+# Dynamic Multi-Window Difficulty Algorithm (DMWDA)
 
 ## Overview
 
-The Adaptive Multi-Window Difficulty Algorithm (AMWDA) is Fuego's next-generation difficulty adjustment system, designed to address the limitations of traditional difficulty algorithms. It activates at **BlockMajorVersion 10** (height 969696) alongside the Enhanced Privacy features.
+Fuego's Dynamic Multi-Window Difficulty Algorithm (DMWDA) is a new custom difficulty adjustment system, designed to address the limitations of traditional difficulty algorithms by using a multi-window approach with increased responsiveness to hashrate swings and block-stealing-attack attempts. It activates at **BlockMajorVersion 10** (height 980000) alongside the Enhanced Privacy features.
 
 ## Key Features
 
@@ -59,7 +59,7 @@ if (recentTime < expectedTime / 10 || recentTime > expectedTime * 10) {
 
 ## Comparison with Previous Algorithms
 
-| Feature | V5 (LWMA-1) | V6 (AMWDA) |
+| Feature | V5 (LWMA-1) | V6 (DMWDA) |
 |---------|-------------|------------|
 | **Windows** | Single (45 blocks) | Multi (15/45/120 blocks) |
 | **Response Speed** | Fixed | Adaptive |
@@ -85,7 +85,7 @@ if (recentTime < expectedTime / 10 || recentTime > expectedTime * 10) {
 ## Activation Details
 
 - **Block Major Version**: 10
-- **Activation Height**: 969,696
+- **Activation Height**: 980,000
 - **Coincides with**: Enhanced Privacy (ring size 8)
 - **Backward Compatibility**: Yes (previous algorithms remain active)
 
@@ -123,30 +123,14 @@ const uint32_t EMERGENCY_WINDOW = 5; // Crisis response
 - **Emergency mode**: 10% to 1000% change per adjustment
 - **Smoothing**: 30% exponential smoothing factor
 
-## Future Enhancements
-
-### **Planned Improvements**
-- **Machine learning integration** for better prediction
-- **Network health metrics** for adaptive parameters
-- **Cross-chain difficulty** for multi-chain networks
-- **Dynamic window sizing** based on network conditions
-
-### **Research Areas**
-- **Quantum-resistant** difficulty algorithms
-- **Privacy-preserving** difficulty calculation
-- **Decentralized** parameter governance
-- **Cross-platform** compatibility
-
 ## Conclusion
 
-The Adaptive Multi-Window Difficulty Algorithm represents a significant advancement in blockchain difficulty management. By combining multiple time windows, confidence scoring, and emergency response mechanisms, AMWDA provides:
+The Dynamic Multi-Window Difficulty Algorithm represents a significant advancement in blockchain difficulty management. By combining multiple time windows, confidence scoring, and emergency response mechanisms, DMWDA provides:
 
 - **Superior responsiveness** to hash rate changes
 - **Enhanced security** against block stealing attacks
 - **Better stability** during volatile market conditions
 - **Improved fairness** for all network participants
-
-This algorithm positions Fuego as a leader in adaptive blockchain technology, providing a robust foundation for future growth and innovation.
 
 ---
 

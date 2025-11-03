@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2025 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -324,6 +324,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   bool synced = ((uint32_t)height == (uint32_t)last_known_block_index);
   uint64_t totalCoinsInNetwork = m_core.coinsEmittedAtHeight(height);
   uint64_t totalCoinsOnDeposits = m_core.depositAmountAtHeight(height);
+  uint64_t totalCoinsEthereal = m_core.getBurnedXfgAtHeight(height);
   uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
 
 
@@ -335,9 +336,10 @@ std::cout << "**************************************************"<< std::endl;
 std::cout << "Network Hashrate: " << get_mining_speed(hashrate) << ", Difficulty: " << difficulty << std::endl;
 std::cout << "Block Major version: " << (int)majorVersion << ", " << "Alt Blocks: " << alt_blocks_count << std::endl;
 const auto &currency = m_core.currency();
-std::cout << "Total active (unlocked) XFG :  " << currency.formatAmount(amountOfActiveCoins) << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
-std::cout << "Total XFG locked in COLD : " << currency.formatAmount(totalCoinsOnDeposits) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
-std::cout << "Current amount of XFG in Network :  " << currency.formatAmount(totalCoinsInNetwork)<<" XFG"<< std::endl;
+std::cout << "Total active (unlocked)" << (m_core.currency().isTestnet() ? " TEST:" : " XFG:") << currency.formatAmount(amountOfActiveCoins) << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
+std::cout << "Total Ethereal (burned)" << (m_core.currency().isTestnet() ? " TEST:" : " XFG:") << currency.formatAmount(totalCoinsEthereal) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsEthereal, totalCoinsInNetwork)) << "%)" << std::endl;
+std::cout << "Total" << (m_core.currency().isTestnet() ? " TEST " : " XFG ") << "locked in COLD Banking : " << currency.formatAmount(totalCoinsOnDeposits) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
+std::cout << "Current amount of" << (m_core.currency().isTestnet() ? " TEST " : " XFG ") << "in Network :  " << currency.formatAmount(totalCoinsInNetwork) << (m_core.currency().isTestnet() ? "TEST" : "XFG") << std::endl;
 std::cout << "**************************************************"<< std::endl;
   return true;
 }

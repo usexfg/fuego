@@ -1,3 +1,18 @@
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2025 Elderfire Privacy Group
+//
+// This file is part of Fuego.
+//
+// Fuego is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fuego includes elements written
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
+
 #include "BurnDepositValidationService.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/Currency.h"
@@ -220,7 +235,7 @@ std::optional<BurnProofData> BurnDepositValidationService::generateBurnProof(uin
     proof.commitment = commitment;
     proof.txHash = txHash;
     proof.timestamp = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
+    std::chrono::system_clock::now().time_since_epoch()).count();
     proof.treasuryAddress = m_config.treasuryAddress;
     proof.burnHash = calculateBurnHash(amount, depositorAddress, proof.timestamp);
 

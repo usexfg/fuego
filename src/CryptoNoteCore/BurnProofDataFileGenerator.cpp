@@ -1,7 +1,5 @@
-// Copyright (c) 2017-2025 Elderfire Privacy Council
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2014-2017 The XDN developers
-// Copyright (c) 2012-2018 The CryptoNote developers
+// Copyright (c) 2025 Elderfire Privacy Council
+// Copyright (c) 2017-2026 Fuego Developers
 //
 // This file is part of Fuego.
 //

@@ -1,7 +1,7 @@
-// Copyright (c) 2017-2022 Fuego Developers
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
+// Copyright (c) 2018-2019 Conceal Network Developers
 //
 // This file is part of Fuego.
 //
@@ -93,27 +93,27 @@ public:
   size_t minMixin() const { return m_minMixin; }
   size_t minMixin(uint8_t blockMajorVersion) const {
     if (blockMajorVersion >= BLOCK_MAJOR_VERSION_10) {
-      return parameters::MIN_TX_MIXIN_SIZE_V10; // Enhanced privacy: ring size 8
+      return parameters::MIN_TX_MIXIN_SIZE_V10; // standard privacy: mix8/ ring ct 9
     }
-    return m_minMixin; // Default: ring size 2
+    return m_minMixin; // legacy default mixin 2 / ring ct 3
   }
   
-  // Dynamic ring size calculation based on available outputs
+  // Dynamic ring ct calculation based on available outputs
   size_t calculateOptimalRingSize(uint64_t amount, size_t availableOutputs, uint8_t blockMajorVersion) const {
     if (blockMajorVersion < BLOCK_MAJOR_VERSION_10) {
-      return minMixin(blockMajorVersion); // Use static ring size for older versions
+      return minMixin(blockMajorVersion); // Use legacy for older versions
     }
     
-    // Enhanced privacy: aim for larger ring sizes when possible
+    // Standard privacy: aim for larger ring sizes when possible
     size_t minRingSize = minMixin(blockMajorVersion); // Minimum: 8
-    size_t maxRingSize = maxMixin(); // Maximum: typically 20
+    size_t maxRingSize = maxMixin(); // Maximum: 18
     
     // For BlockMajorVersion 10+, never go below ring size 8
-    // If insufficient outputs for ring size 8, this should be handled by the caller
+    // If insufficient outputs for ring ct 8, this is handled by the caller
     if (availableOutputs < minRingSize) {
-      // This indicates insufficient outputs - caller should handle this error
-      // and direct user to run optimizer
-      return 0; // Signal to caller that ring size 8 is not achievable
+      // indicates insufficient outputs - caller should handle this error
+      
+      return 0; // Signal to caller that ring ct 8 is not achievable - direct user to run optimizer
     }
     
     // Target ring sizes in order of preference
@@ -126,7 +126,7 @@ public:
       }
     }
     
-    // Fall back to minimum if no targets are achievable
+    // Fall back to standard if no targets are achievable
     return minRingSize;
   }
   
@@ -256,6 +256,7 @@ public:
   difficulty_type nextDifficultyV4(uint32_t height, uint8_t blockMajorVersion, std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
   difficulty_type nextDifficultyV5(uint32_t height, uint8_t blockMajorVersion, std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
   difficulty_type nextDifficultyV6(uint32_t height, uint8_t blockMajorVersion, std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
+  difficulty_type nextDifficultyV7(uint32_t height, uint8_t blockMajorVersion, std::vector<uint64_t> timestamps, std::vector<difficulty_type> Difficulties) const;
 
   bool checkProofOfWorkV1(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
   bool checkProofOfWorkV2(Crypto::cn_context& context, const Block& block, difficulty_type currentDiffic, Crypto::Hash& proofOfWork) const;
@@ -282,7 +283,6 @@ private:
   uint64_t m_blockFutureTimeLimit;
   uint64_t m_blockFutureTimeLimit_v1;
   uint64_t m_blockFutureTimeLimit_v2;
-
 
   uint64_t m_moneySupply;
   unsigned int m_emissionSpeedFactor;
@@ -336,6 +336,8 @@ private:
   uint32_t m_upgradeHeightV7;
   uint32_t m_upgradeHeightV8;
   uint32_t m_upgradeHeightV9;
+  uint32_t m_upgradeHeightV10;
+
   unsigned int m_upgradeVotingThreshold;
   uint32_t m_upgradeVotingWindow;
   uint32_t m_upgradeWindow;
@@ -450,6 +452,7 @@ public:
   CurrencyBuilder& upgradeHeightV7(uint64_t val) { m_currency.m_upgradeHeightV7 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeHeightV8(uint64_t val) { m_currency.m_upgradeHeightV8 = static_cast<uint32_t>(val); return *this; }
   CurrencyBuilder& upgradeHeightV9(uint64_t val) { m_currency.m_upgradeHeightV9 = static_cast<uint32_t>(val); return *this; }
+  CurrencyBuilder& upgradeHeightV10(uint64_t val) { m_currency.m_upgradeHeightV10 = static_cast<uint32_t>(val); return *this; }
 
 
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);

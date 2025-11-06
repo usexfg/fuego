@@ -60,6 +60,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
   m_consoleHandler.setHandler("print_ban", boost::bind(&DaemonCommandsHandler::print_ban, this, boost::arg<1>()), "Print banned nodes");
   m_consoleHandler.setHandler("ban", boost::bind(&DaemonCommandsHandler::ban, this, boost::arg<1>()), "Ban a given <IP> for a given amount of <seconds>, ban <IP> [<seconds>]");
   m_consoleHandler.setHandler("unban", boost::bind(&DaemonCommandsHandler::unban, this, boost::arg<1>()), "Unban a given <IP>, unban <IP>");
+  m_consoleHandler.setHandler("getburnedxfg", boost::bind(&DaemonCommandsHandler::get_burned_xfg, this, boost::arg<1>()), "Get total burned XFG amount");
 }
 
 //--------------------------------------------------------------------------------
@@ -486,4 +487,9 @@ bool DaemonCommandsHandler::unban(const std::vector<std::string>& args)
     return false;
   }
   return m_srv.unban_host(ip);
+}
+bool DaemonCommandsHandler::get_burned_xfg(const std::vector<std::string>& args) {
+  uint64_t burnedXFG = m_core.currency().getEternalFlame();
+  std::cout << "Total burned XFG: " << m_core.currency().formatAmount(burnedXFG) << " XFG" << std::endl;
+  return true;
 }

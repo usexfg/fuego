@@ -2449,8 +2449,10 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
     if (permanentBurns > 0) {
       uint32_t height = static_cast<uint32_t>(m_blocks.size());
       m_depositIndex.addForeverDeposit(permanentBurns, height);
-      
-      // Use large burn amount for logging (800 XFG)
+        // Sync Currency ethernalXFG
+    const_cast<Currency&>(m_currency).addEternalFlame(permanentBurns);
+  
+  // Use large burn amount for logging (800 XFG)
       logger(INFO) << "Burn in block " << height << ": " << parameters::BURN_DEPOSIT_LARGE_AMOUNT 
                    << " XFG sent into the Ether";
     }

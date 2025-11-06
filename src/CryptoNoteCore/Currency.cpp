@@ -176,7 +176,15 @@ namespace CryptoNote
 			return static_cast<uint32_t>(-1);
 		}
 	}
-
+void Currency::addEternalFlame(uint64_t amount) {
+  m_ethernalXFG += amount;
+}
+void Currency::removeEternalFlame(uint64_t amount) {
+  m_ethernalXFG -= amount;
+}
+void Currency::getEternalFlame(uint64_t& amount) {
+  amount = m_ethernalXFG;
+}
 	
 	bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
 		uint64_t fee, uint32_t height, uint64_t& reward, int64_t& emissionChange) const {

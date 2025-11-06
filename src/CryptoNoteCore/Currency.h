@@ -257,8 +257,10 @@ public:
 
   // Money supply methods
   uint64_t getBaseMoneySupply() const { return m_baseMoneySupply; }
-  uint64_t getEternalFlame() const { return m_ethernalXFG; }
   void addEternalFlame(uint64_t amount);
+  void removeEternalFlame(uint64_t amount);
+  void getEternalFlame(uint64_t& amount) const;
+  uint64_t getEternalFlame() const { return m_ethernalXFG; }
   double getBurnPercentage() const;
 
   // Network validation
@@ -360,6 +362,9 @@ private:
   // Money supply
   uint64_t m_baseMoneySupply;
   uint64_t m_ethernalXFG;
+  void addEternalFlame(uint64_t amount);
+  void removeEternalFlame(uint64_t amount);
+  void getEternalFlame(uint64_t& amount);
 
   // Network validation - using hash of the full network ID
   uint64_t m_fuegoNetworkId;

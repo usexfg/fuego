@@ -1,4 +1,5 @@
-// Copyright (c) 2024 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2012-2014 Cryptonote Developers
 //
 // This file is part of Fuego.
 //
@@ -39,7 +40,7 @@ public:
     const std::vector<OutputInfo>& availableOutputs,
     uint8_t blockMajorVersion,
     size_t minRingSize = 8,
-    size_t maxRingSize = 20
+    size_t maxRingSize = 18
   );
   
   // Get target ring sizes in order of preference
@@ -57,7 +58,7 @@ public:
 
 // Privacy levels for different ring sizes
 enum class PrivacyLevel {
-  BASIC = 8,      // Minimum enhanced privacy
+  BASIC = 8,      // Standard privacy
   GOOD = 10,      // Good privacy
   BETTER = 12,    // Better privacy
   STRONG = 15,    // Strong privacy

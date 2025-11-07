@@ -231,8 +231,8 @@ public:
       printf("INFO: %smulti-signature outputs\n", operation.c_str());
       s(m_bs.m_multisignatureOutputs, "multisig_outputs");
 
-      printf("INFO: %sdeposit index\n", operation.c_str());
-      s(m_bs.m_depositIndex, "deposit_index");
+      printf("INFO: %sbanking index\n", operation.c_str());
+      s(m_bs.m_bankingIndex, "deposit_index");
 
     auto dur = std::chrono::steady_clock::now() - start;
 
@@ -596,6 +596,14 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
   }
 
   update_next_comulative_size_limit();
+
+  // Sync Currency (ethernalXFG) with DepositIndex after blockchain load
+  // This keeps Currency at correct burned total when loading from disk
+  uint64_t currentBurned = m_bankingIndex.getBurnedXfgAmount();
+  if (currentBurned > 0) {
+    const_cast<Currency&>(m_currency).addEternalFlame(currentBurned);
+    logger(DEBUGGING) << "Sync'd : " << currentBurned << " Ξthernal XFG via COLD Banking Ledger";
+  }
 
   uint64_t timestamp_diff = time(NULL) - m_blocks.back().bl.timestamp;
   if (!m_blocks.back().bl.timestamp) {
@@ -2344,18 +2352,18 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
 
 uint64_t Blockchain::fullDepositAmount() const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  return m_depositIndex.fullDepositAmount();
+  return m_bankingIndex.fullDepositAmount();
 }
 
 uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  return m_depositIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
+  return m_bankingIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
 }
 
   uint64_t Blockchain::depositInterestAtHeight(size_t height) const
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-    return m_depositIndex.depositInterestAtHeight(static_cast<DepositIndex::DepositHeight>(height));
+    return m_bankingIndex.depositInterestAtHeight(static_cast<DepositIndex::DepositHeight>(height));
   }
 
   void Blockchain::pushToDepositIndex(const BlockEntry &block, uint64_t interest)
@@ -2443,12 +2451,12 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
     }
     
     // Push deposit tracking
-    m_depositIndex.pushBlock(deposit, interest);
+    m_bankingIndex.pushBlock(deposit, interest);
     
     // Add permanent burns to ethernalXFG if any were found
     if (permanentBurns > 0) {
       uint32_t height = static_cast<uint32_t>(m_blocks.size());
-      m_depositIndex.addForeverDeposit(permanentBurns, height);
+      m_bankingIndex.addForeverDeposit(permanentBurns, height);
         // Sync Currency ethernalXFG
     const_cast<Currency&>(m_currency).addEternalFlame(permanentBurns);
   
@@ -2492,7 +2500,7 @@ void Blockchain::popBlock(const Crypto::Hash& blockHash) {
   m_timestampIndex.remove(m_blocks.back().bl.timestamp, blockHash);
   m_generatedTransactionsIndex.remove(m_blocks.back().bl);
 
-  m_depositIndex.popBlock();
+  m_bankingIndex.popBlock();
   m_blocks.pop_back();
   m_blockIndex.pop();
 
@@ -2773,8 +2781,20 @@ bool Blockchain::validateInput(const MultisignatureInput& input, const Crypto::H
   }
 
   logger(DEBUGGING) << "Removing last block with height " << m_blocks.back().height;
+    // Get burned amount (if any) before popping
+  uint32_t height = m_blocks.back().height;
+  uint64_t burnedAtHeight = m_bankingIndex.getBurnedXfgAtHeight(height);
+  if (height > 0) {
+    uint64_t previousBurned = m_bankingIndex.getBurnedXfgAtHeight(height - 1);
+    uint64_t burnedInThisBlock = burnedAtHeight - previousBurned;
+    if (burnedInThisBlock > 0) {
+      // Sync w Currency on rollback
+      const_cast<Currency&>(m_currency).removeEternalFlame(burnedInThisBlock);
+    }
+  }
+  
   popTransactions(m_blocks.back(), getObjectHash(m_blocks.back().bl.baseTransaction));
-
+  m_bankingIndex.popBlock();
   Crypto::Hash blockHash = getBlockIdByHeight(m_blocks.back().height);
   m_timestampIndex.remove(m_blocks.back().bl.timestamp, blockHash);
   m_generatedTransactionsIndex.remove(m_blocks.back().bl);

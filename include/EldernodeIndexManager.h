@@ -27,7 +27,7 @@
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
 #include "IBlockchainExplorer.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 
 namespace CryptoNote {
 
@@ -214,7 +214,7 @@ public:
     
     // Blockchain integration
     void setBlockchainExplorer(IBlockchainExplorer* explorer);
-    void setDepositIndex(const DepositIndex* depositIndex);
+    void setBankingIndex(const BankingIndex* bankingIndex);
     
     // Auto-generation of fresh proofs
     bool generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress);
@@ -243,7 +243,7 @@ private:
     
     // Blockchain integration
     IBlockchainExplorer* m_blockchainExplorer;
-    const DepositIndex* m_depositIndex;
+    const BankingIndex* m_bankingIndex;
     
     // Monitoring configuration and thread
     ElderfierMonitoringConfig m_monitoringConfig;

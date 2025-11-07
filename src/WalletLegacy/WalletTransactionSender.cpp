@@ -513,7 +513,7 @@ namespace CryptoNote
       std::vector<TransactionTypes::InputKeyInfo> inputs = prepareKeyInputs(context->selectedTransfers, context->outs, context->mixIn);
       std::vector<uint64_t> decomposedChange = splitAmount(context->foundMoney - totalAmount, context->dustPolicy.dustThreshold);
 
-      auto depositIndex = transaction->addOutput(std::abs(transactionInfo.totalAmount) - transactionInfo.fee,
+      auto bankingIndex = transaction->addOutput(std::abs(transactionInfo.totalAmount) - transactionInfo.fee,
                                                  {m_keys.address},
                                                  1,
                                                  context->depositTerm);
@@ -552,7 +552,7 @@ namespace CryptoNote
       // Interest calculation removed - no on-chain interest
 
       deposit.locked = true;
-      DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());
+      DepositId depositId = m_transactionsCache.insertDeposit(deposit, bankingIndex, transaction->getTransactionHash());
       transactionInfo.firstDepositId = depositId;
       transactionInfo.depositCount = 1;
 

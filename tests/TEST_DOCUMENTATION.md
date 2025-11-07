@@ -149,7 +149,7 @@ make DynamicSupplyPerformanceTest
 ### Code Coverage Areas
 - ✅ DynamicMoneySupply class methods
 - ✅ Currency class integration
-- ✅ DepositIndex integration
+- ✅ BankingIndex integration
 - ✅ State serialization/deserialization
 - ✅ Economic balance calculations
 - ✅ Block reward scaling
@@ -178,7 +178,7 @@ on:
     branches: [ main, develop ]
     paths: 
       - 'src/CryptoNoteCore/DynamicMoneySupply.*'
-      - 'src/CryptoNoteCore/DepositIndex.*'
+      - 'src/CryptoNoteCore/BankingIndex.*'
       - 'src/CryptoNoteCore/Currency.*'
   pull_request:
     branches: [ main, develop ]

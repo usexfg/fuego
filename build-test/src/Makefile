@@ -1545,29 +1545,29 @@ CryptoNoteCore/DepositCommitment.cpp.s:
 	cd /workspace/build-test && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/CryptoNoteCore.dir/build.make src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.s
 .PHONY : CryptoNoteCore/DepositCommitment.cpp.s
 
-CryptoNoteCore/DepositIndex.o: CryptoNoteCore/DepositIndex.cpp.o
-.PHONY : CryptoNoteCore/DepositIndex.o
+CryptoNoteCore/BankingIndex.o: CryptoNoteCore/BankingIndex.cpp.o
+.PHONY : CryptoNoteCore/BankingIndex.o
 
 # target to build an object file
-CryptoNoteCore/DepositIndex.cpp.o:
-	cd /workspace/build-test && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/CryptoNoteCore.dir/build.make src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o
-.PHONY : CryptoNoteCore/DepositIndex.cpp.o
+CryptoNoteCore/BankingIndex.cpp.o:
+	cd /workspace/build-test && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/CryptoNoteCore.dir/build.make src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o
+.PHONY : CryptoNoteCore/BankingIndex.cpp.o
 
-CryptoNoteCore/DepositIndex.i: CryptoNoteCore/DepositIndex.cpp.i
-.PHONY : CryptoNoteCore/DepositIndex.i
+CryptoNoteCore/BankingIndex.i: CryptoNoteCore/BankingIndex.cpp.i
+.PHONY : CryptoNoteCore/BankingIndex.i
 
 # target to preprocess a source file
-CryptoNoteCore/DepositIndex.cpp.i:
-	cd /workspace/build-test && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/CryptoNoteCore.dir/build.make src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.i
-.PHONY : CryptoNoteCore/DepositIndex.cpp.i
+CryptoNoteCore/BankingIndex.cpp.i:
+	cd /workspace/build-test && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/CryptoNoteCore.dir/build.make src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.i
+.PHONY : CryptoNoteCore/BankingIndex.cpp.i
 
-CryptoNoteCore/DepositIndex.s: CryptoNoteCore/DepositIndex.cpp.s
-.PHONY : CryptoNoteCore/DepositIndex.s
+CryptoNoteCore/BankingIndex.s: CryptoNoteCore/BankingIndex.cpp.s
+.PHONY : CryptoNoteCore/BankingIndex.s
 
 # target to generate assembly for a file
-CryptoNoteCore/DepositIndex.cpp.s:
-	cd /workspace/build-test && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/CryptoNoteCore.dir/build.make src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.s
-.PHONY : CryptoNoteCore/DepositIndex.cpp.s
+CryptoNoteCore/BankingIndex.cpp.s:
+	cd /workspace/build-test && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/CryptoNoteCore.dir/build.make src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.s
+.PHONY : CryptoNoteCore/BankingIndex.cpp.s
 
 CryptoNoteCore/Difficulty.o: CryptoNoteCore/Difficulty.cpp.o
 .PHONY : CryptoNoteCore/Difficulty.o
@@ -4955,9 +4955,9 @@ help:
 	@echo "... CryptoNoteCore/DepositCommitment.o"
 	@echo "... CryptoNoteCore/DepositCommitment.i"
 	@echo "... CryptoNoteCore/DepositCommitment.s"
-	@echo "... CryptoNoteCore/DepositIndex.o"
-	@echo "... CryptoNoteCore/DepositIndex.i"
-	@echo "... CryptoNoteCore/DepositIndex.s"
+	@echo "... CryptoNoteCore/BankingIndex.o"
+	@echo "... CryptoNoteCore/BankingIndex.i"
+	@echo "... CryptoNoteCore/BankingIndex.s"
 	@echo "... CryptoNoteCore/Difficulty.o"
 	@echo "... CryptoNoteCore/Difficulty.i"
 	@echo "... CryptoNoteCore/Difficulty.s"
@@ -5373,4 +5373,3 @@ help:
 cmake_check_build_system:
 	cd /workspace/build-test && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
-

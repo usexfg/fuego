@@ -59,7 +59,7 @@ public:
     
     // State management
     MoneySupplyState getCurrentState() const;
-    void updateFromDepositIndex(const class DepositIndex& depositIndex);
+    void updateFromBankingIndex(const class BankingIndex& bankingIndex);
     
     // Statistics and percentages
     double getBurnPercentage() const;

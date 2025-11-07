@@ -24,15 +24,15 @@
 namespace CryptoNote {
 class ISerializer;
 
-class DepositIndex {
+class BankingIndex {
 public:
   using DepositAmount = int64_t;
   using DepositInterest = uint64_t;
   using DepositHeight = uint32_t;
   using BurnedAmount = uint64_t;
   
-  DepositIndex();
-  explicit DepositIndex(DepositHeight expectedHeight);
+  BankingIndex();
+  explicit BankingIndex(DepositHeight expectedHeight);
   void pushBlock(DepositAmount amount, DepositInterest interest); 
   void popBlock(); 
   void reserve(DepositHeight expectedHeight);
@@ -59,7 +59,7 @@ public:
   DepositStats getStats() const;
 
 private:
-  struct DepositIndexEntry {
+  struct BankingIndexEntry {
     DepositHeight height;
     DepositAmount amount;
     DepositInterest interest;
@@ -76,7 +76,7 @@ private:
     void serialize(ISerializer& s);
   };
 
-  using IndexType = std::vector<DepositIndexEntry>;
+  using IndexType = std::vector<BankingIndexEntry>;
   IndexType::const_iterator upperBound(DepositHeight height) const;
   IndexType index;
   DepositHeight blockCount;

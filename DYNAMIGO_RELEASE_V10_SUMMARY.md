@@ -23,7 +23,7 @@ This release introduces comprehensive **Dynamic Updates** that revolutionize Fue
 
 **Technical Implementation:**
 - `DynamicMoneySupply` class with real-time state management
-- `DepositIndex` integration for burned XFG tracking
+- `BankingIndex` integration for burned XFG tracking
 - RPC endpoints: `getDynamicSupplyOverview`, `getCirculatingSupply`, `getTotalBurnedXfg`
 - FOREVER deposits (term = 4294967295) for XFG-for-HEAT mints
 

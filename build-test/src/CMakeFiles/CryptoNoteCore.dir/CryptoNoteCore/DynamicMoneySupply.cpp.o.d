@@ -151,7 +151,7 @@ src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicMoneySupply.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/stl_vector.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/stl_bvector.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/vector.tcc \
-  /workspace/src/CryptoNoteCore/DepositIndex.h \
+  /workspace/src/CryptoNoteCore/BankingIndex.h \
   /workspace/src/Serialization/ISerializer.h \
   /workspace/src/Common/StringView.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/cassert \

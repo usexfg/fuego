@@ -310,19 +310,19 @@ src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.s: cmake_
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.s"
 	cd /workspace/build-test/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspace/src/CryptoNoteCore/DepositCommitment.cpp -o CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.s
 
-src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o: src/CMakeFiles/CryptoNoteCore.dir/flags.make
-src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o: /workspace/src/CryptoNoteCore/DepositIndex.cpp
-src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o: src/CMakeFiles/CryptoNoteCore.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/workspace/build-test/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o"
-	cd /workspace/build-test/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o -MF CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o.d -o CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o -c /workspace/src/CryptoNoteCore/DepositIndex.cpp
+src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o: src/CMakeFiles/CryptoNoteCore.dir/flags.make
+src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o: /workspace/src/CryptoNoteCore/BankingIndex.cpp
+src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o: src/CMakeFiles/CryptoNoteCore.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/workspace/build-test/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o"
+	cd /workspace/build-test/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o -MF CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o.d -o CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o -c /workspace/src/CryptoNoteCore/BankingIndex.cpp
 
-src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.i"
-	cd /workspace/build-test/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspace/src/CryptoNoteCore/DepositIndex.cpp > CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.i
+src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.i"
+	cd /workspace/build-test/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspace/src/CryptoNoteCore/BankingIndex.cpp > CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.i
 
-src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.s"
-	cd /workspace/build-test/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspace/src/CryptoNoteCore/DepositIndex.cpp -o CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.s
+src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.s"
+	cd /workspace/build-test/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspace/src/CryptoNoteCore/BankingIndex.cpp -o CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.s
 
 src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Difficulty.cpp.o: src/CMakeFiles/CryptoNoteCore.dir/flags.make
 src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Difficulty.cpp.o: /workspace/src/CryptoNoteCore/Difficulty.cpp
@@ -567,7 +567,7 @@ CryptoNoteCore_OBJECTS = \
 "CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/CryptoNoteTools.cpp.o" \
 "CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Currency.cpp.o" \
 "CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.o" \
-"CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o" \
+"CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o" \
 "CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Difficulty.cpp.o" \
 "CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicMoneySupply.cpp.o" \
 "CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicRingSize.cpp.o" \
@@ -605,7 +605,7 @@ src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Crypto
 src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/CryptoNoteTools.cpp.o
 src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Currency.cpp.o
 src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.o
-src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o
+src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o
 src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Difficulty.cpp.o
 src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicMoneySupply.cpp.o
 src/libCryptoNoteCore.a: src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicRingSize.cpp.o
@@ -639,4 +639,3 @@ src/CMakeFiles/CryptoNoteCore.dir/clean:
 src/CMakeFiles/CryptoNoteCore.dir/depend:
 	cd /workspace/build-test && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /workspace /workspace/src /workspace/build-test /workspace/build-test/src /workspace/build-test/src/CMakeFiles/CryptoNoteCore.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : src/CMakeFiles/CryptoNoteCore.dir/depend
-

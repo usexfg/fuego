@@ -25,7 +25,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/workspace/src/CryptoNoteCore/CryptoNoteTools.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/CryptoNoteTools.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/CryptoNoteTools.cpp.o.d"
   "/workspace/src/CryptoNoteCore/Currency.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Currency.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Currency.cpp.o.d"
   "/workspace/src/CryptoNoteCore/DepositCommitment.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositCommitment.cpp.o.d"
-  "/workspace/src/CryptoNoteCore/DepositIndex.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o.d"
+  "/workspace/src/CryptoNoteCore/BankingIndex.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o.d"
   "/workspace/src/CryptoNoteCore/Difficulty.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Difficulty.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/Difficulty.cpp.o.d"
   "/workspace/src/CryptoNoteCore/DynamicMoneySupply.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicMoneySupply.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicMoneySupply.cpp.o.d"
   "/workspace/src/CryptoNoteCore/DynamicRingSize.cpp" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicRingSize.cpp.o" "gcc" "src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DynamicRingSize.cpp.o.d"

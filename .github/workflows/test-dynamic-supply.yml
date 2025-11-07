@@ -5,7 +5,7 @@ on:
     branches: [ master, dynamigo-release-v10 ]
     paths: 
       - 'src/CryptoNoteCore/DynamicMoneySupply.*'
-      - 'src/CryptoNoteCore/DepositIndex.*'
+      - 'src/CryptoNoteCore/BankingIndex.*'
       - 'src/CryptoNoteCore/Currency.*'
   pull_request:
     branches: [ master ]

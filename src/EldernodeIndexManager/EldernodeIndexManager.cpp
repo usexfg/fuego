@@ -4,7 +4,7 @@
 #include "crypto/hash.h"
 #include "Logging/LoggerRef.h"
 #include "IBlockchainExplorer.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -20,7 +20,7 @@ EldernodeIndexManager::EldernodeIndexManager(Logging::ILogger& log)
     , m_elderfierConfig(ElderfierServiceConfig::getDefault())
     , m_lastUpdate(std::chrono::system_clock::now())
     , m_blockchainExplorer(nullptr)
-    , m_depositIndex(nullptr)
+    , m_bankingIndex(nullptr)
     , m_monitoringConfig(ElderfierMonitoringConfig::getDefault())
     , m_monitoringActive(false)
     , m_shouldStopMonitoring(false) {
@@ -1166,9 +1166,9 @@ void EldernodeIndexManager::setBlockchainExplorer(IBlockchainExplorer* explorer)
     logger(INFO) << "Blockchain explorer set for Elderfier deposit monitoring";
 }
 
-void EldernodeIndexManager::setDepositIndex(const DepositIndex* depositIndex) {
+void EldernodeIndexManager::setBankingIndex(const BankingIndex* bankingIndex) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_depositIndex = depositIndex;
+    m_bankingIndex = bankingIndex;
     logger(INFO) << "Deposit index set for Elderfier deposit monitoring";
 }
 

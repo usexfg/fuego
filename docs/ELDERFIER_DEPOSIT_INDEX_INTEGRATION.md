@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Elderfier Deposit Index Integration provides **real-time tracking** of whether Elderfier deposit stakes have been spent by leveraging the existing `DepositIndex` and `IBlockchainExplorer` systems. This replaces the placeholder implementation with actual blockchain integration.
+The Elderfier Deposit Index Integration provides **real-time tracking** of whether Elderfier deposit stakes have been spent by leveraging the existing `BankingIndex` and `IBlockchainExplorer` systems. This replaces the placeholder implementation with actual blockchain integration.
 
 ## Table of Contents
 
@@ -48,7 +48,7 @@ Deposit Creation → Output Tracking → Spending Detection → Status Update �
 
 ### 1. Deposit Index Overview
 
-The `DepositIndex` class provides:
+The `BankingIndex` class provides:
 - **Deposit tracking** by height
 - **Burned XFG tracking** for FOREVER deposits
 - **Cumulative statistics** for deposits and burned amounts
@@ -61,21 +61,21 @@ class EldernodeIndexManager {
 private:
     // Blockchain integration
     IBlockchainExplorer* m_blockchainExplorer;
-    const DepositIndex* m_depositIndex;
+    const BankingIndex* m_bankingIndex;
     
 public:
     // Blockchain integration methods
     void setBlockchainExplorer(IBlockchainExplorer* explorer);
-    void setDepositIndex(const DepositIndex* depositIndex);
+    void setBankingIndex(const BankingIndex* bankingIndex);
 };
 ```
 
 ### 3. Deposit Index Usage
 
 ```cpp
-void EldernodeIndexManager::setDepositIndex(const DepositIndex* depositIndex) {
+void EldernodeIndexManager::setBankingIndex(const BankingIndex* bankingIndex) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_depositIndex = depositIndex;
+    m_bankingIndex = bankingIndex;
     logger(INFO) << "Deposit index set for Elderfier deposit monitoring";
 }
 ```
@@ -214,7 +214,7 @@ void setupElderfierMonitoring() {
     eldernodeIndexManager.setBlockchainExplorer(blockchainExplorer);
     
     // Set deposit index
-    eldernodeIndexManager.setDepositIndex(depositIndex);
+    eldernodeIndexManager.setBankingIndex(bankingIndex);
     
     logger(INFO) << "Elderfier deposit monitoring configured with blockchain integration";
 }
@@ -273,7 +273,7 @@ void onTransactionReceived(const Transaction& tx) {
 ```cpp
 // Blockchain integration setup
 void setBlockchainExplorer(IBlockchainExplorer* explorer);
-void setDepositIndex(const DepositIndex* depositIndex);
+void setBankingIndex(const BankingIndex* bankingIndex);
 
 // Output spending detection
 bool isOutputSpent(uint32_t globalIndex) const;
@@ -307,7 +307,7 @@ bool removeElderfierFromENindex(const Crypto::PublicKey& publicKey);
 - **Real-time ENindex management** based on spending status
 
 ### 2. **Efficient Integration**
-- **Leverages existing systems** (DepositIndex, IBlockchainExplorer)
+- **Leverages existing systems** (BankingIndex, IBlockchainExplorer)
 - **No duplicate tracking** - uses blockchain data
 - **Consistent with other deposit types** in the system
 
@@ -329,13 +329,13 @@ The Elderfier Deposit Index Integration provides:
 
 ### **Key Benefits**:
 1. **Real-time spending detection** using blockchain data
-2. **Efficient integration** with existing DepositIndex and IBlockchainExplorer
+2. **Efficient integration** with existing BankingIndex and IBlockchainExplorer
 3. **Automatic status updates** when deposits are spent
 4. **Reliable tracking** based on blockchain verification
 
 ### **Implementation**:
 - **Blockchain Explorer Integration**: Uses IBlockchainExplorer for transaction queries
-- **Deposit Index Integration**: Leverages DepositIndex for deposit tracking
+- **Deposit Index Integration**: Leverages BankingIndex for deposit tracking
 - **Output Spending Detection**: Checks global output indices for spending
 - **Automatic Monitoring**: Integrates with existing monitoring system
 

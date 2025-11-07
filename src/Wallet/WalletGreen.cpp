@@ -536,7 +536,7 @@ namespace CryptoNote
      which includes the term, and then after that the change outputs */
 
     /* Add the deposit outputs to the transaction */
-    auto depositIndex = transaction->addOutput(
+    auto bankingIndex = transaction->addOutput(
         neededMoney - fee,
         {destAddr},
         1,
@@ -1974,17 +1974,17 @@ namespace CryptoNote
     return m_transactions.get<RandomAccessIndex>()[transactionIndex];
   }
 
-  Deposit WalletGreen::getDeposit(size_t depositIndex) const
+  Deposit WalletGreen::getDeposit(size_t bankingIndex) const
   {
     throwIfNotInitialized();
     throwIfStopped();
 
-    if (m_deposits.size() <= depositIndex)
+    if (m_deposits.size() <= bankingIndex)
     {
       throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_DOESNOT_EXIST));
     }
 
-    return m_deposits.get<RandomAccessIndex>()[depositIndex];
+    return m_deposits.get<RandomAccessIndex>()[bankingIndex];
   }
 
   size_t WalletGreen::getTransactionTransferCount(size_t transactionIndex) const
@@ -3507,13 +3507,13 @@ namespace CryptoNote
 
   DepositId WalletGreen::insertDeposit(
       const Deposit &deposit,
-      size_t depositIndexInTransaction,
+      size_t bankingIndexInTransaction,
       const Hash &transactionHash)
   {
 
     Deposit info = deposit;
 
-    info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
+    info.outputInTransaction = static_cast<uint32_t>(bankingIndexInTransaction);
     info.transactionHash = transactionHash;
 
     auto &hashIndex = m_transactions.get<TransactionIndex>();

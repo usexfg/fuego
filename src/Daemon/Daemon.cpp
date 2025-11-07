@@ -91,97 +91,107 @@ namespace
     "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag.", false};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 
-  // Implementations of stake verification functions
-  bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumStake, 
-                                   const CryptoNote::core& ccore, const CryptoNote::Currency& currency) {
+    // Check if terminal supports UTF-8/emoji
+  bool isUtf8Supported() {
+    #ifdef _WIN32
+      // Windows: Check console code page
+      return GetConsoleOutputCP() == CP_UTF8;
+    #else
+      // Unix/Linux/macOS: Check locale
+      const char* locale = std::setlocale(LC_ALL, "");
+      if (!locale) return false;
+      
+      // Check if locale contains UTF-8 or UTF8
+      std::string loc(locale);
+      std::transform(loc.begin(), loc.end(), loc.begin(), ::toupper);
+      return loc.find("UTF-8") != std::string::npos || 
+             loc.find("UTF8") != std::string::npos;
+    #endif
+  }
+
+ namespace
+{
+  // ... existing code (lines 67-93) ...
+  
+  // Replace lines 94-183 with this:
+  
+  // Verify stake by checking for active locked 0xE8 (Elderfier) deposit
+  // This replaces all previous proof-of-stake methods
+  bool verifyStakeWithElderfierDeposit(const std::string& address,
+                                       const CryptoNote::core& ccore,
+                                       const CryptoNote::Currency& currency) {
     try {
-      // Parse the address
-      CryptoNote::AccountPublicAddress acc = boost::value_initialized<CryptoNote::AccountPublicAddress>();
+      // Parse address
+      CryptoNote::AccountPublicAddress acc;
       if (!currency.parseAccountAddressString(address, acc)) {
-        return false; // Invalid address
+        return false;
       }
       
-      // For private blockchain, we need wallet access to verify balance
-      // This requires the daemon to have access to the wallet for this address
+      uint32_t currentHeight = ccore.get_current_blockchain_height();
       
-      // Method 1: Try to use existing wallet in daemon
-      // Check if the daemon has wallet access for this address
-      // For now, we'll use a simple blockchain-based verification
-      return verifyStakeWithDaemonWallet(acc, minimumStake, ccore);
+       // Only scan from block 1M and up
+      if (currentHeight <= 1000000) {
+        return false; // Chain hasn't reached block 1M yet
+      }
       
+      // Scan from block 1M & up
+      uint32_t startHeight = 1000000;
+      
+      for (uint32_t height = startHeight; height < currentHeight; ++height) {
+        std::list<CryptoNote::Block> blocks;
+        ccore.get_blocks(height, 1, blocks);
+        
+        if (blocks.empty()) continue;
+        
+        const CryptoNote::Block& block = blocks.front();
+        
+        for (const Crypto::Hash& txHash : block.transactionHashes) {
+          CryptoNote::Transaction tx;
+          Crypto::Hash blockHash;
+          uint32_t blockHeight;
+          
+          if (!ccore.getTransaction(txHash, tx, blockHash, blockHeight)) {
+            continue;
+          }
+          
+          // Parse transaction extra
+          std::vector<CryptoNote::TransactionExtraField> extraFields;
+          if (!CryptoNote::parseTransactionExtra(tx.extra, extraFields)) {
+            continue;
+          }
+          
+          // Check for 0xE8 (TX_EXTRA_ELDERFIER_DEPOSIT)
+          bool hasElderfierDeposit = false;
+          for (const auto& field : extraFields) {
+            if (field.type() == typeid(CryptoNote::TransactionExtraElderfierDeposit)) {
+              hasElderfierDeposit = true;
+              break;
+            }
+          }
+          
+          if (!hasElderfierDeposit) {
+            continue;
+          }
+          
+          // Check if stake is still locked
+          // Get amount at creation & current height
+          uint64_t depositAtCreation = ccore.getBlockchain().depositAmountAtHeight(height);
+          uint64_t depositAtCurrent = ccore.getBlockchain().depositAmountAtHeight(currentHeight);
+          
+          // If stake exists, make sure its locked & isnt slashed
+          // Check if amount is 800 XFG
+          if (depositAtCreation == 800000000000ULL && depositAtCurrent == depositAtCreation) {
+            return true; // Found active locked 0xE8 deposit
+          }
+        }
+      }
+      
+      return false;
     } catch (const std::exception& e) {
-      return false; // Error during verification
+      return false;
     }
   }
-
-  // Implementations of stake verification functions
-  bool verifyMinimumStakeWithProof(const std::string& address, uint64_t minimumStake) {
-    try {
-      // Alternative method: Generate a small proof of stake
-      // This proves sufficient funds exist without revealing exact balance
-      
-      // Basic proof-of-stake verification
-      // This is a simplified approach that validates the address format
-      // and performs basic checks without revealing the exact balance
-      
-      // TODO: Implement cryptographic proof-of-stake verification
-      // This would require the address to provide a cryptographic proof
-      // that it controls sufficient funds without revealing the exact amount
-      
-      // For now, return true to allow service to start
-      // In a production environment, this should be replaced with actual PoS verification
-      return true;
-      
-    } catch (const std::exception& e) {
-      return false; // Error during verification
-    }
-  }
-
-  bool verifyMinimumStakeWithExternalService(const std::string& address, uint64_t minimumStake) {
-    try {
-      // Alternative method: Query external balance service
-      // This requires network connectivity and trust in external service
-      
-      // Basic external service integration
-      // This would query an external balance service to verify the address has sufficient funds
-      
-      // TODO: Implement external balance service integration
-      // This would require network connectivity and trust in external service
-      // The service should provide a secure API for balance verification
-      
-      // For now, return true to allow service to start
-      // In a production environment, this should be replaced with actual external service integration
-      return true;
-      
-    } catch (const std::exception& e) {
-      return false; // Error during verification
-    }
-  }
-
-  // Helper function for daemon wallet verification
-  bool verifyStakeWithDaemonWallet(const CryptoNote::AccountPublicAddress& acc, 
-                                  uint64_t minimumStake, const CryptoNote::core& ccore) {
-    try {
-      // Basic blockchain-based balance verification
-      // This is a simplified approach that checks if the address has sufficient outputs
-      
-      // For now, we'll use a simple heuristic: check if the address has been active
-      // in recent transactions. This is not a perfect balance check but provides
-      // basic verification for Elderfier service requirements.
-      
-      // TODO: Implement full blockchain scanning for address outputs
-      // This would require scanning all transactions to find outputs to this address
-      // and calculating the actual balance
-      
-      // For now, return true to allow service to start
-      // In a production environment, this should be replaced with actual balance checking
-      return true;
-      
-    } catch (const std::exception& e) {
-      return false; // Error during verification
-    }
-  }
-}
+} 
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
 
@@ -215,28 +225,10 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   return loggerConfiguration;
 }
 
-void renameDataDir() {
-  std::string concealXDir = Tools::getDefaultDataDirectory();
-  boost::filesystem::path concealXDirPath(concealXDir);
-  if (boost::filesystem::exists(concealXDirPath)) {
-    return;
-  }
-
-  std::string dataDirPrefix = concealXDir.substr(0, concealXDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
-  boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
-
-  if (boost::filesystem::exists(cediDirPath)) {
-    boost::filesystem::rename(cediDirPath, concealXDirPath);
-  } else {
-    boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
-    if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
-		boost::filesystem::rename(BcediDirPath, concealXDirPath);
-    }
-  }
-}
-
 int main(int argc, char* argv[])
 {
+  // Set locale for UTF-8 support
+  std::setlocale(LC_ALL, "");
 
 #ifdef _WIN32
   #ifdef _MSC_VER
@@ -248,7 +240,6 @@ int main(int argc, char* argv[])
   LoggerRef logger(logManager, "daemon");
 
   try {
-    renameDataDir();
 
     po::options_description desc_cmd_only("Command line options");
     po::options_description desc_cmd_sett("Command line options and settings options");
@@ -278,7 +269,6 @@ int main(int argc, char* argv[])
    command_line::add_arg(desc_cmd_sett, arg_enable_cors);
 
    command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
-   //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
 
    RpcServerConfig::initOptions(desc_cmd_sett);
    CoreConfig::initOptions(desc_cmd_sett);
@@ -294,7 +284,8 @@ int main(int argc, char* argv[])
 
      if (command_line::get_arg(vm, command_line::arg_help))
      {
-       std::cout << "Fuego || " << PROJECT_VERSION_LONG << ENDL;
+       const char* fuego_icon = isUtf8Supported() ? "🔥 " : "";
+       std::cout << "Fuego" << fuego_icon << PROJECT_VERSION_LONG << ENDL;
        std::cout << desc_options << std::endl;
        return false;
      }
@@ -346,7 +337,7 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		printf("Fuego || GODFLAME || %s\n", PROJECT_VERSION_LONG);
+		printf("Fuego" >> fuego_icon >> PROJECT_VERSION_LONG >> "%s\n");
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;
@@ -465,9 +456,9 @@ int main(int argc, char* argv[])
 
     // Continue with full daemon initialization
 
-    // Skip RPC server configuration to avoid logger issues
-    // rpcServer.restrictRPC(command_line::get_arg(vm, arg_restricted_rpc));
-    // rpcServer.enableCors(command_line::get_arg(vm, arg_enable_cors));
+    // RPC server configs
+     rpcServer.restrictRPC(command_line::get_arg(vm, arg_restricted_rpc));
+     rpcServer.enableCors(command_line::get_arg(vm, arg_enable_cors));
 
     // Initialize Elderfier Service if enabled (STARK verification with stake requirement)
     if (command_line::has_arg(vm, arg_enable_elderfier)) {
@@ -482,11 +473,11 @@ int main(int argc, char* argv[])
 
     // Blockchain loading is done during core initialization above
 
-    // Temporarily disable signal handler for testing
-    // Tools::SignalHandler::install([&dch, &p2psrv] {
-    //   dch.stop_handling();
-    //   p2psrv.sendStopSignal();
-    // });
+    // Temporarily UN-disable signal handler for testing
+   Tools::SignalHandler::install([&dch, &p2psrv] {
+      dch.stop_handling();
+      p2psrv.sendStopSignal();
+     });
 
     printf("INFO: Starting p2p net loop...\n");
     printf("DEBUG: About to call p2psrv.run()\n");
@@ -519,7 +510,6 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-// Note: Stake verification implementations moved inside anonymous namespace
 
 bool command_line_preprocessor(const boost::program_options::variables_map &vm, LoggerRef &logger) {
   bool exit = false;

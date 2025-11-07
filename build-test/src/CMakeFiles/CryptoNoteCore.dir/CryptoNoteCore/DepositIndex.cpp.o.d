@@ -1,6 +1,6 @@
-src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/DepositIndex.cpp.o: \
-  /workspace/src/CryptoNoteCore/DepositIndex.cpp \
-  /workspace/src/CryptoNoteCore/DepositIndex.h \
+src/CMakeFiles/CryptoNoteCore.dir/CryptoNoteCore/BankingIndex.cpp.o: \
+  /workspace/src/CryptoNoteCore/BankingIndex.cpp \
+  /workspace/src/CryptoNoteCore/BankingIndex.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/vector \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/requires_hosted.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/x86_64-linux-gnu/c++/14/bits/c++config.h \

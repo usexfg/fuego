@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 
 #include <algorithm>
 #include <cassert>
@@ -28,22 +28,22 @@
 
 namespace CryptoNote {
 
-DepositIndex::DepositIndex() : blockCount(0), m_ethernalXFG(0) {
+BankingIndex::BankingIndex() : blockCount(0), m_ethernalXFG(0) {
 }
 
-DepositIndex::DepositIndex(DepositHeight expectedHeight) : blockCount(0), m_ethernalXFG(0) {
+BankingIndex::BankingIndex(DepositHeight expectedHeight) : blockCount(0), m_ethernalXFG(0) {
   index.reserve(expectedHeight + 1);
 }
 
-void DepositIndex::reserve(DepositHeight expectedHeight) {
+void BankingIndex::reserve(DepositHeight expectedHeight) {
   index.reserve(expectedHeight + 1);
 }
 
-auto DepositIndex::fullDepositAmount() const -> DepositAmount {
+auto BankingIndex::fullDepositAmount() const -> DepositAmount {
   return index.empty() ? 0 : index.back().amount;
 }
 
-auto DepositIndex::fullInterestAmount() const -> DepositInterest {
+auto BankingIndex::fullInterestAmount() const -> DepositInterest {
   return index.empty() ? 0 : index.back().interest;
 }
 
@@ -67,7 +67,7 @@ static inline bool sumWillOverflow(uint64_t x, uint64_t y) {
   return false;
 }
 
-void DepositIndex::pushBlock(DepositAmount amount, DepositInterest interest) {
+void BankingIndex::pushBlock(DepositAmount amount, DepositInterest interest) {
   DepositAmount lastAmount;
   DepositInterest lastInterest;
   if (index.empty()) {
@@ -88,30 +88,38 @@ void DepositIndex::pushBlock(DepositAmount amount, DepositInterest interest) {
   ++blockCount;
 }
 
-void DepositIndex::popBlock() {
+void BankingIndex::popBlock() {
   assert(blockCount > 0);
+  
+  // Calculate burned amount (if any) in block before popping
+  uint64_t burnedInBlock = 0;
+  if (!m_burnedXfgEntries.empty() && m_burnedXfgEntries.back().height == blockCount) {
+    uint64_t currentTotal = m_ethernalXFG;
+    uint64_t previousTotal = (m_burnedXfgEntries.size() > 1) ? 
+      (--m_burnedXfgEntries.end() - 1)->cumulative_burned : 0;
+    burnedInBlock = currentTotal - previousTotal;
+    
+    m_burnedXfgEntries.pop_back();
+    m_ethernalXFG -= burnedInBlock;  // Update total
+  }
+  
   --blockCount;
   if (!index.empty() && index.back().height == blockCount) {
     index.pop_back();
   }
-  
-  // Also pop burned XFG entry if it exists for this height
-  if (!m_burnedXfgEntries.empty() && m_burnedXfgEntries.back().height == blockCount) {
-    m_burnedXfgEntries.pop_back();
-  }
 }
   
-auto DepositIndex::size() const -> DepositHeight {
+auto BankingIndex::size() const -> DepositHeight {
   return blockCount;
 }
 
-auto DepositIndex::upperBound(DepositHeight height) const -> IndexType::const_iterator {
+auto BankingIndex::upperBound(DepositHeight height) const -> IndexType::const_iterator {
   return std::upper_bound(
       index.cbegin(), index.cend(), height,
-      [] (DepositHeight height, const DepositIndexEntry& left) { return height < left.height; });
+      [] (DepositHeight height, const BankingIndexEntry& left) { return height < left.height; });
 }
 
-size_t DepositIndex::popBlocks(DepositHeight from) {
+size_t BankingIndex::popBlocks(DepositHeight from) {
   if (from >= blockCount) {
     return 0;
   }
@@ -139,7 +147,7 @@ size_t DepositIndex::popBlocks(DepositHeight from) {
   return diff;
 }
 
-auto DepositIndex::depositAmountAtHeight(DepositHeight height) const -> DepositAmount {
+auto BankingIndex::depositAmountAtHeight(DepositHeight height) const -> DepositAmount {
   if (blockCount == 0) {
     return 0;
   } else {
@@ -148,7 +156,7 @@ auto DepositIndex::depositAmountAtHeight(DepositHeight height) const -> DepositA
   }
 }
 
-auto DepositIndex::depositInterestAtHeight(DepositHeight height) const -> DepositInterest {
+auto BankingIndex::depositInterestAtHeight(DepositHeight height) const -> DepositInterest {
   if (blockCount == 0) {
     return 0;
   } else {
@@ -158,11 +166,11 @@ auto DepositIndex::depositInterestAtHeight(DepositHeight height) const -> Deposi
 }
 
 // Enhanced burned XFG tracking methods
-DepositIndex::BurnedAmount DepositIndex::getBurnedXfgAmount() const {
+BankingIndex::BurnedAmount BankingIndex::getBurnedXfgAmount() const {
   return m_ethernalXFG;
 }
 
-DepositIndex::BurnedAmount DepositIndex::getBurnedXfgAtHeight(DepositHeight height) const {
+BankingIndex::BurnedAmount BankingIndex::getBurnedXfgAtHeight(DepositHeight height) const {
   if (m_burnedXfgEntries.empty()) {
     return 0;
   }
@@ -174,7 +182,7 @@ DepositIndex::BurnedAmount DepositIndex::getBurnedXfgAtHeight(DepositHeight heig
   return it == m_burnedXfgEntries.cbegin() ? 0 : (--it)->cumulative_burned;
 }
 
-void DepositIndex::addForeverDeposit(BurnedAmount amount, DepositHeight height) {
+void BankingIndex::addForeverDeposit(BurnedAmount amount, DepositHeight height) {
   if (amount == 0) return;
   
   // Add to regular deposit tracking (existing functionality)
@@ -200,7 +208,7 @@ void DepositIndex::addForeverDeposit(BurnedAmount amount, DepositHeight height) 
 
 
 
-DepositIndex::DepositStats DepositIndex::getStats() const {
+BankingIndex::DepositStats BankingIndex::getStats() const {
   DepositStats stats;
   stats.totalDeposits = static_cast<uint64_t>(fullDepositAmount());
   stats.ethernalXFG = m_ethernalXFG;
@@ -209,26 +217,26 @@ DepositIndex::DepositStats DepositIndex::getStats() const {
   return stats;
 }
 
-void DepositIndex::serialize(ISerializer& s) {
+void BankingIndex::serialize(ISerializer& s) {
   s(blockCount, "blockCount");
   s(m_ethernalXFG, "ethernalXFG");
   
   if (s.type() == ISerializer::INPUT) {
-    readSequence<DepositIndexEntry>(std::back_inserter(index), "index", s);
+    readSequence<BankingIndexEntry>(std::back_inserter(index), "index", s);
     readSequence<BurnedXfgEntry>(std::back_inserter(m_burnedXfgEntries), "burnedXfgEntries", s);
   } else {
-    writeSequence<DepositIndexEntry>(index.begin(), index.end(), "index", s);
+    writeSequence<BankingIndexEntry>(index.begin(), index.end(), "index", s);
     writeSequence<BurnedXfgEntry>(m_burnedXfgEntries.begin(), m_burnedXfgEntries.end(), "burnedXfgEntries", s);
   }
 }
 
-void DepositIndex::DepositIndexEntry::serialize(ISerializer& s) {
+void BankingIndex::BankingIndexEntry::serialize(ISerializer& s) {
   s(height, "height");
   s(amount, "amount");
   s(interest, "interest");
 }
 
-void DepositIndex::BurnedXfgEntry::serialize(ISerializer& s) {
+void BankingIndex::BurnedXfgEntry::serialize(ISerializer& s) {
   s(height, "height");
   s(amount, "amount");
   s(cumulative_burned, "cumulative_burned");

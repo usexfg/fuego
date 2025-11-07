@@ -16,7 +16,7 @@
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "CryptoNoteCore/DynamicMoneySupply.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
@@ -113,8 +113,8 @@ DynamicMoneySupply::MoneySupplyState DynamicMoneySupply::getCurrentState() const
     return m_state;
 }
 
-void DynamicMoneySupply::updateFromDepositIndex(const DepositIndex& depositIndex) {
-    BurnedAmount currentBurned = depositIndex.getBurnedXfgAmount();
+void DynamicMoneySupply::updateFromBankingIndex(const BankingIndex& bankingIndex) {
+    BurnedAmount currentBurned = bankingIndex.getBurnedXfgAmount();
     
     // Calculate the difference
     if (currentBurned > m_state.ethernalXFG) {
@@ -169,7 +169,7 @@ void DynamicMoneySupply::recalculateSupply() {
     m_state.blockRewardSupply = m_state.baseMoneySupply;
     
     // Circulating supply = Total supply - Locked deposits (excluding burn deposits)
-    // Note: Locked deposits calculation is handled separately in DepositIndex
+    // Note: Locked deposits calculation is handled separately in BankingIndex
     m_state.circulatingSupply = m_state.totalSupply;
 }
 

@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master, dynamigo-release-v10, integtest, dynamigo ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, integtest ]
 
 jobs:
   build:

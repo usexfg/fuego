@@ -13,7 +13,7 @@ jobs:
     name: Windows
     runs-on: windows-2022
     env:
-      BOOST_ROOT: C:\local\boost_1_83_0
+      BOOST_ROOT: ""
     steps:
       - uses: actions/checkout@v4
 
@@ -35,38 +35,37 @@ jobs:
           choco install boost-msvc-14.3 -y
 
           Write-Host "Locating Boost installation..."
-          $boostPath = "C:\local\boost_1_83_0"
-          if (Test-Path $boostPath) {
+          $boostPath = Get-ChildItem "C:\local" -Directory -Filter "boost_*" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+
+          if ($boostPath) {
             Write-Host "Found Boost at: $boostPath"
             echo "BOOST_ROOT=$boostPath" >> $env:GITHUB_ENV
-          } else {
-            # Check alternate location
-            $boostPath = Get-ChildItem "C:\local" -Directory -Filter "boost_*" | Select-Object -First 1 -ExpandProperty FullName
-            if ($boostPath) {
-              Write-Host "Found Boost at: $boostPath"
-              echo "BOOST_ROOT=$boostPath" >> $env:GITHUB_ENV
-            } else {
-              Write-Error "Boost installation not found!"
-              exit 1
-            }
+          }
+          else {
+            Write-Error "Boost installation not found in C:\local!"
+            Get-ChildItem "C:\local" -ErrorAction SilentlyContinue
+            exit 1
           }
       - name: Verify Boost Installation
         shell: powershell
         run: |
           Write-Host "Verifying Boost installation..."
           Write-Host "BOOST_ROOT: $env:BOOST_ROOT"
-          if (Test-Path $env:BOOST_ROOT) {
-            Write-Host "✓ BOOST_ROOT exists"
-            Write-Host "Contents:"
-            Get-ChildItem $env:BOOST_ROOT | Select-Object -First 10
-            if (Test-Path "$env:BOOST_ROOT\boost") {
-              Write-Host "✓ boost subdirectory found"
-            } else {
-              Write-Warning "boost subdirectory not found!"
-            }
-          } else {
-            Write-Error "BOOST_ROOT path does not exist!"
+
+          if (-not (Test-Path $env:BOOST_ROOT)) {
+            Write-Error "BOOST_ROOT path does not exist: $env:BOOST_ROOT"
             exit 1
+          }
+
+          Write-Host "✓ BOOST_ROOT exists"
+          Write-Host "Contents:"
+          Get-ChildItem $env:BOOST_ROOT | Select-Object -First 10
+
+          if (Test-Path "$env:BOOST_ROOT\boost") {
+            Write-Host "✓ boost subdirectory found"
+          }
+          else {
+            Write-Warning "boost subdirectory not found!"
           }
 
       - name: Build

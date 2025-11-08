@@ -1,2 +1,0 @@
-/usr/bin/ar qc libEldernodeIndexManager.a CMakeFiles/EldernodeIndexManager.dir/EldernodeIndexManager.cpp.o CMakeFiles/EldernodeIndexManager.dir/EldernodeIndexUtils.cpp.o CMakeFiles/EldernodeIndexManager.dir/ElderfierDepositManager.cpp.o CMakeFiles/EldernodeIndexManager.dir/EldernodeRandomSelector.cpp.o
-/usr/bin/ranlib libEldernodeIndexManager.a

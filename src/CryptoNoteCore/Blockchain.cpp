@@ -2576,7 +2576,14 @@ bool Blockchain::pushTransaction(BlockEntry& block, const Crypto::Hash& transact
 }
 
 void Blockchain::popTransaction(const Transaction& transaction, const Crypto::Hash& transactionHash) {
-  TransactionIndex transactionIndex = m_transactionMap.at(transactionHash);
+  auto it = m_transactionMap.find(transactionHash);
+  if (it == m_transactionMap.end()) {
+    logger(ERROR, BRIGHT_RED) <<
+      "Cannot pop transaction - transaction hash not found in map during rollback. Hash: " << transactionHash;
+    return;
+  }
+  
+  TransactionIndex transactionIndex = it->second;
   for (size_t outputIndex = 0; outputIndex < transaction.outputs.size(); ++outputIndex) {
     const TransactionOutput& output = transaction.outputs[transaction.outputs.size() - 1 - outputIndex];
     if (output.target.type() == typeid(KeyOutput)) {

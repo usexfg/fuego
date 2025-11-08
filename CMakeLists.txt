@@ -129,7 +129,7 @@ else()
     else()
         message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
     endif()
-    
+
     # On macOS, ensure we have the correct ICU library paths
     if(APPLE)
         if(ICU_DATA_LIBRARY)
@@ -160,16 +160,16 @@ add_subdirectory(external)
 add_subdirectory(src)
 
 # --------------------------
-# ICU linking for executables (macOS) - TEMPORARILY DISABLED FOR M1 DEBUG
+# ICU linking for executables (macOS)
 # --------------------------
 if(APPLE AND ICU_FOUND)
-    message(STATUS "ICU linking temporarily disabled for M1 debugging")
-    # foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer)
-    #     if(TARGET ${exec_target})
-    #         message(STATUS "Linking ICU to ${exec_target}")
-    #         target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
-    #     endif()
-    # endforeach()
+    message(STATUS "Linking ICU libraries to executables")
+    foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer)
+        if(TARGET ${exec_target})
+            message(STATUS "Linking ICU to ${exec_target}")
+            target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
+        endif()
+    endforeach()
 endif()
 
 # --------------------------

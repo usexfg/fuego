@@ -487,7 +487,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
       }
     }
 
-      /* Load (or generate) the indices only if Explorer mode is enabled */
+      /* Load (or generate) indices only if Explorer mode is enabled */
       if (m_blockchainIndexesEnabled)
       {
         loadBlockchainIndices();
@@ -597,7 +597,7 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
 
   update_next_comulative_size_limit();
 
-  // Sync Currency (ethernalXFG) with DepositIndex after blockchain load
+  // Sync Currency (ethernalXFG) with BankingIndex after blockchain load
   // This keeps Currency at correct burned total when loading from disk
   uint64_t currentBurned = m_bankingIndex.getBurnedXfgAmount();
   if (currentBurned > 0) {
@@ -619,13 +619,7 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
     std::vector<uint32_t> checkpointHeights = m_checkpoints.getCheckpointHeights();
     for (const auto &checkpointHeight : checkpointHeights)
     {
-      // M1 FIX: Skip checkpoints beyond what we processed in rebuildCache
-      // We only processed up to 500k blocks to avoid the M1 crash
-      if (checkpointHeight >= 500000) {
-        // Skip logging to avoid M1 crashes - just continue
-        continue;
-      }
-
+     
       if (m_blocks.size() <= checkpointHeight)
       {
         return true;
@@ -640,7 +634,6 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
         return false;
       }
     }
-    // Skip logging to avoid M1 issues
      logger(INFO, BRIGHT_WHITE) << "Checkpoints passed";
     return true;
   }
@@ -654,9 +647,6 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
       m_spent_keys.clear();
       m_outputs.clear();
       m_multisignatureOutputs.clear();
-
-      // Process blocks up to 500k to avoid M1 crash while having enough for rollback
-      uint32_t blocksToProcess = std::min(500000u, (uint32_t)m_blocks.size());
 
       for (uint32_t b = 0; b < blocksToProcess; ++b) {
         const BlockEntry &block = m_blocks[b];
@@ -682,18 +672,16 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
           }
           // Interest calculation removed - no on-chain interest
         }
-        pushToDepositIndex(block, interest);
-      }
+    pushToBankingIndex(block, interestSummary); 
+        }
 
       skip_block_processing:
 
       std::chrono::duration<double> duration = std::chrono::steady_clock::now() - timePoint;
     } catch (const std::exception& e) {
-      // Skip logging to avoid M1 issues
        logger(ERROR, BRIGHT_RED) << "Exception in rebuildCache: " << e.what();
       throw;
     } catch (...) {
-      // Skip logging to avoid M1 issues
        logger(ERROR, BRIGHT_RED) << "Unknown exception in rebuildCache";
       throw;
     }
@@ -2321,7 +2309,7 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
   }
 
   pushBlock(block);
-    pushToDepositIndex(block, interestSummary);
+    pushToBankingIndex(block, interestSummary);
 
   auto block_processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - blockProcessingStart).count();
 
@@ -2366,14 +2354,14 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
     return m_bankingIndex.depositInterestAtHeight(static_cast<DepositIndex::DepositHeight>(height));
   }
 
-  void Blockchain::pushToDepositIndex(const BlockEntry &block, uint64_t interest)
+  void Blockchain::pushToBankingIndex(const BlockEntry &block, uint64_t interest)
   {
     int64_t deposit = 0;
     uint64_t permanentBurns = 0;  // Track permanent burns for ethernalXFG
     
     for (const auto &tx : block.transactions)
     {
-      // Parse transaction extra to detect burn types
+      // Parse transaction extra to detect burn types (0X08 0xE8)
       std::vector<TransactionExtraField> extraFields;
       if (parseTransactionExtra(tx.tx.extra, extraFields)) {
         for (const auto& field : extraFields) {

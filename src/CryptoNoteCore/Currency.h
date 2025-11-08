@@ -362,13 +362,10 @@ private:
   // Money supply
   uint64_t m_baseMoneySupply;
   uint64_t m_ethernalXFG;
-  void addEternalFlame(uint64_t amount);
-  void removeEternalFlame(uint64_t amount);
-  void getEternalFlame(uint64_t& amount);
 
-  // Network validation - using hash of the full network ID
+  // Network validation - using hash of network ID
   uint64_t m_fuegoNetworkId;
-  std::string m_fuegoNetworkIdString;  // Full network ID as string
+  std::string m_fuegoNetworkIdString;  // network ID as string
 
   size_t m_maxBlockSizeInitial;
   uint64_t m_maxBlockSizeGrowthSpeedNumerator;

@@ -41,6 +41,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/MinerConfig.h"
+#include "CryptoNoteCore/TransactionExtra.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
 #include "P2p/NetNode.h"
@@ -108,17 +109,11 @@ namespace
              loc.find("UTF8") != std::string::npos;
     #endif
   }
-
- namespace
-{
-  // ... existing code (lines 67-93) ...
-  
-  // Replace lines 94-183 with this:
   
   // Verify stake by checking for active locked 0xE8 (Elderfier) deposit
   // This replaces all previous proof-of-stake methods
   bool verifyStakeWithElderfierDeposit(const std::string& address,
-                                       const CryptoNote::core& ccore,
+                                       CryptoNote::core& ccore,
                                        const CryptoNote::Currency& currency) {
     try {
       // Parse address
@@ -150,7 +145,7 @@ namespace
           Crypto::Hash blockHash;
           uint32_t blockHeight;
           
-          if (!ccore.getTransaction(txHash, tx, blockHash, blockHeight)) {
+          if (!ccore.getTransaction(txHash, tx)) {
             continue;
           }
           
@@ -175,8 +170,8 @@ namespace
           
           // Check if stake is still locked
           // Get amount at creation & current height
-          uint64_t depositAtCreation = ccore.getBlockchain().depositAmountAtHeight(height);
-          uint64_t depositAtCurrent = ccore.getBlockchain().depositAmountAtHeight(currentHeight);
+          uint64_t depositAtCreation = ccore.depositAmountAtHeight(height);
+          uint64_t depositAtCurrent = ccore.depositAmountAtHeight(currentHeight);
           
           // If stake exists, make sure its locked & isnt slashed
           // Check if amount is 800 XFG
@@ -191,7 +186,8 @@ namespace
       return false;
     }
   }
-} 
+
+} // anonymous namespace
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
 
@@ -337,7 +333,7 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		printf("Fuego" >> fuego_icon >> PROJECT_VERSION_LONG >> "%s\n");
+		printf("Fuego %s\n", PROJECT_VERSION_LONG);
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;

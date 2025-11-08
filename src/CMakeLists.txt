@@ -56,7 +56,7 @@ add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
 if(TARGET upnpc-static)
     add_dependencies(P2P upnpc-static)
     target_link_libraries(P2P PUBLIC upnpc-static)
-    target_include_directories(P2P PUBLIC 
+    target_include_directories(P2P PUBLIC
         ${CMAKE_SOURCE_DIR}/external/miniupnpc
         ${CMAKE_BINARY_DIR}/external/miniupnpc
     )
@@ -64,6 +64,7 @@ else()
     message(FATAL_ERROR "upnpc-static target not found. MiniUPnPc static library is required for UPnP support.")
 endif()
 add_library(Serialization STATIC ${Serialization})
+target_link_libraries(Serialization PUBLIC Common)
 add_library(System STATIC ${System})
 add_library(Transfers STATIC ${Transfers})
 add_library(Wallet STATIC ${Wallet} ${WalletLegacy})

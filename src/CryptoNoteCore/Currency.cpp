@@ -182,7 +182,7 @@ void Currency::addEternalFlame(uint64_t amount) {
 void Currency::removeEternalFlame(uint64_t amount) {
   m_ethernalXFG -= amount;
 }
-void Currency::getEternalFlame(uint64_t& amount) {
+void Currency::getEternalFlame(uint64_t& amount) const {
   amount = m_ethernalXFG;
 }
 	
@@ -192,7 +192,7 @@ void Currency::getEternalFlame(uint64_t& amount) {
 
     // Calculate emission while accounting for burns)
     uint64_t Osavvirsak = alreadyGeneratedCoins - getEternalFlame();
-    Osavvirsak = std::max(Osavvirsak, 0ULL);  // Prevent negative values
+    Osavvirsak = std::max(Osavvirsak, static_cast<uint64_t>(0));  // Prevent negative values
 
     assert(Osavvirsak <= m_moneySupply);
     assert(m_emissionSpeedFactor > 0 && m_emissionSpeedFactor <= 8 * sizeof(uint64_t));

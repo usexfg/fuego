@@ -182,7 +182,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-14
+          - os: macos-12
             arch: intel
             arch_flag: x86_64
           - os: macos-14

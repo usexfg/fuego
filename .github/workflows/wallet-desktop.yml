@@ -2,55 +2,55 @@ name: XFG Wallet - Desktop Build
 
 on:
   push:
-    branches: [ master, dynamigo-release-v10, integtest, dynamigo ]
+    branches: [master, dynamigo-release-v10, integtest, dynamigo]
     paths:
-      - 'src/PaymentGate/**'
-      - 'src/PaymentGateService/**'
-      - 'src/Wallet/**'
-      - 'src/WalletLegacy/**'
-      - 'src/SimpleWallet/**'
-      - 'src/JsonRpcServer/**'
-      - 'src/Rpc/**'
-      - 'src/Serialization/**'
-      - 'src/Transfers/**'
-      - 'src/NodeRpcProxy/**'
-      - 'src/InProcessNode/**'
-      - 'src/Logging/**'
-      - 'src/Http/**'
-      - 'src/Common/**'
-      - 'src/Crypto/**'
-      - 'src/CryptoNoteCore/**'
-      - 'src/CryptoNoteProtocol/**'
-      - 'src/P2p/**'
-      - 'src/System/**'
-      - 'CMakeLists.txt'
-      - 'src/CMakeLists.txt'
-      - '.github/workflows/wallet-desktop.yml'
+      - "src/PaymentGate/**"
+      - "src/PaymentGateService/**"
+      - "src/Wallet/**"
+      - "src/WalletLegacy/**"
+      - "src/SimpleWallet/**"
+      - "src/JsonRpcServer/**"
+      - "src/Rpc/**"
+      - "src/Serialization/**"
+      - "src/Transfers/**"
+      - "src/NodeRpcProxy/**"
+      - "src/InProcessNode/**"
+      - "src/Logging/**"
+      - "src/Http/**"
+      - "src/Common/**"
+      - "src/Crypto/**"
+      - "src/CryptoNoteCore/**"
+      - "src/CryptoNoteProtocol/**"
+      - "src/P2p/**"
+      - "src/System/**"
+      - "CMakeLists.txt"
+      - "src/CMakeLists.txt"
+      - ".github/workflows/wallet-desktop.yml"
   pull_request:
-    branches: [ master ]
+    branches: [master]
     paths:
-      - 'src/PaymentGate/**'
-      - 'src/PaymentGateService/**'
-      - 'src/Wallet/**'
-      - 'src/WalletLegacy/**'
-      - 'src/SimpleWallet/**'
-      - 'src/JsonRpcServer/**'
-      - 'src/Rpc/**'
-      - 'src/Serialization/**'
-      - 'src/Transfers/**'
-      - 'src/NodeRpcProxy/**'
-      - 'src/InProcessNode/**'
-      - 'src/Logging/**'
-      - 'src/Http/**'
-      - 'src/Common/**'
-      - 'src/Crypto/**'
-      - 'src/CryptoNoteCore/**'
-      - 'src/CryptoNoteProtocol/**'
-      - 'src/P2p/**'
-      - 'src/System/**'
-      - 'CMakeLists.txt'
-      - 'src/CMakeLists.txt'
-      - '.github/workflows/wallet-desktop.yml'
+      - "src/PaymentGate/**"
+      - "src/PaymentGateService/**"
+      - "src/Wallet/**"
+      - "src/WalletLegacy/**"
+      - "src/SimpleWallet/**"
+      - "src/JsonRpcServer/**"
+      - "src/Rpc/**"
+      - "src/Serialization/**"
+      - "src/Transfers/**"
+      - "src/NodeRpcProxy/**"
+      - "src/InProcessNode/**"
+      - "src/Logging/**"
+      - "src/Http/**"
+      - "src/Common/**"
+      - "src/Crypto/**"
+      - "src/CryptoNoteCore/**"
+      - "src/CryptoNoteProtocol/**"
+      - "src/P2p/**"
+      - "src/System/**"
+      - "CMakeLists.txt"
+      - "src/CMakeLists.txt"
+      - ".github/workflows/wallet-desktop.yml"
   workflow_dispatch:
 
 jobs:
@@ -131,10 +131,11 @@ jobs:
 
       # -------------------- Build --------------------
       - name: Configure CMake
+        shell: bash
         run: |
           mkdir -p build-desktop
           cd build-desktop
-          
+
           if [ "${{ matrix.os }}" = "windows-2022" ]; then
             cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_TESTS=OFF
           else
@@ -142,6 +143,7 @@ jobs:
           fi
 
       - name: Build Desktop Wallet
+        shell: bash
         run: |
           cd build-desktop
           if [ "${{ matrix.os }}" = "windows-2022" ]; then
@@ -152,6 +154,7 @@ jobs:
 
       # -------------------- Verification --------------------
       - name: Verify Desktop binaries
+        shell: bash
         run: |
           cd build-desktop
           if [ "${{ matrix.os }}" = "windows-2022" ]; then
@@ -166,9 +169,10 @@ jobs:
 
       # -------------------- Package Creation --------------------
       - name: Create Desktop release package
+        shell: bash
         run: |
           mkdir -p release-${{ matrix.platform }}
-          
+
           if [ "${{ matrix.os }}" = "windows-2022" ]; then
             cp build-desktop/src/${{ matrix.build_type }}/walletd.exe release-${{ matrix.platform }}/
             cp build-desktop/src/${{ matrix.build_type }}/fuego-wallet-cli.exe release-${{ matrix.platform }}/
@@ -176,28 +180,28 @@ jobs:
             cp build-desktop/src/walletd release-${{ matrix.platform }}/
             cp build-desktop/src/fuego-wallet-cli release-${{ matrix.platform }}/
           fi
-          
+
           # Create platform-specific README
           cat > release-${{ matrix.platform }}/README.md << EOF
           # XFG Wallet for ${{ matrix.platform }}
-          
+
           This package contains the XFG wallet binaries built for ${{ matrix.platform }}.
-          
+
           ## Binaries
           - `walletd`: Wallet daemon service (for desktop wallet apps)
           - `fuego-wallet-cli`: Command line wallet interface
-          
+
           ## Usage
           These binaries are designed for desktop wallet applications.
           The `walletd` service provides the core wallet functionality via JSON-RPC API.
-          
+
           ## Platform Details
           - Platform: ${{ matrix.platform }}
           - Build Type: ${{ matrix.build_type }}
           - Commit: ${{ github.sha }}
           - Build Date: $(date -u)
           EOF
-          
+
           # Create platform-specific archive
           if [ "${{ matrix.os }}" = "windows-2022" ]; then
             powershell Compress-Archive -Path release-${{ matrix.platform }}/* -DestinationPath ${{ matrix.artifact_name }}-${{ github.sha }}.zip
@@ -225,7 +229,7 @@ jobs:
     name: Test Desktop Wallet
     runs-on: ubuntu-22.04
     needs: build-desktop-wallet
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -237,18 +241,19 @@ jobs:
           path: linux-binaries/
 
       - name: Test Linux wallet functionality
+        shell: bash
         run: |
           # Test that binaries are valid
           file linux-binaries/walletd
           file linux-binaries/fuego-wallet-cli
-          
+
           # Verify they're executable
           ls -la linux-binaries/
-          
+
           # Test basic functionality
           timeout 10s linux-binaries/walletd --help || echo "Help command completed or timed out as expected"
           timeout 10s linux-binaries/fuego-wallet-cli --help || echo "Help command completed or timed out as expected"
-          
+
           echo "Linux desktop wallet binaries verified successfully!"
 
   create-release:
@@ -256,7 +261,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [build-desktop-wallet, test-desktop-wallet]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -267,25 +272,26 @@ jobs:
           path: release-artifacts/
 
       - name: Create release notes
+        shell: bash
         run: |
           cat > release-notes.md << 'EOF'
           # XFG Wallet Release ${{ github.sha }}
-          
+
           This release contains XFG wallet binaries for desktop platforms.
-          
+
           ## Platforms
           - Linux (x86_64)
           - macOS (x86_64/ARM64)
           - Windows (x86_64)
-          
+
           ## Binaries
           - `walletd`: Wallet daemon service
           - `fuego-wallet-cli`: Command line wallet interface
-          
+
           ## Usage
           These binaries are designed for desktop wallet applications.
           The `walletd` service provides core wallet functionality via JSON-RPC API.
-          
+
           ## Build Information
           - Commit: ${{ github.sha }}
           - Build Date: $(date -u)

@@ -333,7 +333,28 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		printf("Fuego %s\n", PROJECT_VERSION_LONG);
+		logger(INFO, BRIGHT_MAGENTA) <<
+#ifdef _WIN32
+" \n"		
+"       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n"
+"       888        888     888 888       d88P  Y88b d88P` `Y88b  \n"
+"       888        888     888 888       888    888 888     888  \n"
+"       8888888    888     888 8888888   888        888     888  \n"
+"       888        888     888 888       888  88888 888     888  \n"
+"       888        888     888 888       888    888 888     888  \n"
+"       888        Y88b. .d88P 888       Y88b  d88P Y88b. .d88P  \n"
+"       888         `Y88888P`  8888888888 `Y8888P88  `Y88888P`   \n"                                
+#else
+" \n"
+" ░░░░░░░ ░░    ░░ ░░░░░░░  ░░░░░░   ░░░░░░  \n"
+" ▒▒      ▒▒    ▒▒ ▒▒      ▒▒       ▒▒    ▒▒ \n"
+" ▒▒▒▒▒   ▒▒    ▒▒ ▒▒▒▒▒   ▒▒   ▒▒▒ ▒▒    ▒▒ \n"
+" ▓▓      ▓▓    ▓▓ ▓▓      ▓▓    ▓▓ ▓▓    ▓▓ \n"
+" ██       ██████  ███████  ██████   ██████  \n"
+#endif
+			"\n"
+			<< "             "  PROJECT_VERSION_LONG "\n"
+			"\n";
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;

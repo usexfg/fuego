@@ -648,6 +648,8 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
       m_outputs.clear();
       m_multisignatureOutputs.clear();
 
+      uint32_t blocksToProcess = std::min(500000u, (uint32_t)m_blocks.size());
+
       for (uint32_t b = 0; b < blocksToProcess; ++b) {
         const BlockEntry &block = m_blocks[b];
         Crypto::Hash blockHash = get_block_hash(block.bl);
@@ -672,8 +674,8 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
           }
           // Interest calculation removed - no on-chain interest
         }
-    pushToBankingIndex(block, interestSummary); 
-        }
+        pushToBankingIndex(block, interest);
+      }
 
       skip_block_processing:
 
@@ -2345,13 +2347,13 @@ uint64_t Blockchain::fullDepositAmount() const {
 
 uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  return m_bankingIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
+  return m_bankingIndex.depositAmountAtHeight(static_cast<BankingIndex::DepositHeight>(height));
 }
 
   uint64_t Blockchain::depositInterestAtHeight(size_t height) const
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-    return m_bankingIndex.depositInterestAtHeight(static_cast<DepositIndex::DepositHeight>(height));
+    return m_bankingIndex.depositInterestAtHeight(static_cast<BankingIndex::DepositHeight>(height));
   }
 
   void Blockchain::pushToBankingIndex(const BlockEntry &block, uint64_t interest)

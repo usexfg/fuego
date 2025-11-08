@@ -226,25 +226,43 @@ public:
       printf("INFO: %soutputs\n", operation.c_str());
       if (s.type() == ISerializer::INPUT)
       {
-        phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "outputs.dat").c_str());
-        m_bs.m_outputs.load(ar_in);
+        // Manual serialization for non-trivially-copyable types
+        std::vector<std::pair<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>>> temp;
+        s(temp, "outputs");
+        m_bs.m_outputs.clear();
+        for (const auto& pair : temp) {
+          m_bs.m_outputs.emplace(pair.first, pair.second);
+        }
       }
       else
       {
-        phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "outputs.dat").c_str());
-        m_bs.m_outputs.dump(ar_out);
+        std::vector<std::pair<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>>> temp;
+        temp.reserve(m_bs.m_outputs.size());
+        for (const auto& pair : m_bs.m_outputs) {
+          temp.emplace_back(pair.first, pair.second);
+        }
+        s(temp, "outputs");
       }
 
       printf("INFO: %smulti-signature outputs\n", operation.c_str());
       if (s.type() == ISerializer::INPUT)
       {
-        phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "multisigoutputs.dat").c_str());
-        m_bs.m_multisignatureOutputs.load(ar_in);
+        // Manual serialization for non-trivially-copyable types
+        std::vector<std::pair<uint64_t, std::vector<MultisignatureOutputUsage>>> temp;
+        s(temp, "multisig_outputs");
+        m_bs.m_multisignatureOutputs.clear();
+        for (const auto& pair : temp) {
+          m_bs.m_multisignatureOutputs.emplace(pair.first, pair.second);
+        }
       }
       else
       {
-        phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "multisigoutputs.dat").c_str());
-        m_bs.m_multisignatureOutputs.dump(ar_out);
+        std::vector<std::pair<uint64_t, std::vector<MultisignatureOutputUsage>>> temp;
+        temp.reserve(m_bs.m_multisignatureOutputs.size());
+        for (const auto& pair : m_bs.m_multisignatureOutputs) {
+          temp.emplace_back(pair.first, pair.second);
+        }
+        s(temp, "multisig_outputs");
       }
 
       printf("INFO: %sbanking index\n", operation.c_str());

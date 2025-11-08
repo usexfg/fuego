@@ -224,10 +224,28 @@ public:
       }
 
       printf("INFO: %soutputs\n", operation.c_str());
-      s(m_bs.m_outputs, "outputs");
+      if (s.type() == ISerializer::INPUT)
+      {
+        phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "outputs.dat").c_str());
+        m_bs.m_outputs.load(ar_in);
+      }
+      else
+      {
+        phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "outputs.dat").c_str());
+        m_bs.m_outputs.dump(ar_out);
+      }
 
       printf("INFO: %smulti-signature outputs\n", operation.c_str());
-      s(m_bs.m_multisignatureOutputs, "multisig_outputs");
+      if (s.type() == ISerializer::INPUT)
+      {
+        phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "multisigoutputs.dat").c_str());
+        m_bs.m_multisignatureOutputs.load(ar_in);
+      }
+      else
+      {
+        phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "multisigoutputs.dat").c_str());
+        m_bs.m_multisignatureOutputs.dump(ar_out);
+      }
 
       printf("INFO: %sbanking index\n", operation.c_str());
       s(m_bs.m_bankingIndex, "deposit_index");

@@ -481,14 +481,16 @@ int main(int argc, char ** argv)
 	char ** commandargv = 0;
 	int commandargc = 0;
 	struct UPNPDev * devlist = 0;
-	char lanaddr[64];	/* my ip address on the LAN */
+	char lanaddr[64] = "unset";	/* my ip address on the LAN */
 	int i;
 	const char * rootdescurl = 0;
 	const char * multicastif = 0;
 	const char * minissdpdpath = 0;
+	int localport = 0;  /* Use system-assigned port */
 	int retcode = 0;
 	int error = 0;
 	int ipv6 = 0;
+	unsigned char ttl = 2;	/* defaulting to 2 */
 	const char * description = 0;
 
 #ifdef _WIN32
@@ -519,8 +521,12 @@ int main(int argc, char ** argv)
 				multicastif = argv[++i];
 			else if(argv[i][1] == 'p')
 				minissdpdpath = argv[++i];
+			else if(argv[i][1] == 'l')
+				localport = atoi(argv[++i]);
 			else if(argv[i][1] == '6')
 				ipv6 = 1;
+			else if(argv[i][1] == 't')
+				ttl = (unsigned char)atoi(argv[++i]);
 			else if(argv[i][1] == 'e')
 				description = argv[++i];
 			else
@@ -571,7 +577,7 @@ int main(int argc, char ** argv)
 
 	if( rootdescurl
 	  || (devlist = upnpDiscover(2000, multicastif, minissdpdpath,
-	                             0/*sameport*/, ipv6, &error)))
+	                             localport, ipv6, &error)))
 	{
 		struct UPNPDev * device;
 		struct UPNPUrls urls;

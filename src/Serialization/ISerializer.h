@@ -78,6 +78,7 @@ bool serialize(T& value, Common::StringView name, ISerializer& serializer) {
 
 template<typename T>
 void serialize(T& value, ISerializer& serializer) {
+  // Call the object's serialize method if it exists
   value.serialize(serializer);
 }
 

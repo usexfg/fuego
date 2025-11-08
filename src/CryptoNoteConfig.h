@@ -30,7 +30,7 @@ namespace CryptoNote
 	{
 		const uint64_t DIFFICULTY_TARGET = 480;	
 		const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
-		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 500000000;
+		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 8000000;
 		const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
     const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
 		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;	
@@ -57,8 +57,8 @@ namespace CryptoNote
 		const size_t   CRYPTONOTE_COIN_VERSION                       = 1;
 		const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT 	         = 7;
 		const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
-		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 800000; //size of block (bytes) after reward for block is calculated in block-size
-		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2  = 800000;
+		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 430080; //size of block (bytes) after reward for block is calculated in block-size (420KB)
+		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2  = 430080;
 		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1  = 20000;
 		const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 		const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
@@ -147,10 +147,10 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-    const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
+        const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
-    const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
-    const uint32_t UPGRADE_HEIGHT_V10                            = 980000; //Dynamigo  (dmwda|dynamaxin|ethernalXFG)
+        const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
+        const uint32_t UPGRADE_HEIGHT_V10                            = 980000; //Dynamigo  (dmwda|dynamaxin|ethernalXFG)
 
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -264,7 +264,7 @@ namespace CryptoNote
  	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 8;  		
     const uint32_t TESTNET_DEPOSIT_TERM_YIELD = TESTNET_DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
 //__________________________________________________________________________________________________________________________
-                                     	// DMWDA TESTNET parameters
+                                     	// TESTNET DMWDA parameters
 //--------------------------------------------------------------------------------------------------------------------------
  		const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
  		const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  

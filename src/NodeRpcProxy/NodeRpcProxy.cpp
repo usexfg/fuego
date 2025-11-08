@@ -115,11 +115,8 @@ bool NodeRpcProxy::shutdown() {
   assert(m_state == STATE_INITIALIZED);
   assert(m_dispatcher != nullptr);
 
-  m_dispatcher->remoteSpawn([this]() {
-    m_stop = true;
-    // Run all spawned contexts
-    m_dispatcher->yield();
-  });
+  // Simplified for stub dispatcher - just set stop flag
+  m_stop = true;
 
   if (m_workerThread.joinable()) {
     m_workerThread.join();
@@ -151,18 +148,18 @@ void NodeRpcProxy::workerThread(const INode::Callback& initialized_callback) {
     initialized_callback(std::error_code());
 
     contextGroup.spawn([this]() {
-      Timer pullTimer(*m_dispatcher);
+      Timer pullTimer;
       while (!m_stop) {
         updateNodeStatus();
         if (!m_stop) {
-          pullTimer.sleep(std::chrono::milliseconds(m_pullInterval));
+          // Simplified sleep using std::this_thread::sleep_for
+          std::this_thread::sleep_for(std::chrono::milliseconds(m_pullInterval));
         }
       }
     });
 
     contextGroup.wait();
-    // Make sure all remote spawns are executed
-    m_dispatcher->yield();
+    // Simplified - stub dispatcher doesn't need yield
   } catch (std::exception&) {
   }
 
@@ -663,20 +660,19 @@ void NodeRpcProxy::scheduleRequest(std::function<std::error_code()>&& procedure,
     Callback callback;
   };
   assert(m_dispatcher != nullptr && m_context_group != nullptr);
-  m_dispatcher->remoteSpawn(Wrapper([this](std::function<std::error_code()>& procedure, Callback& callback) {
-    m_context_group->spawn(Wrapper([this](std::function<std::error_code()>& procedure, const Callback& callback) {
-        if (m_stop) {
-          callback(std::make_error_code(std::errc::operation_canceled));
-        } else {
-          std::error_code ec = procedure();
-          if (m_connected != m_httpClient->isConnected()) {
-            m_connected = m_httpClient->isConnected();
-            m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
-          }
-          callback(m_stop ? std::make_error_code(std::errc::operation_canceled) : ec);
+  // Simplified for stub dispatcher - execute directly
+  m_context_group->spawn(Wrapper([this](std::function<std::error_code()>& procedure, const Callback& callback) {
+      if (m_stop) {
+        callback(std::make_error_code(std::errc::operation_canceled));
+      } else {
+        std::error_code ec = procedure();
+        if (m_connected != m_httpClient->isConnected()) {
+          m_connected = m_httpClient->isConnected();
+          m_rpcProxyObserverManager.notify(&INodeRpcProxyObserver::connectionStatusUpdated, m_connected);
         }
-      }, std::move(procedure), std::move(callback)));
-    }, std::move(procedure), callback));
+        callback(m_stop ? std::make_error_code(std::errc::operation_canceled) : ec);
+      }
+    }, std::move(procedure), std::move(callback)));
 }
 
 template <typename Request, typename Response>

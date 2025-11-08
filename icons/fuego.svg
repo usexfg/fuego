@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="fireGradient" cx="50%" cy="80%" r="60%">
+      <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#F7931E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFD23F;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" rx="32" fill="#1a1a1a"/>
+  <!-- Flame shape -->
+  <path d="M128 40 C100 60, 80 90, 80 130 C80 170, 100 200, 128 210 C156 200, 176 170, 176 130 C176 90, 156 60, 128 40 Z" fill="url(#fireGradient)"/>
+  <!-- Inner flame -->
+  <path d="M128 60 C110 75, 100 95, 100 120 C100 145, 110 165, 128 175 C146 165, 156 145, 156 120 C156 95, 146 75, 128 60 Z" fill="#FFE66D"/>
+  <!-- Core -->
+  <ellipse cx="128" cy="130" rx="15" ry="25" fill="#FFF3A0"/>
+  <!-- Text -->
+  <text x="128" y="240" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#FFFFFF">FUEGO</text>
+</svg>

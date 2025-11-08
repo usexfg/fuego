@@ -42,6 +42,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/TransactionApi.h"
 #include <CryptoNoteCore/TransactionExtra.h>
+#include "CryptoNoteCore/DepositCommitment.h"
 #include "crypto/crypto.h"
 #include "Transfers/TransfersContainer.h"
 #include "WalletSerializationV1.h"
@@ -76,7 +77,8 @@ namespace
   {
     int index = 0;
     return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights](uint64_t sum, const CryptoNote::TransactionOutputInformation &deposit) {
-      return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
+      // Interest calculation removed - no on-chain interest
+      return sum + deposit.amount;
     });
   }
 
@@ -480,7 +482,8 @@ namespace CryptoNote
       uint64_t term,
       std::string sourceAddress,
       std::string destinationAddress,
-      std::string &transactionHash)
+      std::string &transactionHash,
+      const DepositCommitment& commitment)
   {
 
     throwIfNotInitialized();
@@ -533,7 +536,7 @@ namespace CryptoNote
      which includes the term, and then after that the change outputs */
 
     /* Add the deposit outputs to the transaction */
-    auto depositIndex = transaction->addOutput(
+    auto bankingIndex = transaction->addOutput(
         neededMoney - fee,
         {destAddr},
         1,
@@ -587,7 +590,63 @@ namespace CryptoNote
     transaction->getTransactionSecretKey(transactionSK);
     transaction->setUnlockTime(0);
 
-    /* Add the transaction extra */
+    /* Process commitment based on deposit type */
+    bool isBurnDeposit = (term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
+    
+    if (isBurnDeposit) {
+      m_logger(DEBUGGING, BRIGHT_GREEN) << "Creating burn deposit with HEAT commitment for " << amount << " XFG";
+      
+      /* Use provided HEAT commitment or generate one */
+      DepositCommitment finalCommitment = commitment;
+      if (commitment.type != CommitmentType::HEAT) {
+        // Generate HEAT commitment automatically (pure, no recipient)
+        finalCommitment = DepositCommitmentGenerator::generateHeatCommitment(
+          amount, commitment.metadata);
+        
+        m_logger(DEBUGGING, BRIGHT_GREEN) << "Generated HEAT commitment: " << Common::podToHex(finalCommitment.commitment);
+      }
+      
+      /* Calculate HEAT amount based on XFG amount (0.8 XFG = 8M HEAT) */
+      uint64_t heatAmount = DepositCommitmentGenerator::convertXfgToHeat(amount);
+      
+      /* Add HEAT commitment to transaction extra */
+      std::vector<uint8_t> extra;
+      if (!CryptoNote::createTxExtraWithHeatCommitment(finalCommitment.commitment, heatAmount, finalCommitment.metadata, extra))
+      {
+        throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR), "Failed to create HEAT commitment in transaction extra");
+      }
+      
+      /* Append HEAT commitment to transaction extra */
+      transaction->appendExtra(extra);
+      
+      m_logger(DEBUGGING, BRIGHT_GREEN) << "HEAT commitment added to burn deposit transaction: " << amount << " XFG = " << heatAmount << " HEAT";
+    } else {
+      m_logger(DEBUGGING, BRIGHT_GREEN) << "Creating yield deposit with YIELD commitment for " << amount << " XFG";
+      
+      /* Use provided YIELD commitment or generate one */
+      DepositCommitment finalCommitment = commitment;
+      if (commitment.type != CommitmentType::YIELD) {
+        // Generate YIELD commitment automatically
+        finalCommitment = DepositCommitmentGenerator::generateYieldCommitment(
+          term, amount, commitment.metadata);
+        
+        m_logger(DEBUGGING, BRIGHT_GREEN) << "Generated YIELD commitment: " << Common::podToHex(finalCommitment.commitment);
+      }
+      
+      /* Add YIELD commitment to transaction extra */
+      std::vector<uint8_t> extra;
+      if (!CryptoNote::createTxExtraWithYieldCommitment(finalCommitment.commitment, amount, term, "standard", finalCommitment.metadata, extra))
+      {
+        throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR), "Failed to create YIELD commitment in transaction extra");
+      }
+      
+      /* Append YIELD commitment to transaction extra */
+      transaction->appendExtra(extra);
+      
+      m_logger(DEBUGGING, BRIGHT_GREEN) << "YIELD commitment added to yield deposit transaction: " << amount << " XFG";
+    }
+
+    /* Add the transaction extra for messages (if any) */
     std::vector<WalletMessage> messages;
     Crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
     CryptoNote::KeyPair kp = {publicKey, transactionSK};
@@ -1915,17 +1974,17 @@ namespace CryptoNote
     return m_transactions.get<RandomAccessIndex>()[transactionIndex];
   }
 
-  Deposit WalletGreen::getDeposit(size_t depositIndex) const
+  Deposit WalletGreen::getDeposit(size_t bankingIndex) const
   {
     throwIfNotInitialized();
     throwIfStopped();
 
-    if (m_deposits.size() <= depositIndex)
+    if (m_deposits.size() <= bankingIndex)
     {
       throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_DOESNOT_EXIST));
     }
 
-    return m_deposits.get<RandomAccessIndex>()[depositIndex];
+    return m_deposits.get<RandomAccessIndex>()[bankingIndex];
   }
 
   size_t WalletGreen::getTransactionTransferCount(size_t transactionIndex) const
@@ -3438,7 +3497,7 @@ namespace CryptoNote
     deposit.creatingTransactionId = creatingTransactionId;
     deposit.term = depositOutput.term;
     deposit.spendingTransactionId = WALLET_INVALID_TRANSACTION_ID;
-    deposit.interest = currency.calculateInterest(deposit.amount, deposit.term, height);
+    // Interest calculation removed - no on-chain interest
     deposit.height = height;
     deposit.unlockHeight = height + depositOutput.term;
     deposit.locked = true;
@@ -3448,13 +3507,13 @@ namespace CryptoNote
 
   DepositId WalletGreen::insertDeposit(
       const Deposit &deposit,
-      size_t depositIndexInTransaction,
+      size_t bankingIndexInTransaction,
       const Hash &transactionHash)
   {
 
     Deposit info = deposit;
 
-    info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
+    info.outputInTransaction = static_cast<uint32_t>(bankingIndexInTransaction);
     info.transactionHash = transactionHash;
 
     auto &hashIndex = m_transactions.get<TransactionIndex>();
@@ -4606,6 +4665,51 @@ namespace CryptoNote
     m_walletsContainer.clear();
 
     shutdown();
+  }
+
+  // Burn deposit secret management implementation
+  void WalletGreen::addBurnDepositSecret(const std::string& transactionHash, const Crypto::SecretKey& secret, uint64_t amount, const std::vector<uint8_t>& metadata) {
+    // Store burn deposit secret locally (never on blockchain)
+    WalletGreen::BurnDepositInfo burnInfo(transactionHash, secret, amount, metadata);
+    burnInfo.timestamp = static_cast<uint64_t>(std::time(nullptr));
+    
+    m_burnDepositSecrets[transactionHash] = burnInfo;
+    
+    // TODO: Persist to wallet file for backup
+    // This ensures secrets survive wallet restarts
+  }
+
+  bool WalletGreen::getBurnDepositSecret(const std::string& transactionHash, Crypto::SecretKey& secret, uint64_t& amount, std::vector<uint8_t>& metadata) {
+    auto it = m_burnDepositSecrets.find(transactionHash);
+    if (it == m_burnDepositSecrets.end()) {
+      return false;  // Secret not found
+    }
+    
+    const WalletGreen::BurnDepositInfo& burnInfo = it->second;
+    secret = burnInfo.secret;
+    amount = burnInfo.amount;
+    metadata = burnInfo.metadata;
+    
+    return true;
+  }
+
+  bool WalletGreen::hasBurnDepositSecret(const std::string& transactionHash) {
+    return m_burnDepositSecrets.find(transactionHash) != m_burnDepositSecrets.end();
+  }
+
+  void WalletGreen::markBurnDepositBPDFGenerated(const std::string& transactionHash) {
+    auto it = m_burnDepositSecrets.find(transactionHash);
+    if (it != m_burnDepositSecrets.end()) {
+      it->second.bpdfGenerated = true;
+    }
+  }
+
+  std::vector<WalletGreen::BurnDepositInfo> WalletGreen::getAllBurnDeposits() {
+    std::vector<WalletGreen::BurnDepositInfo> result;
+    for (const auto& pair : m_burnDepositSecrets) {
+      result.push_back(pair.second);
+    }
+    return result;
   }
 
 } //namespace CryptoNote

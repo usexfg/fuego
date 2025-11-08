@@ -1,4 +1,4 @@
-<b>Development Process</b>
+<b>USEXFG Development Process</b>
 
 Developers work in their own trees, then submit pull requests when they think their feature or bug fix is ready.
 The patch will be accepted if there is broad consensus that it is a good thing.

@@ -1,5 +1,5 @@
-// Copyright (c) 2025 Elderfire Privacy Council
 // Copyright (c) 2017-2026 Fuego Developers
+// Copyright (c) 2025 Elderfire Privacy Group
 //
 // This file is part of Fuego.
 //

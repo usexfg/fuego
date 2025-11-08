@@ -17,6 +17,7 @@
 
 #include "ITransaction.h"
 
+#include <memory>
 #include <numeric>
 #include <system_error>
 

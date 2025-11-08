@@ -30,10 +30,11 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <stdexcept>
 #include <parallel_hashmap/phmap.h>
 
-using phmap::flat_hash_map;
-using phmap::parallel_flat_hash_map;
+// using phmap::flat_hash_map;
+// using phmap::parallel_flat_hash_map;
 namespace CryptoNote
 {
 
@@ -42,7 +43,7 @@ typename std::enable_if<std::is_pod<T>::value>::type
 serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
 {
   std::string blob;
-  if (serializer.type() == ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::ISerializer::INPUT)
   {
     serializer.binary(blob, name);
 
@@ -59,23 +60,21 @@ serializeAsBinary(std::vector<T> &value, Common::StringView name, CryptoNote::IS
     {
       memcpy(&value[0], blob.data(), blobSize);
     }
+  } else {
+    if (!value.empty())
+    {
+      blob.assign(reinterpret_cast<const char *>(&value[0]), value.size() * sizeof(T));
+    }
+    serializer.binary(blob, name);
   }
-else
-{
-  if (!value.empty())
-  {
-    blob.assign(reinterpret_cast<const char *>(&value[0]), value.size() * sizeof(T));
-  }
-  serializer.binary(blob, name);
 }
-} // namespace CryptoNote
 
 template <typename T>
 typename std::enable_if<std::is_pod<T>::value>::type
 serializeAsBinary(std::list<T> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
 {
   std::string blob;
-  if (serializer.type() == ISerializer::INPUT)
+  if (serializer.type() == CryptoNote::ISerializer::INPUT)
   {
     serializer.binary(blob, name);
 
@@ -257,17 +256,19 @@ bool serialize(std::unordered_map<K, V, Hash> &value, Common::StringView name, C
   return serializeMap(value, name, serializer, [&value](size_t size) { value.reserve(size); });
 }
 
-template <typename K, typename V, typename Hash>
-bool serialize(flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
-{
-  return serializeMap(value, name, serializer, [](size_t size) {});
-}
+// Commented out to avoid conflict with std::unordered_map serialization
+// template <typename K, typename V, typename Hash>
+// bool serialize(flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+// {
+//   return serializeMap(value, name, serializer, [](size_t size) {});
+// }
 
-template <typename K, typename V, typename Hash>
-bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
-{
-  return serializeMap(value, name, serializer, [](size_t size) {});
-}
+// Commented out to avoid conflict with std::unordered_map serialization
+// template <typename K, typename V, typename Hash>
+// bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+// {
+//   return serializeMap(value, name, serializer, [](size_t size) {});
+// }
 
   template <typename K, typename V, typename Hash>
   bool serialize(std::unordered_multimap<K, V, Hash> & value, Common::StringView name, CryptoNote::ISerializer & serializer)
@@ -294,14 +295,14 @@ bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView nam
   }
 
   template <typename T1, typename T2>
-  void serialize(std::pair<T1, T2> & value, ISerializer & s)
+  void serialize(std::pair<T1, T2> & value, CryptoNote::ISerializer & s)
   {
     s(value.first, "first");
     s(value.second, "second");
   }
 
   template <typename Element, typename Iterator>
-  void writeSequence(Iterator begin, Iterator end, Common::StringView name, ISerializer & s)
+  void writeSequence(Iterator begin, Iterator end, Common::StringView name, CryptoNote::ISerializer & s)
   {
     size_t size = std::distance(begin, end);
     s.beginArray(size, name);
@@ -313,7 +314,7 @@ bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView nam
   }
 
   template <typename Element, typename Iterator>
-  void readSequence(Iterator outputIterator, Common::StringView name, ISerializer & s)
+  void readSequence(Iterator outputIterator, Common::StringView name, CryptoNote::ISerializer & s)
   {
     size_t size = 0;
     s.beginArray(size, name);
@@ -329,9 +330,12 @@ bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView nam
   }
 
   //convinience function since we change block height type
-  void serializeBlockHeight(ISerializer & s, uint32_t & blockHeight, Common::StringView name);
+  void serializeBlockHeight(CryptoNote::ISerializer & s, uint32_t & blockHeight, Common::StringView name);
 
   //convinience function since we change global output index type
-  void serializeGlobalOutputIndex(ISerializer & s, uint32_t & globalOutputIndex, Common::StringView name);
+  void serializeGlobalOutputIndex(CryptoNote::ISerializer & s, uint32_t & globalOutputIndex, Common::StringView name);
+
+  // Serialization specializations are now handled by the generic template
+  // which calls the object's serialize method directly
 
 } // namespace CryptoNote

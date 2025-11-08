@@ -45,9 +45,32 @@ public:
   virtual ~WalletGreen();
 
   /* Deposit related functions */
-  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override;
+  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash, const DepositCommitment& commitment = DepositCommitment()) override;
   virtual void withdrawDeposit(DepositId depositId, std::string &transactionHash) override;
   std::vector<MultisignatureInput> prepareMultisignatureInputs(const std::vector<TransactionOutputInformation> &selectedTransfers);
+
+  // Burn deposit information for local secret storage
+  struct BurnDepositInfo {
+    std::string transactionHash;
+    Crypto::SecretKey secret;      // 🔒 SECURE: Stored locally, never on blockchain
+    uint64_t amount;
+    std::vector<uint8_t> metadata;
+    bool bpdfGenerated;
+    uint64_t timestamp;
+    
+    BurnDepositInfo() : amount(0), bpdfGenerated(false), timestamp(0) {}
+    BurnDepositInfo(const std::string& txHash, const Crypto::SecretKey& s, uint64_t amt, const std::vector<uint8_t>& meta)
+      : transactionHash(txHash), secret(s), amount(amt), metadata(meta), bpdfGenerated(false), timestamp(0) {}
+  };
+
+  // Burn deposit secret management
+  void addBurnDepositSecret(const std::string& transactionHash, const Crypto::SecretKey& secret, uint64_t amount, const std::vector<uint8_t>& metadata);
+  bool getBurnDepositSecret(const std::string& transactionHash, Crypto::SecretKey& secret, uint64_t& amount, std::vector<uint8_t>& metadata);
+  bool hasBurnDepositSecret(const std::string& transactionHash);
+  void markBurnDepositBPDFGenerated(const std::string& transactionHash);
+  std::vector<BurnDepositInfo> getAllBurnDeposits();
+
+private:
 
   
   virtual void initialize(const std::string& path, const std::string& password) override;
@@ -88,7 +111,7 @@ public:
 
   virtual size_t getTransactionCount() const override;
   virtual WalletTransaction getTransaction(size_t transactionIndex) const override;
-  virtual Deposit getDeposit(size_t depositIndex) const override;
+  virtual Deposit getDeposit(size_t bankingIndex) const override;
   virtual size_t getTransactionTransferCount(size_t transactionIndex) const override;
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const override;
 
@@ -120,7 +143,7 @@ public:
   virtual bool isFusionTransaction(size_t transactionId) const override;
   virtual IFusionManager::EstimateResult estimate(uint64_t threshold, const std::vector<std::string> &sourceAddresses = {}) const override;
 
-  DepositId insertDeposit(const Deposit &deposit, size_t depositIndexInTransaction, const Crypto::Hash &transactionHash);
+  DepositId insertDeposit(const Deposit &deposit, size_t bankingIndexInTransaction, const Crypto::Hash &transactionHash);
   DepositId insertNewDeposit(const TransactionOutputInformation &depositOutput,
                              TransactionId creatingTransactionId,
                              const Currency &currency, uint32_t height);
@@ -424,6 +447,9 @@ protected:
   uint32_t m_transactionSoftLockTime;
 
   BlockHashesContainer m_blockchain;
+
+  // Burn deposit secrets storage (local, never on blockchain)
+  std::map<std::string, BurnDepositInfo> m_burnDepositSecrets;
 };
 
 } //namespace CryptoNote

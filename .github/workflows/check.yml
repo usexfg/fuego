@@ -13,7 +13,7 @@ jobs:
     name: Windows
     runs-on: windows-2022
     env:
-      BOOST_ROOT: C:\thirdparties\boost-1.83.0
+      BOOST_ROOT: ""
     steps:
       - uses: actions/checkout@v4
 
@@ -25,25 +25,48 @@ jobs:
           $xfg_version="${{ github.sha }}".SubString(0,7)
           $release_name="xfg-cli-$os-dev-$xfg_version"
           echo "release_name=${release_name}" >> $env:GITHUB_OUTPUT
-
       - name: Install msbuild
         uses: microsoft/setup-msbuild@v1.3
 
-      - name: Restore Boost
-        uses: actions/cache@v3
-        id: restore-boost
-        with:
-          path: ${{env.BOOST_ROOT}}
-          key: boost_1_83_0-msvc-14.3-64
-
-      - name: Download and Install Boost 1.83
+      - name: Install Boost via Chocolatey
+        shell: powershell
         run: |
-          $Url = "https://github.com/boostorg/boost/releases/download/boost-1.83.0/boost-1.83.0.zip"
-          $OutputPath = "C:\Users\runneradmin\AppData\Local\Temp\boost-1.83.0.zip"
-          $ExtractPath = "C:\thirdparties\boost-1.83.0"
-          curl -L $Url -o $OutputPath
-          Expand-Archive -Path $OutputPath -DestinationPath $ExtractPath -Force
-          Start-Process -Wait -FilePath $OutputPath "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=C:\\thirdparties\\boost-1.83.0"
+          Write-Host "Installing Boost via Chocolatey..."
+          choco install boost-msvc-14.3 -y
+
+          Write-Host "Locating Boost installation..."
+          $boostPath = Get-ChildItem "C:\local" -Directory -Filter "boost_*" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+
+          if ($boostPath) {
+            Write-Host "Found Boost at: $boostPath"
+            echo "BOOST_ROOT=$boostPath" >> $env:GITHUB_ENV
+          }
+          else {
+            Write-Error "Boost installation not found in C:\local!"
+            Get-ChildItem "C:\local" -ErrorAction SilentlyContinue
+            exit 1
+          }
+      - name: Verify Boost Installation
+        shell: powershell
+        run: |
+          Write-Host "Verifying Boost installation..."
+          Write-Host "BOOST_ROOT: $env:BOOST_ROOT"
+
+          if (-not (Test-Path $env:BOOST_ROOT)) {
+            Write-Error "BOOST_ROOT path does not exist: $env:BOOST_ROOT"
+            exit 1
+          }
+
+          Write-Host "✓ BOOST_ROOT exists"
+          Write-Host "Contents:"
+          Get-ChildItem $env:BOOST_ROOT | Select-Object -First 10
+
+          if (Test-Path "$env:BOOST_ROOT\boost") {
+            Write-Host "✓ boost subdirectory found"
+          }
+          else {
+            Write-Warning "boost subdirectory not found!"
+          }
 
       - name: Build
         shell: powershell
@@ -54,9 +77,13 @@ jobs:
           $sha = "${{ github.sha }}"
           $xfg_ver = $sha.SubString(0,7)
           $release_name = "fuego-cli-win64-v$xfg_ver"
+
+          Write-Host "Creating build folder..."
           mkdir "$build_folder" -Force
           cd "$build_folder"
-          cmake -G "Visual Studio 17 2022" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT" -DBOOST_INCLUDE_DIRS="$env:BOOST_ROOT/include" ..
+
+          Write-Host "Configuring CMake with BOOST_ROOT: $env:BOOST_ROOT"
+          cmake -G "Visual Studio 17 2022" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT" -DBOOST_INCLUDEDIR="$env:BOOST_ROOT\boost" -DBoost_NO_SYSTEM_PATHS=ON ..
           if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed" }
           msbuild fuegoX.sln /p:Configuration=Release /m /v:minimal
           if ($LASTEXITCODE -ne 0) { throw "Build failed" }
@@ -71,44 +98,6 @@ jobs:
           echo "asset_path=${asset_path}" >> $env:GITHUB_OUTPUT
           echo "xfg_version=${xfg_version}" >> $env:GITHUB_OUTPUT
           echo "artifact_path=$build_folder/src/Release/$release_name" >> $env:GITHUB_OUTPUT
-
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.build.outputs.release_name }}
-          path: ${{ steps.build.outputs.artifact_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-  build-ubuntu24:
-    name: Ubuntu 24.04
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build
-        id: build
-        run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y build-essential libboost-all-dev cmake
-          build_folder="build/debug"
-          xfg_ver=${GITHUB_SHA::7}
-          xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
-          release_name=fuego-cli-ubuntu-2404-dev"$xfg_ver"
-          mkdir -p "$build_folder"
-          cd "$build_folder"
-          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-          make -j$(nproc)
-          mkdir -p "$release_name"
-          exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
-          strip "${exeFiles[@]}"
-          cp "${exeFiles[@]}" "$release_name/"
-          echo "release_name=${release_name}.tar.gz" >> $GITHUB_OUTPUT
-          echo "artifact_path=$build_folder/$release_name" >> $GITHUB_OUTPUT
-
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -145,7 +134,41 @@ jobs:
           cp "${exeFiles[@]}" "$release_name/"
           echo "release_name=${release_name}.tar.gz" >> $GITHUB_OUTPUT
           echo "artifact_path=$build_folder/$release_name" >> $GITHUB_OUTPUT
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.release_name }}
+          path: ${{ steps.build.outputs.artifact_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build-ubuntu22:
+    name: Ubuntu 22.04
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        id: build
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y build-essential libboost-all-dev cmake
+          build_folder="build/debug"
+          xfg_ver=${GITHUB_SHA::7}
+          xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
+          release_name=fuego-cli-ubuntu-2204-dev"$xfg_ver"
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
+          make -j$(nproc)
+          mkdir -p "$release_name"
+          exeFiles=()
+          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
+          strip "${exeFiles[@]}"
+          cp "${exeFiles[@]}" "$release_name/"
+          echo "release_name=${release_name}.tar.gz" >> $GITHUB_OUTPUT
+          echo "artifact_path=$build_folder/$release_name" >> $GITHUB_OUTPUT
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -196,8 +219,6 @@ jobs:
           echo "asset_path=${asset_path}" >> $GITHUB_OUTPUT
           echo "xfg_version=${xfg_ver}" >> $GITHUB_OUTPUT
           echo "artifact_path=${artifact_path}" >> $GITHUB_OUTPUT
-
-
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -205,4 +226,3 @@ jobs:
           path: ${{ steps.build.outputs.artifact_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-# Windows workflow updated

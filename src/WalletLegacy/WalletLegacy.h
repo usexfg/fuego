@@ -39,6 +39,7 @@
 
 #include "Transfers/BlockchainSynchronizer.h"
 #include "Transfers/TransfersSynchronizer.h"
+#include "BurnTransactionHandler.h"
 
 namespace CryptoNote {
 
@@ -167,6 +168,13 @@ private:
 
   std::vector<uint32_t> getTransactionHeights(std::vector<TransactionOutputInformation> transfers);
 
+  // Burn transaction management
+  void initializeBurnTransactionManager();
+  void setBurnTransactionCallbacks();
+  void processTransactionForBurnDetection(const std::string& txHash, const std::vector<uint8_t>& txExtra, uint64_t amount);
+  bool isBurnTransaction(const std::vector<uint8_t>& txExtra);
+  BurnTransactionHandler::BurnTransactionData parseBurnTransaction(const std::vector<uint8_t>& txExtra);
+  void generateStarkProofForBurn(const std::string& txHash, const std::string& ethAddress, uint64_t amount);
 
   enum WalletState
   {
@@ -204,6 +212,9 @@ private:
   Tools::ObserverManager<CryptoNote::IWalletLegacyObserver> m_observerManager;
 
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
+  
+  // Burn transaction management
+  std::unique_ptr<CryptoNote::BurnTransactionManager> m_burnTransactionManager;
 };
 
 } //namespace CryptoNote

@@ -12,6 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # -------------------- Cache --------------------
+      - name: Cache Boost ARM64
+        id: cache-boost
+        uses: actions/cache@v4
+        with:
+          path: /tmp/boost-arm64
+          key: ${{ runner.os }}-boost-arm64-${{ hashFiles('**/CMakeLists.txt') }}
+
+      - name: Cache ICU ARM64
+        id: cache-icu
+        uses: actions/cache@v4
+        with:
+          path: /tmp/icu-arm64
+          key: ${{ runner.os }}-icu-arm64-${{ hashFiles('**/CMakeLists.txt') }}
+
       - name: Install ARM64 Cross-Compilation Tools
         run: |
           sudo apt-get update
@@ -19,7 +34,11 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get install -y cmake build-essential
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential ninja-build pkg-config \
+               libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
+               libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
+               libicu-dev
 
       - name: Create Toolchain File
         run: |
@@ -35,10 +54,11 @@ jobs:
           EOF
 
       - name: Download and Build Boost for ARM64
+        if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
           BOOST_VERSION=1.83.0
           BOOST_VERSION_UNDERSCORE=${BOOST_VERSION//./_}
-          BOOST_URL="https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2/download"
+          BOOST_URL="https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2"
           wget --retry-connrefused --waitretry=5 --timeout=30 --tries=5 -O boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 "$BOOST_URL"
           file boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2
           if ! file boost_${BOOST_VERSION_UNDERSCORE}.tar.bz2 | grep -q 'bzip2 compressed data'; then
@@ -60,6 +80,24 @@ jobs:
             sed -i 's/#if defined(PTHREAD_STACK_MIN) && (PTHREAD_STACK_MIN > 0)/#if defined(PTHREAD_STACK_MIN)/' $BOOST_HEADER
           fi
 
+      - name: Download and Build ICU for ARM64
+        if: steps.cache-icu.outputs.cache-hit != 'true'
+        run: |
+          ICU_VERSION=76.1
+          ICU_URL="https://github.com/unicode-org/icu/releases/download/release-${ICU_VERSION//./-}/icu4c-${ICU_VERSION//./_}-src.tgz"
+          wget --retry-connrefused --waitretry=5 --timeout=30 --tries=5 -O icu4c-${ICU_VERSION//./_}-src.tgz "$ICU_URL"
+          tar -xzf icu4c-${ICU_VERSION//./_}-src.tgz
+          cd icu/source
+          export CC=aarch64-linux-gnu-gcc
+          export CXX=aarch64-linux-gnu-g++
+          export AR=aarch64-linux-gnu-ar
+          export RANLIB=aarch64-linux-gnu-ranlib
+          export STRIP=aarch64-linux-gnu-strip
+          ./configure --host=aarch64-linux-gnu --prefix=/tmp/icu-arm64 --with-cross-build=/usr
+          make -j$(nproc)
+          make install
+          cd ../..
+
       - name: Build
         id: build
         run: |
@@ -68,13 +106,31 @@ jobs:
           release_name="fuego-cli-raspberry-pi-arm64-v$xfg_ver"
           mkdir "$build_folder"
           cd "$build_folder"
+          
+          # Configure with CMake
           cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/arm64-toolchain.cmake \
                 -DBOOST_ROOT=/tmp/boost-arm64 \
-                -DCMAKE_BUILD_TYPE=Release ..
-          make -j$(nproc)
+                -DICU_ROOT=/tmp/icu-arm64 \
+                -DICU_INCLUDE_DIR=/tmp/icu-arm64/include \
+                -DICU_DATA_LIBRARY=/tmp/icu-arm64/lib/libicudata.so \
+                -DICU_I18N_LIBRARY=/tmp/icu-arm64/lib/libicui18n.so \
+                -DICU_UC_LIBRARY=/tmp/icu-arm64/lib/libicuuc.so \
+                -DCMAKE_PREFIX_PATH="/tmp/icu-arm64" \
+                -DCMAKE_BUILD_TYPE=Release \
+                -G Ninja ..
+          
+          # Build with Ninja
+          ninja -j$(nproc)
+          
+          # Create release package
           mkdir "$release_name"
           exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && aarch64-linux-gnu-strip "$f" && exeFiles+=( "$f" ); done
+          for f in src/*; do 
+            if [[ -x $f && -f $f ]]; then
+              aarch64-linux-gnu-strip "$f"
+              exeFiles+=( "$f" )
+            fi
+          done
           cp "${exeFiles[@]}" "$release_name/"
           tar -czf "$release_name".tar.gz "$release_name"
           sha256=$(sha256sum "$release_name".tar.gz | awk '{print toupper($1)}')

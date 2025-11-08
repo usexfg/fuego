@@ -1123,6 +1123,8 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
     res.txDetails.paymentId = "";
   }
 
+      res.txDetails.networkId = "93385046440755750514194170694064996624";  // Fuego network mainnet ID
+
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }

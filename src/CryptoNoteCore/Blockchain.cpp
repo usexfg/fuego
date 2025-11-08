@@ -227,7 +227,7 @@ public:
       if (s.type() == ISerializer::INPUT)
       {
         // Manual serialization for non-trivially-copyable types
-        std::vector<std::pair<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>>> temp;
+        std::vector<std::pair<uint64_t, std::vector<std::pair<Blockchain::TransactionIndex, uint16_t>>>> temp;
         s(temp, "outputs");
         m_bs.m_outputs.clear();
         for (const auto& pair : temp) {
@@ -236,7 +236,7 @@ public:
       }
       else
       {
-        std::vector<std::pair<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>>> temp;
+        std::vector<std::pair<uint64_t, std::vector<std::pair<Blockchain::TransactionIndex, uint16_t>>>> temp;
         temp.reserve(m_bs.m_outputs.size());
         for (const auto& pair : m_bs.m_outputs) {
           temp.emplace_back(pair.first, pair.second);
@@ -248,7 +248,7 @@ public:
       if (s.type() == ISerializer::INPUT)
       {
         // Manual serialization for non-trivially-copyable types
-        std::vector<std::pair<uint64_t, std::vector<MultisignatureOutputUsage>>> temp;
+        std::vector<std::pair<uint64_t, std::vector<Blockchain::MultisignatureOutputUsage>>> temp;
         s(temp, "multisig_outputs");
         m_bs.m_multisignatureOutputs.clear();
         for (const auto& pair : temp) {
@@ -257,7 +257,7 @@ public:
       }
       else
       {
-        std::vector<std::pair<uint64_t, std::vector<MultisignatureOutputUsage>>> temp;
+        std::vector<std::pair<uint64_t, std::vector<Blockchain::MultisignatureOutputUsage>>> temp;
         temp.reserve(m_bs.m_multisignatureOutputs.size());
         for (const auto& pair : m_bs.m_multisignatureOutputs) {
           temp.emplace_back(pair.first, pair.second);

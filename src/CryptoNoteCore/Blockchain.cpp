@@ -200,28 +200,10 @@ public:
     s(m_bs.m_blockIndex, "block_index");
 
       printf("INFO: %stransaction map\n", operation.c_str());
-      if (s.type() == ISerializer::INPUT)
-      {
-        phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "transactionsmap.dat").c_str());
-        m_bs.m_transactionMap.load(ar_in);
-      }
-      else
-      {
-        phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "transactionsmap.dat").c_str());
-        m_bs.m_transactionMap.dump(ar_out);
-      }
+      s(m_bs.m_transactionMap, "transaction_map");
 
       printf("INFO: %sspent keys\n", operation.c_str());
-      if (s.type() == ISerializer::INPUT)
-      {
-        phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "spentkeys.dat").c_str());
-        m_bs.m_spent_keys.load(ar_in);
-      }
-      else
-      {
-        phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "spentkeys.dat").c_str());
-        m_bs.m_spent_keys.dump(ar_out);
-      }
+      s(m_bs.m_spent_keys, "spent_keys");
 
       printf("INFO: %soutputs\n", operation.c_str());
       s(m_bs.m_outputs, "outputs");

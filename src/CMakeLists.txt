@@ -57,7 +57,7 @@ if(TARGET upnpc-static)
     add_dependencies(P2P upnpc-static)
     target_link_libraries(P2P PUBLIC upnpc-static)
     target_include_directories(P2P PUBLIC
-        ${CMAKE_SOURCE_DIR}/external/miniupnpc
+        ${CMAKE_SOURCE_DIR}/external
         ${CMAKE_BINARY_DIR}/external/miniupnpc
     )
 else()

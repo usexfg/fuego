@@ -2,7 +2,7 @@ name: XFG Wallet - Desktop Build
 
 on:
   push:
-    branches: [ master, dynamigo-release-v10, dynamigo ]
+    branches: [ master, dynamigo-release-v10, integtest, dynamigo ]
     paths:
       - 'src/PaymentGate/**'
       - 'src/PaymentGateService/**'

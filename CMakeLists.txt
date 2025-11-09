@@ -164,7 +164,7 @@ add_subdirectory(src)
 # --------------------------
 if(APPLE AND ICU_FOUND)
     message(STATUS "Linking ICU libraries to executables")
-    foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer)
+    foreach(exec_target Daemon SimpleWallet PaymentGateService Optimizer TestnetDaemon testnet-wallet-cli)
         if(TARGET ${exec_target})
             message(STATUS "Linking ICU to ${exec_target}")
             target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})

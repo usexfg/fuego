@@ -48,7 +48,64 @@ source_group("" FILES ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol
 add_library(BlockchainExplorer STATIC ${BlockchainExplorer})
 add_library(Common STATIC ${Common})
 add_library(Crypto STATIC ${Crypto})
-add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
+
+# --------------------------
+# Apply AES/SSE compile options to Crypto library for slow-hash.c
+# --------------------------
+# Robust AES-NI configuration that works in CI environments
+
+# Always try to enable AES-NI for GCC/Clang on non-Android systems
+if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" AND NOT ANDROID)
+    # Enable AES-NI and SSE instructions for cryptographic operations
+    target_compile_options(Crypto PRIVATE -maes -msse2 -msse4.1 -msse4.2)
+
+    # Add preprocessor definitions for AES-NI support
+    target_compile_definitions(Crypto PRIVATE __AES__ __SSE2__ __SSE4_1__ __SSE4_2__ HAVE_AES_NI)
+
+    # Special handling for CI environments
+    if (DEFINED ENV{CI} OR DEFINED ENV{GITHUB_ACTIONS} OR DEFINED ENV{GITHUB_REF} OR DEFINED ENV{GITHUB_RUN_ID})
+        # In CI, add march=native for better performance (works in most CI environments)
+        target_compile_options(Crypto PRIVATE -march=native)
+        message(STATUS "CI environment detected, AES-NI enabled with march=native for Crypto library")
+    else()
+        message(STATUS "AES-NI instructions enabled for Crypto library")
+    endif()
+
+elseif (CMAKE_C_COMPILER_ID MATCHES "MSVC" AND NOT ANDROID)
+    # MSVC compiler - enable AVX2 which includes AES-NI support
+    target_compile_options(Crypto PRIVATE /arch:AVX2)
+    target_compile_definitions(Crypto PRIVATE HAVE_AES_NI)
+    message(STATUS "MSVC detected, AES-NI enabled via AVX2 for Crypto library")
+
+else()
+    # Fallback for unknown compilers or Android
+    target_compile_definitions(Crypto PRIVATE NO_AES)
+    if (ANDROID)
+        message(STATUS "Android detected, using software AES for Crypto library")
+    else()
+        message(STATUS "Unknown compiler ${CMAKE_C_COMPILER_ID}, using software AES for Crypto library")
+    endif()
+endif()
+
+# Platform-specific adjustments
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    # On macOS, only enable for Intel Macs
+    if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+        # Apple Silicon - use software AES
+        target_compile_definitions(Crypto PRIVATE NO_AES)
+        target_compile_options(Crypto PRIVATE -msse2 -msse4.1)  # Keep SSE for other crypto operations
+        message(STATUS "Apple Silicon detected, using software AES for Crypto library")
+    else()
+        # Intel Mac or unknown - AES-NI should be enabled above
+        message(STATUS "macOS Intel or unknown architecture, AES-NI configuration applied")
+    endif()
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # Linux - AES-NI should be enabled above for GCC/Clang
+    message(STATUS "Linux detected, AES-NI configuration applied")
+endif()
+
+message(STATUS "=== End AES-NI Configuration ===")
+
 add_library(Http STATIC ${Http})
 add_library(InProcessNode STATIC ${InProcessNode})
 add_library(Logging STATIC ${Logging})
@@ -69,6 +126,14 @@ endif()
 add_library(Serialization STATIC ${Serialization})
 target_link_libraries(Serialization PUBLIC Common)
 add_library(System STATIC ${System})
+
+# Fix ucontext compilation issues on macOS
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    # Define _XOPEN_SOURCE for ucontext functions on macOS
+    target_compile_definitions(System PRIVATE _XOPEN_SOURCE=700)
+    target_compile_definitions(System PRIVATE __MAC_OS_X_VERSION_MIN_REQUIRED=101200)
+    message(STATUS "macOS detected, added ucontext compatibility definitions for System library")
+endif()
 add_library(Transfers STATIC ${Transfers})
 add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(PaymentGate STATIC ${PaymentGate})

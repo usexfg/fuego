@@ -16,7 +16,7 @@
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "StagedDepositRpc.h"
-#include "CryptoNoteSerialization.h"
+#include "CryptoNoteCore/StagedUnlock.h"
 #include "Serialization/SerializationOverloads.h"
 
 namespace PaymentService {

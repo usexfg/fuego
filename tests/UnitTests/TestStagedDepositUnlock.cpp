@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 #include <thread>
 #include "CryptoNoteCore/StagedDepositUnlock.h"
-#include "CryptoNoteCore/EnhancedDeposit.h"
+#include "CryptoNoteCore/StagedUnlock.h"
 #include "CryptoNoteCore/StagedUnlockStorage.h"
 #include "CryptoNoteCore/StagedUnlockStorage.h"
 #include "CryptoNoteCore/Currency.h"
@@ -274,7 +274,7 @@ TEST_F(StagedDepositUnlockTest, StageUnlocking) {
     EXPECT_TRUE(stagedUnlock.isFullyUnlocked());
 }
 
-TEST_F(StagedDepositUnlockTest, EnhancedDeposit) {
+TEST_F(StagedDepositUnlockTest, StagedUnlock) {
     // Create a basic deposit
     Deposit basicDeposit;
     basicDeposit.amount = 1000000000; // 1000 XFG
@@ -286,26 +286,26 @@ TEST_F(StagedDepositUnlockTest, EnhancedDeposit) {
     basicDeposit.creatingTransactionId = 1;
     basicDeposit.spendingTransactionId = 0;
     
-    // Convert to enhanced deposit
-    EnhancedDeposit enhancedDeposit;
-    enhancedDeposit.initializeFromDeposit(basicDeposit);
+    // Convert to staged unlock deposit
+    CryptoNote::StagedUnlock stagedDeposit;
+    stagedDeposit.initializeFromDeposit(basicDeposit);
     
     // Check that it uses staged unlocking (non-FOREVER term)
-    EXPECT_TRUE(enhancedDeposit.useStagedUnlock);
-    EXPECT_EQ(enhancedDeposit.amount, basicDeposit.amount);
-    EXPECT_EQ(enhancedDeposit.interest, basicDeposit.interest);
-    EXPECT_EQ(enhancedDeposit.height, basicDeposit.height);
+    EXPECT_TRUE(stagedDeposit.useStagedUnlock);
+    EXPECT_EQ(stagedDeposit.amount, basicDeposit.amount);
+    EXPECT_EQ(stagedDeposit.interest, basicDeposit.interest);
+    EXPECT_EQ(stagedDeposit.height, basicDeposit.height);
     
     // Test unlock process
     uint32_t currentHeight = 1000 + StagedUnlockConfig::STAGE_INTERVAL_BLOCKS;
-    auto newlyUnlocked = enhancedDeposit.processUnlock(currentHeight);
+    auto newlyUnlocked = stagedDeposit.processUnlock(currentHeight);
     
     EXPECT_EQ(newlyUnlocked.size(), 1);
     EXPECT_EQ(newlyUnlocked[0].stageNumber, 1);
     EXPECT_TRUE(newlyUnlocked[0].isUnlocked);
     
     // Check status
-    std::string status = EnhancedDepositManager::getUnlockStatus(enhancedDeposit, currentHeight);
+    std::string status = CryptoNote::StagedUnlockManager::getUnlockStatus(stagedDeposit, currentHeight);
     EXPECT_FALSE(status.empty());
     EXPECT_TRUE(status.find("Staged Unlock") != std::string::npos);
 }

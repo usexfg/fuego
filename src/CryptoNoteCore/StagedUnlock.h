@@ -24,8 +24,8 @@
 
 namespace CryptoNote {
 
-// Enhanced Deposit structure with staged unlocking support
-struct EnhancedDeposit {
+// StagedUnlock structure with staged unlocking support
+struct StagedUnlock {
     // Basic deposit fields (existing)
     uint64_t amount;
     uint32_t term;
@@ -43,9 +43,9 @@ struct EnhancedDeposit {
     uint64_t remainingLockedAmount;
     
     // Constructor
-    EnhancedDeposit() : amount(0), term(0), interest(0), height(0), unlockHeight(0), 
-                       locked(true), creatingTransactionId(0), spendingTransactionId(0),
-                       useStagedUnlock(false), totalUnlockedAmount(0), remainingLockedAmount(0) {}
+    StagedUnlock() : amount(0), term(0), interest(0), height(0), unlockHeight(0), 
+                    locked(true), creatingTransactionId(0), spendingTransactionId(0),
+                    useStagedUnlock(false), totalUnlockedAmount(0), remainingLockedAmount(0) {}
     
     // Initialize from basic deposit
     void initializeFromDeposit(const Deposit& deposit);
@@ -69,24 +69,24 @@ struct EnhancedDeposit {
     void serialize(ISerializer& s);
 };
 
-// Enhanced deposit manager
-class EnhancedDepositManager {
+// StagedUnlock manager
+class StagedUnlockManager {
 public:
-    // Convert basic deposits to enhanced deposits
-    static std::vector<EnhancedDeposit> convertDeposits(const std::vector<Deposit>& deposits);
+    // Convert deposits to staged unlocks
+    static std::vector<StagedUnlock> convertDeposits(const std::vector<Deposit>& deposits);
     
     // Process all deposits for potential unlocks
     static std::vector<DepositId> processAllUnlocks(uint32_t currentHeight, 
-                                                   const std::vector<EnhancedDeposit>& deposits);
+                                                   const std::vector<StagedUnlock>& deposits);
     
     // Get deposit unlock status
-    static std::string getUnlockStatus(const EnhancedDeposit& deposit, uint32_t currentHeight);
+    static std::string getUnlockStatus(const StagedUnlock& deposit, uint32_t currentHeight);
     
-    // Get total unlocked amount for all deposits
-    static uint64_t getTotalUnlockedAmount(const std::vector<EnhancedDeposit>& deposits);
+    // Get total unlocked amount for all staged unlocks
+    static uint64_t getTotalUnlockedAmount(const std::vector<StagedUnlock>& deposits);
     
-    // Get total remaining locked amount for all deposits
-    static uint64_t getTotalRemainingLockedAmount(const std::vector<EnhancedDeposit>& deposits);
+    // Get total remaining locked amount for all staged unlocks
+    static uint64_t getTotalRemainingLockedAmount(const std::vector<StagedUnlock>& deposits);
 };
 
 } // namespace CryptoNote

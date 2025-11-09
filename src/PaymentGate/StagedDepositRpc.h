@@ -18,7 +18,7 @@
 #pragma once
 
 #include "PaymentServiceJsonRpcMessages.h"
-#include "CryptoNoteCore/EnhancedDeposit.h"
+#include "CryptoNoteCore/StagedUnlock.h"
 
 namespace PaymentService {
 

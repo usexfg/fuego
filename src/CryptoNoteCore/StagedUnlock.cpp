@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
-#include "EnhancedDeposit.h"
+#include "StagedUnlock.h"
 #include "CryptoNoteSerialization.h"
 #include "Serialization/SerializationOverloads.h"
 #include <algorithm>
@@ -23,7 +23,7 @@
 
 namespace CryptoNote {
 
-void EnhancedDeposit::initializeFromDeposit(const Deposit& deposit) {
+void StagedUnlock::initializeFromDeposit(const Deposit& deposit) {
     // Copy basic fields
     amount = deposit.amount;
     term = deposit.term;
@@ -46,7 +46,7 @@ void EnhancedDeposit::initializeFromDeposit(const Deposit& deposit) {
     }
 }
 
-bool EnhancedDeposit::canUnlock(uint32_t currentHeight) const {
+bool StagedUnlock::canUnlock(uint32_t currentHeight) const {
     if (useStagedUnlock) {
         // Check if any stage can be unlocked
         return !stagedUnlock.getNextUnlockStage(currentHeight).isUnlocked;
@@ -56,7 +56,7 @@ bool EnhancedDeposit::canUnlock(uint32_t currentHeight) const {
     }
 }
 
-uint64_t EnhancedDeposit::getUnlockableAmount(uint32_t currentHeight) const {
+uint64_t StagedUnlock::getUnlockableAmount(uint32_t currentHeight) const {
     if (useStagedUnlock) {
         // Get amount from next unlockable stage
         auto nextStage = stagedUnlock.getNextUnlockStage(currentHeight);
@@ -73,7 +73,7 @@ uint64_t EnhancedDeposit::getUnlockableAmount(uint32_t currentHeight) const {
     }
 }
 
-std::vector<UnlockStage> EnhancedDeposit::processUnlock(uint32_t currentHeight) {
+std::vector<UnlockStage> StagedUnlock::processUnlock(uint32_t currentHeight) {
     std::vector<UnlockStage> newlyUnlocked;
     
     if (useStagedUnlock) {
@@ -100,7 +100,7 @@ std::vector<UnlockStage> EnhancedDeposit::processUnlock(uint32_t currentHeight) 
     return newlyUnlocked;
 }
 
-bool EnhancedDeposit::isFullyUnlocked() const {
+bool StagedUnlock::isFullyUnlocked() const {
     if (useStagedUnlock) {
         return stagedUnlock.isFullyUnlocked();
     } else {
@@ -108,7 +108,7 @@ bool EnhancedDeposit::isFullyUnlocked() const {
     }
 }
 
-UnlockStage EnhancedDeposit::getNextUnlockInfo(uint32_t currentHeight) const {
+UnlockStage StagedUnlock::getNextUnlockInfo(uint32_t currentHeight) const {
     if (useStagedUnlock) {
         return stagedUnlock.getNextUnlockStage(currentHeight);
     } else {
@@ -123,7 +123,7 @@ UnlockStage EnhancedDeposit::getNextUnlockInfo(uint32_t currentHeight) const {
     }
 }
 
-void EnhancedDeposit::serialize(ISerializer& s) {
+void StagedUnlock::serialize(ISerializer& s) {
     // Serialize basic fields
     s(amount, "amount");
     s(term, "term");
@@ -141,22 +141,22 @@ void EnhancedDeposit::serialize(ISerializer& s) {
     s(remainingLockedAmount, "remainingLockedAmount");
 }
 
-// EnhancedDepositManager implementation
-std::vector<EnhancedDeposit> EnhancedDepositManager::convertDeposits(const std::vector<Deposit>& deposits) {
-    std::vector<EnhancedDeposit> enhancedDeposits;
-    enhancedDeposits.reserve(deposits.size());
+// StagedUnlockManager implementation
+std::vector<StagedUnlock> StagedUnlockManager::convertDeposits(const std::vector<Deposit>& deposits) {
+    std::vector<StagedUnlock> stagedUnlocks;
+    stagedUnlocks.reserve(deposits.size());
     
     for (const auto& deposit : deposits) {
-        EnhancedDeposit enhancedDeposit;
-        enhancedDeposit.initializeFromDeposit(deposit);
-        enhancedDeposits.push_back(enhancedDeposit);
+        StagedUnlock stagedUnlock;
+        stagedUnlock.initializeFromDeposit(deposit);
+        stagedUnlocks.push_back(stagedUnlock);
     }
     
-    return enhancedDeposits;
+    return stagedUnlocks;
 }
 
-std::vector<DepositId> EnhancedDepositManager::processAllUnlocks(uint32_t currentHeight, 
-                                                                const std::vector<EnhancedDeposit>& deposits) {
+std::vector<DepositId> StagedUnlockManager::processAllUnlocks(uint32_t currentHeight, 
+                                                            const std::vector<StagedUnlock>& deposits) {
     std::vector<DepositId> newlyUnlockedDeposits;
     
     for (size_t i = 0; i < deposits.size(); ++i) {
@@ -164,7 +164,7 @@ std::vector<DepositId> EnhancedDepositManager::processAllUnlocks(uint32_t curren
         
         if (deposit.canUnlock(currentHeight)) {
             // Process unlock
-            auto newlyUnlocked = const_cast<EnhancedDeposit&>(deposit).processUnlock(currentHeight);
+            auto newlyUnlocked = const_cast<StagedUnlock&>(deposit).processUnlock(currentHeight);
             
             if (!newlyUnlocked.empty()) {
                 newlyUnlockedDeposits.push_back(static_cast<DepositId>(i));
@@ -175,7 +175,7 @@ std::vector<DepositId> EnhancedDepositManager::processAllUnlocks(uint32_t curren
     return newlyUnlockedDeposits;
 }
 
-std::string EnhancedDepositManager::getUnlockStatus(const EnhancedDeposit& deposit, uint32_t currentHeight) {
+std::string StagedUnlockManager::getUnlockStatus(const StagedUnlock& deposit, uint32_t currentHeight) {
     std::ostringstream oss;
     
     if (deposit.useStagedUnlock) {
@@ -207,7 +207,7 @@ std::string EnhancedDepositManager::getUnlockStatus(const EnhancedDeposit& depos
     return oss.str();
 }
 
-uint64_t EnhancedDepositManager::getTotalUnlockedAmount(const std::vector<EnhancedDeposit>& deposits) {
+uint64_t StagedUnlockManager::getTotalUnlockedAmount(const std::vector<StagedUnlock>& deposits) {
     uint64_t total = 0;
     for (const auto& deposit : deposits) {
         total += deposit.totalUnlockedAmount;
@@ -215,7 +215,7 @@ uint64_t EnhancedDepositManager::getTotalUnlockedAmount(const std::vector<Enhanc
     return total;
 }
 
-uint64_t EnhancedDepositManager::getTotalRemainingLockedAmount(const std::vector<EnhancedDeposit>& deposits) {
+uint64_t StagedUnlockManager::getTotalRemainingLockedAmount(const std::vector<StagedUnlock>& deposits) {
     uint64_t total = 0;
     for (const auto& deposit : deposits) {
         total += deposit.remainingLockedAmount;

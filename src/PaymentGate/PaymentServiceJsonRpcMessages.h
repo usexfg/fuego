@@ -136,6 +136,7 @@ struct CreateDeposit
     std::string sourceAddress;
     std::string heatCommitment;  // Hex string of HEAT commitment (optional)
     std::string metadata;        // Hex string of metadata (optional)
+    bool useStagedUnlock;        // Optional staged unlock (default: false)
 
     void serialize(CryptoNote::ISerializer &serializer);
   };
@@ -144,6 +145,9 @@ struct CreateDeposit
   {
     std::string transactionHash;
     bool isBurnDeposit;          // Indicates if this is a burn deposit
+    bool useStagedUnlock;        // Indicates if staged unlock was used
+    uint64_t transactionFee;     // Transaction fee for this deposit
+    uint64_t totalFees;          // Total fees (1x for traditional, 4x for staged)
 
     void serialize(CryptoNote::ISerializer &serializer);
   };
@@ -336,7 +340,7 @@ struct GetMoneySupplyStats
   struct Response
   {
     uint64_t baseMoneySupply;
-    uint64_t totalBurnedXfg;
+    uint64_t ethernalXFG;
     uint64_t totalRebornXfg;
     	uint64_t totalMoneySupply;
     uint64_t circulatingSupply;
@@ -373,9 +377,9 @@ struct GetRealTotalSupply
 
   struct Response
   {
-    uint64_t realTotalSupply;    // baseTotalSupply - totalBurnedXfg
+    uint64_t realTotalSupply;    // baseTotalSupply - ethernalXFG
     uint64_t baseTotalSupply;    // All XFG created
-    uint64_t totalBurnedXfg;     // Total burned XFG
+    uint64_t ethernalXFG;     // Total burned XFG
     std::string formattedAmount; // Human-readable format
     
     void serialize(CryptoNote::ISerializer &serializer);
@@ -391,9 +395,9 @@ struct GetTotalDepositAmount
 
   struct Response
   {
-    uint64_t totalDepositAmount; // currentAmount in deposits - totalBurnedXfg
+    uint64_t totalDepositAmount; // currentAmount in deposits - ethernalXFG
     uint64_t currentDepositAmount; // Current amount in all deposits
-    uint64_t totalBurnedXfg;     // Total burned XFG
+    uint64_t ethernalXFG;     // Total burned XFG
     std::string formattedAmount; // Human-readable format
     
     void serialize(CryptoNote::ISerializer &serializer);
@@ -410,15 +414,15 @@ struct GetCirculatingSupply
   struct Response
   {
     uint64_t circulatingSupply;  // realTotalSupply - totalDepositAmount
-    uint64_t realTotalSupply;    // actualTotalSupply - totalBurnedXfg
-    uint64_t totalDepositAmount; // currentAmount in deposits - totalBurnedXfg
+    uint64_t realTotalSupply;    // actualTotalSupply - ethernalXFG
+    uint64_t totalDepositAmount; // currentAmount in deposits - ethernalXFG
     std::string formattedAmount; // Human-readable format
     
     void serialize(CryptoNote::ISerializer &serializer);
   };
 };
 
-struct GetTotalBurnedXfg
+struct GetEthernalXFG
 {
   struct Request
   {
@@ -427,7 +431,7 @@ struct GetTotalBurnedXfg
 
   struct Response
   {
-    uint64_t totalBurnedXfg;     // Total burned XFG
+    uint64_t ethernalXFG;     // Total burned XFG
     std::string formattedAmount; // Human-readable format
     
     void serialize(CryptoNote::ISerializer &serializer);
@@ -444,10 +448,10 @@ struct GetDynamicSupplyOverview
   struct Response
   {
     uint64_t baseTotalSupply;    // All XFG created
-    uint64_t realTotalSupply;    // baseTotalSupply - totalBurnedXfg
-    uint64_t totalDepositAmount; // currentAmount in deposits - totalBurnedXfg
+    uint64_t realTotalSupply;    // baseTotalSupply - ethernalXFG
+    uint64_t totalDepositAmount; // currentAmount in deposits - ethernalXFG
     uint64_t circulatingSupply;  // realTotalSupply - totalDepositAmount
-    uint64_t totalBurnedXfg;     // Total burned XFG
+    uint64_t ethernalXFG;     // Total burned XFG
     uint64_t currentDepositAmount; // Current amount in all deposits
     
     // Formatted amounts for display
@@ -455,11 +459,11 @@ struct GetDynamicSupplyOverview
     std::string realTotalSupplyFormatted;
     std::string totalDepositAmountFormatted;
     std::string circulatingSupplyFormatted;
-    std::string totalBurnedXfgFormatted;
+    std::string ethernalXFGFormatted;
     std::string currentDepositAmountFormatted;
     
     // Percentages
-    double burnPercentage;       // (totalBurnedXfg / baseTotalSupply) * 100
+    double burnPercentage;       // (ethernalXFG / baseTotalSupply) * 100
     double depositPercentage;    // (totalDepositAmount / realTotalSupply) * 100
     double circulatingPercentage; // (circulatingSupply / realTotalSupply) * 100
     
@@ -489,6 +493,9 @@ struct GetDeposit
     std::string spendingTransactionHash;
     bool locked;
     std::string address;
+    bool useStagedUnlock;        // Indicates if this deposit uses staged unlock
+    uint64_t transactionFee;     // Transaction fee for this deposit
+    uint64_t totalFees;          // Total fees (1x for traditional, 4x for staged)
 
     void serialize(CryptoNote::ISerializer &serializer);
   };

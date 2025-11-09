@@ -56,9 +56,9 @@ class DynamicMoneySupply {
 };
 ```
 
-#### 2. **DepositIndex Integration**
+#### 2. **BankingIndex Integration**
 ```cpp
-class DepositIndex {
+class BankingIndex {
     // Enhanced burned XFG tracking
     struct BurnedXfgEntry {
         DepositHeight height;
@@ -95,7 +95,7 @@ class Currency {
 
 1. **User creates XFG-for-HEAT mint** → Wallet validates (term = 4294967295)
 2. **Transaction mined** → Block processed by blockchain
-3. **DepositIndex updated** → `addForeverDeposit()` called
+3. **BankingIndex updated** → `addForeverDeposit()` called
 4. **Dynamic supply recalculated** → All metrics updated
 5. **State persisted** → Burned XFG entries saved with blockchain
 6. **RPC queries** → Real-time supply data available
@@ -107,8 +107,8 @@ class Currency {
 src/CryptoNoteCore/
 ├── DynamicMoneySupply.h          # Main dynamic supply header
 ├── DynamicMoneySupply.cpp        # Implementation
-├── DepositIndex.h                # Enhanced deposit tracking
-├── DepositIndex.cpp              # Burned XFG tracking
+├── BankingIndex.h                # Enhanced deposit tracking
+├── BankingIndex.cpp              # Burned XFG tracking
 ├── Currency.h                    # Currency integration
 └── Currency.cpp                  # Dynamic supply methods
 
@@ -139,11 +139,11 @@ double getRebornPercentage() const;            // Reborn percentage
 double getSupplyIncreasePercentage() const;    // Supply increase %
 
 // State management
-void updateFromDepositIndex(const DepositIndex& depositIndex);
+void updateFromBankingIndex(const BankingIndex& bankingIndex);
 MoneySupplyState getCurrentState() const;
 ```
 
-#### **DepositIndex Class**
+#### **BankingIndex Class**
 ```cpp
 // Burned XFG tracking
 BurnedAmount getBurnedXfgAmount() const;       // Total burned

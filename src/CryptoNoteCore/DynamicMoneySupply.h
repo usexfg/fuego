@@ -31,9 +31,9 @@ public:
     
     struct MoneySupplyState {
         uint64_t baseMoneySupply;      // Increases with each burn
-        BurnedAmount totalBurnedXfg;   // Total XFG burned through FOREVER deposits
-        RebornAmount totalRebornXfg;   // Always equals totalBurnedXfg
-        uint64_t totalSupply;          // baseMoneySupply - totalBurnedXfg
+        BurnedAmount ethernalXFG;   // Total XFG burned through FOREVER deposits
+        RebornAmount totalRebornXfg;   // Always equals ethernalXFG
+        uint64_t totalSupply;          // baseMoneySupply - ethernalXFG
         uint64_t circulatingSupply;    // totalSupply - lockedDeposits (excluding burn deposits)
         uint64_t blockRewardSupply;    // baseMoneySupply (for mining rewards)
     };
@@ -46,7 +46,7 @@ public:
     uint64_t getTotalSupply() const;
     uint64_t getCirculatingSupply() const;
     uint64_t getBlockRewardSupply() const;
-    BurnedAmount getTotalBurnedXfg() const;
+    BurnedAmount getEternalFlame() const;
     RebornAmount getTotalRebornXfg() const;
     
     // Burned XFG management
@@ -59,7 +59,7 @@ public:
     
     // State management
     MoneySupplyState getCurrentState() const;
-    void updateFromDepositIndex(const class DepositIndex& depositIndex);
+    void updateFromBankingIndex(const class BankingIndex& bankingIndex);
     
     // Statistics and percentages
     double getBurnPercentage() const;

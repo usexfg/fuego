@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -35,6 +35,7 @@
 #include "System/Dispatcher.h"
 #include "CryptoNoteCore/MessageQueue.h"
 #include "CryptoNoteCore/BlockchainMessages.h"
+#include "CryptoNoteCore/DepositIndex.h"
 
 #include <Logging/LoggerMessage.h>
 
@@ -162,6 +163,7 @@ namespace CryptoNote {
     uint64_t getTotalGeneratedAmount();
     uint64_t fullDepositAmount() const;
     uint64_t depositAmountAtHeight(size_t height) const;
+    uint64_t getBurnedXfgAtHeight(size_t height) const;
     uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
 
     bool is_key_image_spent(const Crypto::KeyImage &key_im);

@@ -17,24 +17,47 @@
 
 #pragma once
 
-#define	setcontext(u)	setmcontext(&(u)->uc_mcontext)
-#define	getcontext(u)	getmcontext(&(u)->uc_mcontext)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 #include <stdlib.h>
 
+#if defined(__aarch64__) || defined(__arm64__)
+/* Use system ucontext on ARM64 */
+#include <ucontext.h>
+typedef ucontext_t uctx;
+#else
+/* Use custom ucontext on x86_64 */
+#define	setcontext(u)	setmcontext(&(u)->uc_mcontext)
+#define	getcontext(u)	getmcontext(&(u)->uc_mcontext)
+
 typedef struct mcontext mctx;
 typedef struct ucontext uctx;
 
 extern	int		swapcontext(uctx*, const uctx*);
-extern	void		makecontext(uctx*, void(*)(void), intptr_t);
+extern	void		makecontext(uctx*, void(*)(void), int, intptr_t);
 extern	int		getmcontext(mctx*);
 extern	void		setmcontext(const mctx*);
+#endif
 
 struct mcontext {
+#if defined(__aarch64__) || defined(__arm64__)
   /*
+   * ARM64 context structure - simplified version
+   */
+  long	mc_onstack;		/* XXX - sigcontext compat. */
+  long	mc_x[31];		/* ARM64 general purpose registers x0-x30 */
+  long	mc_sp;			/* stack pointer */
+  long	mc_pc;			/* program counter */
+  long	mc_pstate;		/* processor state */
+  long	mc_len;			/* sizeof(mcontext_t) */
+  long	mc_fpformat;
+  long	mc_ownedfp;
+  long	mc_fpstate[64];
+  long	mc_spare[8];
+#else
+  /*
+   * x86_64 context structure
    * The first 20 fields must match the definition of
    * sigcontext. So that we can support sigcontext
    * and ucontext_t at the same time.
@@ -78,6 +101,7 @@ struct mcontext {
    */
   long	mc_fpstate[64];
   long	mc_spare[8];
+#endif
 };
 
 struct ucontext {

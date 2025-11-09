@@ -16,7 +16,7 @@
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "CryptoNoteCore/DynamicMoneySupply.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
@@ -29,7 +29,7 @@ namespace CryptoNote {
 
 DynamicMoneySupply::DynamicMoneySupply() {
     m_state.baseMoneySupply = BASE_MONEY_SUPPLY;
-    m_state.totalBurnedXfg = 0;
+    m_state.ethernalXFG = 0;
     m_state.totalRebornXfg = 0;
     	m_state.totalSupply = BASE_MONEY_SUPPLY;
     m_state.circulatingSupply = BASE_MONEY_SUPPLY;
@@ -47,8 +47,8 @@ uint64_t DynamicMoneySupply::getCirculatingSupply() const {
     return m_state.circulatingSupply;
 }
 
-DynamicMoneySupply::BurnedAmount DynamicMoneySupply::getTotalBurnedXfg() const {
-    return m_state.totalBurnedXfg;
+DynamicMoneySupply::BurnedAmount DynamicMoneySupply::getEternalFlame() const {
+    return m_state.ethernalXFG;
 }
 
 DynamicMoneySupply::RebornAmount DynamicMoneySupply::getTotalRebornXfg() const {
@@ -58,7 +58,7 @@ DynamicMoneySupply::RebornAmount DynamicMoneySupply::getTotalRebornXfg() const {
 void DynamicMoneySupply::addBurnedXfg(BurnedAmount amount) {
     if (amount == 0) return;
     
-    m_state.totalBurnedXfg += amount;
+    m_state.ethernalXFG += amount;
     addRebornXfg(amount); // Automatically add as reborn XFG
     
     // Increase base money supply by the burned amount
@@ -71,10 +71,10 @@ void DynamicMoneySupply::addBurnedXfg(BurnedAmount amount) {
 void DynamicMoneySupply::removeBurnedXfg(BurnedAmount amount) {
     if (amount == 0) return;
     
-    if (amount > m_state.totalBurnedXfg) {
-        m_state.totalBurnedXfg = 0;
+    if (amount > m_state.ethernalXFG) {
+        m_state.ethernalXFG = 0;
     } else {
-        m_state.totalBurnedXfg -= amount;
+        m_state.ethernalXFG -= amount;
     }
     
     removeRebornXfg(amount); // Automatically remove from reborn XFG
@@ -113,22 +113,22 @@ DynamicMoneySupply::MoneySupplyState DynamicMoneySupply::getCurrentState() const
     return m_state;
 }
 
-void DynamicMoneySupply::updateFromDepositIndex(const DepositIndex& depositIndex) {
-    BurnedAmount currentBurned = depositIndex.getBurnedXfgAmount();
+void DynamicMoneySupply::updateFromBankingIndex(const BankingIndex& bankingIndex) {
+    BurnedAmount currentBurned = bankingIndex.getBurnedXfgAmount();
     
     // Calculate the difference
-    if (currentBurned > m_state.totalBurnedXfg) {
-        BurnedAmount newBurned = currentBurned - m_state.totalBurnedXfg;
+    if (currentBurned > m_state.ethernalXFG) {
+        BurnedAmount newBurned = currentBurned - m_state.ethernalXFG;
         addBurnedXfg(newBurned);
-    } else if (currentBurned < m_state.totalBurnedXfg) {
-        BurnedAmount removedBurned = m_state.totalBurnedXfg - currentBurned;
+    } else if (currentBurned < m_state.ethernalXFG) {
+        BurnedAmount removedBurned = m_state.ethernalXFG - currentBurned;
         removeBurnedXfg(removedBurned);
     }
 }
 
 double DynamicMoneySupply::getBurnPercentage() const {
     if (m_state.baseMoneySupply == 0) return 0.0;
-    return (static_cast<double>(m_state.totalBurnedXfg) / m_state.baseMoneySupply) * 100.0;
+    return (static_cast<double>(m_state.ethernalXFG) / m_state.baseMoneySupply) * 100.0;
 }
 
 double DynamicMoneySupply::getRebornPercentage() const {
@@ -152,7 +152,7 @@ void DynamicMoneySupply::loadState(const std::string& filename) {
 }
 
 void DynamicMoneySupply::clearState() {
-    m_state.totalBurnedXfg = 0;
+    m_state.ethernalXFG = 0;
     m_state.totalRebornXfg = 0;
     m_state.baseMoneySupply = BASE_MONEY_SUPPLY;
     m_state.totalSupply = BASE_MONEY_SUPPLY;
@@ -162,20 +162,20 @@ void DynamicMoneySupply::clearState() {
 
 void DynamicMoneySupply::recalculateSupply() {
     // Total supply = Base money supply - Burned XFG
-    m_state.totalSupply = m_state.baseMoneySupply - m_state.totalBurnedXfg;
+    m_state.totalSupply = m_state.baseMoneySupply - m_state.ethernalXFG;
     
     // Block reward supply = Base money supply (includes all reborn amounts)
     // This allows burned XFG to be redistributed through mining rewards
     m_state.blockRewardSupply = m_state.baseMoneySupply;
     
     // Circulating supply = Total supply - Locked deposits (excluding burn deposits)
-    // Note: Locked deposits calculation is handled separately in DepositIndex
+    // Note: Locked deposits calculation is handled separately in BankingIndex
     m_state.circulatingSupply = m_state.totalSupply;
 }
 
 void DynamicMoneySupply::validateAmounts() const {
     // Ensure reborn XFG equals burned XFG
-    if (m_state.totalRebornXfg != m_state.totalBurnedXfg) {
+    if (m_state.totalRebornXfg != m_state.ethernalXFG) {
         throw std::runtime_error("Reborn XFG must equal burned XFG");
     }
     
@@ -207,7 +207,7 @@ void DynamicMoneySupply::ensureSupplyCap() {
 
 void DynamicMoneySupply::serialize(ISerializer& s) {
     s(m_state.baseMoneySupply, "baseMoneySupply");
-    s(m_state.totalBurnedXfg, "totalBurnedXfg");
+    s(m_state.ethernalXFG, "ethernalXFG");
     s(m_state.totalRebornXfg, "totalRebornXfg");
     s(m_state.totalSupply, "totalSupply");
     s(m_state.circulatingSupply, "circulatingSupply");

@@ -1,6 +1,6 @@
 #include "CryptoNoteCore/DynamicMoneySupply.h"
 #include "CryptoNoteCore/Currency.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 #include "CryptoNoteCore/TransactionExtra.h"
 #include <gtest/gtest.h>
 #include <cstdint>
@@ -14,7 +14,7 @@ protected:
     void SetUp() override {
         // Initialize components
         m_dynamicSupply = DynamicMoneySupply();
-        m_depositIndex = DepositIndex();
+        m_bankingIndex = BankingIndex();
         
         // Initialize currency with dynamic supply
         m_currency = CurrencyBuilder()
@@ -27,7 +27,7 @@ protected:
     }
 
     DynamicMoneySupply m_dynamicSupply;
-    DepositIndex m_depositIndex;
+    BankingIndex m_bankingIndex;
     Currency m_currency;
     
     // Test constants
@@ -50,10 +50,10 @@ TEST_F(DynamicSupplyIntegrationTest, ForeverDepositCreation) {
     deposit.unlockHeight = 0; // Never unlocks
     
     // Add deposit to index
-    m_depositIndex.addDeposit(deposit);
+    m_bankingIndex.addDeposit(deposit);
     
     // Verify deposit is tracked as burned
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), depositAmount);
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), depositAmount);
     
     // Add burned amount to dynamic supply
     m_dynamicSupply.addBurnedXfg(depositAmount);
@@ -84,20 +84,20 @@ TEST_F(DynamicSupplyIntegrationTest, MultipleForeverDeposits) {
         deposit.height = 1000 + i;
         deposit.unlockHeight = 0;
         
-        m_depositIndex.addDeposit(deposit);
+        m_bankingIndex.addDeposit(deposit);
         totalBurned += depositAmounts[i];
         
         // Add to dynamic supply
         m_dynamicSupply.addBurnedXfg(depositAmounts[i]);
         
         // Verify cumulative tracking
-        EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), totalBurned);
+        EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), totalBurned);
         EXPECT_EQ(m_dynamicSupply.getTotalBurnedXfg(), totalBurned);
         EXPECT_EQ(m_dynamicSupply.getTotalRebornXfg(), totalBurned);
     }
     
     // Verify final totals
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), totalBurned);
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), totalBurned);
     EXPECT_EQ(m_dynamicSupply.getBaseMoneySupply(), BASE_MONEY_SUPPLY + totalBurned);
     EXPECT_EQ(m_dynamicSupply.getTotalSupply(), BASE_MONEY_SUPPLY);
 }
@@ -126,12 +126,12 @@ TEST_F(DynamicSupplyIntegrationTest, RegularVsForeverDeposits) {
     foreverDeposit.unlockHeight = 0;
     
     // Add both deposits
-    m_depositIndex.addDeposit(regularDeposit);
-    m_depositIndex.addDeposit(foreverDeposit);
+    m_bankingIndex.addDeposit(regularDeposit);
+    m_bankingIndex.addDeposit(foreverDeposit);
     
     // Only FOREVER deposit should be counted as burned
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), foreverAmount);
-    EXPECT_EQ(m_depositIndex.getTotalLockedAmount(), regularAmount);
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), foreverAmount);
+    EXPECT_EQ(m_bankingIndex.getTotalLockedAmount(), regularAmount);
     
     // Add burned amount to dynamic supply
     m_dynamicSupply.addBurnedXfg(foreverAmount);
@@ -154,7 +154,7 @@ TEST_F(DynamicSupplyIntegrationTest, CurrencyIntegrationWithDeposits) {
     deposit.height = 1000;
     deposit.unlockHeight = 0;
     
-    m_depositIndex.addDeposit(deposit);
+    m_bankingIndex.addDeposit(deposit);
     
     // Update currency with burned amount
     m_currency.addBurnedXfg(burnAmount);
@@ -170,7 +170,7 @@ TEST_F(DynamicSupplyIntegrationTest, CurrencyIntegrationWithDeposits) {
 }
 
 // Test 5: Deposit Index State Persistence
-TEST_F(DynamicSupplyIntegrationTest, DepositIndexStatePersistence) {
+TEST_F(DynamicSupplyIntegrationTest, BankingIndexStatePersistence) {
     uint64_t depositAmount = TEST_DEPOSIT_AMOUNT;
     
     // Create and add deposit
@@ -182,19 +182,19 @@ TEST_F(DynamicSupplyIntegrationTest, DepositIndexStatePersistence) {
     deposit.height = 1000;
     deposit.unlockHeight = 0;
     
-    m_depositIndex.addDeposit(deposit);
+    m_bankingIndex.addDeposit(deposit);
     
     // Serialize deposit index state
-    std::string serialized = m_depositIndex.serialize();
+    std::string serialized = m_bankingIndex.serialize();
     EXPECT_FALSE(serialized.empty());
     
     // Create new deposit index and deserialize
-    DepositIndex newDepositIndex;
-    newDepositIndex.deserialize(serialized);
+    BankingIndex newBankingIndex;
+    newBankingIndex.deserialize(serialized);
     
     // Verify deserialized state matches original
-    EXPECT_EQ(newDepositIndex.getTotalBurnedAmount(), m_depositIndex.getTotalBurnedAmount());
-    EXPECT_EQ(newDepositIndex.getTotalLockedAmount(), m_depositIndex.getTotalLockedAmount());
+    EXPECT_EQ(newBankingIndex.getTotalBurnedAmount(), m_bankingIndex.getTotalBurnedAmount());
+    EXPECT_EQ(newBankingIndex.getTotalLockedAmount(), m_bankingIndex.getTotalLockedAmount());
 }
 
 // Test 6: Block Reward Calculation Integration
@@ -210,7 +210,7 @@ TEST_F(DynamicSupplyIntegrationTest, BlockRewardCalculationIntegration) {
     deposit.height = 1000;
     deposit.unlockHeight = 0;
     
-    m_depositIndex.addDeposit(deposit);
+    m_bankingIndex.addDeposit(deposit);
     m_dynamicSupply.addBurnedXfg(burnAmount);
     m_currency.addBurnedXfg(burnAmount);
     
@@ -241,13 +241,13 @@ TEST_F(DynamicSupplyIntegrationTest, LargeScaleIntegrationTest) {
         deposit.height = 1000 + i;
         deposit.unlockHeight = 0;
         
-        m_depositIndex.addDeposit(deposit);
+        m_bankingIndex.addDeposit(deposit);
         m_dynamicSupply.addBurnedXfg(depositAmount);
         m_currency.addBurnedXfg(depositAmount);
     }
     
     // Verify all components are in sync
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), totalBurned);
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), totalBurned);
     EXPECT_EQ(m_dynamicSupply.getTotalBurnedXfg(), totalBurned);
     EXPECT_EQ(m_dynamicSupply.getTotalRebornXfg(), totalBurned);
     EXPECT_EQ(m_dynamicSupply.getBaseMoneySupply(), BASE_MONEY_SUPPLY + totalBurned);
@@ -269,11 +269,11 @@ TEST_F(DynamicSupplyIntegrationTest, ErrorHandlingAndEdgeCases) {
     zeroDeposit.height = 1000;
     zeroDeposit.unlockHeight = 0;
     
-    m_depositIndex.addDeposit(zeroDeposit);
+    m_bankingIndex.addDeposit(zeroDeposit);
     m_dynamicSupply.addBurnedXfg(0);
     
     // Verify zero amount doesn't affect totals
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), 0);
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), 0);
     EXPECT_EQ(m_dynamicSupply.getTotalBurnedXfg(), 0);
     EXPECT_EQ(m_dynamicSupply.getBaseMoneySupply(), BASE_MONEY_SUPPLY);
     
@@ -288,11 +288,11 @@ TEST_F(DynamicSupplyIntegrationTest, ErrorHandlingAndEdgeCases) {
     maxDeposit.height = 1001;
     maxDeposit.unlockHeight = 0;
     
-    m_depositIndex.addDeposit(maxDeposit);
+    m_bankingIndex.addDeposit(maxDeposit);
     m_dynamicSupply.addBurnedXfg(maxAmount);
     
     // Verify large amount is handled correctly
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), maxAmount);
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), maxAmount);
     EXPECT_EQ(m_dynamicSupply.getTotalBurnedXfg(), maxAmount);
     EXPECT_EQ(m_dynamicSupply.getBaseMoneySupply(), BASE_MONEY_SUPPLY + maxAmount);
 }
@@ -310,12 +310,12 @@ TEST_F(DynamicSupplyIntegrationTest, StateValidationAcrossComponents) {
     deposit.height = 1000;
     deposit.unlockHeight = 0;
     
-    m_depositIndex.addDeposit(deposit);
+    m_bankingIndex.addDeposit(deposit);
     m_dynamicSupply.addBurnedXfg(burnAmount);
     m_currency.addBurnedXfg(burnAmount);
     
     // Verify all components are consistent
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), m_dynamicSupply.getTotalBurnedXfg());
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), m_dynamicSupply.getTotalBurnedXfg());
     EXPECT_EQ(m_dynamicSupply.getTotalBurnedXfg(), m_dynamicSupply.getTotalRebornXfg());
     EXPECT_EQ(m_dynamicSupply.getBaseMoneySupply(), BASE_MONEY_SUPPLY + burnAmount);
     EXPECT_EQ(m_dynamicSupply.getTotalSupply(), BASE_MONEY_SUPPLY);
@@ -342,7 +342,7 @@ TEST_F(DynamicSupplyIntegrationTest, PerformanceTest) {
         deposit.height = 1000 + i;
         deposit.unlockHeight = 0;
         
-        m_depositIndex.addDeposit(deposit);
+        m_bankingIndex.addDeposit(deposit);
         m_dynamicSupply.addBurnedXfg(operationAmount);
     }
     
@@ -354,7 +354,7 @@ TEST_F(DynamicSupplyIntegrationTest, PerformanceTest) {
     
     // Verify final state is correct
     uint64_t expectedTotal = operationAmount * numOperations;
-    EXPECT_EQ(m_depositIndex.getTotalBurnedAmount(), expectedTotal);
+    EXPECT_EQ(m_bankingIndex.getTotalBurnedAmount(), expectedTotal);
     EXPECT_EQ(m_dynamicSupply.getTotalBurnedXfg(), expectedTotal);
     EXPECT_EQ(m_dynamicSupply.getTotalRebornXfg(), expectedTotal);
 }

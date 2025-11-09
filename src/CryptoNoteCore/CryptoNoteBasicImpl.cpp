@@ -65,6 +65,7 @@ namespace CryptoNote {
     BinaryArray ba;
     bool r = toBinaryArray(adr, ba);
     assert(r);
+    (void)r; // Suppress unused variable warning
     return Tools::Base58::encode_addr(prefix, Common::asString(ba));
   }
   //-----------------------------------------------------------------------

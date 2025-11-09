@@ -1,7 +1,5 @@
-// Copyright (c) 2017-2025 Elderfire Privacy Council
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2014-2017 The XDN developers
-// Copyright (c) 2012-2018 The CryptoNote developers
+// Copyright (c) 2017-2026 Fuego Developers
+// Copyright (c) 2025 Elderfire Privacy Council
 //
 // This file is part of Fuego.
 //
@@ -81,25 +79,25 @@ public:
     // Validate burn proof data file
     static bool validateBPDF(const std::string& filePath);
     
-    // Calculate nullifier from secret (same as xfgwinter)
+    // nullifier from secret (same as xfgwinter)
     static Crypto::Hash calculateNullifier(const Crypto::SecretKey& secret);
     
-    // Calculate commitment from secret and amount (pure, no recipient)
+    // commitment from secret and amount (pure, no recipient)
     static Crypto::Hash calculateCommitment(const Crypto::SecretKey& secret, uint64_t amount);
     
-    // Calculate recipient hash from address
+    // recipient hash from address
     static Crypto::Hash calculateRecipientHash(const std::string& recipientAddress);
     
-    // Calculate transaction extra hash (just the secret)
+    // transaction extra hash (just the secret)
     static Crypto::Hash calculateTxExtraHash(const Crypto::SecretKey& secret);
     
-    // Calculate network validation hash
+    // network validation hash
     static Crypto::Hash calculateNetworkValidationHash(uint64_t networkId, const std::string& genesisTx);
     
     // Validate Arbitrum address format
     static bool isValidArbitrumAddress(const std::string& address);
     
-    // Validate XFG amount (supports both 0.8 XFG and 800 XFG)
+    // Validate XFG amount (supports 0.8 XFG and 800 XFG)
     static bool isValidXfgAmount(uint64_t amount);
 
 private:

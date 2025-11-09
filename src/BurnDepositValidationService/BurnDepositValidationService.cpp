@@ -1,3 +1,18 @@
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2025 Elderfire Privacy Group
+//
+// This file is part of Fuego.
+//
+// Fuego is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fuego includes elements written
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
+
 #include "BurnDepositValidationService.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/Currency.h"
@@ -39,14 +54,14 @@ BurnDepositValidationResult BurnDepositValidationResult::failure(const std::stri
 // BurnDepositConfig implementation
 BurnDepositConfig BurnDepositConfig::getDefault() {
     BurnDepositConfig config;
-    config.minimumBurnAmount = 1000000;  // 1 XFG minimum
-    config.maximumBurnAmount = 1000000000000;  // 1M XFG maximum
+    config.minimumBurnAmount = 8000000;  // 0.8 XFG minimum
+    config.maximumBurnAmount = 8000000000;  // 800 XFG maximum
     config.proofExpirationSeconds = 3600;  // 1 hour
     config.requireProofValidation = true;
     config.treasuryAddress = "";
-    config.fastPassConsensusThreshold = 2;  // 2/2 fast pass Eldernodes
+    config.fastPassConsensusThreshold = 2;  // 2/2 fastpass Eldernodes
     config.fallbackConsensusThreshold = 4;  // 4/5 fallback Eldernodes
-    config.totalEldernodes = 5;     // Total Eldernodes in network
+    config.totalEldernodes = 5;     // Total Eldernodes 
     config.enableDualValidation = true;  // Both commitment and burn amount validation
     config.enableFastPass = true;   // Enable 2/2 fast pass consensus
     return config;

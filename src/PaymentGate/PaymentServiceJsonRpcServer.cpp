@@ -91,7 +91,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("getRealTotalSupply", jsonHandler<GetRealTotalSupply::Request, GetRealTotalSupply::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetRealTotalSupply, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getTotalDepositAmount", jsonHandler<GetTotalDepositAmount::Request, GetTotalDepositAmount::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetTotalDepositAmount, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getCirculatingSupply", jsonHandler<GetCirculatingSupply::Request, GetCirculatingSupply::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetCirculatingSupply, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getTotalBurnedXfg", jsonHandler<GetTotalBurnedXfg::Request, GetTotalBurnedXfg::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetTotalBurnedXfg, this, std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("getEternalFlame", jsonHandler<GetEthernalXFG::Request, GetEthernalXFG::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetEthernalXFG, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getDynamicSupplyOverview", jsonHandler<GetDynamicSupplyOverview::Request, GetDynamicSupplyOverview::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetDynamicSupplyOverview, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("estimateFusion", jsonHandler<EstimateFusion::Request, EstimateFusion::Response>(std::bind(&PaymentServiceJsonRpcServer::handleEstimateFusion, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("sendFusionTransaction", jsonHandler<SendFusionTransaction::Request, SendFusionTransaction::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSendFusionTransaction, this, std::placeholders::_1, std::placeholders::_2)));
@@ -278,6 +278,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDep
   // Check if this is a burn deposit (FOREVER term)
   bool isBurnDeposit = (request.term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
   response.isBurnDeposit = isBurnDeposit;
+  response.useStagedUnlock = request.useStagedUnlock;
   
   // Generate commitment based on deposit type
   if (isBurnDeposit) {
@@ -288,7 +289,12 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDep
       request.term, request.amount, commitment.metadata);
   }
   
-  return service.createDeposit(request.amount, request.term, request.sourceAddress, response.transactionHash, commitment);
+  // Calculate transaction fees
+  uint64_t baseFee = 800000; // 0.008 XFG base transaction fee
+  response.transactionFee = baseFee;
+  response.totalFees = request.useStagedUnlock ? (baseFee * 5) : baseFee; // 5 transactions for staged unlock
+  
+  return service.createDeposit(request.amount, request.term, request.sourceAddress, response.transactionHash, commitment, request.useStagedUnlock);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit(const CreateBurnDeposit::Request& request, CreateBurnDeposit::Response& response) {
@@ -541,7 +547,16 @@ std::error_code PaymentServiceJsonRpcServer::handleSendDeposit(const SendDeposit
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response) {
-  return service.getDeposit(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address);
+  std::error_code result = service.getDepositWithStagedInfo(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address, response.useStagedUnlock);
+  
+  if (!result) {
+    // Calculate transaction fees
+    uint64_t baseFee = 800000; // 0.008 XFG base transaction fee
+    response.transactionFee = baseFee;
+    response.totalFees = response.useStagedUnlock ? (baseFee * 4) : baseFee;
+  }
+  
+  return result;
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetAddresses(const GetAddresses::Request& request, GetAddresses::Response& response) {
@@ -586,9 +601,9 @@ std::error_code PaymentServiceJsonRpcServer::handleGetCirculatingSupply(const Ge
   return service.getCirculatingSupply(response);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetTotalBurnedXfg(const GetTotalBurnedXfg::Request& request, GetTotalBurnedXfg::Response& response)
+std::error_code PaymentServiceJsonRpcServer::handleGetEthernalXFG(const GetEthernalXFG::Request& request, GetEthernalXFG::Response& response)
 {
-  return service.getTotalBurnedXfg(response);
+  return service.getEternalFlame(response);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDynamicSupplyOverview(const GetDynamicSupplyOverview::Request& request, GetDynamicSupplyOverview::Response& response)

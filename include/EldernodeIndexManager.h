@@ -1,3 +1,18 @@
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2020-2025 Elderfire Privacy Group
+// Copyright (c) 2011-2017 The Cryptonote developers
+//
+// This file is part of Fuego.
+//
+// Fuego is free software distributed in the hope that it
+// will be useful- but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You are encouraged to redistribute it and/or modify it
+// under the terms of the GNU General Public License v3 or later
+// versions as published by the Free Software Foundation.
+// You should receive a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>
+
 #pragma once
 
 #include <unordered_map>
@@ -12,7 +27,7 @@
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
 #include "IBlockchainExplorer.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 
 namespace CryptoNote {
 
@@ -64,7 +79,7 @@ public:
     virtual bool hasElderCouncilQuorum(const Crypto::PublicKey& targetPublicKey) const = 0;
     virtual bool canElderfierVote(const Crypto::PublicKey& voterPublicKey) const = 0;
     
-    // Elderfier voting interface (email inbox system)
+    // Elderfier voting interface (elder council inbox)
     virtual bool createVotingMessage(const MisbehaviorEvidence& evidence) = 0;
     virtual std::vector<ElderCouncilVotingMessage> getVotingMessages(const Crypto::PublicKey& elderfierPublicKey) const = 0;
     virtual std::vector<ElderCouncilVotingMessage> getUnreadVotingMessages(const Crypto::PublicKey& elderfierPublicKey) const = 0;
@@ -98,6 +113,9 @@ public:
     
     // Slashing functionality
     virtual bool slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) = 0;
+    virtual bool forceSlashEldernode(const Crypto::PublicKey& publicKey, ElderCouncilVoteType slashType, const std::string& reason) = 0;
+    virtual bool processElderCouncilSlashingVote(const Crypto::PublicKey& targetPublicKey, const ElderCouncilVotingMessage& votingResult) = 0;
+    virtual uint32_t getTotalActiveElderfiers() const = 0;
 };
 
 class EldernodeIndexManager : public IEldernodeIndexManager {
@@ -149,7 +167,7 @@ public:
     bool hasElderCouncilQuorum(const Crypto::PublicKey& targetPublicKey) const override;
     bool canElderfierVote(const Crypto::PublicKey& voterPublicKey) const override;
     
-    // Elderfier voting interface (email inbox system)
+    // Elderfier voting interface (elder council inbox)
     bool createVotingMessage(const MisbehaviorEvidence& evidence) override;
     std::vector<ElderCouncilVotingMessage> getVotingMessages(const Crypto::PublicKey& elderfierPublicKey) const override;
     std::vector<ElderCouncilVotingMessage> getUnreadVotingMessages(const Crypto::PublicKey& elderfierPublicKey) const override;
@@ -196,22 +214,24 @@ public:
     
     // Blockchain integration
     void setBlockchainExplorer(IBlockchainExplorer* explorer);
-    void setDepositIndex(const DepositIndex* depositIndex);
+    void setBankingIndex(const BankingIndex* bankingIndex);
     
     // Auto-generation of fresh proofs
     bool generateFreshProof(const Crypto::PublicKey& publicKey, const std::string& feeAddress);
     bool regenerateAllProofs();
     
-    // Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers
+    // Note: Old stake proof methods removed - 0xE8 tag used now for 'Elderfyre Stayking' deposits
     
     // Slashing functionality
     bool slashEldernode(const Crypto::PublicKey& publicKey, const std::string& reason) override;
+    bool forceSlashEldernode(const Crypto::PublicKey& publicKey, ElderCouncilVoteType slashType, const std::string& reason) override;
+    bool processElderCouncilSlashingVote(const Crypto::PublicKey& targetPublicKey, const ElderCouncilVotingMessage& votingResult) override;
+    uint32_t getTotalActiveElderfiers() const override;
 
 private:
     Logging::LoggerRef logger;
     mutable std::mutex m_mutex;
     std::unordered_map<Crypto::PublicKey, ENindexEntry> m_eldernodes;
-    // Note: m_stakeProofs removed - now using 0x06 tag deposits for Elderfiers
     std::unordered_map<Crypto::PublicKey, EldernodeConsensusParticipant> m_consensusParticipants;
     ConsensusThresholds m_consensusThresholds;
     ElderfierServiceConfig m_elderfierConfig;
@@ -223,7 +243,7 @@ private:
     
     // Blockchain integration
     IBlockchainExplorer* m_blockchainExplorer;
-    const DepositIndex* m_depositIndex;
+    const BankingIndex* m_bankingIndex;
     
     // Monitoring configuration and thread
     ElderfierMonitoringConfig m_monitoringConfig;
@@ -235,7 +255,7 @@ private:
     std::unordered_map<Crypto::Hash, MempoolSecurityWindow> m_mempoolBuffer;
     std::unordered_map<Crypto::PublicKey, std::vector<ElderCouncilVote>> m_elderCouncilVotes;
     
-    // Elderfier voting interface (email inbox system)
+    // Elderfier voting interface (elder council inbox)
     std::unordered_map<Crypto::Hash, ElderCouncilVotingMessage> m_votingMessages;
     std::unordered_map<Crypto::PublicKey, std::vector<Crypto::Hash>> m_elderfierMessageInbox;
     std::unordered_map<Crypto::PublicKey, std::vector<Crypto::Hash>> m_elderfierReadMessages;
@@ -243,7 +263,6 @@ private:
     
     // Helper methods
     bool validateEldernodeEntry(const ENindexEntry& entry) const;
-    // Note: validateStakeProof removed - now using 0x06 tag deposits for Elderfiers
     bool validateElderfierServiceId(const ElderfierServiceId& serviceId) const;
     bool hasServiceIdConflict(const ElderfierServiceId& serviceId, const Crypto::PublicKey& excludeKey) const;
     Crypto::Hash calculateStakeHash(const Crypto::PublicKey& publicKey, uint64_t amount, uint64_t timestamp) const;
@@ -278,7 +297,7 @@ private:
     bool hasVoted(const Crypto::PublicKey& voterPublicKey, const Crypto::PublicKey& targetPublicKey) const;
     uint32_t calculateRequiredQuorum() const;
     
-    // Elderfier voting interface helpers
+    // Elderfier voting UI helpers
     Crypto::Hash generateMessageId(const MisbehaviorEvidence& evidence) const;
     std::string generateVotingSubject(const MisbehaviorEvidence& evidence) const;
     std::string generateVotingDescription(const MisbehaviorEvidence& evidence) const;

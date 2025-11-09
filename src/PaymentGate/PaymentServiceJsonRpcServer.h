@@ -117,7 +117,7 @@ private:
   std::error_code handleGetRealTotalSupply(const GetRealTotalSupply::Request& request, GetRealTotalSupply::Response& response);
   std::error_code handleGetTotalDepositAmount(const GetTotalDepositAmount::Request& request, GetTotalDepositAmount::Response& response);
   std::error_code handleGetCirculatingSupply(const GetCirculatingSupply::Request& request, GetCirculatingSupply::Response& response);
-  std::error_code handleGetTotalBurnedXfg(const GetTotalBurnedXfg::Request& request, GetTotalBurnedXfg::Response& response);
+  std::error_code handleGetEthernalXFG(const GetEthernalXFG::Request& request, GetEthernalXFG::Response& response);
   std::error_code handleGetDynamicSupplyOverview(const GetDynamicSupplyOverview::Request& request, GetDynamicSupplyOverview::Response& response);
 };
 

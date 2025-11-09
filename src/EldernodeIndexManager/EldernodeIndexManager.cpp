@@ -4,7 +4,7 @@
 #include "crypto/hash.h"
 #include "Logging/LoggerRef.h"
 #include "IBlockchainExplorer.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -20,7 +20,7 @@ EldernodeIndexManager::EldernodeIndexManager(Logging::ILogger& log)
     , m_elderfierConfig(ElderfierServiceConfig::getDefault())
     , m_lastUpdate(std::chrono::system_clock::now())
     , m_blockchainExplorer(nullptr)
-    , m_depositIndex(nullptr)
+    , m_bankingIndex(nullptr)
     , m_monitoringConfig(ElderfierMonitoringConfig::getDefault())
     , m_monitoringActive(false)
     , m_shouldStopMonitoring(false) {
@@ -1166,9 +1166,9 @@ void EldernodeIndexManager::setBlockchainExplorer(IBlockchainExplorer* explorer)
     logger(INFO) << "Blockchain explorer set for Elderfier deposit monitoring";
 }
 
-void EldernodeIndexManager::setDepositIndex(const DepositIndex* depositIndex) {
+void EldernodeIndexManager::setBankingIndex(const BankingIndex* bankingIndex) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_depositIndex = depositIndex;
+    m_bankingIndex = bankingIndex;
     logger(INFO) << "Deposit index set for Elderfier deposit monitoring";
 }
 
@@ -2254,34 +2254,169 @@ bool EldernodeIndexManager::slashEldernode(const Crypto::PublicKey& publicKey, c
     ENindexEntry updatedEntry = entry;
     updatedEntry.stakeAmount -= slashedAmount;
     
-    // Handle slashed amount based on destination
-    switch (m_elderfierConfig.slashingConfig.destination) {
-        case SlashingDestination::BURN:
-            logger(INFO) << "Burned " << slashedAmount << " XFG from Eldernode: " << Common::podToHex(publicKey);
-            break;
-            
-        case SlashingDestination::TREASURY:
-            logger(INFO) << "Sent " << slashedAmount << " XFG to treasury from Eldernode: " << Common::podToHex(publicKey);
-            break;
-            
-        case SlashingDestination::REDISTRIBUTE:
-            redistributeSlashedStake(slashedAmount);
-            logger(INFO) << "Redistributed " << slashedAmount << " XFG to other Eldernodes from: " << Common::podToHex(publicKey);
-            break;
-            
-        case SlashingDestination::CHARITY:
-            logger(INFO) << "Sent " << slashedAmount << " XFG to charity from Eldernode: " << Common::podToHex(publicKey);
-            break;
-    }
+    // SLASHED FUNDS ARE ALWAYS BURNED (removed from circulation)
+    // This prevents perverse incentives and ensures penalties are meaningful
+    logger(INFO) << "Burned " << slashedAmount << " XFG from Eldernode: " << Common::podToHex(publicKey)
+                << " (slashed funds are permanently removed from circulation)";
     
     // Update the Eldernode
     it->second = updatedEntry;
     m_lastUpdate = std::chrono::system_clock::now();
     
-    logger(INFO) << "Slashed Eldernode: " << Common::podToHex(publicKey) 
+    logger(INFO) << "Slashed Eldernode: " << Common::podToHex(publicKey)
                 << " amount: " << slashedAmount << " reason: " << reason;
-    
+
     return true;
+}
+
+bool EldernodeIndexManager::forceSlashEldernode(const Crypto::PublicKey& publicKey, ElderCouncilVoteType slashType, const std::string& reason) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (!m_elderfierConfig.slashingConfig.enableSlashing) {
+        logger(WARNING) << "Slashing is disabled";
+        return false;
+    }
+
+    if (!m_elderfierConfig.slashingConfig.allowForceSlashing) {
+        logger(WARNING) << "Force slashing is disabled";
+        return false;
+    }
+
+    auto it = m_eldernodes.find(publicKey);
+    if (it == m_eldernodes.end()) {
+        logger(ERROR) << "Eldernode not found for force slashing: " << Common::podToHex(publicKey);
+        return false;
+    }
+
+    const auto& entry = it->second;
+    if (entry.tier != EldernodeTier::ELDERFIER) {
+        logger(ERROR) << "Cannot force slash Basic Eldernode: " << Common::podToHex(publicKey);
+        return false;
+    }
+
+    // Get slashing percentage based on vote type
+    uint64_t slashingPercentage = m_elderfierConfig.slashingConfig.getSlashingPercentage(slashType);
+    uint64_t slashedAmount = (entry.stakeAmount * slashingPercentage) / 100;
+
+    if (slashedAmount == 0) {
+        logger(INFO) << "No slashing required for Eldernode: " << Common::podToHex(publicKey)
+                    << " (vote type: " << static_cast<int>(slashType) << ")";
+        return true; // Not an error, just no slashing needed
+    }
+
+    // Update the Eldernode entry with reduced stake
+    ENindexEntry updatedEntry = entry;
+    updatedEntry.stakeAmount -= slashedAmount;
+
+    // ALL slashing ALWAYS burns funds (removed from circulation)
+    // This ensures bad actors lose their stake permanently and prevents perverse incentives
+    logger(INFO) << "Force burned " << slashedAmount << " XFG (" << slashingPercentage
+                << "%) from Eldernode: " << Common::podToHex(publicKey)
+                << " vote type: " << static_cast<int>(slashType) << " reason: " << reason;
+
+    // Update the Eldernode
+    it->second = updatedEntry;
+    m_lastUpdate = std::chrono::system_clock::now();
+
+    // Force slash removes the node from active service immediately
+    // (unlike regular slashing which may allow continued operation)
+    if (slashingPercentage >= 50) { // Half or full slash = remove from service
+        logger(INFO) << "Force removing Eldernode from active service: " << Common::podToHex(publicKey);
+        // Additional logic could mark node as inactive here
+    }
+
+    return true;
+}
+
+bool EldernodeIndexManager::processElderCouncilSlashingVote(const Crypto::PublicKey& targetPublicKey, const ElderCouncilVotingMessage& votingResult) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    // Validate voting result
+    if (!votingResult.isValid()) {
+        logger(ERROR) << "Invalid Elder Council voting result for: " << Common::podToHex(targetPublicKey);
+        return false;
+    }
+
+    // For 0x06 deposit interventions, require >80% quorum consensus
+    // This is enforced via the Elderfier message (0xEF) consensus requirements
+    uint32_t totalEligibleVoters = getTotalActiveElderfiers();
+    uint32_t actualVotes = votingResult.currentVotes;
+    uint32_t quorumPercentage = (actualVotes * 100) / totalEligibleVoters;
+
+    // Check if voting reached required quorum (>80% for slashing decisions)
+    const uint32_t REQUIRED_QUORUM_PERCENTAGE = 80;
+    if (quorumPercentage < REQUIRED_QUORUM_PERCENTAGE) {
+        logger(INFO) << "Elder Council voting for " << Common::podToHex(targetPublicKey)
+                    << " requires >80% quorum. Current: " << quorumPercentage << "% ("
+                    << actualVotes << "/" << totalEligibleVoters << " votes)";
+        return true; // Not an error, just insufficient quorum
+    }
+
+    // Determine the winning vote type by counting votes
+    std::map<ElderCouncilVoteType, uint32_t> voteCounts;
+    for (const auto& vote : votingResult.votes) {
+        if (vote.isValid()) {
+            voteCounts[vote.confirmedVoteType]++;
+        }
+    }
+
+    // Find the vote type with the most votes
+    ElderCouncilVoteType winningVote = ElderCouncilVoteType::SLASH_NONE;
+    uint32_t maxVotes = 0;
+    for (const auto& pair : voteCounts) {
+        if (pair.second > maxVotes) {
+            maxVotes = pair.second;
+            winningVote = pair.first;
+        }
+    }
+
+    logger(INFO) << "Processing Elder Council slashing vote for " << Common::podToHex(targetPublicKey)
+                << " - Winning vote: " << static_cast<int>(winningVote)
+                << " - Reason: " << votingResult.description;
+
+    // Process based on vote outcome
+    switch (winningVote) {
+        case ElderCouncilVoteType::SLASH_NONE:
+            // No slashing - Elderfier is cleared of charges
+            logger(INFO) << "Elder Council acquitted Eldernode: " << Common::podToHex(targetPublicKey);
+            // Could mark as cleared or take other actions
+            return true;
+
+        case ElderCouncilVoteType::GOOD_KEEPALL:
+            // Positive acknowledgment - no slashing, good participation recognized
+            logger(INFO) << "Elder Council acknowledged good participation by Eldernode: " << Common::podToHex(targetPublicKey)
+                        << " - No slashing, stake preserved";
+            // Could implement positive incentives here (reputation boost, etc.)
+            return true;
+
+        case ElderCouncilVoteType::SLASH_HALF:
+            // Slash half the stake and burn it
+            return forceSlashEldernode(targetPublicKey, ElderCouncilVoteType::SLASH_HALF,
+                "Elder Council vote: Half slash - " + votingResult.description);
+
+        case ElderCouncilVoteType::SLASH_ALL:
+            // Slash all stake and burn it
+            return forceSlashEldernode(targetPublicKey, ElderCouncilVoteType::SLASH_ALL,
+                "Elder Council vote: Full slash - " + votingResult.description);
+
+        default:
+            logger(ERROR) << "Unknown Elder Council vote type: " << static_cast<int>(winningVote);
+            return false;
+    }
+}
+
+uint32_t EldernodeIndexManager::getTotalActiveElderfiers() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    uint32_t count = 0;
+    for (const auto& pair : m_eldernodes) {
+        const auto& entry = pair.second;
+        if (entry.tier == EldernodeTier::ELDERFIER && entry.isActive) {
+            count++;
+        }
+    }
+
+    return count;
 }
 
 // Private helper methods

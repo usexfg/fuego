@@ -23,6 +23,7 @@
 #include "IWallet.h"
 #include "INode.h"
 #include "CryptoNoteCore/Currency.h"
+#include "CryptoNoteCore/StagedUnlockStorage.h"
 #include "PaymentServiceJsonRpcMessages.h"
 #undef ERROR //TODO: workaround for windows build. fix it
 #include "Logging/LoggerRef.h"
@@ -97,7 +98,7 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code sendDelayedTransaction(const std::string &transactionHash);
   std::error_code getUnconfirmedTransactionHashes(const std::vector<std::string> &addresses, std::vector<std::string> &transactionHashes);
   std::error_code getStatus(uint32_t &blockCount, uint32_t &knownBlockCount, std::string &lastBlockHash, uint32_t &peerCount, uint32_t &depositCount, uint32_t &transactionCount, uint32_t &addressCount, std::string &networkId);
-  std::error_code createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string &transactionHash, const CryptoNote::DepositCommitment& commitment = CryptoNote::DepositCommitment());
+  std::error_code createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string &transactionHash, const CryptoNote::DepositCommitment& commitment = CryptoNote::DepositCommitment(), bool useStagedUnlock = false);
   std::error_code storeBurnDepositSecret(const std::string& transactionHash, const Crypto::SecretKey& secret, uint64_t amount, const std::vector<uint8_t>& metadata);
   std::error_code getBurnDepositSecret(const std::string& transactionHash, Crypto::SecretKey& secret, uint64_t& amount, std::vector<uint8_t>& metadata);
   std::error_code markBurnDepositBPDFGenerated(const std::string& transactionHash);
@@ -108,6 +109,7 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code withdrawDeposit(uint64_t depositId, std::string &transactionHash);
   std::error_code sendDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash);
   std::error_code getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address);
+  std::error_code getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address, bool &useStagedUnlock);
 
   // New methods for dynamic money supply
   std::error_code getMoneySupplyStats(GetMoneySupplyStats::Response &response);
@@ -115,11 +117,11 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code getRealTotalSupply(GetRealTotalSupply::Response &response);
   std::error_code getTotalDepositAmount(GetTotalDepositAmount::Response &response);
   std::error_code getCirculatingSupply(GetCirculatingSupply::Response &response);
-  std::error_code getTotalBurnedXfg(GetTotalBurnedXfg::Response &response);
+  std::error_code getEternalFlame(GetEthernalXFG::Response &response);
   std::error_code getDynamicSupplyOverview(GetDynamicSupplyOverview::Response &response);
   std::error_code getBaseMoneySupply(uint64_t &baseMoneySupply);
   std::error_code getCirculatingSupply(uint64_t &circulatingSupply);
-  std::error_code getTotalBurnedXfg(uint64_t &totalBurnedXfg);
+  std::error_code getEternalFlame(uint64_t &ethernalXFG);
   std::error_code getTotalRebornXfg(uint64_t &totalRebornXfg);
   std::error_code getBurnPercentage(double &burnPercentage);
   std::error_code getRebornPercentage(double &rebornPercentage);
@@ -165,6 +167,9 @@ private:
   System::ContextGroup refreshContext;
 
   std::map<std::string, size_t> transactionIdIndex;
+  
+  // Staged unlock storage
+  CryptoNote::StagedUnlockStorage m_stagedUnlockStorage;
 };
 
 } //namespace PaymentService

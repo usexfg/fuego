@@ -291,16 +291,36 @@ DepositValidationResult DepositValidationResult::failure(const std::string& erro
 // SlashingConfig implementations
 SlashingConfig SlashingConfig::getDefault() {
     SlashingConfig config;
-    config.destination = SlashingDestination::TREASURY;
-    config.destinationAddress = "FUEGOTREASURY123456789abcdef"; // Network treasury address
-    config.slashingPercentage = 50; // 50% of stake slashed for misbehavior
+    config.destination = SlashingDestination::BURN;  // Burn slashed funds (remove from circulation)
+    config.destinationAddress = ""; // Not needed for BURN destination
+    config.slashingPercentage = 50; // Legacy default (50% of stake slashed)
+    config.halfSlashPercentage = 50; // 50% for SLASH_HALF votes
+    config.fullSlashPercentage = 100; // 100% for SLASH_ALL votes
     config.enableSlashing = true;
+    config.allowForceSlashing = true; // Allow Elder Council force slashing
     return config;
 }
 
 bool SlashingConfig::isValid() const {
-    return slashingPercentage > 0 && slashingPercentage <= 100 &&
-           (destination == SlashingDestination::BURN || !destinationAddress.empty());
+    // ONLY BURN destination is allowed for slashed funds
+    return destination == SlashingDestination::BURN &&
+           slashingPercentage > 0 && slashingPercentage <= 100 &&
+           halfSlashPercentage > 0 && halfSlashPercentage <= 100 &&
+           fullSlashPercentage > 0 && fullSlashPercentage <= 100;
+}
+
+uint64_t SlashingConfig::getSlashingPercentage(ElderCouncilVoteType voteType) const {
+    switch (voteType) {
+        case ElderCouncilVoteType::SLASH_HALF:
+            return halfSlashPercentage;
+        case ElderCouncilVoteType::SLASH_ALL:
+            return fullSlashPercentage;
+        case ElderCouncilVoteType::SLASH_NONE:
+        case ElderCouncilVoteType::GOOD_KEEPALL:
+            return 0; // No slashing for positive outcomes
+        default:
+            return slashingPercentage; // Fallback to legacy percentage
+    }
 }
 
 // Note: Old stake proof methods removed - now using 0x06 tag deposits for Elderfiers

@@ -124,7 +124,7 @@ public:
     case DEPOSIT_LOCKED:           return "Deposit is locked";
     case DEPOSIT_WRONG_TERM:       return "Incorrect term";
     case DAEMON_NOT_SYNCED:        return "Daemon is not synchronized";
-    case INSUFFICIENT_OUTPUTS_FOR_RING_SIZE: return "Insufficient outputs for minimum ring size. Please run wallet optimizer to consolidate outputs.";
+    case INSUFFICIENT_OUTPUTS_FOR_RING_SIZE: return "Insufficient outputs for transaction amount. Please run wallet optimizer to consolidate outputs.";
         default:
       return "Unknown error";
     }

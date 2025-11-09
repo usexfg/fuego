@@ -1,5 +1,6 @@
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2020-2025 Elderfire Privacy Group
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2017-2022 Fuego Developers
 //
 // This file is part of Fuego.
 //
@@ -42,6 +43,7 @@ struct TransactionOutputMultisignatureDetails {
 struct TransactionOutputDetails {
   uint64_t amount;
   uint32_t globalIndex;
+  uint32_t creationHeight; // used in decoy analysis | available from v10+ | 0 if unknown
 
   boost::variant<
     TransactionOutputToKeyDetails,

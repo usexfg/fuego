@@ -1,4 +1,7 @@
 // Copyright (c) 2024 Fuego Developers
+// Copyright (c) 2024 Elderfire Privacy Group
+// Copyright (c) 2024 Monero Developers
+//
 //
 // This file is part of Fuego.
 //
@@ -17,17 +20,25 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <memory>
+#include "OSPEADDecoySelection.h"
+#include "IBlockchainExplorer.h"
+
+// Forward declaration for TransactionOutputInfo (defined in OSPEADDecoySelection.h)
+using TransactionOutputInfo = CryptoNote::TransactionOutputInfo;
 
 namespace CryptoNote {
 
-// Structure to hold output information for dynamic ring size calculation
+// Structure to hold output info for ring size calculation
 struct OutputInfo {
   uint64_t amount;
   size_t availableCount;
   std::string description;
-  
-  OutputInfo(uint64_t amt, size_t count, const std::string& desc = "")
-    : amount(amt), availableCount(count), description(desc) {}
+  uint32_t creationHeight; // when output was created (0 if unknown)
+
+  OutputInfo(uint64_t amt, size_t count, const std::string& desc = "", uint32_t height = 0)
+    : amount(amt), availableCount(count), description(desc), creationHeight(height) {}
 };
 
 // Dynamic ring size calculator
@@ -39,7 +50,7 @@ public:
     const std::vector<OutputInfo>& availableOutputs,
     uint8_t blockMajorVersion,
     size_t minRingSize = 8,
-    size_t maxRingSize = 20
+    size_t maxRingSize = 18
   );
   
   // Get target ring sizes in order of preference
@@ -50,18 +61,30 @@ public:
     size_t ringSize,
     const std::vector<OutputInfo>& availableOutputs
   );
+
+  // Check if a ring size is one of our approved uniform sizes
+  static bool isApprovedRingSize(size_t ringSize);
   
   // Get privacy level description for a ring size
   static std::string getPrivacyLevelDescription(size_t ringSize);
+
+  // use OSPEAD principles from Monero for better decoy distribution
+  static std::vector<OutputInfo> filterOutputsByOSPEAD(
+    const std::vector<OutputInfo>& availableOutputs,
+    uint64_t amount,
+    uint64_t currentBlockHeight,
+    const std::vector<TransactionOutputInfo>& recentTransactions,
+    IBlockchainExplorer* blockchainExplorer = nullptr
+  );
 };
 
 // Privacy levels for different ring sizes
 enum class PrivacyLevel {
-  BASIC = 8,      // Minimum enhanced privacy
-  GOOD = 10,      // Good privacy
-  BETTER = 12,    // Better privacy
-  STRONG = 15,    // Strong privacy
-  MAXIMUM = 18    // Maximum privacy
+  MINIMUM = 8,      //   Fuego Standard (minimum of 8)
+  SOLID = 10,      //   Solid privacy (10)
+  BETTER = 12,    //   Better privacy (12)
+  STRONG = 15,    //  Monero's Ring Size (15)
+  MAXIMUM = 18    // Fuego Max Privacy (18)
 };
 
 } // namespace CryptoNote

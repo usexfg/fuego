@@ -1,8 +1,18 @@
-// Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2016-2019 The Karbowanec developers
+// Copyright (c) 2012-2018 The CryptoNote developers
+//
+// This file is part of Fuego.
+//
+// Fuego is free software distributed in the hope that it
+// will be useful, but WITHOUT ANY WARRANTY; without even the
+// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You can redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fuego includes elements written
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "TcpConnection.h"
 #include <cassert>
@@ -94,16 +104,16 @@ size_t TcpConnection::read(uint8_t* data, size_t size) {
           if (!context->interrupted) {
             struct kevent event;
             EV_SET(&event, connection, EVFILT_READ, EV_DELETE | EV_DISABLE, 0, 0, NULL);
-            
+
             if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
               throw std::runtime_error("TcpListener::interruptionProcedure, kevent failed, " + lastErrorMessage());
             }
-            
+
             context->interrupted = true;
             dispatcher->pushContext(context->context);
           }
         };
-        
+
         dispatcher->dispatch();
         dispatcher->getCurrentContext()->interruptProcedure = nullptr;
         assert(dispatcher != nullptr);
@@ -169,16 +179,16 @@ size_t TcpConnection::write(const uint8_t* data, size_t size) {
           if (!context->interrupted) {
             struct kevent event;
             EV_SET(&event, connection, EVFILT_WRITE, EV_DELETE | EV_DISABLE, 0, 0, NULL);
-            
+
             if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
               throw std::runtime_error("TcpListener::stop, kevent failed, " + lastErrorMessage());
             }
-            
+
             context->interrupted = true;
-            dispatcher->pushContext(context->context);            
+            dispatcher->pushContext(context->context);
           }
         };
-        
+
         dispatcher->dispatch();
         dispatcher->getCurrentContext()->interruptProcedure = nullptr;
         assert(dispatcher != nullptr);

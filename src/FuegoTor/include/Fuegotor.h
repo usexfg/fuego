@@ -11,14 +11,14 @@
 namespace CryptoNote {
 
 // Forward declarations
-class TorManager;
-class TorConnection;
-class TorConfig;
+class FuegoTorManager;
+class FuegoTorConnection;
+class FuegoTorConfig;
 
 /**
- * @brief Tor connection status enumeration
+ * @brief FuegoTor connection status enumeration
  */
-enum class TorStatus {
+enum class FuegoTorStatus {
     DISCONNECTED,   // Not connected to Tor
     CONNECTING,     // Attempting to connect
     CONNECTED,      // Successfully connected
@@ -27,10 +27,10 @@ enum class TorStatus {
 };
 
 /**
- * @brief Tor configuration structure
+ * @brief FuegoTor configuration structure
  */
-struct TorConfig {
-    bool enabled = false;                    // Enable Tor integration
+struct FuegoTorConfig {
+    bool enabled = false;                    // Enable FuegoTor integration
     std::string socksHost = "127.0.0.1";     // SOCKS5 proxy host
     uint16_t socksPort = 9050;              // SOCKS5 proxy port
     std::string controlHost = "127.0.0.1";  // Tor control host
@@ -46,21 +46,21 @@ struct TorConfig {
 };
 
 /**
- * @brief Tor connection information
+ * @brief FuegoTor connection information
  */
-struct TorConnectionInfo {
+struct FuegoTorConnectionInfo {
     std::string address;                     // Connection address
     uint16_t port = 0;                      // Connection port
     std::string onionAddress;               // Onion address (if applicable)
-    TorStatus status = TorStatus::UNKNOWN;  // Connection status
+    FuegoTorStatus status = FuegoTorStatus::UNKNOWN;  // Connection status
     uint32_t latency = 0;                  // Connection latency (ms)
     std::string errorMessage;              // Error message (if any)
 };
 
 /**
- * @brief Tor statistics
+ * @brief FuegoTor statistics
  */
-struct TorStats {
+struct FuegoTorStats {
     uint32_t totalConnections = 0;          // Total connections made
     uint32_t successfulConnections = 0;     // Successful connections
     uint32_t failedConnections = 0;        // Failed connections
@@ -71,36 +71,36 @@ struct TorStats {
 };
 
 /**
- * @brief Tor event callback types
+ * @brief FuegoTor event callback types
  */
-using TorStatusCallback = std::function<void(TorStatus status, const std::string& message)>;
-using TorConnectionCallback = std::function<void(const TorConnectionInfo& info)>;
-using TorErrorCallback = std::function<void(const std::string& error)>;
+using FuegoTorStatusCallback = std::function<void(FuegoTorStatus status, const std::string& message)>;
+using FuegoTorConnectionCallback = std::function<void(const FuegoTorConnectionInfo& info)>;
+using FuegoTorErrorCallback = std::function<void(const std::string& error)>;
 
 /**
- * @brief Main Tor integration manager
+ * @brief Main FuegoTor integration manager
  */
-class TorManager {
+class FuegoTorManager {
 public:
     /**
      * @brief Constructor
-     * @param config Tor configuration
+     * @param config FuegoTor configuration
      */
-    explicit TorManager(const TorConfig& config);
+    explicit FuegoTorManager(const FuegoTorConfig& config);
     
     /**
      * @brief Destructor
      */
-    ~TorManager();
+    ~FuegoTorManager();
     
     /**
-     * @brief Initialize Tor integration
+     * @brief Initialize FuegoTor integration
      * @return true if initialization successful
      */
     bool initialize();
     
     /**
-     * @brief Shutdown Tor integration
+     * @brief Shutdown FuegoTor integration
      */
     void shutdown();
     
@@ -111,16 +111,16 @@ public:
     bool isTorAvailable() const;
     
     /**
-     * @brief Get current Tor status
+     * @brief Get current FuegoTor status
      * @return Current status
      */
-    TorStatus getStatus() const;
+    FuegoTorStatus getStatus() const;
     
     /**
-     * @brief Get Tor statistics
+     * @brief Get FuegoTor statistics
      * @return Current statistics
      */
-    TorStats getStats() const;
+    FuegoTorStats getStats() const;
     
     /**
      * @brief Create a Tor connection
@@ -128,7 +128,7 @@ public:
      * @param port Target port
      * @return Connection info
      */
-    TorConnectionInfo createConnection(const std::string& address, uint16_t port);
+    FuegoTorConnectionInfo createConnection(const std::string& address, uint16_t port);
     
     /**
      * @brief Get hidden service address
@@ -140,32 +140,32 @@ public:
      * @brief Set status callback
      * @param callback Status change callback
      */
-    void setStatusCallback(TorStatusCallback callback);
+    void setStatusCallback(FuegoTorStatusCallback callback);
     
     /**
      * @brief Set connection callback
      * @param callback Connection event callback
      */
-    void setConnectionCallback(TorConnectionCallback callback);
+    void setConnectionCallback(FuegoTorConnectionCallback callback);
     
     /**
      * @brief Set error callback
      * @param callback Error event callback
      */
-    void setErrorCallback(TorErrorCallback callback);
+    void setErrorCallback(FuegoTorErrorCallback callback);
     
     /**
      * @brief Update configuration
      * @param config New configuration
      * @return true if update successful
      */
-    bool updateConfig(const TorConfig& config);
+    bool updateConfig(const FuegoTorConfig& config);
     
     /**
      * @brief Get current configuration
      * @return Current configuration
      */
-    TorConfig getConfig() const;
+    FuegoTorConfig getConfig() const;
 
 private:
     class Impl;
@@ -175,7 +175,7 @@ private:
 /**
  * @brief Individual Tor connection
  */
-class TorConnection {
+class FuegoTorConnection {
 public:
     /**
      * @brief Constructor
@@ -297,5 +297,7 @@ namespace TorUtils {
      */
     bool saveConfigToFile(const TorConfig& config, const std::string& filename);
 }
+
+};
 
 } // namespace CryptoNote

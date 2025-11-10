@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -1315,7 +1315,7 @@ namespace PaymentService
       uint32_t knownBlockCount = node.getKnownBlockCount();
       transaction.confirmations = knownBlockCount - transaction.blockIndex;
 
-      /* Cycle through all the transfers in the transaction and extract the address, 
+      /* Cycle through all the transfers in the transaction and extract the address,
        amount, and pull any messages from Extra */
       std::vector<std::string> messages;
       std::vector<uint8_t> extraBin = Common::fromHex(transaction.extra);
@@ -1738,7 +1738,7 @@ namespace PaymentService
         const CryptoNote::DepositCommitment& commitment,
         bool useStagedUnlock)
     {
-    
+
       try
       {
 
@@ -1750,7 +1750,7 @@ namespace PaymentService
           logger(Logging::WARNING) << "Daemon is not synchronized";
           return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
         }
-        
+
         System::EventLock lk(readyEvent);
 
         /* Validate the source addresse if it is are not empty */
@@ -1763,10 +1763,10 @@ namespace PaymentService
 
         /* Check if this is a FOREVER term (burn deposit) */
         bool isForeverTerm = (term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
-        
+
         if (!isForeverTerm) {
           /* For regular deposits, validate term constraints */
-          
+
           /* Deposits should be multiples of DEPOSIT_MIN_TERM blocks */
           if (term % CryptoNote::parameters::DEPOSIT_MIN_TERM != 0)
           {
@@ -1804,7 +1804,7 @@ namespace PaymentService
 
         /* Create or send the deposit */
         wallet.createDeposit(amount, term, sourceAddress, sourceAddress, transactionHash, commitment);
-        
+
         /* Handle staged unlock if requested */
         if (useStagedUnlock && !isBurnDeposit) {
           // Store staged unlock preference for this deposit
@@ -1867,10 +1867,10 @@ namespace PaymentService
 
         /* Check if this is a FOREVER term (burn deposit) */
         bool isForeverTerm = (term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
-        
+
         if (!isForeverTerm) {
           /* For regular deposits, validate term constraints */
-          
+
           if (term < CryptoNote::parameters::DEPOSIT_MIN_TERM)
           {
             return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_SMALL);
@@ -2206,7 +2206,7 @@ namespace PaymentService
         response.baseMoneySupply = currency.getBaseMoneySupply();
         response.ethernalXFG = currency.getEternalFlame();
         response.burnPercentage = currency.getBurnPercentage();
-        
+
         return std::error_code();
       }
       catch (std::exception &e)
@@ -2240,11 +2240,11 @@ namespace PaymentService
         uint64_t baseTotalSupply = currency.getBaseMoneySupply();
         uint64_t ethernalXFG = currency.getEternalFlame();
         uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
-        
+
         uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
         uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
         circulatingSupply = realTotalSupply - totalDepositAmount;
-        
+
         return std::error_code();
       }
       catch (std::exception &e)
@@ -2289,14 +2289,14 @@ namespace PaymentService
     // Removed getSupplyIncreasePercentage - no longer needed
 
 
-        
+
 
   std::error_code WalletService::storeBurnDepositSecret(
       const std::string& transactionHash,
       const Crypto::SecretKey& secret,
       uint64_t amount,
       const std::vector<uint8_t>& metadata) {
-    
+
     try {
       // Store burn deposit secret locally in wallet (never on blockchain)
       // Note: This requires casting to WalletGreen to access burn deposit methods
@@ -2314,7 +2314,7 @@ namespace PaymentService
       Crypto::SecretKey& secret,
       uint64_t& amount,
       std::vector<uint8_t>& metadata) {
-    
+
     try {
       auto& walletGreen = static_cast<CryptoNote::WalletGreen&>(wallet);
       bool found = walletGreen.getBurnDepositSecret(transactionHash, secret, amount, metadata);
@@ -2330,7 +2330,7 @@ namespace PaymentService
 
   std::error_code WalletService::markBurnDepositBPDFGenerated(
       const std::string& transactionHash) {
-    
+
     try {
       auto& walletGreen = static_cast<CryptoNote::WalletGreen&>(wallet);
       walletGreen.markBurnDepositBPDFGenerated(transactionHash);
@@ -2349,7 +2349,7 @@ namespace PaymentService
       uint64_t amount,
       const std::vector<uint8_t>& metadata,
       const std::string& networkId) {
-    
+
     try {
       // Use BurnProofDataFileGenerator to create BPDF
       std::error_code bpdfResult = CryptoNote::BurnProofDataFileGenerator::generateBPDF(
@@ -2359,7 +2359,7 @@ namespace PaymentService
         amount,
         outputPath
       );
-      
+
       if (!bpdfResult) {
         logger(Logging::INFO) << "Generated BPDF successfully";
       } else {
@@ -2377,7 +2377,7 @@ namespace PaymentService
       const std::string& recipientAddress,
       const std::string& outputPath,
       const std::string& networkId) {
-    
+
     try {
       // For manual mode, we need to get transaction data and extract commitment
       // User will provide secret separately (not through RPC for security)
@@ -2386,11 +2386,11 @@ namespace PaymentService
       uint64_t amount;
       std::error_code extractResult = CryptoNote::BurnProofDataFileGenerator::extractSecretFromTransaction(
         transactionHash, secret, amount);
-      
+
       if (extractResult) {
         return extractResult;
       }
-      
+
       std::error_code bpdfResult = CryptoNote::BurnProofDataFileGenerator::generateBPDF(
         transactionHash,
         secret,
@@ -2398,7 +2398,7 @@ namespace PaymentService
         amount,
         outputPath
       );
-      
+
       if (!bpdfResult) {
         logger(Logging::INFO) << "Generated BPDF (manual) successfully";
       } else {
@@ -2426,10 +2426,10 @@ namespace PaymentService
     {
       // baseTotalSupply = All XFG created (base money supply)
       response.baseTotalSupply = currency.getBaseMoneySupply();
-      
+
       // Format amount for display
       response.formattedAmount = formatAmount(response.baseTotalSupply);
-      
+
       return std::error_code();
     }
     catch (std::exception &e)
@@ -2446,14 +2446,14 @@ namespace PaymentService
       // realTotalSupply = baseTotalSupply - ethernalXFG
       uint64_t baseTotalSupply = currency.getBaseMoneySupply();
       uint64_t ethernalXFG = currency.getEternalFlame();
-      
+
       response.baseTotalSupply = baseTotalSupply;
       response.ethernalXFG = ethernalXFG;
       response.realTotalSupply = baseTotalSupply - ethernalXFG;
-      
+
       // Format amount for display
       response.formattedAmount = formatAmount(response.realTotalSupply);
-      
+
       return std::error_code();
     }
     catch (std::exception &e)
@@ -2470,14 +2470,14 @@ namespace PaymentService
       // totalDepositAmount = currentAmount in deposits - ethernalXFG
       uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
       uint64_t ethernalXFG = currency.getEternalFlame();
-      
+
       response.currentDepositAmount = currentDepositAmount;
       response.ethernalXFG = ethernalXFG;
       response.totalDepositAmount = currentDepositAmount - ethernalXFG;
-      
+
       // Format amount for display
       response.formattedAmount = formatAmount(response.totalDepositAmount);
-      
+
       return std::error_code();
     }
     catch (std::exception &e)
@@ -2495,18 +2495,18 @@ namespace PaymentService
       uint64_t baseTotalSupply = currency.getBaseMoneySupply();
       uint64_t ethernalXFG = currency.getEternalFlame();
       uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
-      
+
       uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
       uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
       uint64_t circulatingSupply = realTotalSupply - totalDepositAmount;
-      
+
       response.realTotalSupply = realTotalSupply;
       response.totalDepositAmount = totalDepositAmount;
       response.circulatingSupply = circulatingSupply;
-      
+
       // Format amount for display
       response.formattedAmount = formatAmount(response.circulatingSupply);
-      
+
       return std::error_code();
     }
     catch (std::exception &e)
@@ -2522,10 +2522,10 @@ namespace PaymentService
     {
       // ethernalXFG = Total burned XFG
       response.ethernalXFG = currency.getEternalFlame();
-      
+
       // Format amount for display
       response.formattedAmount = formatAmount(response.ethernalXFG);
-      
+
       return std::error_code();
     }
     catch (std::exception &e)
@@ -2543,12 +2543,12 @@ namespace PaymentService
       uint64_t baseTotalSupply = currency.getBaseMoneySupply();
       uint64_t ethernalXFG = currency.getEternalFlame();
       uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
-      
+
       // Calculate derived values
       uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
       uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
       uint64_t circulatingSupply = realTotalSupply - totalDepositAmount;
-      
+
       // Set raw values
       response.baseTotalSupply = baseTotalSupply;
       response.realTotalSupply = realTotalSupply;
@@ -2556,7 +2556,7 @@ namespace PaymentService
       response.circulatingSupply = circulatingSupply;
       response.ethernalXFG = ethernalXFG;
       response.currentDepositAmount = currentDepositAmount;
-      
+
       // Format amounts for display
       response.baseTotalSupplyFormatted = formatAmount(baseTotalSupply);
       response.realTotalSupplyFormatted = formatAmount(realTotalSupply);
@@ -2564,12 +2564,12 @@ namespace PaymentService
       response.circulatingSupplyFormatted = formatAmount(circulatingSupply);
       response.ethernalXFGFormatted = formatAmount(ethernalXFG);
       response.currentDepositAmountFormatted = formatAmount(currentDepositAmount);
-      
+
       // Calculate percentages
       response.burnPercentage = (baseTotalSupply > 0) ? (ethernalXFG * 100.0 / baseTotalSupply) : 0.0;
       response.depositPercentage = (realTotalSupply > 0) ? (totalDepositAmount * 100.0 / realTotalSupply) : 0.0;
       response.circulatingPercentage = (realTotalSupply > 0) ? (circulatingSupply * 100.0 / realTotalSupply) : 0.0;
-      
+
       return std::error_code();
     }
     catch (std::exception &e)
@@ -2583,7 +2583,7 @@ namespace PaymentService
   {
     // Convert atomic units to XFG with 8 decimal places
     double xfgAmount = static_cast<double>(amount) / 100000000.0;
-    
+
     std::stringstream ss;
     ss << std::fixed << std::setprecision(8) << xfgAmount << " XFG";
     return ss.str();

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Elderfire Privacy Council
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2017 The XDN developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -26,17 +26,17 @@ namespace PaymentService {
 struct GetStagedUnlockSchedule {
     struct Request {
         uint64_t depositId;
-        
+
         void serialize(CryptoNote::ISerializer& serializer);
     };
-    
+
     struct Response {
         bool useStagedUnlock;
         std::vector<UnlockStage> stages;
         std::string status;
         uint64_t totalUnlockedAmount;
         uint64_t remainingLockedAmount;
-        
+
         void serialize(CryptoNote::ISerializer& serializer);
     };
 };
@@ -46,12 +46,12 @@ struct GetStagedDeposits {
     struct Request {
         void serialize(CryptoNote::ISerializer& serializer);
     };
-    
+
     struct Response {
         std::vector<StagedDepositInfo> deposits;
         uint64_t totalUnlockedAmount;
         uint64_t totalRemainingLockedAmount;
-        
+
         void serialize(CryptoNote::ISerializer& serializer);
     };
 };
@@ -66,14 +66,14 @@ struct StagedDepositInfo {
     uint32_t unlockHeight;
     bool locked;
     bool useStagedUnlock;
-    std::vector<UnlockStage> stages;
+    std::vector<CryptoNote::UnlockStage> stages;
     std::string status;
     uint64_t totalUnlockedAmount;
     uint64_t remainingLockedAmount;
     std::string creatingTransactionHash;
     std::string spendingTransactionHash;
     std::string address;
-    
+
     void serialize(CryptoNote::ISerializer& serializer);
 };
 
@@ -82,12 +82,12 @@ struct ProcessStagedUnlocks {
     struct Request {
         void serialize(CryptoNote::ISerializer& serializer);
     };
-    
+
     struct Response {
         std::vector<uint64_t> newlyUnlockedDeposits;
         uint64_t totalUnlockedAmount;
         std::string message;
-        
+
         void serialize(CryptoNote::ISerializer& serializer);
     };
 };

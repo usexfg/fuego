@@ -1169,7 +1169,7 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address)
+  std::error_code WalletService::getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address, /*bool &useStagedUnlock*/) {
   {
     try
     {
@@ -1194,7 +1194,7 @@ namespace PaymentService
       }
 
       // Check if this deposit uses staged unlock
-      useStagedUnlock = m_stagedUnlockStorage.getStagedUnlockPreference(creatingTransactionHash);
+      // useStagedUnlock = /*m_stagedUnlockStorage.getStagedUnlockPreference(creatingTransactionHash)*/ false;
 
       bool state = true;
       uint32_t knownBlockCount = node.getKnownBlockCount();
@@ -1800,17 +1800,17 @@ namespace PaymentService
         if (amount < minAmount)
         {
           return make_error_code(CryptoNote::error::DEPOSIT_AMOUNT_TOO_SMALL);
-        }
+        /* } */
 
         /* Create or send the deposit */
         wallet.createDeposit(amount, term, sourceAddress, sourceAddress, transactionHash, commitment);
 
         /* Handle staged unlock if requested */
-        if (useStagedUnlock && !isBurnDeposit) {
-          // Store staged unlock preference for this deposit
-          m_stagedUnlockStorage.setStagedUnlockPreference(transactionHash, true);
-          logger(Logging::INFO) << "Deposit created with staged unlock: " << transactionHash;
-        }
+        /* if (useStagedUnlock && !isBurnDeposit) { */
+        /* // Store staged unlock preference for this deposit
+        m_stagedUnlockStorage.setStagedUnlockPreference(transactionHash, true);
+        logger(Logging::INFO) << "Deposit created with staged unlock: " << transactionHash; */
+        // }
       }
 
       catch (std::system_error &x)

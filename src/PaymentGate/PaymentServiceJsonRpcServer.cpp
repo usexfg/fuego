@@ -45,7 +45,7 @@
 
 namespace PaymentService {
 
-PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, WalletService& service, Logging::ILogger& loggerGroup) 
+PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, WalletService& service, Logging::ILogger& loggerGroup)
   : JsonRpcServer(sys, stopEvent, loggerGroup)
   , service(service)
   , logger(loggerGroup, "PaymentServiceJsonRpcServer")
@@ -176,18 +176,18 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateAddressList(const Creat
   return service.createAddressList(request.spendSecretKeys, request.reset, response.addresses);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleSave(const Save::Request& /*request*/, Save::Response& /*response*/) 
+std::error_code PaymentServiceJsonRpcServer::handleSave(const Save::Request& /*request*/, Save::Response& /*response*/)
 {
   return service.saveWalletNoThrow();
 }
 
 
-std::error_code PaymentServiceJsonRpcServer::handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response) 
+std::error_code PaymentServiceJsonRpcServer::handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response)
 {
   return service.createIntegratedAddress(request, response.integrated_address);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleSplitIntegrated(const SplitIntegrated::Request& request, SplitIntegrated::Response& response) 
+std::error_code PaymentServiceJsonRpcServer::handleSplitIntegrated(const SplitIntegrated::Request& request, SplitIntegrated::Response& response)
 {
   return service.splitIntegratedAddress(request, response.address, response.payment_id);
 }
@@ -266,7 +266,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetStatus(const GetStatus::Re
 std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response) {
   // Generate appropriate commitment based on deposit term
   CryptoNote::DepositCommitment commitment;
-  
+
   if (!request.metadata.empty()) {
     std::vector<uint8_t> metadata;
     if (!Common::fromHex(request.metadata, metadata)) {
@@ -274,12 +274,12 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDep
     }
     commitment.metadata = metadata;
   }
-  
+
   // Check if this is a burn deposit (FOREVER term)
   bool isBurnDeposit = (request.term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
   response.isBurnDeposit = isBurnDeposit;
-  response.useStagedUnlock = request.useStagedUnlock;
-  
+  // response.useStagedUnlock = request.useStagedUnlock;
+
   // Generate commitment based on deposit type
   if (isBurnDeposit) {
     commitment = CryptoNote::DepositCommitmentGenerator::generateHeatCommitment(
@@ -288,94 +288,94 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDep
     commitment = CryptoNote::DepositCommitmentGenerator::generateYieldCommitment(
       request.term, request.amount, commitment.metadata);
   }
-  
+
   // Calculate transaction fees
   uint64_t baseFee = 800000; // 0.008 XFG base transaction fee
   response.transactionFee = baseFee;
-  response.totalFees = request.useStagedUnlock ? (baseFee * 5) : baseFee; // 5 transactions for staged unlock
-  
-  return service.createDeposit(request.amount, request.term, request.sourceAddress, response.transactionHash, commitment, request.useStagedUnlock);
+  // response.totalFees = request.useStagedUnlock ? (baseFee * 5) : baseFee; // 5 transactions for staged unlock
+
+  return service.createDeposit(request.amount, request.term, request.sourceAddress, response.transactionHash, commitment/*, request.useStagedUnlock*/);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit(const CreateBurnDeposit::Request& request, CreateBurnDeposit::Response& response) {
   // Create burn deposit with FOREVER term
   uint64_t term = CryptoNote::parameters::DEPOSIT_TERM_BURN;  // 4294967295 (FOREVER)
-  
+
   // Enforce standard 0.8 XFG burn amount
   uint64_t amount = (request.amount == 0) ? CryptoNote::parameters::BURN_DEPOSIT_STANDARD_AMOUNT : request.amount;
   if (amount != CryptoNote::parameters::BURN_DEPOSIT_STANDARD_AMOUNT) {
     logger(Logging::WARNING) << "Invalid standard burn amount: " << amount;
     return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
   }
-  
+
   // 🔥 ADD: Include network ID in metadata for STARK validation
   std::string networkId = "93385046440755750514194170694064996624";
-  std::string enhancedMetadata = request.metadata.empty() ? 
-      "network_id:" + networkId : 
+  std::string enhancedMetadata = request.metadata.empty() ?
+      "network_id:" + networkId :
       request.metadata + "|network_id:" + networkId;
-  
+
   // Generate HEAT commitment with secret for local storage
   auto [commitment, secret] = CryptoNote::DepositCommitmentGenerator::generateHeatCommitmentWithSecret(
     amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
-  
+
   std::error_code result = service.createDeposit(amount, term, request.sourceAddress, response.transactionHash, commitment);
-  
+
   if (!result) {
     response.term = term;  // Always 4294967295
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 0.8 XFG = 8M HEAT
-    
+
     // 🔥 ADD: Store secret locally (never on blockchain)
     service.storeBurnDepositSecret(response.transactionHash, secret, amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   }
-  
+
   return result;
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDepositWithProof(const CreateBurnDepositWithProof::Request& request, CreateBurnDepositWithProof::Response& response) {
   // Create burn deposit with FOREVER term
   uint64_t term = CryptoNote::parameters::DEPOSIT_TERM_BURN;  // 4294967295 (FOREVER)
-  
+
   // Enforce standard 0.8 XFG burn amount
   uint64_t amount = (request.amount == 0) ? CryptoNote::parameters::BURN_DEPOSIT_STANDARD_AMOUNT : request.amount;
   if (amount != CryptoNote::parameters::BURN_DEPOSIT_STANDARD_AMOUNT) {
     logger(Logging::WARNING) << "Invalid standard burn amount: " << amount;
     return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
   }
-  
+
   // 🔥 ADD: Include network ID in metadata for STARK validation
   std::string networkId = "93385046440755750514194170694064996624";
-  std::string enhancedMetadata = request.metadata.empty() ? 
-      "network_id:" + networkId : 
+  std::string enhancedMetadata = request.metadata.empty() ?
+      "network_id:" + networkId :
       request.metadata + "|network_id:" + networkId;
-  
+
   // Generate HEAT commitment with enhanced metadata and also get secret
   auto [commitment, secret] = CryptoNote::DepositCommitmentGenerator::generateHeatCommitmentWithSecret(
     amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
-  
+
   std::error_code result = service.createDeposit(amount, term, request.sourceAddress, response.transactionHash, commitment);
-  
+
   if (!result) {
     response.term = term;  // Always 4294967295
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 0.8 XFG = 8M HEAT
-    
+
     // 🔥 ADD: Generate BPDF with network ID
     std::string outputPath = service.getDefaultWalletPath() + "/bpdf/" + response.transactionHash + ".json";
     std::error_code bpdfResult = service.generateBurnProofDataFile(
-      response.transactionHash, 
-      request.recipientAddress, 
+      response.transactionHash,
+      request.recipientAddress,
       outputPath,
       secret,
       amount,
       std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()),
       networkId
     );
-    
+
     if (!bpdfResult) {
       response.burnProofDataFile = outputPath;
     }
     response.networkId = networkId;
   }
-  
+
   return result;
 }
 
@@ -383,27 +383,27 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000(const C
   // Create burn deposit with FOREVER term and fixed 800 XFG amount
   uint64_t term = CryptoNote::parameters::DEPOSIT_TERM_BURN;  // 4294967295 (FOREVER)
   uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_LARGE_AMOUNT;  // 800 XFG
-  
+
   // 🔥 ADD: Include network ID in metadata for STARK validation
   std::string networkId = "93385046440755750514194170694064996624";
-  std::string enhancedMetadata = request.metadata.empty() ? 
-      "network_id:" + networkId : 
+  std::string enhancedMetadata = request.metadata.empty() ?
+      "network_id:" + networkId :
       request.metadata + "|network_id:" + networkId;
-  
+
   // Generate HEAT commitment with secret for local storage
   auto [commitment, secret] = CryptoNote::DepositCommitmentGenerator::generateHeatCommitmentWithSecret(
     amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
-  
+
   std::error_code result = service.createDeposit(amount, term, request.sourceAddress, response.transactionHash, commitment);
-  
+
   if (!result) {
     response.term = term;  // Always 4294967295
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 800 XFG = 8,000,000,000 HEAT
-    
+
     // 🔥 ADD: Store secret locally (never on blockchain)
     service.storeBurnDepositSecret(response.transactionHash, secret, amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
   }
-  
+
   return result;
 }
 
@@ -411,41 +411,41 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit8000WithProo
   // Create burn deposit with FOREVER term and fixed 800 XFG amount
   uint64_t term = CryptoNote::parameters::DEPOSIT_TERM_BURN;  // 4294967295 (FOREVER)
   uint64_t amount = CryptoNote::parameters::BURN_DEPOSIT_LARGE_AMOUNT;  // 800 XFG
-  
+
   // 🔥 ADD: Include network ID in metadata for STARK validation
   std::string networkId = "93385046440755750514194170694064996624";
-  std::string enhancedMetadata = request.metadata.empty() ? 
-      "network_id:" + networkId : 
+  std::string enhancedMetadata = request.metadata.empty() ?
+      "network_id:" + networkId :
       request.metadata + "|network_id:" + networkId;
-  
+
   // Generate HEAT commitment with enhanced metadata and also get secret
   auto [commitment, secret] = CryptoNote::DepositCommitmentGenerator::generateHeatCommitmentWithSecret(
     amount, std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()));
-  
+
   std::error_code result = service.createDeposit(amount, term, request.sourceAddress, response.transactionHash, commitment);
-  
+
   if (!result) {
     response.term = term;  // Always 4294967295
     response.heatAmount = CryptoNote::DepositCommitmentGenerator::convertXfgToHeat(amount);  // 800 XFG = 8,000,000,000 HEAT
-    
+
     // 🔥 ADD: Generate BPDF with network ID
     std::string outputPath = service.getDefaultWalletPath() + "/bpdf/" + response.transactionHash + ".json";
     std::error_code bpdfResult = service.generateBurnProofDataFile(
-      response.transactionHash, 
-      request.recipientAddress, 
+      response.transactionHash,
+      request.recipientAddress,
       outputPath,
       secret,
       amount,
       std::vector<uint8_t>(enhancedMetadata.begin(), enhancedMetadata.end()),
       networkId
     );
-    
+
     if (!bpdfResult) {
       response.burnProofDataFile = outputPath;
     }
     response.networkId = networkId;
   }
-  
+
   return result;
 }
 
@@ -453,13 +453,13 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFile(con
   try {
     // 🔥 MANUAL: Generate BPDF manually (user provides secret separately)
     std::string networkId = "93385046440755750514194170694064996624";
-    
+
     // 🔥 ADD: Use default wallet path if outputPath is empty
     std::string outputPath = request.outputPath;
     if (outputPath.empty()) {
       outputPath = service.getDefaultWalletPath() + "/bpdf/" + request.transactionHash + ".json";
     }
-    
+
     // For manual mode, we need to get transaction data and extract commitment
     // User will provide secret separately (not through RPC for security)
     std::error_code bpdfResult = service.generateBurnProofDataFile(
@@ -468,13 +468,13 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFile(con
       outputPath,
       networkId
     );
-    
+
     if (!bpdfResult) {
       response.burnProofDataFile = outputPath;
     }
     response.success = true;
     response.networkId = networkId;
-    
+
     return std::error_code();
   } catch (std::exception& e) {
     response.success = false;
@@ -487,24 +487,24 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFileAuto
   try {
     // 🔥 AUTO: Generate BPDF automatically with local secret retrieval
     std::string networkId = "93385046440755750514194170694064996624";
-    
+
     // Retrieve secret from local storage
     Crypto::SecretKey secret;
     uint64_t amount;
     std::vector<uint8_t> metadata;
-    
+
     if (!service.getBurnDepositSecret(request.transactionHash, secret, amount, metadata)) {
       response.success = false;
       response.errorMessage = "Burn deposit secret not found for transaction: " + request.transactionHash;
       return std::error_code();
     }
-    
+
     // 🔥 ADD: Use default wallet path if outputPath is empty
     std::string outputPath = request.outputPath;
     if (outputPath.empty()) {
       outputPath = service.getDefaultWalletPath() + "/bpdf/" + request.transactionHash + ".json";
     }
-    
+
     // Generate BPDF using local secret
     std::error_code bpdfResult = service.generateBurnProofDataFile(
       request.transactionHash,
@@ -515,16 +515,16 @@ std::error_code PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFileAuto
       metadata,
       networkId
     );
-    
+
     if (!bpdfResult) {
       response.burnProofDataFile = outputPath;
     }
     response.success = true;
     response.networkId = networkId;
-    
+
     // Mark BPDF as generated
     service.markBurnDepositBPDFGenerated(request.transactionHash);
-    
+
     return std::error_code();
   } catch (std::exception& e) {
     response.success = false;
@@ -547,15 +547,15 @@ std::error_code PaymentServiceJsonRpcServer::handleSendDeposit(const SendDeposit
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response) {
-  std::error_code result = service.getDepositWithStagedInfo(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address, response.useStagedUnlock);
-  
+  return service.getDepositWithStagedInfo(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address/*, response.useStagedUnlock*/);
+
   if (!result) {
     // Calculate transaction fees
     uint64_t baseFee = 800000; // 0.008 XFG base transaction fee
     response.transactionFee = baseFee;
-    response.totalFees = response.useStagedUnlock ? (baseFee * 4) : baseFee;
+    // response.totalFees = response.useStagedUnlock ? (baseFee * 4) : baseFee;
   }
-  
+
   return result;
 }
 

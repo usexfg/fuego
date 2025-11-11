@@ -320,12 +320,12 @@ struct GetEthernalXFG
   {
     uint64_t ethernalXFG;     // Total burned XFG
     std::string formattedAmount; // Human-readable format
-    
+
     void serialize(CryptoNote::ISerializer &serializer);
   };
 };
 
-struct GetDeposit
+struct SendDeposit
 {
   struct Request
   {
@@ -345,8 +345,6 @@ struct GetDeposit
     void serialize(CryptoNote::ISerializer &serializer);
   };
 };
-
-
 
 
 

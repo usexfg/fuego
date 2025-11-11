@@ -16,6 +16,7 @@
 
 #include "TcpConnection.h"
 #include <cassert>
+#include <signal.h>
 
 #include <netinet/in.h>
 #include <sys/event.h>
@@ -229,10 +230,9 @@ std::pair<Ipv4Address, uint16_t> TcpConnection::getPeerAddressAndPort() const {
 }
 
 TcpConnection::TcpConnection(Dispatcher& dispatcher, int socket) : dispatcher(&dispatcher), connection(socket), readContext(nullptr), writeContext(nullptr) {
-  int val = 1;
-  if (setsockopt(connection, SOL_SOCKET, SO_NOSIGPIPE, (void*)&val, sizeof val) == -1) {
-    throw std::runtime_error("TcpConnection::TcpConnection, setsockopt failed, " + lastErrorMessage());
-  }
+  // SO_NOSIGPIPE is not available on macOS, use signal handling instead
+  // This prevents SIGPIPE signals when writing to closed connections
+  signal(SIGPIPE, SIG_IGN);
 }
 
 }

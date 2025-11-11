@@ -111,14 +111,7 @@ private:
   std::error_code handleGenerateBurnProofDataFile(const GenerateBurnProofDataFile::Request& request, GenerateBurnProofDataFile::Response& response);
   std::error_code handleGenerateBurnProofDataFileAuto(const GenerateBurnProofDataFileAuto::Request& request, GenerateBurnProofDataFileAuto::Response& response);
 
-  // Money supply and statistics handlers
-  std::error_code handleGetMoneySupplyStats(const GetMoneySupplyStats::Request& request, GetMoneySupplyStats::Response& response);
-  std::error_code handleGetBaseTotalSupply(const GetBaseTotalSupply::Request& request, GetBaseTotalSupply::Response& response);
-  std::error_code handleGetRealTotalSupply(const GetRealTotalSupply::Request& request, GetRealTotalSupply::Response& response);
-  std::error_code handleGetTotalDepositAmount(const GetTotalDepositAmount::Request& request, GetTotalDepositAmount::Response& response);
-  std::error_code handleGetCirculatingSupply(const GetCirculatingSupply::Request& request, GetCirculatingSupply::Response& response);
-  std::error_code handleGetEthernalXFG(const GetEthernalXFG::Request& request, GetEthernalXFG::Response& response);
-  std::error_code handleGetDynamicSupplyOverview(const GetDynamicSupplyOverview::Request& request, GetDynamicSupplyOverview::Response& response);
+
 };
 
 }//namespace PaymentService

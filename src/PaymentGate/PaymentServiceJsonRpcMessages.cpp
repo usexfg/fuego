@@ -548,20 +548,14 @@ void SendFusionTransaction::Response::serialize(CryptoNote::ISerializer &seriali
   serializer(transactionHash, "transactionHash");
 }
 
-void GetMoneySupplyStats::Request::serialize(CryptoNote::ISerializer &serializer)
+void GetEthernalXFG::Request::serialize(CryptoNote::ISerializer &serializer)
 {
 }
 
-void GetMoneySupplyStats::Response::serialize(CryptoNote::ISerializer &serializer)
+void GetEthernalXFG::Response::serialize(CryptoNote::ISerializer &serializer)
 {
-  serializer(baseMoneySupply, "baseMoneySupply");
   serializer(ethernalXFG, "ethernalXFG");
-  serializer(totalRebornXfg, "totalRebornXfg");
-  		serializer(totalMoneySupply, "totalMoneySupply");
-  serializer(circulatingSupply, "circulatingSupply");
-  serializer(burnPercentage, "burnPercentage");
-  serializer(rebornPercentage, "rebornPercentage");
-  serializer(supplyIncreasePercentage, "supplyIncreasePercentage");
+  serializer(formattedAmount, "formattedAmount");
 }
 
 // Burn Deposit RPC serialization
@@ -657,83 +651,16 @@ void GenerateBurnProofDataFileAuto::Response::serialize(CryptoNote::ISerializer 
 }
 
 // Dynamic Supply RPC serialization
-void GetBaseTotalSupply::Request::serialize(CryptoNote::ISerializer &serializer)
-{
-}
 
-void GetBaseTotalSupply::Response::serialize(CryptoNote::ISerializer &serializer)
-{
-  serializer(baseTotalSupply, "baseTotalSupply");
-  serializer(formattedAmount, "formattedAmount");
-}
 
-void GetRealTotalSupply::Request::serialize(CryptoNote::ISerializer &serializer)
-{
-}
 
-void GetRealTotalSupply::Response::serialize(CryptoNote::ISerializer &serializer)
-{
-  serializer(baseTotalSupply, "baseTotalSupply");
-  serializer(ethernalXFG, "ethernalXFG");
-  serializer(realTotalSupply, "realTotalSupply");
-  serializer(formattedAmount, "formattedAmount");
-}
 
-void GetTotalDepositAmount::Request::serialize(CryptoNote::ISerializer &serializer)
-{
-}
 
-void GetTotalDepositAmount::Response::serialize(CryptoNote::ISerializer &serializer)
-{
-  serializer(currentDepositAmount, "currentDepositAmount");
-  serializer(ethernalXFG, "ethernalXFG");
-  serializer(totalDepositAmount, "totalDepositAmount");
-  serializer(formattedAmount, "formattedAmount");
-}
 
-void GetCirculatingSupply::Request::serialize(CryptoNote::ISerializer &serializer)
-{
-}
 
-void GetCirculatingSupply::Response::serialize(CryptoNote::ISerializer &serializer)
-{
-  serializer(realTotalSupply, "realTotalSupply");
-  serializer(totalDepositAmount, "totalDepositAmount");
-  serializer(circulatingSupply, "circulatingSupply");
-  serializer(formattedAmount, "formattedAmount");
-}
 
-void GetEthernalXFG::Request::serialize(CryptoNote::ISerializer &serializer)
-{
-}
 
-void GetEthernalXFG::Response::serialize(CryptoNote::ISerializer &serializer)
-{
-  serializer(ethernalXFG, "ethernalXFG");
-  serializer(formattedAmount, "formattedAmount");
-}
 
-void GetDynamicSupplyOverview::Request::serialize(CryptoNote::ISerializer &serializer)
-{
-}
 
-void GetDynamicSupplyOverview::Response::serialize(CryptoNote::ISerializer &serializer)
-{
-  serializer(baseTotalSupply, "baseTotalSupply");
-  serializer(baseTotalSupplyFormatted, "baseTotalSupplyFormatted");
-  serializer(realTotalSupply, "realTotalSupply");
-  serializer(realTotalSupplyFormatted, "realTotalSupplyFormatted");
-  serializer(totalDepositAmount, "totalDepositAmount");
-  serializer(totalDepositAmountFormatted, "totalDepositAmountFormatted");
-  serializer(circulatingSupply, "circulatingSupply");
-  serializer(circulatingSupplyFormatted, "circulatingSupplyFormatted");
-  serializer(ethernalXFG, "ethernalXFG");
-  serializer(ethernalXFGFormatted, "ethernalXFGFormatted");
-  serializer(currentDepositAmount, "currentDepositAmount");
-  serializer(currentDepositAmountFormatted, "currentDepositAmountFormatted");
-  serializer(burnPercentage, "burnPercentage");
-  serializer(depositPercentage, "depositPercentage");
-  serializer(circulatingPercentage, "circulatingPercentage");
-}
 
 } // namespace PaymentService

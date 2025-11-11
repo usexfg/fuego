@@ -483,8 +483,7 @@ namespace CryptoNote
       std::string sourceAddress,
       std::string destinationAddress,
       std::string &transactionHash,
-      const DepositCommitment& commitment,
-      /* bool useStagedUnlock */)
+      const DepositCommitment& commitment)
   {
 
     throwIfNotInitialized();

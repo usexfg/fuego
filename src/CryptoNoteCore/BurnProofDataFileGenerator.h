@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <system_error>
 #include "CryptoNote.h"
+#include "Common/JsonValue.h"
 
 namespace CryptoNote {
 
@@ -102,8 +103,8 @@ public:
 
 private:
     // BPDF validation helper functions
-    static bool validateJsonStructure(const JsonValue& json);
-    static bool extractBPDFData(const JsonValue& json, BPDFData& data);
+    static bool validateJsonStructure(const Common::JsonValue& json);
+    static bool extractBPDFData(const Common::JsonValue& json, BPDFData& data);
     static bool validateCryptographicHashes(const BPDFData& data);
     static bool validateDataIntegrity(const BPDFData& data);
     static bool validateFormatConstraints(const BPDFData& data);

@@ -86,13 +86,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("withdrawDeposit", jsonHandler<WithdrawDeposit::Request, WithdrawDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleWithdrawDeposit, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getMessagesFromExtra", jsonHandler<GetMessagesFromExtra::Request, GetMessagesFromExtra::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetMessagesFromExtra, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getDeposit", jsonHandler<GetDeposit::Request, GetDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetDeposit, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getMoneySupplyStats", jsonHandler<GetMoneySupplyStats::Request, GetMoneySupplyStats::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetMoneySupplyStats, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getBaseTotalSupply", jsonHandler<GetBaseTotalSupply::Request, GetBaseTotalSupply::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetBaseTotalSupply, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getRealTotalSupply", jsonHandler<GetRealTotalSupply::Request, GetRealTotalSupply::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetRealTotalSupply, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getTotalDepositAmount", jsonHandler<GetTotalDepositAmount::Request, GetTotalDepositAmount::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetTotalDepositAmount, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getCirculatingSupply", jsonHandler<GetCirculatingSupply::Request, GetCirculatingSupply::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetCirculatingSupply, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getEternalFlame", jsonHandler<GetEthernalXFG::Request, GetEthernalXFG::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetEthernalXFG, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("getDynamicSupplyOverview", jsonHandler<GetDynamicSupplyOverview::Request, GetDynamicSupplyOverview::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetDynamicSupplyOverview, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("estimateFusion", jsonHandler<EstimateFusion::Request, EstimateFusion::Response>(std::bind(&PaymentServiceJsonRpcServer::handleEstimateFusion, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("sendFusionTransaction", jsonHandler<SendFusionTransaction::Request, SendFusionTransaction::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSendFusionTransaction, this, std::placeholders::_1, std::placeholders::_2)));
 }
@@ -547,7 +541,7 @@ std::error_code PaymentServiceJsonRpcServer::handleSendDeposit(const SendDeposit
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response) {
-  return service.getDepositWithStagedInfo(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address/*, response.useStagedUnlock*/);
+  return service.getDeposit(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address);
 
   if (!result) {
     // Calculate transaction fees
@@ -576,40 +570,14 @@ std::error_code PaymentServiceJsonRpcServer::handleSendFusionTransaction(const S
   return service.sendFusionTransaction(request.threshold, request.anonymity, request.addresses, request.destinationAddress, response.transactionHash);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetMoneySupplyStats(const GetMoneySupplyStats::Request& request, GetMoneySupplyStats::Response& response)
-{
-  return service.getMoneySupplyStats(response);
-}
 
-std::error_code PaymentServiceJsonRpcServer::handleGetBaseTotalSupply(const GetBaseTotalSupply::Request& request, GetBaseTotalSupply::Response& response)
-{
-  return service.getBaseTotalSupply(response);
-}
-
-std::error_code PaymentServiceJsonRpcServer::handleGetRealTotalSupply(const GetRealTotalSupply::Request& request, GetRealTotalSupply::Response& response)
-{
-  return service.getRealTotalSupply(response);
-}
-
-std::error_code PaymentServiceJsonRpcServer::handleGetTotalDepositAmount(const GetTotalDepositAmount::Request& request, GetTotalDepositAmount::Response& response)
-{
-  return service.getTotalDepositAmount(response);
-}
-
-std::error_code PaymentServiceJsonRpcServer::handleGetCirculatingSupply(const GetCirculatingSupply::Request& request, GetCirculatingSupply::Response& response)
-{
-  return service.getCirculatingSupply(response);
-}
 
 std::error_code PaymentServiceJsonRpcServer::handleGetEthernalXFG(const GetEthernalXFG::Request& request, GetEthernalXFG::Response& response)
 {
   return service.getEternalFlame(response);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetDynamicSupplyOverview(const GetDynamicSupplyOverview::Request& request, GetDynamicSupplyOverview::Response& response)
-{
-  return service.getDynamicSupplyOverview(response);
-}
+
 
 
 }

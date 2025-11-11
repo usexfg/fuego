@@ -1169,48 +1169,6 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address, /*bool &useStagedUnlock*/) {
-  {
-    try
-    {
-      System::EventLock lk(readyEvent);
-      Deposit deposit = wallet.getDeposit(depositId);
-      amount = deposit.amount;
-      term = deposit.term;
-      interest = deposit.interest;
-      height = deposit.height;
-      unlockHeight = deposit.unlockHeight;
-
-      WalletTransaction wallettx = wallet.getTransaction(deposit.creatingTransactionId);
-      creatingTransactionHash = Common::podToHex(wallettx.hash);
-
-      WalletTransfer transfer = wallet.getTransactionTransfer(deposit.creatingTransactionId, 0);
-      address = transfer.address;
-
-      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID)
-      {
-        WalletTransaction walletstx = wallet.getTransaction(deposit.spendingTransactionId);
-        spendingTransactionHash = Common::podToHex(walletstx.hash);
-      }
-
-      // Check if this deposit uses staged unlock
-      // useStagedUnlock = /*m_stagedUnlockStorage.getStagedUnlockPreference(creatingTransactionHash)*/ false;
-
-      bool state = true;
-      uint32_t knownBlockCount = node.getKnownBlockCount();
-      if (knownBlockCount > unlockHeight)
-      {
-        locked = false;
-      }
-    }
-    catch (std::exception &x)
-    {
-      logger(Logging::WARNING) << "Error while getting deposit with staged info: " << x.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-
-    return std::error_code();
-  }
 
   std::error_code WalletService::getTransactions(
       const std::vector<std::string> &addresses,
@@ -2199,22 +2157,7 @@ namespace PaymentService
     }
 
     // Money supply stats - simplified
-    std::error_code WalletService::getMoneySupplyStats(GetMoneySupplyStats::Response &response)
-    {
-      try
-      {
-        response.baseMoneySupply = currency.getBaseMoneySupply();
-        response.ethernalXFG = currency.getEternalFlame();
-        response.burnPercentage = currency.getBurnPercentage();
 
-        return std::error_code();
-      }
-      catch (std::exception &e)
-      {
-        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting money supply stats: " << e.what();
-        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-      }
-    }
 
     std::error_code WalletService::getBaseMoneySupply(uint64_t &baseMoneySupply)
     {
@@ -2419,102 +2362,13 @@ namespace PaymentService
 
 
 
-  // Dynamic Supply Methods Implementation
-  std::error_code WalletService::getBaseTotalSupply(GetBaseTotalSupply::Response &response)
-  {
-    try
-    {
-      // baseTotalSupply = All XFG created (base money supply)
-      response.baseTotalSupply = currency.getBaseMoneySupply();
 
-      // Format amount for display
-      response.formattedAmount = formatAmount(response.baseTotalSupply);
 
-      return std::error_code();
-    }
-    catch (std::exception &e)
-    {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting base total supply: " << e.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-  }
 
-  std::error_code WalletService::getRealTotalSupply(GetRealTotalSupply::Response &response)
-  {
-    try
-    {
-      // realTotalSupply = baseTotalSupply - ethernalXFG
-      uint64_t baseTotalSupply = currency.getBaseMoneySupply();
-      uint64_t ethernalXFG = currency.getEternalFlame();
 
-      response.baseTotalSupply = baseTotalSupply;
-      response.ethernalXFG = ethernalXFG;
-      response.realTotalSupply = baseTotalSupply - ethernalXFG;
 
-      // Format amount for display
-      response.formattedAmount = formatAmount(response.realTotalSupply);
 
-      return std::error_code();
-    }
-    catch (std::exception &e)
-    {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting real total supply: " << e.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-  }
 
-  std::error_code WalletService::getTotalDepositAmount(GetTotalDepositAmount::Response &response)
-  {
-    try
-    {
-      // totalDepositAmount = currentAmount in deposits - ethernalXFG
-      uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
-      uint64_t ethernalXFG = currency.getEternalFlame();
-
-      response.currentDepositAmount = currentDepositAmount;
-      response.ethernalXFG = ethernalXFG;
-      response.totalDepositAmount = currentDepositAmount - ethernalXFG;
-
-      // Format amount for display
-      response.formattedAmount = formatAmount(response.totalDepositAmount);
-
-      return std::error_code();
-    }
-    catch (std::exception &e)
-    {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting total deposit amount: " << e.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-  }
-
-  std::error_code WalletService::getCirculatingSupply(GetCirculatingSupply::Response &response)
-  {
-    try
-    {
-      // circulatingSupply = realTotalSupply - totalDepositAmount
-      uint64_t baseTotalSupply = currency.getBaseMoneySupply();
-      uint64_t ethernalXFG = currency.getEternalFlame();
-      uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
-
-      uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
-      uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
-      uint64_t circulatingSupply = realTotalSupply - totalDepositAmount;
-
-      response.realTotalSupply = realTotalSupply;
-      response.totalDepositAmount = totalDepositAmount;
-      response.circulatingSupply = circulatingSupply;
-
-      // Format amount for display
-      response.formattedAmount = formatAmount(response.circulatingSupply);
-
-      return std::error_code();
-    }
-    catch (std::exception &e)
-    {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting circulating supply: " << e.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-  }
 
   std::error_code WalletService::getEternalFlame(GetEthernalXFG::Response &response)
   {
@@ -2535,49 +2389,7 @@ namespace PaymentService
     }
   }
 
-  std::error_code WalletService::getDynamicSupplyOverview(GetDynamicSupplyOverview::Response &response)
-  {
-    try
-    {
-      // Get all supply components
-      uint64_t baseTotalSupply = currency.getBaseMoneySupply();
-      uint64_t ethernalXFG = currency.getEternalFlame();
-      uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
 
-      // Calculate derived values
-      uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
-      uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
-      uint64_t circulatingSupply = realTotalSupply - totalDepositAmount;
-
-      // Set raw values
-      response.baseTotalSupply = baseTotalSupply;
-      response.realTotalSupply = realTotalSupply;
-      response.totalDepositAmount = totalDepositAmount;
-      response.circulatingSupply = circulatingSupply;
-      response.ethernalXFG = ethernalXFG;
-      response.currentDepositAmount = currentDepositAmount;
-
-      // Format amounts for display
-      response.baseTotalSupplyFormatted = formatAmount(baseTotalSupply);
-      response.realTotalSupplyFormatted = formatAmount(realTotalSupply);
-      response.totalDepositAmountFormatted = formatAmount(totalDepositAmount);
-      response.circulatingSupplyFormatted = formatAmount(circulatingSupply);
-      response.ethernalXFGFormatted = formatAmount(ethernalXFG);
-      response.currentDepositAmountFormatted = formatAmount(currentDepositAmount);
-
-      // Calculate percentages
-      response.burnPercentage = (baseTotalSupply > 0) ? (ethernalXFG * 100.0 / baseTotalSupply) : 0.0;
-      response.depositPercentage = (realTotalSupply > 0) ? (totalDepositAmount * 100.0 / realTotalSupply) : 0.0;
-      response.circulatingPercentage = (realTotalSupply > 0) ? (circulatingSupply * 100.0 / realTotalSupply) : 0.0;
-
-      return std::error_code();
-    }
-    catch (std::exception &e)
-    {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting dynamic supply overview: " << e.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-  }
 
   std::string WalletService::formatAmount(uint64_t amount)
   {

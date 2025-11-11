@@ -1692,9 +1692,8 @@ namespace PaymentService
         uint64_t amount,
         uint64_t term,
         std::string sourceAddress,
-        std::string & transactionHash,
-        const CryptoNote::DepositCommitment& commitment,
-        bool useStagedUnlock)
+        std::string &transactionHash,
+        const CryptoNote::DepositCommitment& commitment)
     {
 
       try
@@ -2370,6 +2369,59 @@ namespace PaymentService
 
 
 
+  std::error_code WalletService::getTotalDepositAmount(GetTotalDepositAmount::Response &response)
+  {
+    try
+    {
+      // totalDepositAmount = currentAmount in deposits - ethernalXFG
+      uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
+      uint64_t ethernalXFG = currency.getEternalFlame();
+
+      response.currentDepositAmount = currentDepositAmount;
+      response.ethernalXFG = ethernalXFG;
+      response.totalDepositAmount = currentDepositAmount - ethernalXFG;
+
+      // Format amount for display
+      response.formattedAmount = formatAmount(response.totalDepositAmount);
+
+      return std::error_code();
+    }
+    catch (std::exception &e)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting total deposit amount: " << e.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    }
+  }
+
+  std::error_code WalletService::getCirculatingSupply(GetCirculatingSupply::Response &response)
+  {
+    try
+    {
+      // circulatingSupply = realTotalSupply - totalDepositAmount
+      uint64_t baseTotalSupply = currency.getBaseMoneySupply();
+      uint64_t ethernalXFG = currency.getEternalFlame();
+      uint64_t currentDepositAmount = wallet.getLockedDepositBalance();
+
+      uint64_t realTotalSupply = baseTotalSupply - ethernalXFG;
+      uint64_t totalDepositAmount = currentDepositAmount - ethernalXFG;
+      uint64_t circulatingSupply = realTotalSupply - totalDepositAmount;
+
+      response.realTotalSupply = realTotalSupply;
+      response.totalDepositAmount = totalDepositAmount;
+      response.circulatingSupply = circulatingSupply;
+
+      // Format amount for display
+      response.formattedAmount = formatAmount(response.circulatingSupply);
+
+      return std::error_code();
+    }
+    catch (std::exception &e)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting circulating supply: " << e.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    }
+  }
+
   std::error_code WalletService::getEternalFlame(GetEthernalXFG::Response &response)
   {
     try
@@ -2380,18 +2432,7 @@ namespace PaymentService
       // Format amount for display
       response.formattedAmount = formatAmount(response.ethernalXFG);
 
-      return std::error_code();
-    }
-    catch (std::exception &e)
-    {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error getting total burned XFG: " << e.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-  }
-
-
-
-  std::string WalletService::formatAmount(uint64_t amount)
+      returnformatAmount(uint64_t amount)
   {
     // Convert atomic units to XFG with 8 decimal places
     double xfgAmount = static_cast<double>(amount) / 100000000.0;

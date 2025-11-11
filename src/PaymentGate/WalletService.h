@@ -109,7 +109,15 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code withdrawDeposit(uint64_t depositId, std::string &transactionHash);
   std::error_code sendDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash);
   std::error_code getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address);
-//  std::error_code getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address, bool &useStagedUnlock);
+  // std::error_code getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, 
+  //                                    uint64_t &interest, std::string &creatingTransactionHash, 
+  //                                    std::string &spendingTransactionHash, bool &locked, 
+  //                                    uint64_t &height, uint64_t &unlockHeight, 
+  //                                    std::string &address, bool &useStagedUnlock);
+
+  // Eternal flame methods for tracking burned XFG
+  std::error_code getEternalFlame(uint64_t &ethernalXFG);
+  std::error_code getEternalFlame(GetEthernalXFG::Response &response);
 
   std::string formatAmount(uint64_t amount);
 

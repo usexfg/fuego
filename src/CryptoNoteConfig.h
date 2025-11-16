@@ -28,12 +28,12 @@ namespace CryptoNote
 {
 	namespace parameters
 	{
-		const uint64_t DIFFICULTY_TARGET = 480;	
+		const uint64_t DIFFICULTY_TARGET = 480;
 		const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
 		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 8000000;
 		const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
     const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
-		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;	
+		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;
 		const uint64_t DIFFICULTY_TARGET_DRGL = 81;
 		const unsigned EMISSION_SPEED_FACTOR = 18;
     const unsigned EMISSION_SPEED_FACTOR_FANGO = 19;  //major version 8
@@ -46,10 +46,10 @@ namespace CryptoNote
 		const size_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1 = 11; /* LWMA3 */
 
 		const uint64_t MONEY_SUPPLY = UINT64_C(80000088000008); /* max supply: 8M8 */
-		const uint64_t COIN = UINT64_C(10000000);			  
+		const uint64_t COIN = UINT64_C(10000000);
 		const uint64_t MINIMUM_FEE_V1 = UINT64_C(800000);
 		const uint64_t MINIMUM_FEE_V2 = UINT64_C(80000);	/* 0.008 XFG */
-		const uint64_t MINIMUM_FEE = MINIMUM_FEE_V2;		
+		const uint64_t MINIMUM_FEE = MINIMUM_FEE_V2;
 		const uint64_t MINIMUM_FEE_BANKING = UINT64_C(80000);  /* 0.008 XFG */
 		const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(20000); /* < 0.002 XFG */
 		const size_t   MINIMUM_MIXIN = 2;
@@ -73,7 +73,7 @@ namespace CryptoNote
 
 		// DMWDA MAINNET parameters
 		const uint32_t DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
-		const uint32_t DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
+		const uint32_t DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window
 		const uint32_t DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
 		const uint32_t DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
 		const double   DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
@@ -93,29 +93,30 @@ namespace CryptoNote
 		const uint32_t DMWDA_BLOCK_STEALING_CHECK_BLOCKS             = 5;    // Number of blocks to check for stealing attempts
 		const uint32_t DMWDA_BLOCK_STEALING_THRESHOLD                = 2;    // Threshold for fast blocks to trigger stealing detection
 		const double   DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
-       
-        // MIXIN 
+
+        // MIXIN
 		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
 		const uint64_t MIN_TX_MIXIN_SIZE_V10                         = 8;  // Maxmix min starting from BlockMajorVersion 10
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
-        
+
 		// MAINNET DEPOSITS
 		const uint64_t DEPOSIT_MIN_AMOUNT = 8000000000;
-    const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
+		const uint64_t YIELD_DEPOSIT_MIN_AMOUNT = 10000000;
+		const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
 		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 HEAT)
 		const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 8000000000;  // 800 XFG (8,000,000,000 HEAT)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
-    const uint32_t DEPOSIT_MAX_TERM_v1 = 5480; 
+    const uint32_t DEPOSIT_MAX_TERM_v1 = 5480;
     const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
     const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
     const uint32_t DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
     const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
     const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
-		
+
     static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
-		
+
     const uint64_t MULTIPLIER_FACTOR = 100;		 /* legacy deposits */
 		const uint32_t END_MULTIPLIER_BLOCK = 50; /* legacy deposits */
 
@@ -123,13 +124,13 @@ namespace CryptoNote
 		static constexpr uint64_t POISSON_CHECK_DEPTH = 60;   // Main-chain depth of poisson check. The attacker will have to tamper 50% of those blocks
 		static constexpr double POISSON_LOG_P_REJECT = -75.0; // Reject reorg if probability of timestamps being genuine is less than e^x, -75 = 10^-33
 
-		const size_t   MAX_BLOCK_SIZE_INITIAL                        = 800000;  
+		const size_t   MAX_BLOCK_SIZE_INITIAL                        = 800000;
 		const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 100 * 1024;
 		const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR       = 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
 
 		const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1;
 		const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS    = DIFFICULTY_TARGET_DRGL * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
-		const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V2 = DIFFICULTY_TARGET * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;		   
+		const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V2 = DIFFICULTY_TARGET * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
 
 		const size_t CRYPTONOTE_MAX_TX_SIZE_LIMIT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE; /* maximum transaction size */
 		const size_t CRYPTONOTE_OPTIMIZE_SIZE=  100;		/* proportional to CRYPTONOTE_MAX_TX_SIZE_LIMIT */
@@ -145,7 +146,7 @@ namespace CryptoNote
 		const uint32_t UPGRADE_HEIGHT_V2                             = 147958; //{Hardhome}
  		const uint32_t UPGRADE_HEIGHT_V3                             = 154321; //{Longclaw}
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
- 		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1) 
+ 		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1)
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
     const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
@@ -171,7 +172,7 @@ namespace CryptoNote
 
   const char CRYPTONOTE_NAME[] = "fuego";
 	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
-	
+
 	const uint8_t  TRANSACTION_VERSION_1                         =  1;
 	const uint8_t  TRANSACTION_VERSION_2                         =  2;
 
@@ -182,7 +183,7 @@ namespace CryptoNote
 	const uint8_t  BLOCK_MAJOR_VERSION_5                         =  5;
 	const uint8_t  BLOCK_MAJOR_VERSION_6                         =  6;
 	const uint8_t  BLOCK_MAJOR_VERSION_7                         =  7;
-	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8; 
+	const uint8_t  BLOCK_MAJOR_VERSION_8                         =  8;
 	const uint8_t  BLOCK_MAJOR_VERSION_9                         =  9;
 	const uint8_t  BLOCK_MAJOR_VERSION_10                        = 10;
 
@@ -193,11 +194,11 @@ namespace CryptoNote
 	const size_t BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT = 10000; // by default, blocks ids count in synchronizing
 	const size_t BLOCKS_SYNCHRONIZING_DEFAULT_COUNT = 128;		 // by default, blocks count in blocks downloading
 	const size_t COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
-    
+
 	// Mainnet ports
 	const int P2P_DEFAULT_PORT = 10808;
  	const int RPC_DEFAULT_PORT = 18180;
-	
+
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;
@@ -232,7 +233,7 @@ namespace CryptoNote
 		"3.16.217.33:10808",
  		 "80.89.228.157:10808",
  		   "207.244.247.64:10808",
-	        "216.145.66.224:10808"			
+	        "216.145.66.224:10808"
 	};
 
 	// ---------------  TESTNET CONFIGS -----------------------------------------------------
@@ -242,11 +243,11 @@ namespace CryptoNote
 		"3.16.217.33:20808",
  		 "80.89.228.157:20808",
  		   "207.244.247.64:20808",
-	        "216.145.66.224:20808"	
+	        "216.145.66.224:20808"
 		// Add more testnet seed nodes as they become available
 		};
 
- 	// TESTNET DEFAULTS 
+ 	// TESTNET DEFAULTS
  	const char GENESIS_COINBASE_TX_HEX_TESTNET[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210136834e176c3994ebc8622152e76b8093e0b896aa06f790e6f93eba661edefe6a";
  	const int P2P_DEFAULT_PORT_TESTNET = 20808;
  	const int RPC_DEFAULT_PORT_TESTNET = 28280;
@@ -259,15 +260,15 @@ namespace CryptoNote
     const uint32_t TESTNET_DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
     const uint32_t TESTNET_DEPOSIT_TERM_BURN = TESTNET_DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
- 	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480; 
+ 	const uint32_t TESTNET_DEPOSIT_MAX_TERM_v1 = 5480;
  	const uint32_t TESTNET_DEPOSIT_MIN_TERM = 2;  //blocks		 /* one month=5480
- 	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 2;  		
+ 	const uint32_t TESTNET_DEPOSIT_MAX_TERM = 2;
     const uint32_t TESTNET_DEPOSIT_TERM_YIELD = TESTNET_DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
 //__________________________________________________________________________________________________________________________
                                      	// TESTNET DMWDA parameters
 //--------------------------------------------------------------------------------------------------------------------------
  		const uint32_t TESTNET_DMWDA_SHORT_WINDOW                            = 15;   // Rapid response window
- 		const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window  
+ 		const uint32_t TESTNET_DMWDA_MEDIUM_WINDOW                           = 45;   // Stability window
  		const uint32_t TESTNET_DMWDA_LONG_WINDOW                             = 120;  // Trend analysis window
  		const uint32_t TESTNET_DMWDA_EMERGENCY_WINDOW                        = 5;    // Emergency response window
  		const double   TESTNET_DMWDA_MIN_ADJUSTMENT                          = 0.5;  // Minimum difficulty adjustment (50%)
@@ -277,7 +278,7 @@ namespace CryptoNote
  		const double   TESTNET_DMWDA_CONFIDENCE_MIN                          = 0.1;  // Minimum confidence score
  		const double   TESTNET_DMWDA_CONFIDENCE_MAX                          = 1.0;  // Maximum confidence score
  	    const double   TESTNET_DMWDA_DEFAULT_CONFIDENCE                      = 0.5;  // Default confidence score
- 	
+
 	const double   TESTNET_DMWDA_WEIGHT_SHORT                            = 0.4;  // Weight for short window
  	const double   TESTNET_DMWDA_WEIGHT_MEDIUM                           = 0.4;  // Weight for medium window
  	const double   TESTNET_DMWDA_WEIGHT_LONG                             = 0.2;  // Weight for long window
@@ -291,7 +292,7 @@ namespace CryptoNote
 	const double   TESTNET_DMWDA_HASH_RATE_CHANGE_THRESHOLD              = 10.0; // Hash rate change threshold for anomaly detection
 
  	// -------------------------------------- TESTNET CONFIGS ---------------------------------------------------------
-	
+
 	struct CheckpointData
 	{
 		uint32_t height;

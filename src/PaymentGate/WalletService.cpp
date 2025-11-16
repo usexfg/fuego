@@ -1750,14 +1750,14 @@ namespace PaymentService
           minAmount = CryptoNote::parameters::BURN_DEPOSIT_MIN_AMOUNT;
         } else {
           /* Yield deposits (0x07) use lower minimum: 8 XFG (no maximum) */
-          minAmount = CryptoNote::parameters::YIELD_DEPOSIT_MIN_AMOUNT;
+          minAmount = CryptoNote::parameters::BURN_DEPOSIT_MIN_AMOUNT;
         }
 
         /* Validate minimum deposit amount */
         if (amount < minAmount)
         {
           return make_error_code(CryptoNote::error::DEPOSIT_AMOUNT_TOO_SMALL);
-        /* } */
+        }
 
         /* Create or send the deposit */
         wallet.createDeposit(amount, term, sourceAddress, sourceAddress, transactionHash, commitment);
@@ -1769,7 +1769,6 @@ namespace PaymentService
         logger(Logging::INFO) << "Deposit created with staged unlock: " << transactionHash; */
         // }
       }
-
       catch (std::system_error &x)
       {
         logger(Logging::WARNING) << "Error: " << x.what();
@@ -1787,10 +1786,23 @@ namespace PaymentService
     std::error_code WalletService::withdrawDeposit(
         uint64_t depositId,
         std::string & transactionHash)
-
     {
-      // TODO try and catch
-      wallet.withdrawDeposit(depositId, transactionHash);
+      try
+      {
+        System::EventLock lk(readyEvent);
+        wallet.withdrawDeposit(depositId, transactionHash);
+      }
+      catch (std::system_error &x)
+      {
+        logger(Logging::WARNING) << "Error: " << x.what();
+        return x.code();
+      }
+      catch (std::exception &x)
+      {
+        logger(Logging::WARNING) << "Error : " << x.what();
+        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+      }
+
       return std::error_code();
     }
 
@@ -2358,13 +2370,6 @@ namespace PaymentService
     // This should match the wallet file location
     return config.walletFile.substr(0, config.walletFile.find_last_of("/\\"));
   }
-
-
-
-
-
-
-
 
 
 

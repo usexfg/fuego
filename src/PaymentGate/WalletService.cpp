@@ -2170,7 +2170,20 @@ namespace PaymentService
     // Money supply stats - simplified
 
 
-    std::error_code WalletService::getBaseMoneySupply(uint64_t &baseMoneySupply)
+    std::error_code WalletService::getBaseMoneySupply(uint64_t &baseMoneySupply) {
+      try {
+        System::EventLock lk(readyEvent);
+        
+        // Base money supply = total money supply at genesis * emission curve factor
+        // For OSAVVARIK: Use currency's max supply or genesis emission
+        baseMoneySupply = currency.moneySupply();
+        
+        return std::error_code();
+      } catch (std::exception &e) {
+        logger(Logging::WARNING) << "getBaseMoneySupply error: " << e.what();
+        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+      }
+    }
     {
       try
       {
@@ -2186,7 +2199,37 @@ namespace PaymentService
 
     // Removed getCirculatingSupply - no longer needed
 
-    std::error_code WalletService::getCirculatingSupply(uint64_t &circulatingSupply)
+    std::error_code WalletService::getCirculatingSupply(uint64_t &circulatingSupply) {
+      try {
+        System::EventLock lk(readyEvent);
+        
+        uint64_t actualBalance = 0;
+        uint64_t totalDeposits = 0;
+        
+        // Query blockchain for actual circulating supply
+        auto blockCount = node.getLastLocalBlockHeight();
+        if (blockCount > 0) {
+          // Sum all outputs minus locked deposits/burns
+          circulatingSupply = currency.moneySupply();
+          
+          // Subtract burned amounts from forever deposits
+          uint64_t burned = 0;
+          for (const auto& deposit : wallet.getDeposits()) {
+            if (deposit.term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER) {
+              burned += deposit.amount;
+            }
+          }
+          circulatingSupply -= burned;
+        } else {
+          circulatingSupply = 0;
+        }
+        
+        return std::error_code();
+      } catch (std::exception &e) {
+        logger(Logging::WARNING) << "getCirculatingSupply error: " << e.what();
+        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+      }
+    }
     {
       try
       {
@@ -2224,7 +2267,32 @@ namespace PaymentService
 
     // Removed getTotalRebornXfg - no longer needed
 
-    std::error_code WalletService::getBurnPercentage(double &burnPercentage)
+    std::error_code WalletService::getBurnPercentage(double &burnPercentage) {
+      try {
+        System::EventLock lk(readyEvent);
+        
+        uint64_t totalSupply = currency.moneySupply();
+        uint64_t burnedAmount = 0;
+        
+        // Calculate burned amount from forever deposits
+        for (const auto& deposit : wallet.getDeposits()) {
+          if (deposit.term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER) {
+            burnedAmount += deposit.amount;
+          }
+        }
+        
+        if (totalSupply == 0) {
+          burnPercentage = 0.0;
+        } else {
+          burnPercentage = static_cast<double>(burnedAmount * 100) / totalSupply;
+        }
+        
+        return std::error_code();
+      } catch (std::exception &e) {
+        logger(Logging::WARNING) << "getBurnPercentage error: " << e.what();
+        return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+      }
+    }
     {
       try
       {
@@ -2374,6 +2442,31 @@ namespace PaymentService
 
 
 
+  namespace PaymentService {
+    
+  struct GetTotalDepositAmount {
+    struct Response {
+      std::string totalDepositAmount;
+      std::string status;
+    };
+  };
+
+  struct GetCirculatingSupply {
+    struct Response {
+      std::string circulatingSupply;
+      std::string status;
+    };
+  };
+
+  struct GetEthernalXFG {
+    struct Response {
+      std::string ethernalXFG;
+      std::string status;
+    };
+  };
+
+  } // namespace PaymentService
+
   std::error_code WalletService::getTotalDepositAmount(GetTotalDepositAmount::Response &response)
   {
     try
@@ -2398,7 +2491,23 @@ namespace PaymentService
     }
   }
 
-  std::error_code WalletService::getCirculatingSupply(GetCirculatingSupply::Response &response)
+  std::error_code WalletService::getCirculatingSupply(GetCirculatingSupply::Response &response) {
+    try {
+      uint64_t supply = 0;
+      auto ec = getCirculatingSupply(supply);
+      if (!ec) {
+        response.circulatingSupply = formatAmount(supply);
+        response.status = "success";
+      } else {
+        response.status = "error";
+      }
+      return ec;
+    } catch (std::exception &e) {
+      logger(Logging::WARNING) << "getCirculatingSupply RPC error: " << e.what();
+      response.status = "error";
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    }
+  }
   {
     try
     {
@@ -2437,7 +2546,7 @@ namespace PaymentService
       // Format amount for display
       response.formattedAmount = formatAmount(response.ethernalXFG);
 
-      returnformatAmount(uint64_t amount)
+      return formatAmount(eternal);
   {
     // Convert atomic units to XFG with 8 decimal places
     double xfgAmount = static_cast<double>(amount) / 100000000.0;

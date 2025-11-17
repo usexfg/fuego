@@ -54,6 +54,29 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
 
 struct TransactionsInBlockInfoFilter;
 
+
+// Response structs for RPC methods
+struct GetTotalDepositAmount {
+  struct Response {
+    std::string totalDepositAmount;
+    std::string status;
+  };
+};
+
+struct GetCirculatingSupply {
+  struct Response {
+    std::string circulatingSupply;
+    std::string status;
+  };
+};
+
+struct GetEthernalXFG {
+  struct Response {
+    std::string ethernalXFG;
+    std::string status;
+  };
+};
+
 class WalletService
 {
 public:
@@ -108,6 +131,16 @@ std::error_code getViewKey(std::string &viewSecretKey);
 
   std::error_code withdrawDeposit(uint64_t depositId, std::string &transactionHash);
   std::error_code sendDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash);
+
+  // Circulating supply and burn tracking methods
+  std::error_code getBaseMoneySupply(uint64_t &baseMoneySupply);
+  std::error_code getCirculatingSupply(uint64_t &circulatingSupply);
+  std::error_code getBurnPercentage(double &burnPercentage);
+
+  // RPC response handlers
+  std::error_code getTotalDepositAmount(GetTotalDepositAmount::Response &response);
+  std::error_code getCirculatingSupply(GetCirculatingSupply::Response &response);
+  std::error_code getEternalFlame(GetEthernalXFG::Response &response);
   std::error_code getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address);
   // std::error_code getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, 
   //                                    uint64_t &interest, std::string &creatingTransactionHash, 

@@ -56,26 +56,7 @@ struct TransactionsInBlockInfoFilter;
 
 
 // Response structs for RPC methods
-struct GetTotalDepositAmount {
-  struct Response {
-    std::string totalDepositAmount;
-    std::string status;
-  };
-};
 
-struct GetCirculatingSupply {
-  struct Response {
-    std::string circulatingSupply;
-    std::string status;
-  };
-};
-
-struct GetEthernalXFG {
-  struct Response {
-    std::string ethernalXFG;
-    std::string status;
-  };
-};
 
 class WalletService
 {

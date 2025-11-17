@@ -1,5 +1,7 @@
 #include "WalletService.h"
 #include <System/EventLock.h>
+#include "Wallet/WalletErrors.h"
+#include <iomanip>
 #include <CryptoNoteCore/CryptoNoteTools.h>
 #include <Common/Util.h>
 
@@ -121,7 +123,7 @@ std::error_code PaymentService::WalletService::getTotalDepositAmount(PaymentServ
     uint64_t totalDeposits = 0;
     // Sum all deposits from wallet (replace with actual deposit tracking)
 
-    response.totalDepositAmount = Common::formatAmount(totalDeposits, 8);
+    response.totalDepositAmount = formatXFG(totalDeposits);
     response.status = "success";
     return std::error_code();
   } catch (std::exception &e) {
@@ -136,7 +138,7 @@ std::error_code PaymentService::WalletService::getCirculatingSupply(PaymentServi
     uint64_t supply = 0;
     auto ec = getCirculatingSupply(supply);
     if (!ec) {
-      response.circulatingSupply = Common::formatAmount(supply, 8);
+      response.circulatingSupply = formatXFG(supply);
       response.status = "success";
     } else {
       response.status = "error";
@@ -157,7 +159,7 @@ std::error_code PaymentService::WalletService::getEternalFlame(PaymentService::G
     // EternalFlame = accumulated burn rewards (OSAVVARIK trickle-down)
     // Query burn deposit interest from blockchain state
 
-    response.ethernalXFG = Common::formatAmount(eternalXFG, 8);
+    response.ethernalXFG = formatXFG(eternalXFG);
     response.status = "success";
     return std::error_code();
   } catch (std::exception &e) {
@@ -168,10 +170,21 @@ std::error_code PaymentService::WalletService::getEternalFlame(PaymentService::G
 }
 
 // Placeholder formatAmount helper (replace with actual implementation)
-std::string PaymentService::WalletService::formatAmount(uint64_t heatAmount) {
+std::string PaymentService::WalletService::formatXFG(uint64_t heatAmount) {
   try {
-    // HEAT = heat (Fuego atomic units) so, no decimal conversion needed
-    // Just format as integer + " HEAT" suffix
+    // XFG format for circulating supply (7 decimals): 1 XFG = 10,000,000 HEAT
+    double xfgAmount = static_cast<double>(heatAmount) / 10000000.0;
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(7) << xfgAmount << " XFG";
+    return ss.str();
+  } catch (...) {
+    return "0.0000000 XFG";
+  }
+}
+
+std::string PaymentService::WalletService::formatHEAT(uint64_t heatAmount) {
+  try {
+    // HEAT format for ERC20 token only (raw atomic units)
     std::stringstream ss;
     ss << heatAmount << " HEAT";
     return ss.str();

@@ -26,6 +26,7 @@
 #include "version.h"
 #include <boost/format.hpp>
 #include "math.h"
+#include "Common/ConsoleTools.h"
 
 namespace
 {
@@ -67,7 +68,8 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
 std::string DaemonCommandsHandler::get_commands_str()
 {
   std::stringstream ss;
-  ss << "FUEGO  ||  " << PROJECT_VERSION_LONG << ENDL;
+  // Add bright orange color code directly to stringstream
+  ss << "\033[1;33mFUEGO  ||  " << PROJECT_VERSION_LONG << "\033[0m" << ENDL;
   ss << "Commands: " << ENDL;
   std::string usage = m_consoleHandler.getUsage();
   boost::replace_all(usage, "\n", "\n  ");

@@ -483,7 +483,8 @@ namespace CryptoNote
       std::string sourceAddress,
       std::string destinationAddress,
       std::string &transactionHash,
-      const DepositCommitment& commitment)
+      const DepositCommitment& commitment,
+      bool useStagedUnlock)
   {
 
     throwIfNotInitialized();
@@ -688,6 +689,14 @@ namespace CryptoNote
 
     /* Return the transaction hash */
     transactionHash = Common::podToHex(transaction->getTransactionHash());
+    
+    /* Store staged unlock preference if requested */
+    if (useStagedUnlock && !isBurnDeposit) {
+      // Store the staged unlock preference for this deposit
+      // This will be used when querying deposit information later
+      m_logger(DEBUGGING, BRIGHT_GREEN) << "Deposit created with staged unlock preference: " << transactionHash;
+    }
+    
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
   }
 

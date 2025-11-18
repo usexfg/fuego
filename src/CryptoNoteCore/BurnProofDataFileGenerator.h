@@ -23,6 +23,41 @@
 
 namespace CryptoNote {
 
+// Helper structure for BPDF validation
+struct BPDFData {
+    std::string version;
+    std::string proofType;
+    std::string transactionHash;
+    uint64_t createdAt;
+    std::string formatVersion;
+    
+    std::string secret;
+    std::string nullifier;
+    std::string commitment;
+    uint32_t blockHeight;
+    uint64_t xfgAmount;
+    std::string txExtraHash;
+    
+    std::string recipientAddress;
+    std::string recipientHash;
+    uint64_t heatAmount;
+    std::string xfgAmountFormatted;
+    std::string heatAmountFormatted;
+    uint64_t transactionTimestamp;
+    
+    std::string signature;
+    std::string checksum;
+    std::string signaturePubkey;
+    std::string integrityHash;
+    
+    std::string genesisTransactionHash;
+    std::string genesisBlockHash;
+    uint64_t genesisTimestamp;
+    std::string genesisValidationHash;
+    uint64_t fuegoNetworkId;
+    std::string networkValidationHash;
+};
+
 // Burn Proof Data File Generator
 // Generates JSON files compatible with xfgwinter proof generation
 class BurnProofDataFileGenerator {
@@ -66,6 +101,13 @@ public:
     static bool isValidXfgAmount(uint64_t amount);
 
 private:
+    // BPDF validation helper functions
+    static bool validateJsonStructure(const JsonValue& json);
+    static bool extractBPDFData(const JsonValue& json, BPDFData& data);
+    static bool validateCryptographicHashes(const BPDFData& data);
+    static bool validateDataIntegrity(const BPDFData& data);
+    static bool validateFormatConstraints(const BPDFData& data);
+    static bool isValidHexString(const std::string& str, size_t expectedLength);
     // Generate filename from transaction hash
     static std::string generateFilename(const std::string& txHash);
     

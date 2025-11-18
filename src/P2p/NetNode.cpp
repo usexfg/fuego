@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <fstream>
 
+#include <boost/foreach.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/utility/value_init.hpp>
@@ -1142,7 +1143,7 @@ namespace CryptoNote
     time(&now);
     delta = now - local_time;
 
-    for(PeerlistEntry& be : local_peerlist)
+    BOOST_FOREACH(PeerlistEntry& be, local_peerlist)
     {
       if(be.last_seen > uint64_t(local_time))
       {

@@ -87,16 +87,12 @@ void CreateDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
   serializer(sourceAddress, "sourceAddress");
   serializer(heatCommitment, "heatCommitment");
   serializer(metadata, "metadata");
-  serializer(useStagedUnlock, "useStagedUnlock");
 }
 
 void CreateDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(transactionHash, "transactionHash");
   serializer(isBurnDeposit, "isBurnDeposit");
-  serializer(useStagedUnlock, "useStagedUnlock");
-  serializer(transactionFee, "transactionFee");
-  serializer(totalFees, "totalFees");
 }
 
 
@@ -141,9 +137,6 @@ void GetDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
   serializer(unlockHeight, "unlockHeight");
   serializer(locked, "locked");
   serializer(address, "address");
-  serializer(useStagedUnlock, "useStagedUnlock");
-  serializer(transactionFee, "transactionFee");
-  serializer(totalFees, "totalFees");
 }
 
 void GetAddresses::Request::serialize(CryptoNote::ISerializer &serializer)

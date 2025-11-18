@@ -38,8 +38,7 @@ enum class Color : uint8_t {
   BrightYellow,
   BrightWhite,
   BrightCyan,
-  BrightMagenta,
-  BrightOrange
+  BrightMagenta
 };
 
 void setTextColor(Color color);

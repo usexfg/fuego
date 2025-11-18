@@ -278,7 +278,6 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDep
   // Check if this is a burn deposit (FOREVER term)
   bool isBurnDeposit = (request.term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
   response.isBurnDeposit = isBurnDeposit;
-  response.useStagedUnlock = request.useStagedUnlock;
   
   // Generate commitment based on deposit type
   if (isBurnDeposit) {
@@ -289,12 +288,7 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDep
       request.term, request.amount, commitment.metadata);
   }
   
-  // Calculate transaction fees
-  uint64_t baseFee = 800000; // 0.008 XFG base transaction fee
-  response.transactionFee = baseFee;
-  response.totalFees = request.useStagedUnlock ? (baseFee * 5) : baseFee; // 5 transactions for staged unlock
-  
-  return service.createDeposit(request.amount, request.term, request.sourceAddress, response.transactionHash, commitment, request.useStagedUnlock);
+  return service.createDeposit(request.amount, request.term, request.sourceAddress, response.transactionHash, commitment);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateBurnDeposit(const CreateBurnDeposit::Request& request, CreateBurnDeposit::Response& response) {
@@ -547,16 +541,7 @@ std::error_code PaymentServiceJsonRpcServer::handleSendDeposit(const SendDeposit
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response) {
-  std::error_code result = service.getDepositWithStagedInfo(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address, response.useStagedUnlock);
-  
-  if (!result) {
-    // Calculate transaction fees
-    uint64_t baseFee = 800000; // 0.008 XFG base transaction fee
-    response.transactionFee = baseFee;
-    response.totalFees = response.useStagedUnlock ? (baseFee * 4) : baseFee;
-  }
-  
-  return result;
+  return service.getDeposit(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetAddresses(const GetAddresses::Request& request, GetAddresses::Response& response) {

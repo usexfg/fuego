@@ -1169,49 +1169,6 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address, bool &useStagedUnlock)
-  {
-    try
-    {
-      System::EventLock lk(readyEvent);
-      Deposit deposit = wallet.getDeposit(depositId);
-      amount = deposit.amount;
-      term = deposit.term;
-      interest = deposit.interest;
-      height = deposit.height;
-      unlockHeight = deposit.unlockHeight;
-
-      WalletTransaction wallettx = wallet.getTransaction(deposit.creatingTransactionId);
-      creatingTransactionHash = Common::podToHex(wallettx.hash);
-
-      WalletTransfer transfer = wallet.getTransactionTransfer(deposit.creatingTransactionId, 0);
-      address = transfer.address;
-
-      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID)
-      {
-        WalletTransaction walletstx = wallet.getTransaction(deposit.spendingTransactionId);
-        spendingTransactionHash = Common::podToHex(walletstx.hash);
-      }
-
-      // Check if this deposit uses staged unlock
-      useStagedUnlock = m_stagedUnlockStorage.getStagedUnlockPreference(creatingTransactionHash);
-
-      bool state = true;
-      uint32_t knownBlockCount = node.getKnownBlockCount();
-      if (knownBlockCount > unlockHeight)
-      {
-        locked = false;
-      }
-    }
-    catch (std::exception &x)
-    {
-      logger(Logging::WARNING) << "Error while getting deposit with staged info: " << x.what();
-      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-    }
-
-    return std::error_code();
-  }
-
   std::error_code WalletService::getTransactions(
       const std::vector<std::string> &addresses,
       const std::string &blockHashString,
@@ -1735,8 +1692,7 @@ namespace PaymentService
         uint64_t term,
         std::string sourceAddress,
         std::string & transactionHash,
-        const CryptoNote::DepositCommitment& commitment,
-        bool useStagedUnlock)
+        const CryptoNote::DepositCommitment& commitment)
     {
     
       try
@@ -1792,8 +1748,8 @@ namespace PaymentService
           /* Burn deposits (FOREVER term) use lower minimum: 0.8 XFG */
           minAmount = CryptoNote::parameters::BURN_DEPOSIT_MIN_AMOUNT;
         } else {
-          /* Yield deposits (0x07) use lower minimum: 8 XFG (no maximum) */
-          minAmount = CryptoNote::parameters::YIELD_DEPOSIT_MIN_AMOUNT;
+          /* Regular yield deposits use standard minimum: 8 XFG */
+          minAmount = CryptoNote::parameters::DEPOSIT_MIN_AMOUNT;
         }
 
         /* Validate minimum deposit amount */
@@ -1804,13 +1760,6 @@ namespace PaymentService
 
         /* Create or send the deposit */
         wallet.createDeposit(amount, term, sourceAddress, sourceAddress, transactionHash, commitment);
-        
-        /* Handle staged unlock if requested */
-        if (useStagedUnlock && !isBurnDeposit) {
-          // Store staged unlock preference for this deposit
-          m_stagedUnlockStorage.setStagedUnlockPreference(transactionHash, true);
-          logger(Logging::INFO) << "Deposit created with staged unlock: " << transactionHash;
-        }
       }
 
       catch (std::system_error &x)
@@ -1888,8 +1837,8 @@ namespace PaymentService
           /* Burn deposits (FOREVER term) use lower minimum: 0.8 XFG */
           minAmount = CryptoNote::parameters::BURN_DEPOSIT_MIN_AMOUNT;
         } else {
-          /* Yield deposits (0x07) use lower minimum: 8 XFG (no maximum) */
-          minAmount = CryptoNote::parameters::YIELD_DEPOSIT_MIN_AMOUNT;
+          /* Regular yield deposits use standard minimum: 8 XFG */
+          minAmount = CryptoNote::parameters::DEPOSIT_MIN_AMOUNT;
         }
 
         /* Validate minimum deposit amount */

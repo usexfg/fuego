@@ -41,7 +41,7 @@
 // 0x_8 tags: Burn-related deposit types
 #define TX_EXTRA_HEAT_COMMITMENT            0x08  // Heat commitment (burn)
 #define TX_EXTRA_ELDERFIER_DEPOSIT          0xE8  // Elderfier staking (moved from 0x06)
-#define TX_EXTRA_DIGM_MINT                  0xA8  // DIGM coin mint (Split 3 ways treasury, dev, burn)
+#define TX_EXTRA_DIGM_MINT                  0xA8  // DIGM coin mint (1/3 treasury, 1/3 dev, 1/3 XFG burn)
 
 // 0x_A tags: DIGM Artist related meta/msgs/txns
 #define TX_EXTRA_DIGM_ALBUM                 0x0A  // Album metadata

@@ -34,7 +34,6 @@
 
 #include "Common/SignalHandler.h"
 #include "Common/PathTools.h"
-#include "Common/ConsoleTools.h"
 #include "crypto/hash.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/CoreConfig.h"
@@ -461,7 +460,7 @@ int main(int argc, char* argv[])
       }
 	  }
   
-    /* This sets view-key so we can confirm that
+    /* This sets the view-key so we can confirm that
        the fee is part of the transaction blob */       
     if (command_line::has_arg(vm, arg_set_view_key)) {
       std::string vk_str = command_line::get_arg(vm, arg_set_view_key);

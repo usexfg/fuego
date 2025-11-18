@@ -139,11 +139,6 @@ namespace CryptoNote
           TransactionExtraElderfierMessage message;
           if (getElderfierMessageFromExtra(transactionExtra, message)) {
             transactionExtraFields.push_back(message);
-        case TX_EXTRA_HEAT_COMMITMENT:
-        {
-          TransactionExtraHeatCommitment heatCommitment;
-          if (getHeatCommitmentFromExtra(transactionExtra, heatCommitment)) {
-            transactionExtraFields.push_back(heatCommitment);
           } else {
             return false;
           }
@@ -155,11 +150,6 @@ namespace CryptoNote
           TransactionExtraEncryptedMediaMessage message;
           if (getEncryptedMediaMessageFromExtra(transactionExtra, message)) {
             transactionExtraFields.push_back(message);
-        case TX_EXTRA_YIELD_COMMITMENT:
-        {
-          TransactionExtraYieldCommitment yieldCommitment;
-          if (getYieldCommitmentFromExtra(transactionExtra, yieldCommitment)) {
-            transactionExtraFields.push_back(yieldCommitment);
           } else {
             return false;
           }
@@ -193,11 +183,6 @@ namespace CryptoNote
           TransactionExtraMediaTransferResponse response;
           if (getMediaTransferResponseFromExtra(transactionExtra, response)) {
             transactionExtraFields.push_back(response);
-        case TX_EXTRA_CD_DEPOSIT_SECRET:
-        {
-          TransactionExtraCDDepositSecret cdDepositSecret;
-          if (getCDDepositSecretFromExtra(transactionExtra, cdDepositSecret)) {
-            transactionExtraFields.push_back(cdDepositSecret);
           } else {
             return false;
           }
@@ -1421,8 +1406,8 @@ namespace CryptoNote
       keccak(mediaData.data(), mediaData.size(), hash, sizeof(hash));
       mediaHash.assign(reinterpret_cast<char*>(hash), 32);
 
-      // TODO: implement AES-256-GCM encryption
-      // For now, store unencrypted data (needs proper crypto implementation)
+      // TODO: Implement AES-256-GCM encryption
+      // For now, store unencrypted data (this needs proper crypto implementation)
       encryptedContent = mediaData;
 
       // Create signature data (all fields except signature itself)
@@ -1472,8 +1457,8 @@ namespace CryptoNote
         return false;
       }
 
-      // TODO: implement ECDH key derivation and AES-256-GCM decryption
-      // For now, return the encrypted content (needs crypto implementation)
+      // TODO: Implement ECDH key derivation and AES-256-GCM decryption
+      // For now, return the encrypted content (needs proper crypto implementation)
       mediaData = encryptedContent;
 
       return true;
@@ -1746,8 +1731,8 @@ namespace CryptoNote
 
   bool getEncryptedMediaMessageFromExtra(const std::vector<uint8_t>& tx_extra,
                                         TransactionExtraEncryptedMediaMessage& message) {
-    // implementation would parse the extra field
-    // placeholder - full implementation needs proper parsing logic
+    // Implementation would parse the extra field
+    // This is a placeholder - full implementation would need proper parsing logic
     return false;
   }
 
@@ -1810,8 +1795,8 @@ namespace CryptoNote
 
   bool getMediaAttachmentFromExtra(const std::vector<uint8_t>& tx_extra,
                                   TransactionExtraMediaAttachment& attachment) {
-    // implementation would parse the extra field
-    // This is a placeholder - full implementation needs proper parsing logic
+    // Implementation would parse the extra field
+    // This is a placeholder - full implementation would need proper parsing logic
     return false;
   }
 

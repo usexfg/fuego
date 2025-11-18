@@ -43,7 +43,7 @@ void setTextColor(Color color) {
     return;
   }
 
-  if (color > Color::BrightOrange) {
+  if (color > Color::BrightMagenta) {
     color = Color::Default;
   }
 
@@ -67,9 +67,7 @@ void setTextColor(Color color) {
     FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY,
     FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY,
     FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY,
-    FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY,
-    // bright orange (red + yellow + intensity)
-    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY
+    FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY
   };
 
   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), winColors[static_cast<size_t>(color)]);
@@ -94,9 +92,7 @@ void setTextColor(Color color) {
     "\033[1;33m",
     "\033[1;37m",
     "\033[1;36m",
-    "\033[1;35m",
-    // bright orange
-    "\033[1;33m"
+    "\033[1;35m"
   };
 
   std::cout << ansiColors[static_cast<size_t>(color)];

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ master, newpath, integtest, dynamigo ]
+    branches: [ master, dynamigo-release-v10, integtest, dynamigo ]
   pull_request:
     branches: [ master, integtest ]
 
@@ -92,12 +92,7 @@ jobs:
         run: |
           # Install basic tools
           choco install -y ninja
-          # Install basic tools
-          choco install -y ninja
-          choco install -y vcpkg
-          choco install -y miniupnpc qrencode
-          choco install -y qt5-default --params '/InstallDir:C:\Qt'
-
+          
           # Initialize vcpkg if not already done
           if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
             git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
@@ -105,26 +100,13 @@ jobs:
             .\bootstrap-vcpkg.bat
             .\vcpkg integrate install
           }
-
+          
           # Install packages via vcpkg
           C:/vcpkg/vcpkg.exe install --triplet x64-windows `
             boost-filesystem boost-thread boost-date-time boost-chrono `
             boost-regex boost-serialization boost-program-options `
-            boost-multi-index boost-foreach boost-uuid boost-asio boost-scope-exit `
+            boost-multi-index boost-uuid boost-asio boost-scope-exit `
             boost-format icu openssl miniupnpc
-
-      - name: Debug Boost installation (Windows)
-        if: matrix.os == 'windows-2022'
-        shell: pwsh
-        run: |
-          echo "Checking Boost installation..."
-          if (Test-Path "C:\local\") { ls C:\local\ } else { echo "C:\local\ does not exist" }
-          if (Test-Path "C:\tools\") { ls C:\tools\ } else { echo "C:\tools\ does not exist" }
-          if (Test-Path "C:\ProgramData\chocolatey\lib\boost-msvc-14.3\") { ls C:\ProgramData\chocolatey\lib\boost-msvc-14.3\ } else { echo "Chocolatey Boost path does not exist" }
-          echo "Environment variables:"
-          echo "BOOST_ROOT=$env:BOOST_ROOT"
-          echo "Boost_INCLUDEDIR=$env:Boost_INCLUDEDIR"
-          echo "Boost_LIBRARYDIR=$env:Boost_LIBRARYDIR"
 
       # -------------------- Configure & Build --------------------
       - name: Configure

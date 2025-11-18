@@ -7,7 +7,7 @@
 **Activation Height**: 969,696  
 **Target Date**: Ready for Production Deployment  
 
-This release introduces comprehensive **Dynamic Updates** that revolutionize Fuego's capabilities with adaptive systems for supply management, privacy enhancement, and difficulty adjustment.
+This release introduces comprehensive **Dynamic Updates** that revolutionize Fuego's blockchain capabilities with adaptive systems for supply management, privacy enhancement, and difficulty adjustment.
 
 ---
 
@@ -22,8 +22,9 @@ This release introduces comprehensive **Dynamic Updates** that revolutionize Fue
 - **Circulating Supply**: Total Supply - Locked Deposits (excluding burn deposits)
 
 **Technical Implementation:**
+- `DynamicMoneySupply` class with real-time state management
 - `BankingIndex` integration for burned XFG tracking
-- RPC endpoints: `getCirculatingSupply`, `getTotalBurnedXfg`
+- RPC endpoints: `getDynamicSupplyOverview`, `getCirculatingSupply`, `getTotalBurnedXfg`
 - FOREVER deposits (term = 4294967295) for XFG-for-HEAT mints
 
 **Economic Benefits:**
@@ -52,7 +53,7 @@ This release introduces comprehensive **Dynamic Updates** that revolutionize Fue
 - Automatic optimizer guidance for insufficient outputs
 - Backward compatibility with older block versions
 
-### ⚡ **Dynamic Multi-Window Difficulty Algo (DMWDA)**
+### ⚡ **Dynamic Multi-Window Difficulty Algorithm (DMWDA)**
 
 **Core Features:**
 - **Multi-Window Approach**: 15/45/120 blocks + 5-block emergency window
@@ -69,7 +70,7 @@ This release introduces comprehensive **Dynamic Updates** that revolutionize Fue
 **Security Features:**
 - **Solve Time Clamping**: ±10x target time limits prevent manipulation
 - **Anomaly Detection**: Identifies suspicious mining patterns
-- **Aggressive Mode**: 0.1x to 10x adjustment range for emergency response
+- **Emergency Mode**: 0.1x to 10x adjustment range for crisis response
 - **Statistical Analysis**: Detects and prevents block stealing attempts
 
 ---

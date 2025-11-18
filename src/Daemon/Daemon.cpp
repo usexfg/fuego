@@ -1,11 +1,11 @@
-// Copyright (c) 2019-2025 Fuego Developers
+// Copyright (c) 2017-2026 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
 //
 // This file is part of Fuego.
-// 
+//
 //
 // Fuego is free software distributed in the hope that it
 // will be useful, but WITHOUT ANY WARRANTY; without even the
@@ -23,6 +23,7 @@
 #include <boost/program_options.hpp>
 #include <thread>
 #include <chrono>
+#include <locale.h>
 
 #ifdef _WIN32
   #ifdef _MSC_VER
@@ -66,24 +67,24 @@ namespace po = boost::program_options;
 namespace
 {
   const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", std::string(CryptoNote::CRYPTONOTE_NAME) + ".conf"};
-  
+
   // Stake verification functions for private blockchain
-  bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumStake, 
+  bool verifyMinimumStakeWithWallet(const std::string& address, uint64_t minimumStake,
                                    const CryptoNote::core& ccore, const CryptoNote::Currency& currency);
   bool verifyMinimumStakeWithProof(const std::string& address, uint64_t minimumStake);
   bool verifyMinimumStakeWithExternalService(const std::string& address, uint64_t minimumStake);
-  bool verifyStakeWithDaemonWallet(const CryptoNote::AccountPublicAddress& acc, 
+  bool verifyStakeWithDaemonWallet(const CryptoNote::AccountPublicAddress& acc,
                                   uint64_t minimumStake, const CryptoNote::core& ccore);
   const command_line::arg_descriptor<bool>        arg_os_version  = {"os-version", ""};
   const command_line::arg_descriptor<std::string> arg_log_file    = {"log-file", "", ""};
   const command_line::arg_descriptor<std::string> arg_set_fee_address = { "fee-address", "Set a fee address for remote nodes", "" };
   const command_line::arg_descriptor<std::string> arg_set_view_key = { "view-key", "Set secret view-key for remote node fee confirmation", "" };
-  
+
   // Elderfier Service Arguments (STARK verification with stake requirement)
   const command_line::arg_descriptor<bool>        arg_enable_elderfier = {"enable-elderfier", "Enable Elderfier service mode for STARK proof verification (requires 800 XFG stake)", false};
   const command_line::arg_descriptor<std::string> arg_elderfier_config = {"elderfier-config", "Path to Elderfier configuration file (optional)", ""};
   const command_line::arg_descriptor<std::string> arg_elderfier_registry_url = {"elderfier-registry-url", "GitHub URL for Elderfier registry (default: https://raw.githubusercontent.com/usexfg/fuego/main/elderfier_registry.txt)", "https://raw.githubusercontent.com/usexfg/fuego/main/elderfier_registry.txt"};
-  
+
   const command_line::arg_descriptor<bool>        arg_restricted_rpc = {"restricted-rpc", "Restrict RPC to view only commands to prevent abuse"};
   const command_line::arg_descriptor<std::string> arg_enable_cors = { "enable-cors", "Adds header 'Access-Control-Allow-Origin' to the daemon's RPC responses. Uses the value as domain. Use * for all", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2}; // info level
@@ -102,17 +103,17 @@ namespace
       return GetConsoleOutputCP() == CP_UTF8;
     #else
       // Unix/Linux/macOS: Check locale
-      const char* locale = std::setlocale(LC_ALL, "");
+      const char* locale = setlocale(LC_ALL, "");
       if (!locale) return false;
-      
+
       // Check if locale contains UTF-8 or UTF8
       std::string loc(locale);
       std::transform(loc.begin(), loc.end(), loc.begin(), ::toupper);
-      return loc.find("UTF-8") != std::string::npos || 
+      return loc.find("UTF-8") != std::string::npos ||
              loc.find("UTF8") != std::string::npos;
     #endif
   }
-  
+
   // Verify stake by checking for active locked 0xE8 (Elderfier) deposit
   // This replaces all previous proof-of-stake methods
   bool verifyStakeWithElderfierDeposit(const std::string& address,
@@ -124,40 +125,40 @@ namespace
       if (!currency.parseAccountAddressString(address, acc)) {
         return false;
       }
-      
+
       uint32_t currentHeight = ccore.get_current_blockchain_height();
-      
-       // Only scan from block 1M and up
-      if (currentHeight <= 1000000) {
+
+       // Only scan from ~ block 1M and up
+      if (currentHeight <= 980000) {
         return false; // Chain hasn't reached block 1M yet
       }
-      
+
       // Scan from block 1M & up
-      uint32_t startHeight = 1000000;
-      
+      uint32_t startHeight = 980000;
+
       for (uint32_t height = startHeight; height < currentHeight; ++height) {
         std::list<CryptoNote::Block> blocks;
         ccore.get_blocks(height, 1, blocks);
-        
+
         if (blocks.empty()) continue;
-        
+
         const CryptoNote::Block& block = blocks.front();
-        
+
         for (const Crypto::Hash& txHash : block.transactionHashes) {
           CryptoNote::Transaction tx;
           Crypto::Hash blockHash;
           uint32_t blockHeight;
-          
+
           if (!ccore.getTransaction(txHash, tx)) {
             continue;
           }
-          
+
           // Parse transaction extra
           std::vector<CryptoNote::TransactionExtraField> extraFields;
           if (!CryptoNote::parseTransactionExtra(tx.extra, extraFields)) {
             continue;
           }
-          
+
           // Check for 0xE8 (TX_EXTRA_ELDERFIER_DEPOSIT)
           bool hasElderfierDeposit = false;
           for (const auto& field : extraFields) {
@@ -166,16 +167,16 @@ namespace
               break;
             }
           }
-          
+
           if (!hasElderfierDeposit) {
             continue;
           }
-          
+
           // Check if stake is still locked
           // Get amount at creation & current height
           uint64_t depositAtCreation = ccore.depositAmountAtHeight(height);
           uint64_t depositAtCurrent = ccore.depositAmountAtHeight(currentHeight);
-          
+
           // If stake exists, make sure its locked & isnt slashed
           // Check if amount is 800 XFG
           if (depositAtCreation == 800000000000ULL && depositAtCurrent == depositAtCreation) {
@@ -183,7 +184,7 @@ namespace
           }
         }
       }
-      
+
       return false;
     } catch (const std::exception& e) {
       return false;
@@ -227,7 +228,7 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
 int main(int argc, char* argv[])
 {
   // Set locale for UTF-8 support
-  std::setlocale(LC_ALL, "");
+  setlocale(LC_ALL, "");
 
 #ifdef _WIN32
   #ifdef _MSC_VER
@@ -258,12 +259,12 @@ int main(int argc, char* argv[])
    command_line::add_arg(desc_cmd_sett, arg_log_level);
    command_line::add_arg(desc_cmd_sett, arg_console);
    command_line::add_arg(desc_cmd_sett, arg_set_view_key);
-   
+
        // Elderfier Service Arguments (STARK verification with stake requirement)
     command_line::add_arg(desc_cmd_sett, arg_enable_elderfier);
     command_line::add_arg(desc_cmd_sett, arg_elderfier_config);
     command_line::add_arg(desc_cmd_sett, arg_elderfier_registry_url);
-   
+
    command_line::add_arg(desc_cmd_sett, arg_testnet_on);
    command_line::add_arg(desc_cmd_sett, arg_enable_cors);
 
@@ -336,9 +337,9 @@ int main(int argc, char* argv[])
 
     // configure logging
 	    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
-		logger(INFO, BRIGHT_MAGENTA) <<
+		logger(INFO, BRIGHT_YELLOW) <<
 #ifdef _WIN32
-" \n"		
+" \n"
 "       8888888888 888     888 8888888888 .d8888b.   .d88888b.   \n"
 "       888        888     888 888       d88P  Y88b d88P` `Y88b  \n"
 "       888        888     888 888       888    888 888     888  \n"
@@ -346,7 +347,7 @@ int main(int argc, char* argv[])
 "       888        888     888 888       888  88888 888     888  \n"
 "       888        888     888 888       888    888 888     888  \n"
 "       888        Y88b. .d88P 888       Y88b  d88P Y88b. .d88P  \n"
-"       888         `Y88888P`  8888888888 `Y8888P88  `Y88888P`   \n"                                
+"       888         `Y88888P`  8888888888 `Y8888P88  `Y88888P`   \n"
 #else
 " \n"
 " ░░░░░░░ ░░    ░░ ░░░░░░░  ░░░░░░   ░░░░░░  \n"
@@ -389,17 +390,17 @@ int main(int argc, char* argv[])
     NetNodeConfig netNodeConfig;
     netNodeConfig.init(vm);
     netNodeConfig.setTestnet(testnet_mode);
-    
+
     // Set mainnet default port if not explicitly configured
     if (netNodeConfig.getBindPort() == 0) {
       netNodeConfig.setBindPort(P2P_DEFAULT_PORT);
     }
-    
+
     MinerConfig minerConfig;
     minerConfig.init(vm);
     RpcServerConfig rpcConfig;
     rpcConfig.init(vm);
-    
+
 
     if (!coreConfig.configFolderDefaulted) {
       if (!Tools::directoryExists(coreConfig.configFolder)) {
@@ -460,9 +461,9 @@ int main(int argc, char* argv[])
 
       }
 	  }
-  
+
     /* This sets view-key so we can confirm that
-       the fee is part of the transaction blob */       
+       the fee is part of the transaction blob */
     if (command_line::has_arg(vm, arg_set_view_key)) {
       std::string vk_str = command_line::get_arg(vm, arg_set_view_key);
 	    if (!vk_str.empty()) {
@@ -506,13 +507,13 @@ int main(int argc, char* argv[])
     if (command_line::has_arg(vm, arg_enable_elderfier)) {
       printf("INFO: Checking Elderfier service eligibility...\n");
       std::string feeAddress = command_line::get_arg(vm, arg_set_fee_address);
-      
+
       if (feeAddress.empty()) {
         printf("WARNING: Elderfier service requires --set-fee-address\n");
         printf("INFO: To enable: --enable-elderfier --set-fee-address YOUR_ADDRESS\n");
       } else {
         printf("INFO: Verifying Elderfier stake for address: %s\n", feeAddress.c_str());
-        
+
         // Verify the fee address has 800 XFG stake via Elderfier deposit
         if (verifyStakeWithElderfierDeposit(feeAddress, ccore, currency)) {
           printf("INFO: Elderfier service enabled - valid 800 XFG stake verified\n");

@@ -49,6 +49,24 @@ add_library(BlockchainExplorer STATIC ${BlockchainExplorer})
 add_library(Common STATIC ${Common})
 add_library(Crypto STATIC ${Crypto})
 
+add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
+target_compile_options(CryptoNoteCore PRIVATE -Wno-deprecated-declarations)
+target_link_libraries(CryptoNoteCore PUBLIC
+    Crypto
+    Common
+    P2P
+    Serialization
+    Logging
+    Transfers
+    System
+    BlockchainExplorer
+)
+target_include_directories(CryptoNoteCore PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/external
+)
+add_dependencies(CryptoNoteCore version)
+
 # --------------------------
 # Apply AES/SSE compile options to Crypto library for slow-hash.c
 # --------------------------

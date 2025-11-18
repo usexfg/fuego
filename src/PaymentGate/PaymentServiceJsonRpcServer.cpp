@@ -574,7 +574,10 @@ std::error_code PaymentServiceJsonRpcServer::handleSendFusionTransaction(const S
 
 std::error_code PaymentServiceJsonRpcServer::handleGetEthernalXFG(const GetEthernalXFG::Request& request, GetEthernalXFG::Response& response)
 {
-  return service.getEternalFlame(response);
+  uint64_t eternal;
+  service.getEternalFlame(eternal);
+  response.ethernalXFG = eternal;
+  return std::error_code();
 }
 
 

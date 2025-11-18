@@ -82,7 +82,7 @@ public:
   std::error_code getBalance(const std::string &address, uint64_t &availableBalance, uint64_t &lockedAmount, uint64_t &lockedDepositBalance, uint64_t &unlockedDepositBalance);
   std::error_code getBalance(uint64_t &availableBalance, uint64_t &lockedAmount, uint64_t &lockedDepositBalance, uint64_t &unlockedDepositBalance);
   std::error_code getBlockHashes(uint32_t firstBlockIndex, uint32_t blockCount, std::vector<std::string> &blockHashes);
-std::error_code getViewKey(std::string &viewSecretKey);
+  std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code getTransactionHashes(const std::vector<std::string> &addresses, const std::string &blockHash,
                                        uint32_t blockCount, const std::string &paymentId, std::vector<TransactionHashesInBlockRpcInfo> &transactionHashes);
   std::error_code getTransactionHashes(const std::vector<std::string> &addresses, uint32_t firstBlockIndex,
@@ -119,21 +119,19 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code getBurnPercentage(double &burnPercentage);
 
   // RPC response handlers
-  std::error_code getTotalDepositAmount(GetTotalDepositAmount::Response &response);
-  std::error_code getCirculatingSupply(GetCirculatingSupply::Response &response);
-  std::error_code getEternalFlame(GetEthernalXFG::Response &response);
+
   std::error_code getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address);
-  // std::error_code getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, 
-  //                                    uint64_t &interest, std::string &creatingTransactionHash, 
-  //                                    std::string &spendingTransactionHash, bool &locked, 
-  //                                    uint64_t &height, uint64_t &unlockHeight, 
+  // std::error_code getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term,
+  //                                    uint64_t &interest, std::string &creatingTransactionHash,
+  //                                    std::string &spendingTransactionHash, bool &locked,
+  //                                    uint64_t &height, uint64_t &unlockHeight,
   //                                    std::string &address, bool &useStagedUnlock);
 
   // Eternal flame methods for tracking burned XFG
   std::error_code getEternalFlame(uint64_t &ethernalXFG);
-  std::error_code getEternalFlame(GetEthernalXFG::Response &response);
 
-  std::string formatAmount(uint64_t amount);
+  std::string formatXFG(uint64_t heatAmount);
+  std::string formatHEAT(uint64_t heatAmount);
 
   std::error_code getMessagesFromExtra(const std::string &extra, std::vector<std::string> &messges);
   std::error_code estimateFusion(uint64_t threshold, const std::vector<std::string> &addresses, uint32_t &fusionReadyCount, uint32_t &totalOutputCount);

@@ -42,10 +42,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
    CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
    CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-    message(STATUS "Using ${CMAKE_CXX_COMPILER_ID} compiler with C++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -maes -mpclmul")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes -mpclmul")
+    message(STATUS "Using ${CMAKE_CXX_COMPILER_ID} compiler with C++17 and AES-NI support")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:AVX2")
     message(STATUS "Using MSVC compiler with C++17")
 endif()
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Elderfire Privacy Group
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -90,7 +90,7 @@ namespace CryptoNote
 			m_upgradeHeightV7 = 7;	
 			m_upgradeHeightV8 = 8;
                      m_upgradeHeightV9 = 9;
-                     m_upgradeHeightV10 = 10;
+                     m_upgradeHeightV10 = 45;
 
       m_blocksFileName = "testnet_" + m_blocksFileName;
       m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
@@ -1099,140 +1099,8 @@ void Currency::getEternalFlame(uint64_t& amount) const {
 		
 		// Adaptive Multi-Window Difficulty Algorithm (AMWDA) - V10
 		// Designed for fast adaptation, large swing handling, and block stealing prevention
-		// Activated at BlockMajorVersion 10 (height 969696) alongside Enhanced Privacy
-		// Copyright (c) 2024 Fuego Privacy Group
-		
-		const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET; // 480 seconds
-		const uint32_t SHORT_WINDOW = 15;   // Rapid response window
-		const uint32_t MEDIUM_WINDOW = 45;  // Stability window  
-		const uint32_t LONG_WINDOW = 120;   // Trend analysis window
-		const uint32_t EMERGENCY_WINDOW = 5; // Emergency response window
-		
-		// Early chain protection
-		if (timestamps.size() < 3) {
-			return 10000;
-		}
-		
-		// Convert cumulative difficulties to individual difficulties
-		std::vector<difficulty_type> difficulties;
-		for (size_t i = 1; i < cumulativeDifficulties.size(); ++i) {
-			difficulties.push_back(cumulativeDifficulties[i] - cumulativeDifficulties[i-1]);
-		}
-		
-		// Detect emergency conditions (sudden hash rate changes)
-		bool emergencyMode = false;
-		if (timestamps.size() >= EMERGENCY_WINDOW + 1) {
-			uint64_t recentTime = timestamps[EMERGENCY_WINDOW] - timestamps[0];
-			uint64_t expectedTime = EMERGENCY_WINDOW * T;
-			
-			// If recent blocks are 10x faster or slower than expected
-			if (recentTime < expectedTime / 10 || recentTime > expectedTime * 10) {
-				emergencyMode = true;
-			}
-		}
-		
-		// Emergency response
-		if (emergencyMode) {
-			uint32_t effectiveWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), EMERGENCY_WINDOW);
-			double recentSolveTime = static_cast<double>(timestamps[effectiveWindow] - timestamps[0]) / effectiveWindow;
-			uint64_t avgDifficulty = (cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[0]) / effectiveWindow;
-			
-			double emergencyRatio = static_cast<double>(T) / recentSolveTime;
-			emergencyRatio = std::max(0.1, std::min(10.0, emergencyRatio)); // 10x bounds
-			
-			return std::max(static_cast<uint64_t>(10000), 
-							static_cast<uint64_t>(avgDifficulty * emergencyRatio));
-		}
-		
-		// Multi-window LWMA calculation
-		auto calculateLWMA = [&](uint32_t windowSize) -> double {
-			uint32_t effectiveWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), windowSize);
-			double weightedSum = 0.0;
-			double weightSum = 0.0;
-			
-			for (uint32_t i = 1; i <= effectiveWindow; ++i) {
-				int64_t solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i-1]);
-				
-				// Clamp solve time to prevent manipulation
-				solveTime = std::max(static_cast<int64_t>(T / 10), 
-									std::min(static_cast<int64_t>(T * 10), solveTime));
-				
-				double weight = static_cast<double>(i);
-				weightedSum += solveTime * weight;
-				weightSum += weight;
-			}
-			
-			return weightedSum / weightSum;
-		};
-		
-		// Calculate LWMA for different windows
-		double shortLWMA = calculateLWMA(SHORT_WINDOW);
-		double mediumLWMA = calculateLWMA(MEDIUM_WINDOW);
-		double longLWMA = calculateLWMA(LONG_WINDOW);
-		
-		// Calculate confidence score based on solve time variance
-		double confidence = 1.0;
-		if (timestamps.size() >= 10) {
-			std::vector<double> solveTimes;
-			for (size_t i = 1; i < std::min(static_cast<size_t>(10), timestamps.size()); ++i) {
-				solveTimes.push_back(static_cast<double>(timestamps[i] - timestamps[i-1]));
-			}
-			
-			double mean = std::accumulate(solveTimes.begin(), solveTimes.end(), 0.0) / solveTimes.size();
-			double variance = 0.0;
-			for (double st : solveTimes) {
-				variance += (st - mean) * (st - mean);
-			}
-			variance /= solveTimes.size();
-			
-			double coefficientOfVariation = std::sqrt(variance) / mean;
-			confidence = std::max(0.1, std::min(1.0, 1.0 - coefficientOfVariation));
-		}
-		
-		// Adaptive weighting based on confidence
-		double shortWeight = 0.4 * confidence;
-		double mediumWeight = 0.4 * confidence;
-		double longWeight = 0.2 * (1.0 - confidence);
-		
-		// Calculate weighted average solve time
-		double weightedSolveTime = (shortLWMA * shortWeight + 
-								   mediumLWMA * mediumWeight + 
-								   longLWMA * longWeight) / 
-								   (shortWeight + mediumWeight + longWeight);
-		
-		// Calculate current average difficulty
-		uint32_t effectiveWindow = std::min(static_cast<uint32_t>(timestamps.size() - 1), MEDIUM_WINDOW);
-		uint64_t avgDifficulty = (cumulativeDifficulties[effectiveWindow] - cumulativeDifficulties[0]) / effectiveWindow;
-		
-		// Calculate new difficulty
-		double difficultyRatio = static_cast<double>(T) / weightedSolveTime;
-		
-		// Apply adaptive bounds based on confidence
-		double minAdjustment = 0.5 + (0.3 * (1.0 - confidence)); // 0.5 to 0.8
-		double maxAdjustment = 4.0 - (2.0 * (1.0 - confidence));  // 2.0 to 4.0
-		
-		difficultyRatio = std::max(minAdjustment, std::min(maxAdjustment, difficultyRatio));
-		
-		uint64_t newDifficulty = static_cast<uint64_t>(avgDifficulty * difficultyRatio);
-		
-		// Apply smoothing to prevent oscillations
-		if (timestamps.size() > 1 && difficulties.size() > 0) {
-			uint64_t prevDifficulty = difficulties.back();
-			double alpha = 0.3; // Smoothing factor
-			newDifficulty = static_cast<uint64_t>(alpha * newDifficulty + (1.0 - alpha) * prevDifficulty);
-		}
-		
-		// Minimum difficulty protection
-		return std::max(static_cast<uint64_t>(10000), newDifficulty);
-	}
-
-	difficulty_type Currency::nextDifficultyV6(uint32_t height, uint8_t blockMajorVersion,
-		std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulativeDifficulties) const {
-		
-		// Adaptive Multi-Window Difficulty Algorithm (AMWDA) - V10
-		// Designed for fast adaptation, large swing handling, and block stealing prevention
-		// Activated at BlockMajorVersion 10 (height 969696) alongside Enhanced Privacy
-		// Copyright (c) 2024 Fuego Privacy Group
+		// Activated at BlockMajorVersion 10 (height 980000) 
+		// Copyright (c) 2025 Fuego Developers
 		
 		const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET; // 480 seconds
 		
@@ -1677,17 +1545,17 @@ void Currency::getEternalFlame(uint64_t& amount) const {
 		return isValidBurnDepositTerm(term);
 	}
 
-	uint64_t Currency::convertXfgToHeat(uint64_t xfgAmount) const {
+	// uint64_t Currency::convertXfgToHeat(uint64_t xfgAmount) const {
 		// Convert XFG to HEAT: 0.8 XFG = 8M HEAT
 		// Formula: (xfgAmount * 10000000) / 800000000
-		return (xfgAmount * 10000000) / 800000000;
-	}
+	//	return (xfgAmount * 10000000) / 800000000;
+//	}   
 
-	uint64_t Currency::convertHeatToXfg(uint64_t heatAmount) const {
+//	uint64_t Currency::convertHeatToXfg(uint64_t heatAmount) const {
 		// Convert HEAT to XFG: 8M HEAT = 0.8 XFG
 		// Formula: (heatAmount * 800000000) / 10000000
-		return (heatAmount * 800000000) / 10000000;
-	}
+	//	return (heatAmount * 80000000) / 10000000;
+// }
 
 	double Currency::getBurnPercentage() const {
 		if (m_baseMoneySupply == 0) return 0.0;
@@ -1753,8 +1621,8 @@ void Currency::getEternalFlame(uint64_t& amount) const {
 			return false;
 		}
 		
-		// TODO: Add more comprehensive validation logic here
-		// This could include verifying the cryptographic relationships
+		// TODO: Add more validation logic here
+		// verifying cryptographic relationships
 		// between secret, commitment, and nullifier
 		
 		return true;

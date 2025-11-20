@@ -9,9 +9,11 @@ file(GLOB_RECURSE CryptoNoteProtocol CryptoNoteProtocol/*)
 file(GLOB_RECURSE Daemon Daemon/*)
 file(GLOB_RECURSE Http HTTP/*)
 file(GLOB_RECURSE InProcessNode InProcessNode/*)
+file(GLOB_RECURSE SimpleWallet SimpleWallet/*)
 file(GLOB_RECURSE Logging Logging/*)
 # Optimizer sources
 file(GLOB_RECURSE NodeRpcProxy NodeRpcProxy/*)
+file(GLOB_RECURSE Optimizer Optimizer/*)
 file(GLOB_RECURSE P2p P2p/*)
 file(GLOB_RECURSE Rpc Rpc/*)
 file(GLOB_RECURSE Serialization Serialization/*)
@@ -67,7 +69,7 @@ add_library(Serialization STATIC ${Serialization})
 target_link_libraries(Serialization PUBLIC Common)
 add_library(System STATIC ${System})
 add_library(Transfers STATIC ${Transfers})
-add_library(SimpleWalletLib STATIC ${SimpleWalletLib})
+
 add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
@@ -80,9 +82,8 @@ add_executable(Optimizer ${Optimizer})
 
 # Add TestnetWallet executable
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
-target_link_libraries(testnet-wallet-cli 
+target_link_libraries(testnet-wallet-cli PRIVATE
     Wallet
-    SimpleWalletLib
     NodeRpcProxy
     Transfers
     Rpc
@@ -100,12 +101,6 @@ set_target_properties(testnet-wallet-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${
 if (MSVC)
   target_link_libraries(System PRIVATE ws2_32)
 endif ()
-
-target_link_libraries(Daemon CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(TestnetDaemon CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(SimpleWallet Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES} Serialization)
-target_link_libraries(PaymentGateService PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(Optimizer PaymentGate Rpc Http CryptoNoteCore Logging Serialization Crypto System Common ${Boost_LIBRARIES})
 
 target_link_libraries(SimpleWallet PRIVATE
     Wallet
@@ -163,11 +158,11 @@ target_link_libraries(Optimizer PRIVATE
 # Additional Linux linking
 # --------------------------
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
-  target_link_libraries(SimpleWallet -lresolv)
-  target_link_libraries(testnet-wallet-cli -lresolv)
-  target_link_libraries(Daemon -lresolv)
-  target_link_libraries(TestnetDaemon -lresolv)
-  target_link_libraries(PaymentGateService -lresolv)
+  target_link_libraries(SimpleWallet PRIVATE -lresolv)
+  target_link_libraries(testnet-wallet-cli PRIVATE -lresolv)
+  target_link_libraries(Daemon PRIVATE -lresolv)
+  target_link_libraries(TestnetDaemon PRIVATE -lresolv)
+  target_link_libraries(PaymentGateService PRIVATE -lresolv)
 endif ()
 
 # --------------------------

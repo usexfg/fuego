@@ -35,7 +35,7 @@
 #include "System/Dispatcher.h"
 #include "CryptoNoteCore/MessageQueue.h"
 #include "CryptoNoteCore/BlockchainMessages.h"
-#include "CryptoNoteCore/DepositIndex.h"
+#include "CryptoNoteCore/BankingIndex.h"
 
 #include <Logging/LoggerMessage.h>
 

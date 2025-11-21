@@ -274,6 +274,21 @@ public:
   Crypto::Hash calculateBurnCommitment(const Crypto::SecretKey& secret, uint64_t amount) const;
   Crypto::Hash calculateBurnRecipientHash(const std::string& recipientAddress) const;
   bool validateBurnProofData(const std::string& secret, uint64_t amount, const std::string& commitment, const std::string& nullifier) const;
+  
+  // Supply management functions
+  uint64_t getTotalSupply() const;
+  uint64_t getCirculatingSupply() const;
+  uint64_t getBlockRewardSupply() const;
+  void addBurnedXfg(uint64_t amount);
+  void addRebornXfg(uint64_t amount);
+  
+  // Interest calculation functions
+  uint64_t calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const;
+  uint64_t calculateTotalTransactionInterest(const Transaction &tx, uint32_t height) const;
+  
+  // Supply percentage functions
+  double getRebornPercentage() const;
+  double getSupplyIncreasePercentage() const;
 
   std::string accountAddressAsString(const AccountBase &account) const;
   std::string accountAddressAsString(const AccountPublicAddress &accountPublicAddress) const;
@@ -361,6 +376,13 @@ private:
   // Money supply
   uint64_t m_baseMoneySupply;
   uint64_t m_ethernalXFG;
+  
+  // Supply tracking variables
+  uint64_t m_totalBurnedXfg;
+  uint64_t m_totalRebornXfg;
+  uint64_t m_totalSupply;
+  uint64_t m_circulatingSupply;
+  uint64_t m_blockRewardSupply;
 
   // Network validation - using hash of network ID
   uint64_t m_fuegoNetworkId;

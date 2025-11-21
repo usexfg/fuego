@@ -21,6 +21,12 @@ extern "C" {
 #endif
 
 #include <stdlib.h>
+
+// Define _XOPEN_SOURCE for macOS to enable deprecated ucontext functions
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
+#endif
+
 #include <ucontext.h>
 
 // Use system ucontext on all macOS architectures

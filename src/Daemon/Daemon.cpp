@@ -101,7 +101,7 @@ namespace
       return GetConsoleOutputCP() == CP_UTF8;
     #else
       // Unix/Linux/macOS: Check locale
-      const char* locale = std::setlocale(LC_ALL, "");
+      const char* locale = setlocale(LC_ALL, "");
       if (!locale) return false;
       
       // Check if locale contains UTF-8 or UTF8
@@ -226,7 +226,7 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
 int main(int argc, char* argv[])
 {
   // Set locale for UTF-8 support
-  std::setlocale(LC_ALL, "");
+  setlocale(LC_ALL, "");
 
 #ifdef _WIN32
   #ifdef _MSC_VER

@@ -76,6 +76,21 @@ add_library(JsonRpcServer STATIC ${JsonRpcServer})
 
 add_executable(Daemon ${Daemon})
 add_executable(TestnetDaemon Daemon/DaemonCommandsHandler.cpp Daemon/DaemonCommandsHandler.h TestnetDaemon/TestnetDaemon.cpp)
+
+# Link libraries for Daemon executable
+target_link_libraries(Daemon PRIVATE
+    CryptoNoteCore
+    P2P
+    Rpc
+    Http
+    System
+    Logging
+    Common
+    Crypto
+    BlockchainExplorer
+    ${Boost_LIBRARIES}
+    Serialization
+)
 add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})

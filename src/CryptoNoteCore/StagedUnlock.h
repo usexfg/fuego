@@ -21,6 +21,13 @@
 #include <cstdint>
 #include "CryptoNote.h"
 #include "StagedDepositUnlock.h"
+#include "IWallet.h"
+
+// Forward declarations for types not defined in main headers
+namespace CryptoNote {
+    typedef size_t TransactionId;
+    typedef size_t DepositId;
+}
 
 namespace CryptoNote {
 
@@ -69,24 +76,6 @@ struct StagedUnlock {
     void serialize(ISerializer& s);
 };
 
-// StagedUnlock manager
-class StagedUnlockManager {
-public:
-    // Convert deposits to staged unlocks
-    static std::vector<StagedUnlock> convertDeposits(const std::vector<Deposit>& deposits);
-    
-    // Process all deposits for potential unlocks
-    static std::vector<DepositId> processAllUnlocks(uint32_t currentHeight, 
-                                                   const std::vector<StagedUnlock>& deposits);
-    
-    // Get deposit unlock status
-    static std::string getUnlockStatus(const StagedUnlock& deposit, uint32_t currentHeight);
-    
-    // Get total unlocked amount for all staged unlocks
-    static uint64_t getTotalUnlockedAmount(const std::vector<StagedUnlock>& deposits);
-    
-    // Get total remaining locked amount for all staged unlocks
-    static uint64_t getTotalRemainingLockedAmount(const std::vector<StagedUnlock>& deposits);
-};
+
 
 } // namespace CryptoNote

@@ -1788,7 +1788,8 @@ namespace PaymentService
 
         /* Determine minimum amount based on deposit type */
         uint64_t minAmount;
-        if (term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER) {
+        bool isBurnDeposit = (term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
+        if (isBurnDeposit) {
           /* Burn deposits (FOREVER term) use lower minimum: 0.8 XFG */
           minAmount = CryptoNote::parameters::BURN_DEPOSIT_MIN_AMOUNT;
         } else {
@@ -1884,7 +1885,8 @@ namespace PaymentService
 
         /* Determine minimum amount based on deposit type */
         uint64_t minAmount;
-        if (term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER) {
+        bool isBurnDeposit = (term == CryptoNote::parameters::DEPOSIT_TERM_FOREVER);
+        if (isBurnDeposit) {
           /* Burn deposits (FOREVER term) use lower minimum: 0.8 XFG */
           minAmount = CryptoNote::parameters::BURN_DEPOSIT_MIN_AMOUNT;
         } else {

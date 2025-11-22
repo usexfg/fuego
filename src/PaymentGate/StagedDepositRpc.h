@@ -19,6 +19,7 @@
 
 #include "PaymentServiceJsonRpcMessages.h"
 #include "CryptoNoteCore/StagedUnlock.h"
+#include "CryptoNoteCore/StagedDepositUnlock.h"
 
 namespace PaymentService {
 
@@ -32,7 +33,7 @@ struct GetStagedUnlockSchedule {
     
     struct Response {
         bool useStagedUnlock;
-        std::vector<UnlockStage> stages;
+        std::vector<CryptoNote::UnlockStage> stages;
         std::string status;
         uint64_t totalUnlockedAmount;
         uint64_t remainingLockedAmount;
@@ -48,7 +49,7 @@ struct GetStagedDeposits {
     };
     
     struct Response {
-        std::vector<StagedDepositInfo> deposits;
+        std::vector<PaymentService::StagedDepositInfo> deposits;
         uint64_t totalUnlockedAmount;
         uint64_t totalRemainingLockedAmount;
         
@@ -66,7 +67,8 @@ struct StagedDepositInfo {
     uint32_t unlockHeight;
     bool locked;
     bool useStagedUnlock;
-    std::vector<UnlockStage> stages;
+    // Get all deposits with staged unlock info
+    std::vector<CryptoNote::UnlockStage> stages;
     std::string status;
     uint64_t totalUnlockedAmount;
     uint64_t remainingLockedAmount;

@@ -9,7 +9,8 @@ file(GLOB_RECURSE CryptoNoteProtocol CryptoNoteProtocol/*)
 file(GLOB_RECURSE Daemon Daemon/*)
 file(GLOB_RECURSE Http HTTP/*)
 file(GLOB_RECURSE InProcessNode InProcessNode/*)
-file(GLOB_RECURSE SimpleWallet SimpleWallet/*)
+file(GLOB_RECURSE SimpleWallet SimpleWallet/SimpleWallet.cpp)
+file(GLOB_RECURSE SimpleWalletLibrary SimpleWallet/PasswordContainer.cpp SimpleWallet/PasswordContainer.h)
 file(GLOB_RECURSE Logging Logging/*)
 # Optimizer sources
 file(GLOB_RECURSE NodeRpcProxy NodeRpcProxy/*)
@@ -39,7 +40,7 @@ else()
   file(GLOB_RECURSE System System/* Platform/Linux/System/*)
 endif()
 
-source_group("" FILES ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${Daemon} ${JsonRpcServer} ${Http} ${Logging} ${NodeRpcProxy} ${P2p} ${Rpc} ${Serialization} ${SimpleWallet} ${System} ${Transfers} ${Wallet} ${WalletLegacy})
+source_group("" FILES ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${Daemon} ${JsonRpcServer} ${Http} ${Logging} ${NodeRpcProxy} ${P2p} ${Rpc} ${Serialization} ${SimpleWallet} ${SimpleWalletLibrary} ${System} ${Transfers} ${Wallet} ${WalletLegacy})
 
 # --------------------------
 # Libraries
@@ -73,12 +74,12 @@ add_library(Transfers STATIC ${Transfers})
 add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
+add_library(SimpleWalletLibrary STATIC ${SimpleWalletLibrary})
 
-add_executable(Daemon ${Daemon})
-add_executable(TestnetDaemon Daemon/DaemonCommandsHandler.cpp Daemon/DaemonCommandsHandler.h TestnetDaemon/TestnetDaemon.cpp)
-
-# Link libraries for Daemon executable
-target_link_libraries(Daemon PRIVATE
+# Create DaemonCore library with shared functionality
+file(GLOB_RECURSE DaemonCore Daemon/*)
+add_library(DaemonCore STATIC ${DaemonCore})
+target_link_libraries(DaemonCore PRIVATE
     CryptoNoteCore
     P2P
     Rpc
@@ -91,6 +92,15 @@ target_link_libraries(Daemon PRIVATE
     ${Boost_LIBRARIES}
     Serialization
 )
+
+add_executable(Daemon ${Daemon})
+add_executable(TestnetDaemon TestnetDaemon/TestnetDaemon.cpp)
+
+# Link libraries for Daemon executable
+target_link_libraries(Daemon PRIVATE DaemonCore)
+
+# Link libraries for TestnetDaemon executable
+target_link_libraries(TestnetDaemon PRIVATE DaemonCore)
 add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})
@@ -99,6 +109,7 @@ add_executable(Optimizer ${Optimizer})
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
 target_link_libraries(testnet-wallet-cli PRIVATE
     Wallet
+    SimpleWalletLibrary
     NodeRpcProxy
     Transfers
     Rpc
@@ -117,8 +128,14 @@ if (MSVC)
   target_link_libraries(System PRIVATE ws2_32)
 endif ()
 
+target_link_libraries(SimpleWalletLibrary PRIVATE
+    Common
+    ${Boost_LIBRARIES}
+)
+
 target_link_libraries(SimpleWallet PRIVATE
     Wallet
+    SimpleWalletLibrary
     NodeRpcProxy
     Transfers
     Rpc

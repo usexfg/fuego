@@ -203,7 +203,6 @@ namespace CryptoNote
           }
           break;
         }
-        }
       }
     }
     catch (std::exception &)

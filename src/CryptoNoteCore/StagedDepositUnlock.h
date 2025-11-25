@@ -21,8 +21,13 @@
 #include <cstdint>
 #include <chrono>
 #include "CryptoNote.h"
+#include "Serialization/ISerializer.h"
+#include "IWallet.h"
 
 namespace CryptoNote {
+
+// Forward declaration
+struct StagedUnlock;
 
 // Staged unlock configuration
 namespace StagedUnlockConfig {
@@ -110,6 +115,22 @@ public:
     
     // Get unlock schedule for a deposit
     static std::vector<UnlockStage> getUnlockSchedule(uint64_t amount, uint64_t interest, uint32_t height);
+    
+    // Convert traditional deposits to staged unlocks
+    static std::vector<StagedUnlock> convertDeposits(const std::vector<Deposit>& deposits);
+    
+    // Process all staged unlocks for potential unlocks at current height
+    static std::vector<DepositId> processAllUnlocks(uint32_t currentHeight, 
+                                                   const std::vector<StagedUnlock>& deposits);
+    
+    // Get unlock status string for a deposit
+    static std::string getUnlockStatus(const StagedUnlock& deposit, uint32_t currentHeight);
+    
+    // Get total unlocked amount from all deposits
+    static uint64_t getTotalUnlockedAmount(const std::vector<StagedUnlock>& deposits);
+    
+    // Get total remaining locked amount from all deposits
+    static uint64_t getTotalRemainingLockedAmount(const std::vector<StagedUnlock>& deposits);
 };
 
 } // namespace CryptoNote

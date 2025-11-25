@@ -17,9 +17,32 @@
 
 #pragma once
 
-#include "PaymentServiceJsonRpcMessages.h"
 #include "CryptoNoteCore/StagedUnlock.h"
 #include "CryptoNoteCore/StagedDepositUnlock.h"
+#include "Serialization/ISerializer.h"
+#include "IWallet.h"
+
+// Staged deposit info for RPC responses
+struct StagedDepositInfo {
+    uint64_t depositId;
+    uint64_t amount;
+    uint32_t term;
+    uint64_t interest;
+    uint32_t height;
+    uint32_t unlockHeight;
+    bool locked;
+    bool useStagedUnlock;
+    // Get all deposits with staged unlock info
+    std::vector<CryptoNote::UnlockStage> stages;
+    std::string status;
+    uint64_t totalUnlockedAmount;
+    uint64_t remainingLockedAmount;
+    std::string creatingTransactionHash;
+    std::string spendingTransactionHash;
+    std::string address;
+    
+    void serialize(CryptoNote::ISerializer& serializer);
+};
 
 namespace PaymentService {
 
@@ -49,7 +72,7 @@ struct GetStagedDeposits {
     };
     
     struct Response {
-        std::vector<PaymentService::StagedDepositInfo> deposits;
+        std::vector<StagedDepositInfo> deposits;
         uint64_t totalUnlockedAmount;
         uint64_t totalRemainingLockedAmount;
         
@@ -57,27 +80,7 @@ struct GetStagedDeposits {
     };
 };
 
-// Staged deposit info for RPC responses
-struct StagedDepositInfo {
-    uint64_t depositId;
-    uint64_t amount;
-    uint32_t term;
-    uint64_t interest;
-    uint32_t height;
-    uint32_t unlockHeight;
-    bool locked;
-    bool useStagedUnlock;
-    // Get all deposits with staged unlock info
-    std::vector<CryptoNote::UnlockStage> stages;
-    std::string status;
-    uint64_t totalUnlockedAmount;
-    uint64_t remainingLockedAmount;
-    std::string creatingTransactionHash;
-    std::string spendingTransactionHash;
-    std::string address;
-    
-    void serialize(CryptoNote::ISerializer& serializer);
-};
+
 
 // Process staged unlocks
 struct ProcessStagedUnlocks {

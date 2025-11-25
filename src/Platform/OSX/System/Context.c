@@ -3,7 +3,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#define _XOPEN_SOURCE 700
+
 #include <string.h>
+#include <ucontext.h>
 #include "Context.h"
 
 #if defined(__arm64__) || defined(__aarch64__)
@@ -18,7 +21,7 @@
 #define REG_OFFSET(reg)          (MCONTEXT_GREGS + ((reg) * REG_SZ))
 
 void
-makecontext(uctx *ucp, void (*func)(void), intptr_t arg)
+make_context(uctx *ucp, void (*func)(void), int arg)
 {
   unsigned char *sp;
   unsigned char *mcontext_base = (unsigned char *)&ucp->uc_mcontext;
@@ -76,23 +79,23 @@ makecontext(uctx *ucp, void (*func)(void), int argc, intptr_t arg)
 int
 swapcontext(uctx *oucp, const uctx *ucp)
 {
-  if(getcontext(oucp) == 0)
-    setcontext(ucp);
+  if(getcontext((ucontext_t*)oucp) == 0)
+    setcontext((ucontext_t*)ucp);
   return 0;
 }
 
 #if defined(__aarch64__) || defined(__arm64__)
 /* ARM64 implementations */
 int
-getmcontext(mctx *mcp)
+getmcontext(uctx *mcp)
 {
   /* Simplified implementation - just return success */
-  memset(mcp, 0, sizeof(mctx));
+  memset(mcp, 0, sizeof(uctx));
   return 0;
 }
 
 void
-setmcontext(const mctx *mcp)
+setmcontext(const uctx *mcp)
 {
   /* Simplified implementation - just return */
   (void)mcp;

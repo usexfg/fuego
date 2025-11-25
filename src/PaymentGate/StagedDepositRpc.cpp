@@ -18,6 +18,7 @@
 #include "StagedDepositRpc.h"
 #include "CryptoNoteCore/StagedUnlock.h"
 #include "Serialization/SerializationOverloads.h"
+#include "Serialization/ISerializer.h"
 
 namespace PaymentService {
 
@@ -45,6 +46,24 @@ void GetStagedDeposits::Response::serialize(CryptoNote::ISerializer& serializer)
     serializer(totalRemainingLockedAmount, "totalRemainingLockedAmount");
 }
 
+
+
+
+
+
+// ProcessStagedUnlocks implementation
+void ProcessStagedUnlocks::Request::serialize(CryptoNote::ISerializer& serializer) {
+    // No parameters
+}
+
+void ProcessStagedUnlocks::Response::serialize(CryptoNote::ISerializer& serializer) {
+    serializer(newlyUnlockedDeposits, "newlyUnlockedDeposits");
+    serializer(totalUnlockedAmount, "totalUnlockedAmount");
+    serializer(message, "message");
+}
+
+} // namespace PaymentService
+
 // StagedDepositInfo implementation
 void StagedDepositInfo::serialize(CryptoNote::ISerializer& serializer) {
     serializer(depositId, "depositId");
@@ -63,16 +82,3 @@ void StagedDepositInfo::serialize(CryptoNote::ISerializer& serializer) {
     serializer(spendingTransactionHash, "spendingTransactionHash");
     serializer(address, "address");
 }
-
-// ProcessStagedUnlocks implementation
-void ProcessStagedUnlocks::Request::serialize(CryptoNote::ISerializer& serializer) {
-    // No parameters
-}
-
-void ProcessStagedUnlocks::Response::serialize(CryptoNote::ISerializer& serializer) {
-    serializer(newlyUnlockedDeposits, "newlyUnlockedDeposits");
-    serializer(totalUnlockedAmount, "totalUnlockedAmount");
-    serializer(message, "message");
-}
-
-} // namespace PaymentService

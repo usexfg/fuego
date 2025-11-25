@@ -22,6 +22,7 @@
 #include "CryptoNote.h"
 #include "StagedDepositUnlock.h"
 #include "IWallet.h"
+#include "Serialization/ISerializer.h"
 
 // Forward declarations for types not defined in main headers
 namespace CryptoNote {

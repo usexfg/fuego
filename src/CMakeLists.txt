@@ -112,6 +112,7 @@ add_library(Logging STATIC ${Logging})
 add_library(NodeRpcProxy STATIC ${NodeRpcProxy})
 add_library(Rpc STATIC ${Rpc})
 add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
+add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
 
 if(TARGET upnpc-static)
     add_dependencies(P2P upnpc-static)

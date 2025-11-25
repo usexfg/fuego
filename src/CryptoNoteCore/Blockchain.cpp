@@ -2389,6 +2389,12 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
     return m_bankingIndex.depositInterestAtHeight(static_cast<BankingIndex::DepositHeight>(height));
   }
 
+  uint64_t Blockchain::getBurnedXfgAtHeight(size_t height) const
+  {
+    std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+    return m_bankingIndex.getBurnedXfgAtHeight(static_cast<BankingIndex::DepositHeight>(height));
+  }
+
   void Blockchain::pushToBankingIndex(const BlockEntry &block, uint64_t interest)
   {
     int64_t deposit = 0;

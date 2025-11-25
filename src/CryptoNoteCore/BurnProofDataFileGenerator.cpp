@@ -26,39 +26,7 @@
 namespace CryptoNote {
 
 // Helper structure for BPDF validation
-struct BPDFData {
-    std::string version;
-    std::string proofType;
-    std::string transactionHash;
-    uint64_t createdAt;
-    std::string formatVersion;
-    
-    std::string secret;
-    std::string nullifier;
-    std::string commitment;
-    uint32_t blockHeight;
-    uint64_t xfgAmount;
-    std::string txExtraHash;
-    
-    std::string recipientAddress;
-    std::string recipientHash;
-    uint64_t heatAmount;
-    std::string xfgAmountFormatted;
-    std::string heatAmountFormatted;
-    uint64_t transactionTimestamp;
-    
-    std::string signature;
-    std::string checksum;
-    std::string signaturePubkey;
-    std::string integrityHash;
-    
-    std::string genesisTransactionHash;
-    std::string genesisBlockHash;
-    uint64_t genesisTimestamp;
-    std::string genesisValidationHash;
-    uint64_t fuegoNetworkId;
-    std::string networkValidationHash;
-};
+
 
 std::error_code BurnProofDataFileGenerator::generateBPDF(
     const std::string& txHash,
@@ -161,8 +129,10 @@ bool BurnProofDataFileGenerator::validateBPDF(const std::string& filePath) {
         file.close();
         
         // Parse JSON content
-        JsonValue json;
-        if (!json.loadFromString(jsonContent)) {
+        Common::JsonValue json;
+        try {
+            json = Common::JsonValue::fromString(jsonContent);
+        } catch (...) {
             return false;
         }
         
@@ -300,9 +270,9 @@ std::error_code BurnProofDataFileGenerator::saveToFile(const std::string& jsonDa
 
 // BPDF Validation Helper Functions
 
-bool BurnProofDataFileGenerator::validateJsonStructure(const JsonValue& json) {
+bool BurnProofDataFileGenerator::validateJsonStructure(const Common::JsonValue& json) {
     // Check if root is an object
-    if (json.getType() != JsonValue::OBJECT) {
+    if (json.getType() != Common::JsonValue::OBJECT) {
         return false;
     }
     
@@ -312,13 +282,13 @@ bool BurnProofDataFileGenerator::validateJsonStructure(const JsonValue& json) {
     };
     
     for (const auto& section : requiredSections) {
-        if (!json.contains(section) || json(section).getType() != JsonValue::OBJECT) {
+        if (!json.contains(section) || json(section).getType() != Common::JsonValue::OBJECT) {
             return false;
         }
     }
     
     // Validate metadata section
-    const JsonValue& metadata = json("metadata");
+    const Common::JsonValue& metadata = json("metadata");
     const std::vector<std::string> metadataFields = {
         "version", "proof_type", "transaction_hash", "created_at", "format_version"
     };
@@ -330,7 +300,7 @@ bool BurnProofDataFileGenerator::validateJsonStructure(const JsonValue& json) {
     }
     
     // Validate cryptographic_data section
-    const JsonValue& cryptoData = json("cryptographic_data");
+    const Common::JsonValue& cryptoData = json("cryptographic_data");
     const std::vector<std::string> cryptoFields = {
         "secret", "nullifier", "commitment", "block_height", "xfg_amount", "tx_extra_hash"
     };
@@ -342,7 +312,7 @@ bool BurnProofDataFileGenerator::validateJsonStructure(const JsonValue& json) {
     }
     
     // Validate user_data section
-    const JsonValue& userData = json("user_data");
+    const Common::JsonValue& userData = json("user_data");
     const std::vector<std::string> userFields = {
         "recipient_address", "recipient_hash", "heat_amount", 
         "xfg_amount_formatted", "heat_amount_formatted", "transaction_timestamp"
@@ -355,12 +325,12 @@ bool BurnProofDataFileGenerator::validateJsonStructure(const JsonValue& json) {
     }
     
     // Validate security section
-    const JsonValue& security = json("security");
-    if (!security.contains("genesis_validation") || security("genesis_validation").getType() != JsonValue::OBJECT) {
+    const Common::JsonValue& security = json("security");
+    if (!security.contains("genesis_validation") || security("genesis_validation").getType() != Common::JsonValue::OBJECT) {
         return false;
     }
     
-    const JsonValue& genesisValidation = security("genesis_validation");
+    const Common::JsonValue& genesisValidation = security("genesis_validation");
     const std::vector<std::string> genesisFields = {
         "genesis_transaction_hash", "genesis_block_hash", "genesis_timestamp",
         "genesis_validation_hash", "fuego_network_id", "network_validation_hash"
@@ -375,48 +345,48 @@ bool BurnProofDataFileGenerator::validateJsonStructure(const JsonValue& json) {
     return true;
 }
 
-bool BurnProofDataFileGenerator::extractBPDFData(const JsonValue& json, BPDFData& data) {
+bool BurnProofDataFileGenerator::extractBPDFData(const Common::JsonValue& json, BPDFData& data) {
     try {
         // Extract metadata
-        const JsonValue& metadata = json("metadata");
+        const Common::JsonValue& metadata = json("metadata");
         data.version = metadata("version").getString();
         data.proofType = metadata("proof_type").getString();
         data.transactionHash = metadata("transaction_hash").getString();
-        data.createdAt = metadata("created_at").getUInt64();
+        data.createdAt = static_cast<uint64_t>(metadata("created_at").getInteger());
         data.formatVersion = metadata("format_version").getString();
         
         // Extract cryptographic data
-        const JsonValue& cryptoData = json("cryptographic_data");
+        const Common::JsonValue& cryptoData = json("cryptographic_data");
         data.secret = cryptoData("secret").getString();
         data.nullifier = cryptoData("nullifier").getString();
         data.commitment = cryptoData("commitment").getString();
-        data.blockHeight = cryptoData("block_height").getUInt32();
-        data.xfgAmount = cryptoData("xfg_amount").getUInt64();
+        data.blockHeight = static_cast<uint32_t>(cryptoData("block_height").getInteger());
+        data.xfgAmount = static_cast<uint64_t>(cryptoData("xfg_amount").getInteger());
         data.txExtraHash = cryptoData("tx_extra_hash").getString();
         
         // Extract user data
-        const JsonValue& userData = json("user_data");
+        const Common::JsonValue& userData = json("user_data");
         data.recipientAddress = userData("recipient_address").getString();
         data.recipientHash = userData("recipient_hash").getString();
-        data.heatAmount = userData("heat_amount").getUInt64();
+        data.heatAmount = static_cast<uint64_t>(userData("heat_amount").getInteger());
         data.xfgAmountFormatted = userData("xfg_amount_formatted").getString();
         data.heatAmountFormatted = userData("heat_amount_formatted").getString();
-        data.transactionTimestamp = userData("transaction_timestamp").getUInt64();
+        data.transactionTimestamp = static_cast<uint64_t>(userData("transaction_timestamp").getInteger());
         
         // Extract security data
-        const JsonValue& security = json("security");
+        const Common::JsonValue& security = json("security");
         data.signature = security("signature").getString();
         data.checksum = security("checksum").getString();
         data.signaturePubkey = security("signature_pubkey").getString();
         data.integrityHash = security("integrity_hash").getString();
         
         // Extract genesis validation data
-        const JsonValue& genesisValidation = security("genesis_validation");
+        const Common::JsonValue& genesisValidation = security("genesis_validation");
         data.genesisTransactionHash = genesisValidation("genesis_transaction_hash").getString();
         data.genesisBlockHash = genesisValidation("genesis_block_hash").getString();
-        data.genesisTimestamp = genesisValidation("genesis_timestamp").getUInt64();
+        data.genesisTimestamp = static_cast<uint64_t>(genesisValidation("genesis_timestamp").getInteger());
         data.genesisValidationHash = genesisValidation("genesis_validation_hash").getString();
-        data.fuegoNetworkId = genesisValidation("fuego_network_id").getUInt64();
+        data.fuegoNetworkId = static_cast<uint64_t>(genesisValidation("fuego_network_id").getInteger());
         data.networkValidationHash = genesisValidation("network_validation_hash").getString();
         
         return true;
@@ -546,7 +516,7 @@ bool BurnProofDataFileGenerator::validateFormatConstraints(const BPDFData& data)
     }
     
     // Validate network ID
-    if (data.fuegoNetworkId != 93385046440755750514194170694064996624ULL) {
+    if (std::to_string(data.fuegoNetworkId) != "93385046440755750514194170694064996624") {
         return false;
     }
     

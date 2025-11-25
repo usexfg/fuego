@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 700
+
 // Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
@@ -35,7 +37,7 @@ typedef struct mcontext mctx;
 typedef struct ucontext uctx;
 
 extern	int		swapcontext(uctx*, const uctx*);
-extern	void		makecontext(uctx*, void(*)(void), int, intptr_t);
+extern	void		make_context(uctx*, void(*)(void), int, intptr_t);
 extern	int		getmcontext(mctx*);
 extern	void		setmcontext(const mctx*);
 #endif
@@ -114,7 +116,7 @@ struct ucontext {
    * note: the union is not defined, though.
    */
   sigset_t	uc_sigmask;
-  mctx	uc_mcontext;
+  uctx	uc_mcontext;
   
   struct __ucontext *uc_link;
   stack_t		uc_stack;

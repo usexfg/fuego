@@ -634,6 +634,8 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
+  m_consoleHandler.setHandler("create_COLD_secret", boost::bind(&simple_wallet::create_cold_secret, this, boost::arg<1>()), "create_COLD_secret <term> <amount> <apr_basis_points> <term_code> <chain_code> - Create COLD deposit secret");
+  m_consoleHandler.setHandler("generate_proof", boost::bind(&simple_wallet::generate_proof, this, boost::arg<1>()), "generate_proof <tx_hash> - Generate proof for burn/COLD using stored secret");
   m_consoleHandler.setHandler("payment_id", boost::bind(&simple_wallet::payment_id, this, _1), "Generate random Payment ID");
 }
 
@@ -1955,6 +1957,61 @@ bool simple_wallet::process_command(const std::vector<std::string> &args) {
 
 void simple_wallet::printConnectionError() const {
   fail_msg_writer() << "wallet failed to connect to daemon (" << m_daemon_address << ").";
+}
+
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::generate_proof(const std::vector<std::string> &args) {
+  if (args.size() != 1) {
+    fail_msg_writer() << "usage: generate_proof <tx_hash>";
+    return true;
+  }
+
+  const std::string& tx_hash = args[0];
+  
+  // Try to find burn secret first
+  std::vector<BurnSecretEntry> burn_secrets = m_wallet->getAllBurnSecrets();
+  for (const auto& entry : burn_secrets) {
+    if (entry.tx_hash == tx_hash) {
+      success_msg_writer() << "Found burn secret for transaction: " << tx_hash;
+      success_msg_writer() << "Secret: " << Common::podToHex(entry.secret);
+      success_msg_writer() << "Amount: " << entry.amount << " atomic XFG";
+      success_msg_writer() << "Recipient: " << entry.recipient;
+      
+      // Generate proof data
+      std::cout << "\n=== STARK PROOF DATA FOR CONTRACT ===" << std::endl;
+      std::cout << "Transaction Hash: " << tx_hash << std::endl;
+      std::cout << "Secret Key: " << Common::podToHex(entry.secret) << std::endl;
+      std::cout << "Commitment: " << Common::podToHex(entry.commitment) << std::endl;
+      std::cout << "Nullifier: " << Common::podToHex(entry.nullifier) << std::endl;
+      std::cout << "Amount: " << entry.amount << " atomic XFG" << std::endl;
+      std::cout << "Recipient: " << entry.recipient << std::endl;
+      std::cout << "=====================================" << std::endl;
+      
+      logger(INFO, BRIGHT_GREEN) << "Proof data generated for burn transaction " << tx_hash;
+      return true;
+    }
+  }
+  
+  // Try to find COLD deposit secret
+  std::vector<std::pair<std::string, uint64_t>> cold_deposits = m_wallet->getAllColdDeposits();
+  for (const auto& deposit : cold_deposits) {
+    if (deposit.first == tx_hash) {
+      success_msg_writer() << "Found COLD deposit for transaction: " << tx_hash;
+      success_msg_writer() << "Amount: " << deposit.second << " atomic XFG";
+      
+      // Generate proof data
+      std::cout << "\n=== COLD DEPOSIT PROOF DATA ===" << std::endl;
+      std::cout << "Transaction Hash: " << tx_hash << std::endl;
+      std::cout << "Amount: " << deposit.second << " atomic XFG" << std::endl;
+      std::cout << "=================================" << std::endl;
+      
+      logger(INFO, BRIGHT_GREEN) << "Proof data generated for COLD deposit " << tx_hash;
+      return true;
+    }
+  }
+  
+  fail_msg_writer() << "No burn secret or COLD deposit found for transaction: " << tx_hash;
+  return true;
 }
 
 

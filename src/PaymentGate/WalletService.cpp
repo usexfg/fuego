@@ -1443,7 +1443,8 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::createDelayedTransaction(const CreateDelayedTransaction::Request &request, std::string &transactionHash)
+  std::error_code WalletService::sendBurnTransaction(const SendBurnTransaction::Request &request, std::string &transactionHash, std::string &burnSecretKey) {
+    std::error
   {
     try
     {

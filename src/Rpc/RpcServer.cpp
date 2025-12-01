@@ -100,6 +100,9 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
 
   // json handlers
   { "/getinfo", { jsonMethod<COMMAND_RPC_GET_INFO>(&RpcServer::on_get_info), true } },
+  { "/peers", { jsonMethod<COMMAND_RPC_GET_PEER_LIST>(&RpcServer::on_get_peer_list), true } },
+  { "/getpeers", { jsonMethod<COMMAND_RPC_GET_PEER_LIST>(&RpcServer::on_get_peer_list), true } },
+  { "/getdeposits", { jsonMethod<COMMAND_RPC_GET_DEPOSITS>(&RpcServer::on_get_deposits), true } },
   { "/getheight", { jsonMethod<COMMAND_RPC_GET_HEIGHT>(&RpcServer::on_get_height), true } },
   { "/gettransactions", { jsonMethod<COMMAND_RPC_GET_TRANSACTIONS>(&RpcServer::on_get_transactions), false } },
   { "/sendrawtransaction", { jsonMethod<COMMAND_RPC_SEND_RAW_TX>(&RpcServer::on_send_raw_tx), false } },
@@ -249,7 +252,16 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
-
+bool RpcServer::on_get_peer_list(const COMMAND_RPC_GET_PEER_LIST::request& req, COMMAND_RPC_GET_PEER_LIST::response& res) {
+    rusty::NodesList peers = m_core.get_peer_nodes();
+    res.peers.reserve(peers.size());
+    for (const auto& peer : peers) {
+        res.peers.emplace_back(peer);
+        res.peers.push_back(peer.address.toString());
+  }
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
 
 bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request& req, K_COMMAND_RPC_CHECK_TX_PROOF::response& res) {
 	// parse txid
@@ -485,6 +497,9 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 
 	return true;
 }
+bool RpcServer::on_get_deposits(const COMMAND_RPC_GET_DEPOSITS::request& req, COMMAND_RPC_GET_DEPOSITS::response& res) {
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
 
 bool RpcServer::on_query_blocks(const COMMAND_RPC_QUERY_BLOCKS::request& req, COMMAND_RPC_QUERY_BLOCKS::response& res) {
   uint32_t startHeight;
@@ -539,7 +554,7 @@ bool RpcServer::setViewKey(const std::string& view_key) {
 bool RpcServer::on_get_fee_address(const COMMAND_RPC_GET_FEE_ADDRESS::request& req, COMMAND_RPC_GET_FEE_ADDRESS::response& res) {
   if (m_fee_address.empty()) {
 	  res.status = CORE_RPC_STATUS_OK;
-	  return false; 
+	  return false;
   }
   res.fee_address = m_fee_address;
   res.status = CORE_RPC_STATUS_OK;
@@ -617,17 +632,16 @@ bool RpcServer::onGetPoolChangesLite(const COMMAND_RPC_GET_POOL_CHANGES_LITE::re
 //
 
 
-bool RpcServer::on_get_peer_list(const COMMAND_RPC_GET_PEER_LIST::request& req, COMMAND_RPC_GET_PEER_LIST::response& res) {
-	std::list<PeerlistEntry> pl_wite;
-	std::list<PeerlistEntry> pl_gray;
-	m_p2p.getPeerlistManager().get_peerlist_full(pl_gray, pl_wite);
-	for (const auto& pe : pl_wite) {
-		std::stringstream ss;
-		ss << pe.adr;
-		res.peers.push_back(ss.str());
-	}
-	res.status = CORE_RPC_STATUS_OK;
-	return true;
+bool RpcServer::on_get_peer_list(
+    const COMMAND_RPC_GET_PEER_LIST::request& req,
+    COMMAND_RPC_GET_PEER_LIST::response& res) {
+    rusty::NodesList peers = m_core.get_peer_nodes();
+    res.peers.reserve(peers.size());
+    for (const auto& peer : peers) {
+        res.peers.emplace_back(peer.address.to_string());
+    }
+    res.status = CORE_RPC_STATUS_OK;
+    return true;
 }
 
 bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RPC_GET_INFO::response& res) {
@@ -751,7 +765,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
 
   if (!m_fee_address.empty() && m_view_key != NULL_SECRET_KEY) {
     if (!remotenode_check_incoming_tx(tx_blob)) {
-      logger(INFO) << "<< rpcserver.cpp << " << "Transaction not relayed due to lack of remote node fee";		
+      logger(INFO) << "<< rpcserver.cpp << " << "Transaction not relayed due to lack of remote node fee";
       res.status = "Not relayed due to lack of node fee";
       return true;
     }
@@ -842,7 +856,7 @@ bool RpcServer::on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMM
   }
   return true;
 }
-	
+
 bool RpcServer::on_get_payment_id(const COMMAND_RPC_GEN_PAYMENT_ID::request& req, COMMAND_RPC_GEN_PAYMENT_ID::response& res) {
   std::string pid;
   try {
@@ -926,7 +940,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   uint32_t block_height = boost::get<BaseInput>(blk.baseTransaction.inputs.front()).blockIndex;
   res.block.height = block_height;
   Crypto::Hash tmp_hash = m_core.getBlockIdByHeight(block_height);
-  bool is_orphaned = hash != tmp_hash; // true!=true -> false,  true!=false -> true , fase!=false --> false 
+  bool is_orphaned = hash != tmp_hash; // true!=true -> false,  true!=false -> true , fase!=false --> false
 
   fill_block_header_response(blk, is_orphaned, res.block.height, hash, block_header); // fill up block_header object
 
@@ -1408,5 +1422,71 @@ bool RpcServer::on_get_block_header_by_height(const COMMAND_RPC_GET_BLOCK_HEADER
   return true;
 }
 
+
+bool RpcServer::on_prove_collateral(const COMMAND_RPC_PROVE_COLLATERAL::request& req, COMMAND_RPC_PROVE_COLLATERAL::response& res) {
+  // Validate transaction hash format
+  Crypto::Hash txHash;
+  if (!Common::podFromHex(req.transactionHash, txHash)) {
+    res.exists = false;
+    res.amount = 0;
+    res.hasCommitment = false;
+    res.status = "error";
+    res.errorMessage = "Invalid transaction hash format";
+    return true;
+  }
+
+  // Get transaction from blockchain
+  Transaction tx;
+  if (!m_core.getTransaction(txHash, tx)) {
+    res.exists = false;
+    res.amount = 0;
+    res.hasCommitment = false;
+    res.status = "not_found";
+    res.errorMessage = "Transaction not found";
+    return true;
+  }
+
+  // Transaction exists
+  res.exists = true;
+  res.hasCommitment = false;
+  res.commitmentType = 0;
+
+  // Calculate total output amount
+  res.amount = 0;
+  for (const auto& output : tx.outputs) {
+    res.amount += output.amount;
+  }
+
+  // Parse transaction extra to detect commitment types
+  if (req.commitment) {
+    std::vector<TransactionExtraField> extraFields;
+    if (parseTransactionExtra(tx.extra, extraFields)) {
+      for (const auto& field : extraFields) {
+        // Check for HEAT commitment (0x08 = 136)
+        if (field.type() == typeid(TransactionExtraHeatCommitment)) {
+          res.hasCommitment = true;
+          res.commitmentType = 0x08; // 136
+          break;
+        }
+        // Check for YIELD commitment (0x07 = 7)
+        else if (field.type() == typeid(TransactionExtraYieldCommitment)) {
+          res.hasCommitment = true;
+          res.commitmentType = 0x07; // 7
+          break;
+        }
+        // Check for CD deposit commitment (0xCD = 205)
+        else if (field.type() == typeid(TransactionExtraCDDepositSecret)) {
+          res.hasCommitment = true;
+          res.commitmentType = 0xCD; // 205
+          break;
+        }
+      }
+    }
+  }
+
+  res.status = "found";
+  res.errorMessage = "";
+  return true;
+}
 
 }

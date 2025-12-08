@@ -103,8 +103,19 @@ else()
     message(WARNING "Boost coroutine component not found - using alternative context implementation")
 endif()
 
-# Find Boost with available components
-find_package(Boost 1.74 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+# Handle vcpkg Boost installation specifically
+if(WIN32 AND DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
+    message(STATUS "Using vcpkg toolchain, configuring Boost search...")
+    # Make sure vcpkg Boost is found
+    find_package(Boost 1.74 QUIET COMPONENTS ${BOOST_COMPONENTS})
+    if(NOT Boost_FOUND)
+        message(STATUS "Boost not found with COMPONENTS, trying without explicit components")
+        find_package(Boost 1.74 REQUIRED)
+    endif()
+else()
+    # Find Boost with available components (non-vcpkg)
+    find_package(Boost 1.74 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 message(STATUS "Boost version: ${Boost_VERSION}")
 

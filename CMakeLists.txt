@@ -108,69 +108,67 @@ find_package(Boost 1.74 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 message(STATUS "Boost version: ${Boost_VERSION}")
 
-# Find jsoncpp with robust fallback detection
-find_package(PkgConfig)
-if(PKG_CONFIG_FOUND)
-  pkg_check_modules(JSONCPP jsoncpp)
-endif()
+# Find jsoncpp
+find_package(jsoncpp QUIET)
 
-if(NOT JSONCPP_FOUND)
-  find_package(jsoncpp QUIET)
-endif()
-
-# Create a generic approach to find JSON headers
-set(JSONCPP_FOUND FALSE)
-set(JSONCPP_INCLUDE_DIRS "")
-set(JSONCPP_LIBRARIES "jsoncpp")
-
-# Try different common paths for jsoncpp headers
-if(EXISTS "/usr/include/json/json.h")
-  set(JSONCPP_INCLUDE_DIRS "/usr/include/json")
-  set(JSONCPP_FOUND TRUE)
-  message(STATUS "Found jsoncpp headers at /usr/include/json")
-elseif(EXISTS "/usr/include/jsoncpp/json/json.h")
-  set(JSONCPP_INCLUDE_DIRS "/usr/include/jsoncpp/json")
-  set(JSONCPP_FOUND TRUE)
-  message(STATUS "Found jsoncpp headers at /usr/include/jsoncpp/json")
-elseif(EXISTS "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h")
-  set(JSONCPP_INCLUDE_DIRS "/usr/include/x86_64-linux-gnu/jsoncpp/json")
-  set(JSONCPP_FOUND TRUE)
-  message(STATUS "Found jsoncpp headers at /usr/include/x86_64-linux-gnu/jsoncpp/json")
-elseif(EXISTS "/usr/local/include/json/json.h")
-  set(JSONCPP_INCLUDE_DIRS "/usr/local/include/json")
-  set(JSONCPP_FOUND TRUE)
-  message(STATUS "Found jsoncpp headers at /usr/local/include/json")
-elseif(EXISTS "/tmp/json-wrapper/json/json.h")
-  set(JSONCPP_INCLUDE_DIRS "/tmp/json-wrapper/json")
-  set(JSONCPP_FOUND TRUE)
-  message(STATUS "Found jsoncpp headers at /tmp/json-wrapper/json")
-elseif(APPLE)
-  # Check via Homebrew on macOS
-  execute_process(COMMAND brew --prefix jsoncpp OUTPUT_VARIABLE BREW_JSONCPP_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE BREW_RESULT)
-  if(BREW_RESULT EQUAL 0)
-    set(JSONCPP_INCLUDE_DIRS "${BREW_JSONCPP_PREFIX}/include/json")
-    set(JSONCPP_FOUND TRUE)
-    message(STATUS "Found jsoncpp via Homebrew at ${JSONCPP_INCLUDE_DIRS}")
+if(jsoncpp_FOUND OR JSONCPP_FOUND)
+  # jsoncpp was found via find_package
+  if(jsoncpp_FOUND)
+    message(STATUS "Found jsoncpp via find_package")
   endif()
-endif()
-
-# Check for Windows using vcpkg
-if(WIN32 AND NOT JSONCPP_FOUND)
-  if(EXISTS "${CMAKE_TOOLCHAIN_FILE}" AND EXISTS "C:/vcpkg/installed/x64-windows/include/json/json.h")
-    set(JSONCPP_INCLUDE_DIRS "C:/vcpkg/installed/x64-windows/include/json")
-    set(JSONCPP_FOUND TRUE)
-    set(JSONCPP_LIBRARIES "jsoncpp")
-    message(STATUS "Found jsoncpp via vcpkg at ${JSONCPP_INCLUDE_DIRS}")
-  endif()
-endif()
-
-# Apply JSON include directories globally
-if(JSONCPP_FOUND)
-  include_directories(SYSTEM ${JSONCPP_INCLUDE_DIRS})
 else()
-  message(WARNING "jsoncpp headers not found in standard locations. Build may fail.")
-  # Still try to include a common location as a last resort
-  include_directories(SYSTEM /usr/include/json /usr/include/jsoncpp/json)
+  # Fall back to manual detection
+  set(JSONCPP_FOUND FALSE)
+  set(JSONCPP_LIBRARIES "jsoncpp")
+
+  # Try standard locations, with preference for the expected location
+  if(EXISTS "/usr/include/json/json.h")
+    set(JSONCPP_INCLUDE_DIRS "/usr/include/json")
+    set(JSONCPP_FOUND TRUE)
+    message(STATUS "Found jsoncpp headers at /usr/include/json")
+  elseif(EXISTS "/usr/include/jsoncpp/json/json.h")
+    set(JSONCPP_INCLUDE_DIRS "/usr/include/jsoncpp/json")
+    set(JSONCPP_FOUND TRUE)
+    message(STATUS "Found jsoncpp headers at /usr/include/jsoncpp/json")
+  elseif(EXISTS "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h")
+    set(JSONCPP_INCLUDE_DIRS "/usr/include/x86_64-linux-gnu/jsoncpp/json")
+    set(JSONCPP_FOUND TRUE)
+    message(STATUS "Found jsoncpp headers at /usr/include/x86_64-linux-gnu/jsoncpp/json")
+  elseif(APPLE)
+    # Check via Homebrew on macOS
+    execute_process(COMMAND brew --prefix jsoncpp OUTPUT_VARIABLE BREW_JSONCPP_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE RESULT_VARIABLE BREW_RESULT)
+    if(BREW_RESULT EQUAL 0)
+      set(JSONCPP_INCLUDE_DIRS "${BREW_JSONCPP_PREFIX}/include/json")
+      set(JSONCPP_FOUND TRUE)
+      message(STATUS "Found jsoncpp via Homebrew at ${JSONCPP_INCLUDE_DIRS}")
+    endif()
+  elseif(WIN32)
+    # Check for vcpkg on Windows
+    if(EXISTS "C:/vcpkg/installed/x64-windows/include/json/json.h")
+      set(JSONCPP_INCLUDE_DIRS "C:/vcpkg/installed/x64-windows/include/json")
+      set(JSONCPP_FOUND TRUE)
+      message(STATUS "Found jsoncpp via vcpkg at ${JSONCPP_INCLUDE_DIRS}")
+    endif()
+  endif()
+
+  # Apply JSON include directories if found
+  if(JSONCPP_FOUND)
+    include_directories(SYSTEM ${JSONCPP_INCLUDE_DIRS})
+  else()
+    # As a last resort, try common include locations
+    include_directories(SYSTEM /usr/include/json /usr/include/jsoncpp/json /usr/include/x86_64-linux-gnu/jsoncpp/json)
+    message(WARNING "jsoncpp headers not found, using fallback paths")
+  endif()
+endif()
+
+# Ensure JSONCPP_LIBRARIES is always defined
+if(NOT DEFINED JSONCPP_LIBRARIES)
+  set(JSONCPP_LIBRARIES "jsoncpp")
+endif()
+
+# Ensure JSONCPP_INCLUDE_DIRS is always defined
+if(NOT DEFINED JSONCPP_INCLUDE_DIRS)
+  set(JSONCPP_INCLUDE_DIRS "/usr/include/json")
 endif()
 
 message(STATUS "jsoncpp include dirs: ${JSONCPP_INCLUDE_DIRS}")

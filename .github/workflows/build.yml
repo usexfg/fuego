@@ -60,30 +60,42 @@ jobs:
                libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
                libboost-all-dev libicu-dev libjsoncpp-dev
 
-          # Debug jsoncpp installation
-          echo "=== Debugging jsoncpp installation ==="
-          find /usr -name "json.h" 2>/dev/null | head -5
-          echo "Package contents of libjsoncpp-dev:"
-          dpkg -L libjsoncpp-dev | head -10
+         # Debug JSON installation locations
+         echo "=== JSONcpp Installation Debug ==="
+         echo "Looking for json.h files:"
+         find /usr -name "json.h" -type f 2>/dev/null | head -5
+         echo "libjsoncpp-dev package contents (first 20 lines):"
+         dpkg -L libjsoncpp-dev 2>/dev/null | head -20
 
-          # Create JSON wrapper to handle different jsoncpp installations
-          sudo mkdir -p /tmp/json-wrapper/json
-          # Check different possible locations for jsoncpp headers
-          if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
-            sudo ln -sf /usr/include/jsoncpp/json/* /tmp/json-wrapper/json/
-            echo "Found jsoncpp at /usr/include/jsoncpp/json/"
-          elif [ -f "/usr/include/json/json.h" ]; then
-            sudo ln -sf /usr/include/json/* /tmp/json-wrapper/json/
-            echo "Found jsoncpp at /usr/include/json/"
-          elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
-            sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json/* /tmp/json-wrapper/json/
-            echo "Found jsoncpp at /usr/include/x86_64-linux-gnu/jsoncpp/json/"
-          else
-            echo "Warning: Could not find jsoncpp headers in expected locations"
+         # Create system-level symlink for jsoncpp
+          echo "=== Setting up jsoncpp symlinks ==="
+          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
+            echo "Created system symlink: /usr/include/json -> /usr/include/jsoncpp/json"
+          elif [ -d "/usr/include/x86_64-linux-gnu/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json /usr/include/json
+            echo "Created system symlink: /usr/include/json -> /usr/include/x86_64-linux-gnu/jsoncpp/json"
+          elif [ ! -d "/usr/include/json" ]; then
+            echo "Creating manual directory /usr/include/json"
+            sudo mkdir -p /usr/include/json
+            if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
+              sudo cp -r /usr/include/jsoncpp/json/* /usr/include/json/
+              echo "Copied jsoncpp headers to /usr/include/json"
+            elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
+              sudo cp -r /usr/include/x86_64-linux-gnu/jsoncpp/json/* /usr/include/json/
+              echo "Copied multiarch jsoncpp headers to /usr/include/json"
+            fi
           fi
-          ls -la /tmp/json-wrapper/json/ || echo "JSON wrapper directory is empty"
-          # Add wrapper path to CMAKE_PREFIX_PATH to make it discoverable
-          echo "CMAKE_PREFIX_PATH=/tmp/json-wrapper:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+          # Verify the headers are accessible
+          echo "=== Verification ==="
+          if [ -f "/usr/include/json/json.h" ]; then
+            echo "SUCCESS: Found /usr/include/json/json.h"
+            ls -la /usr/include/json/ | head -5
+          else
+            echo "ERROR: Could not find or create /usr/include/json/json.h"
+            echo "All include dirs containing json:"
+            find /usr/include -type d -name "*json*" 2>/dev/null
+          fi
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'
@@ -223,8 +235,7 @@ jobs:
               -G Ninja \
               -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
               -DBUILD_TESTS=ON \
-              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD \
-              -DCMAKE_PREFIX_PATH="${{ env.CMAKE_PREFIX_PATH }}"
+              -DCMAKE_POLICY_DEFAULT_CMP0167=OLD
           fi
 
       - name: Build

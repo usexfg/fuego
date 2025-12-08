@@ -76,23 +76,32 @@ jobs:
             Write-Warning "boost subdirectory not found!"
           }
 
-          # Verify jsoncpp will be installed via vcpkg
-          Write-Host "jsoncpp will be installed via vcpkg during Build step"
+          # Verify TorIntegration directory exists
+          Write-Host "Verifying repository structure..."
+          Write-Host "Source directory contents:"
+          Get-ChildItem src | Select-Object -First 15
+          if (-not (Test-Path "src/TorIntegration")) {
+            Write-Error "TorIntegration directory not found!"
+            Write-Host "All directories in src:"
+            Get-ChildItem src -Directory
+            exit 1
+          } else {
+            Write-Host "✓ TorIntegration directory found"
+            Write-Host "TorIntegration directory contents:"
+            Get-ChildItem src/TorIntegration
+          }
 
-      - name: Build
-        shell: pwsh
-        id: build
-        run: |
-          $ErrorActionPreference = "Stop"
+        - name: Build
+          shell: pwsh
+          id: build
+          run: |
+            $ErrorActionPreference = "Stop"
           $build_folder = "build"
           $sha = "${{ github.sha }}"
           $xfg_ver = $sha.SubString(0,7)
           $release_name="fuego-cli-win64-v$xfg_ver"
 
           Write-Host "Creating build folder..."
-          mkdir "$build_folder" -Force
-          cd "$build_folder"
-
           # Initialize vcpkg
           if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
             Write-Host "Initializing vcpkg..."
@@ -100,7 +109,7 @@ jobs:
             cd C:/vcpkg
             .\bootstrap-vcpkg.bat
             .\vcpkg integrate install
-            cd ../../build
+            cd ..
           }
 
           # Install jsoncpp, Boost, and ICU via vcpkg for consistency
@@ -119,12 +128,10 @@ jobs:
             Write-Warning "ICU not found in vcpkg installation"
           }
 
-          # Configure CMake with vcpkg toolchain (matches build.yml)
+          # Configure CMake with vcpkg toolchain and explicit source/build directories
           Write-Host "Configuring CMake with vcpkg toolchain..."
-          Write-Host "Checking vcpkg installed packages:"
-          C:/vcpkg/vcpkg.exe list
-          Write-Host "Running CMake configuration..."
-          cmake -G "Visual Studio 17 2022" -A x64 `
+          cmake -S . -B "$build_folder" `
+            -G "Visual Studio 17 2022" -A x64 `
             -DBUILD_TESTS=ON `
             -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
             -DCMAKE_POLICY_DEFAULT_CMP0167=OLD `
@@ -132,8 +139,9 @@ jobs:
             -DICU_INCLUDE_DIR="C:/vcpkg/installed/x64-windows/include" `
             -DICU_LIBRARY="C:/vcpkg/installed/x64-windows/lib/icuuc.lib" `
             -DICU_I18N_LIBRARY="C:/vcpkg/installed/x64-windows/lib/icuin.lib" `
-            -DICU_DATA_LIBRARY="C:/vcpkg/installed/x64-windows/lib/icudt.lib" ..
+            -DICU_DATA_LIBRARY="C:/vcpkg/installed/x64-windows/lib/icudt.lib"
           if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed" }
+          cd "$build_folder"
           msbuild fuegoX.sln /p:Configuration=Release /m /v:minimal
           if ($LASTEXITCODE -ne 0) { throw "Build failed" }
           cd src\Release
@@ -167,6 +175,21 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
+
+          # Verify repository structure
+          echo "=== Verifying repository structure ==="
+          echo "Source directory contents:"
+          ls -la src | head -20
+          if [ ! -d "src/TorIntegration" ]; then
+            echo "ERROR: TorIntegration directory not found!"
+            echo "All directories in src:"
+            ls -la src
+            exit 1
+          else
+            echo "✓ TorIntegration directory found"
+            echo "TorIntegration directory contents:"
+            ls -la src/TorIntegration
+          fi
 
           # Debug JSON installation locations
           echo "=== JSONcpp Installation Debug ==="
@@ -240,6 +263,21 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
+
+          # Verify repository structure
+          echo "=== Verifying repository structure ==="
+          echo "Source directory contents:"
+          ls -la src | head -20
+          if [ ! -d "src/TorIntegration" ]; then
+            echo "ERROR: TorIntegration directory not found!"
+            echo "All directories in src:"
+            ls -la src
+            exit 1
+          else
+            echo "✓ TorIntegration directory found"
+            echo "TorIntegration directory contents:"
+            ls -la src/TorIntegration
+          fi
 
           # Debug JSON installation locations
           echo "=== JSONcpp Installation Debug ==="
@@ -316,6 +354,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies and verify repository
+        run: |
+          set -e
+          brew install gcc boost cmake jsoncpp
+
+          # Verify repository structure
+          echo "=== Verifying repository structure ==="
+          echo "Source directory contents:"
+          ls -la src | head -20
+          if [ ! -d "src/TorIntegration" ]; then
+            echo "ERROR: TorIntegration directory not found!"
+            echo "All directories in src:"
+            ls -la src
+            exit 1
+          else
+            echo "✓ TorIntegration directory found"
+            echo "TorIntegration directory contents:"
+            ls -la src/TorIntegration
+          fi
+
       - name: Build
         id: build
         run: |
@@ -324,10 +382,9 @@ jobs:
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
           release_name=fuego-cli-macos-${{ matrix.arch }}-dev"$xfg_ver"
-          brew install gcc boost cmake jsoncpp
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..
+          cmake -S .. -B . -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }}
           make -j$(sysctl -n hw.ncpu)
           mkdir "$release_name"
           exeFiles=()

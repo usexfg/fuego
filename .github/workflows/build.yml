@@ -59,6 +59,11 @@ jobs:
                libssl-dev libminiupnpc-dev libqrencode-dev libudev-dev \
                libunwind-dev liblzma-dev qtbase5-dev qtbase5-dev-tools \
                libboost-all-dev libicu-dev libjsoncpp-dev
+          # Verify jsoncpp installation and create symlink if needed
+          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
+            echo "Created symlink for jsoncpp headers"
+          fi
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-14'

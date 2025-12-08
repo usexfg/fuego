@@ -1,6 +1,11 @@
 add_definitions(-DSTATICLIB)
 include_directories(${CMAKE_SOURCE_DIR}/external/parallel_hashmap)
 
+# Add JSON include directories globally for all targets
+if(JSONCPP_INCLUDE_DIRS)
+  include_directories(SYSTEM ${JSONCPP_INCLUDE_DIRS})
+endif()
+
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
 file(GLOB_RECURSE Common Common/*)
 file(GLOB_RECURSE Crypto crypto/*)
@@ -49,6 +54,8 @@ source_group("" FILES ${Common} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol
 # Libraries
 # --------------------------
 add_library(BlockchainExplorer STATIC ${BlockchainExplorer})
+target_include_directories(BlockchainExplorer SYSTEM PUBLIC ${JSONCPP_INCLUDE_DIRS})
+target_link_libraries(BlockchainExplorer PUBLIC ${JSONCPP_LIBRARIES})
 add_library(Common STATIC ${Common})
 add_library(Crypto STATIC ${Crypto})
 
@@ -118,6 +125,7 @@ add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
 add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
 
 # Link jsoncpp to CryptoNoteCore that includes JSON headers
+target_include_directories(CryptoNoteCore SYSTEM PUBLIC ${JSONCPP_INCLUDE_DIRS})
 target_link_libraries(CryptoNoteCore PUBLIC ${JSONCPP_LIBRARIES})
 
 if(TARGET upnpc-static)
@@ -148,6 +156,7 @@ add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
 # Link jsoncpp for JSON-RPC server functionality
+target_include_directories(JsonRpcServer SYSTEM PUBLIC ${JSONCPP_INCLUDE_DIRS})
 target_link_libraries(JsonRpcServer PUBLIC ${JSONCPP_LIBRARIES})
 add_library(SimpleWalletLib STATIC ${SimpleWallet})
 add_executable(Daemon ${Daemon})

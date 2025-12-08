@@ -118,6 +118,11 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
+          # Verify jsoncpp installation and create symlink if needed
+          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
+            echo "Created symlink for jsoncpp headers"
+          fi
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
@@ -153,6 +158,11 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
+          # Verify jsoncpp installation and create symlink if needed
+          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
+            echo "Created symlink for jsoncpp headers"
+          fi
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')

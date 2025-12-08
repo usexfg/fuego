@@ -252,16 +252,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
-bool RpcServer::on_get_peer_list(const COMMAND_RPC_GET_PEER_LIST::request& req, COMMAND_RPC_GET_PEER_LIST::response& res) {
-    rusty::NodesList peers = m_core.get_peer_nodes();
-    res.peers.reserve(peers.size());
-    for (const auto& peer : peers) {
-        res.peers.emplace_back(peer);
-        res.peers.push_back(peer.address.toString());
-  }
-  res.status = CORE_RPC_STATUS_OK;
-  return true;
-}
+
 
 bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request& req, K_COMMAND_RPC_CHECK_TX_PROOF::response& res) {
 	// parse txid
@@ -500,6 +491,7 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 bool RpcServer::on_get_deposits(const COMMAND_RPC_GET_DEPOSITS::request& req, COMMAND_RPC_GET_DEPOSITS::response& res) {
   res.status = CORE_RPC_STATUS_OK;
   return true;
+}
 
 bool RpcServer::on_query_blocks(const COMMAND_RPC_QUERY_BLOCKS::request& req, COMMAND_RPC_QUERY_BLOCKS::response& res) {
   uint32_t startHeight;
@@ -635,13 +627,16 @@ bool RpcServer::onGetPoolChangesLite(const COMMAND_RPC_GET_POOL_CHANGES_LITE::re
 bool RpcServer::on_get_peer_list(
     const COMMAND_RPC_GET_PEER_LIST::request& req,
     COMMAND_RPC_GET_PEER_LIST::response& res) {
-    rusty::NodesList peers = m_core.get_peer_nodes();
-    res.peers.reserve(peers.size());
-    for (const auto& peer : peers) {
-        res.peers.emplace_back(peer.address.to_string());
-    }
-    res.status = CORE_RPC_STATUS_OK;
-    return true;
+	std::list<PeerlistEntry> pl_wite;
+	std::list<PeerlistEntry> pl_gray;
+	m_p2p.getPeerlistManager().get_peerlist_full(pl_gray, pl_wite);
+	for (const auto& pe : pl_wite) {
+		std::stringstream ss;
+		ss << pe.adr;
+		res.peers.push_back(ss.str());
+	}
+	res.status = CORE_RPC_STATUS_OK;
+	return true;
 }
 
 bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RPC_GET_INFO::response& res) {
@@ -711,6 +706,7 @@ bool RpcServer::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request&
     if (b.size() != sizeof(Hash))
     {
       res.status = "Failed, size of data mismatch";
+      return true;
     }
     vh.push_back(*reinterpret_cast<const Hash*>(b.data()));
   }

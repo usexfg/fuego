@@ -1443,12 +1443,66 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::sendBurnTransaction(const SendBurnTransaction::Request &request, std::string &transactionHash, std::string &burnSecretKey) {
-    std::error
+  std::error_code WalletService::submitBurnTransaction(const SubmitBurnTransaction::Request &request, std::string &transactionHash, std::string &burnSecretKey) {
+    try
+    {
+      System::EventLock lk(readyEvent);
+
+      validateAddresses(request.sourceAddresses, currency, logger);
+
+      CryptoNote::TransactionParameters sendParams;
+      sendParams.extra = Common::asString(Common::fromHex(request.extra));
+
+      sendParams.sourceAddresses = request.sourceAddresses;
+      
+      // Create a burn transaction with a special destination address
+      // and the specified amount to be burned
+      WalletRpcOrder burnOrder;
+      burnOrder.amount = request.amount;
+      burnOrder.address = request.address;  // This will be the burn destination
+      sendParams.destinations = convertWalletRpcOrdersToWalletOrders({burnOrder});
+      
+      sendParams.fee = request.fee;
+      sendParams.mixIn = request.anonymity;
+      sendParams.unlockTimestamp = request.unlockTime;
+
+      size_t transactionId = wallet.makeTransaction(sendParams);
+      const auto& tx = wallet.getTransaction(transactionId);
+      transactionHash = Common::podToHex(tx.hash);
+      
+      // Extract the transaction secret key
+      burnSecretKey = Common::podToHex(tx.secretKey);
+
+      logger(Logging::DEBUGGING) << "Burn transaction " << transactionHash << " has been created";
+    }
+    catch (std::system_error &x)
+    {
+      logger(Logging::WARNING) << "Error while creating delayed transaction: " << x.what();
+      return x.code();
+    }
+    catch (std::exception &x)
+    {
+      logger(Logging::WARNING) << "Error while creating delayed transaction: " << x.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    }
+
+    return std::error_code();
+  }
+
+  std::error_code WalletService::createDelayedTransaction(const CreateDelayedTransaction::Request &request, std::string &transactionHash)
   {
     try
     {
       System::EventLock lk(readyEvent);
+
+      uint64_t knownBlockCount = node.getKnownBlockCount();
+      uint64_t localBlockCount = node.getLocalBlockCount();
+      uint64_t diff = knownBlockCount - localBlockCount;
+      if ((localBlockCount == 0) || (diff > 2))
+      {
+        logger(Logging::WARNING) << "Daemon is not synchronized";
+        return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
+      }
 
       validateAddresses(request.addresses, currency, logger);
       validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
@@ -1472,13 +1526,13 @@ namespace PaymentService
       sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
       sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
       sendParams.fee = request.fee;
-      sendParams.mixIn = request.anonymity;
+      // Use dynamic ring sizing for optimal privacy (aim for 18, fallback to 8 minimum)
+      sendParams.mixIn = parameters::MIN_TX_MIXIN_SIZE_V10;
       sendParams.unlockTimestamp = request.unlockTime;
       sendParams.changeDestination = request.changeAddress;
 
       size_t transactionId = wallet.makeTransaction(sendParams);
       transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
-
       logger(Logging::DEBUGGING) << "Delayed transaction " << transactionHash << " has been created";
     }
     catch (std::system_error &x)
@@ -1841,7 +1895,7 @@ namespace PaymentService
 
     /* Create and send a deposit to another wallet address, the deposit then will appear in their
    wallet upon confirmation. */
-    std::error_code WalletService::sendDeposit(
+    std::error_code WalletService::giftDeposit(
         uint64_t amount,
         uint64_t term,
         std::string sourceAddress,

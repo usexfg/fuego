@@ -149,16 +149,22 @@ add_executable(Optimizer ${Optimizer})
 # Add TestnetWallet executable
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
 target_link_libraries(testnet-wallet-cli PRIVATE
+    SimpleWalletLib
     Wallet
     NodeRpcProxy
+    JsonRpcServer
     Transfers
     Rpc
     Http
     CryptoNoteCore
+    Crypto
+    P2P
     System
     Logging
     Common
-    Crypto
+    InProcessNode
+    upnpc-static
+    BlockchainExplorer
     ${Boost_LIBRARIES}
     Serialization
 )

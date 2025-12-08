@@ -111,7 +111,7 @@ void WithdrawDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
   serializer(transactionHash, "transactionHash");
 }
 
-void SendDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+void GiftDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(amount, "amount");
   serializer(term, "term");
@@ -119,7 +119,7 @@ void SendDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
   serializer(destinationAddress, "destinationAddress");
 }
 
-void SendDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+void GiftDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(transactionHash, "transactionHash");
 }
@@ -423,6 +423,39 @@ void SendTransaction::Request::serialize(CryptoNote::ISerializer &serializer)
 }
 
 void SendTransaction::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+  serializer(transactionSecretKey, "transactionSecretKey");
+}
+
+void SubmitBurnTransaction::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(sourceAddresses, "addresses");
+
+  if (!serializer(amount, "amount"))
+  {
+    throw RequestSerializationError();
+  }
+
+  serializer(address, "address");
+  serializer(memo, "memo");
+
+  if (!serializer(fee, "fee"))
+  {
+    throw RequestSerializationError();
+  }
+
+  if (!serializer(anonymity, "anonymity"))
+  {
+    throw RequestSerializationError();
+  }
+
+  bool hasExtra = serializer(extra, "extra");
+
+  serializer(unlockTime, "unlockTime");
+}
+
+void SubmitBurnTransaction::Response::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(transactionHash, "transactionHash");
   serializer(transactionSecretKey, "transactionSecretKey");

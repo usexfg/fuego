@@ -1968,7 +1968,9 @@ bool simple_wallet::generate_proof(const std::vector<std::string> &args) {
 
   const std::string& tx_hash = args[0];
   
+  // TODO: Implement burn secret retrieval when available
   // Try to find burn secret first
+  /*
   std::vector<BurnSecretEntry> burn_secrets = m_wallet->getAllBurnSecrets();
   for (const auto& entry : burn_secrets) {
     if (entry.tx_hash == tx_hash) {
@@ -1991,13 +1993,17 @@ bool simple_wallet::generate_proof(const std::vector<std::string> &args) {
       return true;
     }
   }
+  */
   
+  // TODO: Implement cold deposit retrieval when available
   // Try to find COLD deposit secret
+  /*
   std::vector<std::pair<std::string, uint64_t>> cold_deposits = m_wallet->getAllColdDeposits();
   for (const auto& deposit : cold_deposits) {
     if (deposit.first == tx_hash) {
       success_msg_writer() << "Found COLD deposit for transaction: " << tx_hash;
       success_msg_writer() << "Amount: " << deposit.second << " atomic XFG";
+
       
       // Generate proof data
       std::cout << "\n=== COLD DEPOSIT PROOF DATA ===" << std::endl;
@@ -2009,8 +2015,87 @@ bool simple_wallet::generate_proof(const std::vector<std::string> &args) {
       return true;
     }
   }
+  */
   
   fail_msg_writer() << "No burn secret or COLD deposit found for transaction: " << tx_hash;
+  return true;
+}
+
+bool simple_wallet::create_cold_secret(const std::vector<std::string> &args) {
+  if (args.size() != 5) {
+    fail_msg_writer() << "usage: create_COLD_secret <term> <amount> <apr_basis_points> <term_code> <chain_code>";
+    return true;
+  }
+
+  try {
+    std::string term = args[0];
+    uint64_t amount = boost::lexical_cast<uint64_t>(args[1]);
+    uint32_t apr_basis_points = boost::lexical_cast<uint32_t>(args[2]);
+    uint8_t term_code = boost::lexical_cast<uint8_t>(args[3]);
+    uint8_t chain_code = boost::lexical_cast<uint8_t>(args[4]);
+
+    // Validate inputs
+    if (amount == 0) {
+      fail_msg_writer() << "Amount must be greater than 0";
+      return true;
+    }
+
+    if (apr_basis_points == 0 || apr_basis_points > 10000) {
+      fail_msg_writer() << "APR basis points must be between 1 and 10000 (representing 0.01% to 100%)";
+      return true;
+    }
+
+    // Validate term code using existing validation function
+    if (!validateCDTermAndAPR(term_code, apr_basis_points)) {
+      fail_msg_writer() << "Invalid term code and APR combination";
+      return true;
+    }
+
+    // Generate a random key pair
+    Crypto::PublicKey public_key;
+    Crypto::SecretKey secret_key;
+    Crypto::generate_keys(public_key, secret_key);
+    
+    // Convert secret key to bytes
+    std::vector<uint8_t> secret_key_bytes(sizeof(Crypto::SecretKey));
+    std::memcpy(secret_key_bytes.data(), &secret_key, sizeof(Crypto::SecretKey));
+
+    // Prepare empty metadata for now
+    std::vector<uint8_t> metadata;
+
+    // Create the transaction extra field with the COLD deposit secret
+    std::vector<uint8_t> extra;
+    if (!createTxExtraWithCDDepositSecret(secret_key_bytes, amount, apr_basis_points, term_code, chain_code, metadata, extra)) {
+      fail_msg_writer() << "Failed to create COLD deposit secret data";
+      return true;
+    }
+
+    // Convert secret key to hex string for display
+    std::stringstream ss;
+    ss << std::hex;
+    for (size_t i = 0; i < secret_key_bytes.size(); ++i) {
+      ss << std::setw(2) << std::setfill('0') << static_cast<int>(secret_key_bytes[i]);
+    }
+    std::string secret_key_hex = ss.str();
+
+    success_msg_writer() << "COLD deposit secret created successfully:";
+    success_msg_writer() << "Secret Key: " << secret_key_hex;
+    success_msg_writer() << "Amount: " << amount << " XFG";
+    success_msg_writer() << "APR: " << apr_basis_points / 100.0 << "%";
+    success_msg_writer() << "Term Code: " << static_cast<int>(term_code);
+    success_msg_writer() << "Chain Code: " << static_cast<int>(chain_code);
+    
+    // Store the secret for later use when generating proofs
+    // This is a simplified implementation - in a full implementation, 
+    // you might want to persist this securely
+    // TODO: Implement secure storage of COLD deposit secrets
+    success_msg_writer() << "Store this secret securely for future proof generation";
+    
+  } catch (const std::exception& e) {
+    fail_msg_writer() << "Failed to parse arguments: " << e.what();
+    return true;
+  }
+
   return true;
 }
 

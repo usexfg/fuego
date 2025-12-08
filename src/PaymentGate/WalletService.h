@@ -90,7 +90,7 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code getTransaction(const std::string &transactionHash, TransactionRpcInfo &transaction);
   std::error_code getAddresses(std::vector<std::string> &addresses);
   std::error_code sendTransaction(const SendTransaction::Request &request, std::string &transactionHash, std::string &transactionSecretKey);
-  std::error_code sendBurnTransaction(const SendBurnTransaction::Request &request, std::string &transactionHash, std::string &burnSecretKey);
+  std::error_code submitBurnTransaction(const SubmitBurnTransaction::Request &request, std::string &transactionHash, std::string &burnSecretKey);
   std::error_code createDelayedTransaction(const CreateDelayedTransaction::Request &request, std::string &transactionHash);
   std::error_code createIntegratedAddress(const CreateIntegrated::Request &request, std::string &integrated_address);
   std::error_code splitIntegratedAddress(const SplitIntegrated::Request &request, std::string &address, std::string &payment_id);
@@ -108,7 +108,7 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::string getDefaultWalletPath();
 
   std::error_code withdrawDeposit(uint64_t depositId, std::string &transactionHash);
-  std::error_code sendDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash);
+  std::error_code giftDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash);
   std::error_code getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address);
   std::error_code getDepositWithStagedInfo(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address, bool &useStagedUnlock);
 

@@ -67,25 +67,40 @@ jobs:
          echo "libjsoncpp-dev package contents (first 20 lines):"
          dpkg -L libjsoncpp-dev 2>/dev/null | head -20
 
+         # Verify repository structure
+         echo "=== Verifying repository structure ==="
+         echo "Source directory contents:"
+         ls -la src | head -20
+         if [ ! -d "src/TorIntegration" ]; then
+           echo "ERROR: TorIntegration directory not found!"
+           echo "All directories in src:"
+           ls -la src
+           exit 1
+         else
+           echo "✓ TorIntegration directory found"
+           echo "TorIntegration directory contents:"
+           ls -la src/TorIntegration
+         fi
+
          # Create system-level symlink for jsoncpp
-          echo "=== Setting up jsoncpp symlinks ==="
-          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
-            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
-            echo "Created system symlink: /usr/include/json -> /usr/include/jsoncpp/json"
-          elif [ -d "/usr/include/x86_64-linux-gnu/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
-            sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json /usr/include/json
-            echo "Created system symlink: /usr/include/json -> /usr/include/x86_64-linux-gnu/jsoncpp/json"
-          elif [ ! -d "/usr/include/json" ]; then
-            echo "Creating manual directory /usr/include/json"
-            sudo mkdir -p /usr/include/json
-            if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
-              sudo cp -r /usr/include/jsoncpp/json/* /usr/include/json/
-              echo "Copied jsoncpp headers to /usr/include/json"
-            elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
-              sudo cp -r /usr/include/x86_64-linux-gnu/jsoncpp/json/* /usr/include/json/
-              echo "Copied multiarch jsoncpp headers to /usr/include/json"
-            fi
+        echo "=== Setting up jsoncpp symlinks ==="
+        if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+          sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
+          echo "Created system symlink: /usr/include/json -> /usr/include/jsoncpp/json"
+        elif [ -d "/usr/include/x86_64-linux-gnu/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+          sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json /usr/include/json
+          echo "Created system symlink: /usr/include/json -> /usr/include/x86_64-linux-gnu/jsoncpp/json"
+        elif [ ! -d "/usr/include/json" ]; then
+          echo "Creating manual directory /usr/include/json"
+          sudo mkdir -p /usr/include/json
+          if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
+            sudo cp -r /usr/include/jsoncpp/json/* /usr/include/json/
+            echo "Copied jsoncpp headers to /usr/include/json"
+          elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
+            sudo cp -r /usr/include/x86_64-linux-gnu/jsoncpp/json/* /usr/include/json/
+            echo "Copied multiarch jsoncpp headers to /usr/include/json"
           fi
+        fi
           # Verify the headers are accessible
           echo "=== Verification ==="
           if [ -f "/usr/include/json/json.h" ]; then

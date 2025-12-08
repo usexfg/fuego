@@ -28,7 +28,7 @@ public:
     TorConfig config;
     std::atomic<TorStatus> status{TorStatus::DISCONNECTED};
     TorStats stats;
-    std::mutex mutex;
+    mutable std::mutex mutex;
     
     // Callbacks
     TorStatusCallback statusCallback;

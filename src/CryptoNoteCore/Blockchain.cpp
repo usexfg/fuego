@@ -1,9 +1,9 @@
+// Copyright (c) 2017-2026 Fuego Developers
 // Copyright (c) 2012-2016 The CryptoNote developers, The Bytecoin developers, The Monero developers
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2018-2019 The Ryo Currency Developers
 // Copyright (c) 2014-2017 XDN developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2017-2022 Fuego Developers
 //
 // This file is part of Fuego.
 //
@@ -384,7 +384,7 @@ private:
   Crypto::Hash m_lastBlockHash;
 };
 
-  Blockchain::Blockchain(const Currency &currency, tx_memory_pool &tx_pool, ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) : 
+  Blockchain::Blockchain(const Currency &currency, tx_memory_pool &tx_pool, ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) :
     logger(logger, "Blockchain"),
                          m_currency(currency),
                          m_tx_pool(tx_pool),
@@ -394,9 +394,9 @@ private:
 			 m_blockchainAutosaveEnabled(blockchainAutosaveEnabled),
                          m_upgradeDetectorV2(currency, m_blocks, BLOCK_MAJOR_VERSION_2, logger),
                          m_upgradeDetectorV3(currency, m_blocks, BLOCK_MAJOR_VERSION_3, logger),
-                         m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger), 
+                         m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
                          m_upgradeDetectorV5(currency, m_blocks, BLOCK_MAJOR_VERSION_5, logger),
-                         m_upgradeDetectorV6(currency, m_blocks, BLOCK_MAJOR_VERSION_6, logger), 
+                         m_upgradeDetectorV6(currency, m_blocks, BLOCK_MAJOR_VERSION_6, logger),
 			                   m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger),
 			                   m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger),
                          m_upgradeDetectorV9(currency, m_blocks, BLOCK_MAJOR_VERSION_9, logger),
@@ -652,7 +652,7 @@ if (!m_upgradeDetectorV2.init() || !m_upgradeDetectorV3.init() || !m_upgradeDete
     std::vector<uint32_t> checkpointHeights = m_checkpoints.getCheckpointHeights();
     for (const auto &checkpointHeight : checkpointHeights)
     {
-     
+
       if (m_blocks.size() <= checkpointHeight)
       {
         return true;
@@ -882,13 +882,13 @@ uint64_t Blockchain::getCoinsInCirculation() {
     return m_blocks.back().already_generated_coins;
   }
 }
-    
+
 uint64_t Blockchain::coinsEmittedAtHeight(uint64_t height) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   const auto& block = m_blocks[height];
   return block.already_generated_coins;
 }
-  
+
   difficulty_type Blockchain::difficultyAtHeight(uint64_t height)
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
@@ -901,7 +901,7 @@ uint64_t Blockchain::coinsEmittedAtHeight(uint64_t height) {
     const auto &previous = m_blocks[height - 1];
     return current.cumulative_difficulty - previous.cumulative_difficulty;
   }
-  
+
 uint8_t Blockchain::getBlockMajorVersionForHeight(uint32_t height) const {
          if (height > m_upgradeDetectorV10.upgradeHeight()) {
     return m_upgradeDetectorV10.targetVersion();
@@ -966,8 +966,8 @@ double calc_poisson_ln(double lam, uint64_t k)
     logx -= log(k); // This can be tabulated
   } while (--k > 0);
   return logx;
-}	
-	
+}
+
 bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator>& alt_chain, bool discard_disconnected_chain) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
@@ -982,7 +982,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     logger(ERROR, BRIGHT_RED) << "switch_to_alternative_blockchain: blockchain size is lower than split height";
     return false;
   }
-  
+
    //-------------------------------------------------------------------------------------------------
   // For longer reorgs, check if the timestamps are probable - if they aren't the diff algo has failed
   // This check is meant to detect an offline bypass of timestamp < time() + ftl check
@@ -1061,7 +1061,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
       return false;
     }
   }
-	
+
   //disconnecting old chain
   std::list<Block> disconnected_chain;
   for (size_t i = m_blocks.size() - 1; i >= split_height; i--) {
@@ -1144,7 +1144,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 
     if (!main_chain_start_offset)
       ++main_chain_start_offset; //skip genesis block
-    
+
     // get difficulties and timestamps from relevant main chain blocks
     for (; main_chain_start_offset < main_chain_stop_offset; ++main_chain_start_offset) {
       timestamps.push_back(m_blocks[main_chain_start_offset].bl.timestamp);
@@ -1282,12 +1282,12 @@ uint64_t Blockchain::getCurrentCumulativeBlocksizeLimit() {
   return m_current_block_cumul_sz_limit;
 }
 
- bool Blockchain::complete_timestamps_vector(uint8_t blockMajorVersion, uint64_t start_top_height, std::vector<uint64_t>& timestamps) { 
-   if (timestamps.size() >= m_currency.timestampCheckWindow(blockMajorVersion)) 
+ bool Blockchain::complete_timestamps_vector(uint8_t blockMajorVersion, uint64_t start_top_height, std::vector<uint64_t>& timestamps) {
+   if (timestamps.size() >= m_currency.timestampCheckWindow(blockMajorVersion))
     return true;
 
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  size_t need_elements = m_currency.timestampCheckWindow(blockMajorVersion) - timestamps.size(); 
+  size_t need_elements = m_currency.timestampCheckWindow(blockMajorVersion) - timestamps.size();
   if (!(start_top_height < m_blocks.size())) { logger(ERROR, BRIGHT_RED) << "internal error: passed start_height = " << start_top_height << " not less then m_blocks.size()=" << m_blocks.size(); return false; }
   size_t stop_offset = start_top_height > need_elements ? start_top_height - need_elements : 0;
   do {
@@ -1627,7 +1627,7 @@ bool Blockchain::getRandomOutsByAmount(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_
           ++j;
         ++try_count;
       }
-    } 
+    }
      else {
       for(size_t i = 0; i != up_index_limit; i++)
         add_out_to_get_random_outs(amount_outs, result_outs, amount, i);
@@ -1986,14 +1986,14 @@ bool Blockchain::check_tx_outputs(const Transaction& tx, uint32_t height) const 
 
 
 bool Blockchain::check_block_timestamp_main(const Block& b) {
-   if (b.timestamp > get_adjusted_time() + m_currency.blockFutureTimeLimit(b.majorVersion)) { 
+   if (b.timestamp > get_adjusted_time() + m_currency.blockFutureTimeLimit(b.majorVersion)) {
 	   logger(INFO, BRIGHT_WHITE) <<
       "Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", bigger than adjusted time + 8 min.";
     return false;
   }
 
   std::vector<uint64_t> timestamps;
- size_t offset = m_blocks.size() <= m_currency.timestampCheckWindow(b.majorVersion) ? 0 : m_blocks.size() - m_currency.timestampCheckWindow(b.majorVersion);  for (; offset != m_blocks.size(); ++offset) { 
+ size_t offset = m_blocks.size() <= m_currency.timestampCheckWindow(b.majorVersion) ? 0 : m_blocks.size() - m_currency.timestampCheckWindow(b.majorVersion);  for (; offset != m_blocks.size(); ++offset) {
     timestamps.push_back(m_blocks[offset].bl.timestamp);
   }
 
@@ -2009,7 +2009,7 @@ bool Blockchain::check_block_timestamp_main(const Block& b) {
 //       of the selected blocks
 //   false otherwise
 bool Blockchain::check_block_timestamp(std::vector<uint64_t> timestamps, const Block& b) {
-    if (timestamps.size() < m_currency.timestampCheckWindow(b.majorVersion)) { 
+    if (timestamps.size() < m_currency.timestampCheckWindow(b.majorVersion)) {
 	return true;
   }
 
@@ -2389,11 +2389,17 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
     return m_bankingIndex.depositInterestAtHeight(static_cast<BankingIndex::DepositHeight>(height));
   }
 
+  uint64_t Blockchain::getBurnedXfgAtHeight(size_t height) const
+  {
+    std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+    return m_bankingIndex.getBurnedXfgAtHeight(static_cast<BankingIndex::DepositHeight>(height));
+  }
+
   void Blockchain::pushToBankingIndex(const BlockEntry &block, uint64_t interest)
   {
     int64_t deposit = 0;
     uint64_t permanentBurns = 0;  // Track permanent burns for ethernalXFG
-    
+
     for (const auto &tx : block.transactions)
     {
       // Parse transaction extra to detect burn types (0X08 0xE8)
@@ -2404,9 +2410,9 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
           if (field.type() == typeid(TransactionExtraHeatCommitment)) {
             const auto& heatCommit = boost::get<TransactionExtraHeatCommitment>(field);
             permanentBurns += heatCommit.amount;
-            
+
             // Use standard burn amount for logging (0.8 XFG)
-            logger(DEBUGGING) << "HEAT mint detected: " << parameters::BURN_DEPOSIT_MIN_AMOUNT 
+            logger(DEBUGGING) << "HEAT mint detected: " << parameters::BURN_DEPOSIT_MIN_AMOUNT
                              << " was added to Ethernal Flame (permanently burned)";
           }
           // Note: TX_EXTRA_ELDERFIER_DEPOSIT (0xE8) is NOT added to ethernalXFG initially
@@ -2416,31 +2422,31 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
           else if (field.type() == typeid(TransactionExtraElderfierDeposit)) {
             const auto& elderfierDeposit = boost::get<TransactionExtraElderfierDeposit>(field);
             // Use large burn amount for logging (800 XFG)
-            logger(DEBUGGING) << "Detected ElderFyre StayKing Deposit: " << parameters::BURN_DEPOSIT_LARGE_AMOUNT 
+            logger(DEBUGGING) << "Detected ElderFyre StayKing Deposit: " << parameters::BURN_DEPOSIT_LARGE_AMOUNT
                              << " XFG (slashable, NOT added to ethernalXFG unless slashed)";
           }
           // Check for Elderfier messages (0xEF) - may contain slashing decisions
           else if (field.type() == typeid(TransactionExtraElderfierMessage)) {
             const auto& elderfierMsg = boost::get<TransactionExtraElderfierMessage>(field);
-            
+
             // If this is a quorum consensus message with a target deposit hash,
             // it may represent a slashing decision
-            if (elderfierMsg.consensusRequired && 
+            if (elderfierMsg.consensusRequired &&
                 elderfierMsg.consensusType == ElderfierConsensusType::QUORUM &&
                 elderfierMsg.targetDepositHash != Crypto::Hash()) {
-              
+
               // Parse messageData to extract slashing amount
               // Message format: [slashing_percentage (1 byte)] [slashed_amount (8 bytes)]
               if (elderfierMsg.messageData.size() >= 9) {
                 uint8_t slashingPercentage = elderfierMsg.messageData[0];
                 uint64_t slashedAmount = 0;
                 memcpy(&slashedAmount, &elderfierMsg.messageData[1], 8);
-                
+
                 if (slashedAmount > 0) {
                   permanentBurns += slashedAmount;
-                  
-                  logger(INFO) << "ElderFyre Slashing: " << slashedAmount 
-                               << " XFG (" << static_cast<int>(slashingPercentage) 
+
+                  logger(INFO) << "ElderFyre Slashing: " << slashedAmount
+                               << " XFG (" << static_cast<int>(slashingPercentage)
                                << "% of deposit) permanently burned & added to Ethernal Flame";
                 }
               }
@@ -2448,7 +2454,7 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
           }
         }
       }
-      
+
       for (const auto &in : tx.tx.inputs)
       {
         if (in.type() == typeid(MultisignatureInput))
@@ -2472,19 +2478,19 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
         }
       }
     }
-    
+
     // Push deposit tracking
     m_bankingIndex.pushBlock(deposit, interest);
-    
+
     // Add permanent burns to ethernalXFG if any were found
     if (permanentBurns > 0) {
       uint32_t height = static_cast<uint32_t>(m_blocks.size());
       m_bankingIndex.addForeverDeposit(permanentBurns, height);
         // Sync Currency ethernalXFG
     const_cast<Currency&>(m_currency).addEternalFlame(permanentBurns);
-  
+
   // Use large burn amount for logging (800 XFG)
-      logger(INFO) << "Burn in block " << height << ": " << parameters::BURN_DEPOSIT_LARGE_AMOUNT 
+      logger(INFO) << "Burn in block " << height << ": " << parameters::BURN_DEPOSIT_LARGE_AMOUNT
                    << " XFG sent into the Ether";
     }
   }
@@ -2615,7 +2621,7 @@ void Blockchain::popTransaction(const Transaction& transaction, const Crypto::Ha
       "Cannot pop transaction - transaction hash not found in map during rollback. Hash: " << transactionHash;
     return;
   }
-  
+
   TransactionIndex transactionIndex = it->second;
   for (size_t outputIndex = 0; outputIndex < transaction.outputs.size(); ++outputIndex) {
     const TransactionOutput& output = transaction.outputs[transaction.outputs.size() - 1 - outputIndex];
@@ -2822,7 +2828,7 @@ bool Blockchain::validateInput(const MultisignatureInput& input, const Crypto::H
       const_cast<Currency&>(m_currency).removeEternalFlame(burnedInThisBlock);
     }
   }
-  
+
   popTransactions(m_blocks.back(), getObjectHash(m_blocks.back().bl.baseTransaction));
   m_bankingIndex.popBlock();
   Crypto::Hash blockHash = getBlockIdByHeight(m_blocks.back().height);

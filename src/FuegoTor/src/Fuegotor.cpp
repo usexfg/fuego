@@ -1,4 +1,4 @@
-#include "Fuegotor.h"
+#include "TorIntegration.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -22,24 +22,24 @@
 
 namespace CryptoNote {
 
-// FuegoTorManager Implementation
-class FuegoTorManager::Impl {
+// TorManager Implementation
+class TorManager::Impl {
 public:
-    FuegoTorConfig config;
-    std::atomic<FuegoTorStatus> status{FuegoTorStatus::DISCONNECTED};
-    FuegoTorStats stats;
-    std::mutex mutex;
+    TorConfig config;
+    std::atomic<TorStatus> status{TorStatus::DISCONNECTED};
+    TorStats stats;
+    mutable std::mutex mutex;
     
     // Callbacks
-    FuegoTorStatusCallback statusCallback;
-    FuegoTorConnectionCallback connectionCallback;
-    FuegoTorErrorCallback errorCallback;
+    TorStatusCallback statusCallback;
+    TorConnectionCallback connectionCallback;
+    TorErrorCallback errorCallback;
     
     // Thread management
     std::thread monitorThread;
     std::atomic<bool> running{false};
     
-    Impl(const FuegoTorConfig& cfg) : config(cfg) {}
+    Impl(const TorConfig& cfg) : config(cfg) {}
     
     ~Impl() {
         shutdown();
@@ -283,56 +283,56 @@ private:
     }
 };
 
-// FuegoTorManager Public Interface
-FuegoTorManager::FuegoTorManager(const FuegoTorConfig& config) : m_impl(std::make_unique<Impl>(config)) {}
+// TorManager Public Interface
+TorManager::TorManager(const TorConfig& config) : m_impl(std::make_unique<Impl>(config)) {}
 
-FuegoTorManager::~FuegoTorManager() = default;
+TorManager::~TorManager() = default;
 
-bool FuegoTorManager::initialize() {
+bool TorManager::initialize() {
     return m_impl->initialize();
 }
 
-void FuegoTorManager::shutdown() {
+void TorManager::shutdown() {
     m_impl->shutdown();
 }
 
-bool FuegoTorManager::isTorAvailable() const {
+bool TorManager::isTorAvailable() const {
     return m_impl->isTorAvailable();
 }
 
-FuegoTorStatus FuegoTorManager::getStatus() const {
+TorStatus TorManager::getStatus() const {
     return m_impl->getStatus();
 }
 
-FuegoTorStats FuegoTorManager::getStats() const {
+TorStats TorManager::getStats() const {
     return m_impl->getStats();
 }
 
-FuegoTorConnectionInfo FuegoTorManager::createConnection(const std::string& address, uint16_t port) {
+TorConnectionInfo TorManager::createConnection(const std::string& address, uint16_t port) {
     return m_impl->createConnection(address, port);
 }
 
-std::string FuegoTorManager::getHiddenServiceAddress() const {
+std::string TorManager::getHiddenServiceAddress() const {
     return m_impl->getHiddenServiceAddress();
 }
 
-void FuegoTorManager::setStatusCallback(FuegoTorStatusCallback callback) {
+void TorManager::setStatusCallback(TorStatusCallback callback) {
     m_impl->setStatusCallback(callback);
 }
 
-void FuegoTorManager::setConnectionCallback(FuegoTorConnectionCallback callback) {
+void TorManager::setConnectionCallback(TorConnectionCallback callback) {
     m_impl->setConnectionCallback(callback);
 }
 
-void FuegoTorManager::setErrorCallback(FuegoTorErrorCallback callback) {
+void TorManager::setErrorCallback(TorErrorCallback callback) {
     m_impl->setErrorCallback(callback);
 }
 
-bool FuegoTorManager::updateConfig(const FuegoTorConfig& newConfig) {
+bool TorManager::updateConfig(const TorConfig& config) {
     return m_impl->updateConfig(config);
 }
 
-FuegoTorConfig FuegoTorManager::getConfig() const {
+TorConfig TorManager::getConfig() const {
     return m_impl->getConfig();
 }
 
@@ -356,7 +356,7 @@ public:
 TorConnection::TorConnection(TorManager& manager, const std::string& address, uint16_t port)
     : m_impl(std::make_unique<Impl>(manager, address, port)) {}
 
-FuegoTorConnection::~FuegoTorConnection() = default;
+TorConnection::~TorConnection() = default;
 
 bool TorConnection::connect() {
     m_impl->info = m_impl->manager.createConnection(m_impl->address, m_impl->port);
@@ -364,12 +364,12 @@ bool TorConnection::connect() {
     return m_impl->connected.load();
 }
 
-void FuegoTorConnection::disconnect() {
+void TorConnection::disconnect() {
     m_impl->connected.store(false);
     m_impl->info.status = TorStatus::DISCONNECTED;
 }
 
-bool FuegoTorConnection::isConnected() const {
+bool TorConnection::isConnected() const {
     return m_impl->connected.load();
 }
 
@@ -393,11 +393,11 @@ size_t TorConnection::receive(void* buffer, size_t size) {
     return 0;
 }
 
-FuegoTorConnectionInfo FuegoTorConnection::getInfo() const {
+TorConnectionInfo TorConnection::getInfo() const {
     return m_impl->info;
 }
 
-uint32_t FuegoTorConnection::getLatency() const {
+uint32_t TorConnection::getLatency() const {
     return m_impl->info.latency;
 }
 
@@ -571,7 +571,7 @@ TorConfig loadConfigFromFile(const std::string& filename) {
     return config;
 }
 
-bool saveConfigToFile(const FuegoTorConfig& config, const std::string& filename) {
+bool saveConfigToFile(const TorConfig& config, const std::string& filename) {
     std::ofstream file(filename);
     if (!file.is_open()) {
         return false;

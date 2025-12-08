@@ -23,6 +23,7 @@
 #include <boost/variant.hpp>
 
 #include <CryptoNote.h>
+#include "ProofStructures.h"
 #include "../include/EldernodeIndexTypes.h"
 
 #define TX_EXTRA_PADDING_MAX_COUNT          255
@@ -40,8 +41,9 @@
 
 // 0x_8 tags: Burn-related deposit types
 #define TX_EXTRA_HEAT_COMMITMENT            0x08  // Heat commitment (burn)
+#define TX_EXTRA_BURN_RECEIPT               0x18  // Burn transaction receipt
 #define TX_EXTRA_ELDERFIER_DEPOSIT          0xE8  // Elderfier staking (moved from 0x06)
-#define TX_EXTRA_DIGM_MINT                  0xA8  // DIGM coin mint (Split 3 ways treasury, dev, burn)
+#define TX_EXTRA_DIGM_MINT                  0xA8  // DIGM coin mint by burn (Split 3 ways dev, digm treasury, burn)
 
 // 0x_A tags: DIGM Artist related meta/msgs/txns
 #define TX_EXTRA_DIGM_ALBUM                 0x0A  // Album metadata
@@ -56,7 +58,7 @@
 #define TX_EXTRA_DIGM_CURATOR_COIN          0x1C  // CURA coin operations
 
 // 0xCD tags: COLD (CD) yield deposits
-#define TX_EXTRA_CD_DEPOSIT_SECRET          0xCD  // COLD yield deposits (moved from 0x09)
+#define TX_EXTRA_CD_DEPOSIT_SECRET          0xCD  // COLD yield deposits
 
 /*
  * COLD DEPOSIT (CD) YIELD SYSTEM
@@ -72,8 +74,8 @@
  *    4      |   3 years   |  33%     | 1095 |   3300
  *    5      |   5 years   |  80%     | 1825 |   8000
  *
- * Deposits are locked for the full term and earn compound interest.
- * Early withdrawal is not permitted - funds remain locked until maturity.
+ * Deposits are locked for the full term and earn interest off-chain.
+ * Staged withdrawal may be permitted - funds remain locked until maturity.
  *
  * Usage Example:
  *   createTxExtraWithCDDepositSecret(secret_key, amount, CD_APR_21PCT, CD_TERM_1YR_21PCT, chain_code, metadata, extra);
@@ -158,8 +160,9 @@
  * ============================================================================
  */
 
-// Legacy/compatibility (deprecated)
-#define TX_EXTRA_YIELD_COMMITMENT           0x07  // Legacy yield commitment
+// 0x07 FUEGO MOB Custom Interest Assets   Check full compatibility -
+#define TX_EXTRA_YIELD_COMMITMENT           0x07  //  yield commitment
+#define TX_EXTRA_DEPOSIT_RECEIPT            0x17  // Deposit receipt
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
@@ -201,7 +204,7 @@ struct TransactionExtraHeatCommitment {
   Crypto::Hash commitment;       // 🔒 SECURE: Only commitment hash on blockchain
   uint64_t amount;
   std::vector<uint8_t> metadata;
-  
+
   bool serialize(ISerializer& serializer);
 };
 
@@ -211,7 +214,7 @@ struct TransactionExtraYieldCommitment {
   uint32_t term_months;
   std::string yield_scheme;
   std::vector<uint8_t> metadata;
-  
+
   bool serialize(ISerializer& serializer);
 };
 
@@ -319,13 +322,7 @@ struct TransactionExtraMediaTransferResponse {
   bool verifySignature() const;
 };
 
-// Removed duplicate TransactionExtraElderfierDeposit struct
-// tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
-//   varint tag;
-//   varint size;
-//   varint data[];
-typedef boost::variant<CryptoNote::TransactionExtraPadding, CryptoNote::TransactionExtraPublicKey, CryptoNote::TransactionExtraNonce, CryptoNote::TransactionExtraMergeMiningTag, CryptoNote::tx_extra_message, CryptoNote::TransactionExtraTTL, CryptoNote::TransactionExtraElderfierDeposit, CryptoNote::TransactionExtraElderfierMessage, CryptoNote::TransactionExtraHeatCommitment, CryptoNote::TransactionExtraYieldCommitment, CryptoNote::TransactionExtraCDDepositSecret, CryptoNote::TransactionExtraEncryptedMediaMessage, CryptoNote::TransactionExtraMediaAttachment, CryptoNote::TransactionExtraMediaTransferRequest, CryptoNote::TransactionExtraMediaTransferResponse> TransactionExtraField;
-
+typedef boost::variant<CryptoNote::TransactionExtraPadding, CryptoNote::TransactionExtraPublicKey, CryptoNote::TransactionExtraNonce, CryptoNote::TransactionExtraMergeMiningTag, CryptoNote::tx_extra_message, CryptoNote::TransactionExtraTTL, CryptoNote::TransactionExtraElderfierDeposit, CryptoNote::TransactionExtraElderfierMessage, CryptoNote::TransactionExtraHeatCommitment, CryptoNote::TransactionExtraYieldCommitment, CryptoNote::TransactionExtraCDDepositSecret, CryptoNote::TransactionExtraEncryptedMediaMessage, CryptoNote::TransactionExtraMediaAttachment, CryptoNote::TransactionExtraMediaTransferRequest, CryptoNote::TransactionExtraMediaTransferResponse, CryptoNote::TransactionExtraBurnReceipt, CryptoNote::TransactionExtraDepositReceipt> TransactionExtraField;
 
 
 template<typename T>
@@ -464,6 +461,16 @@ bool addMediaTransferResponseToExtra(std::vector<uint8_t>& tx_extra,
                                     const TransactionExtraMediaTransferResponse& response);
 bool getMediaTransferResponseFromExtra(const std::vector<uint8_t>& tx_extra,
                                       TransactionExtraMediaTransferResponse& response);
+
+// Burn receipt helper functions
+bool getBurnReceiptFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraBurnReceipt& burnReceipt);
+bool addBurnReceiptToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraBurnReceipt& burnReceipt);
+bool createTxExtraWithBurnReceipt(const TransactionExtraBurnReceipt& burnReceipt, std::vector<uint8_t>& extra);
+
+// Deposit receipt helper functions
+bool getDepositReceiptFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraDepositReceipt& depositReceipt);
+bool addDepositReceiptToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDepositReceipt& depositReceipt);
+bool createTxExtraWithDepositReceipt(const TransactionExtraDepositReceipt& depositReceipt, std::vector<uint8_t>& extra);
 
 // Media type constants
 enum MediaType {

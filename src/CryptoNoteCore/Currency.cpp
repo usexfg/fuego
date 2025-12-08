@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2017-2025 Elderfire Privacy Group
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -90,7 +90,7 @@ namespace CryptoNote
 			m_upgradeHeightV7 = 7;
 			m_upgradeHeightV8 = 8;
                      m_upgradeHeightV9 = 9;
-                     m_upgradeHeightV10 = 33;
+                     m_upgradeHeightV10 = 10;
 
       m_blocksFileName = "testnet_" + m_blocksFileName;
       m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
@@ -1042,7 +1042,7 @@ void Currency::getEternalFlame(uint64_t& amount) const {
 	   		   uint64_t difficulty_plate = 100000;
 
 
-			   // assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
+			   assert(timestamps.size() == cumulativeDifficulties.size() && timestamps.size() <= static_cast<uint64_t>(N + 1));
 
 			   // If it's a new coin, do startup code. Do not remove in case other coins copy your code.
 			   // uint64_t difficulty_guess = 10000;
@@ -1094,13 +1094,14 @@ void Currency::getEternalFlame(uint64_t& amount) const {
 		return  next_D;
 }
 
+
 	difficulty_type Currency::nextDifficultyV6(uint32_t height, uint8_t blockMajorVersion,
 		std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulativeDifficulties) const {
 
 		// Adaptive Multi-Window Difficulty Algorithm (AMWDA) - V10
 		// Designed for fast adaptation, large swing handling, and block stealing prevention
 		// Activated at BlockMajorVersion 10 (height 969696) alongside Enhanced Privacy
-		// Copyright (c) 2025 Fuego Developers
+		// Copyright (c) 2024 Fuego Privacy Group
 
 		const uint64_t T = CryptoNote::parameters::DIFFICULTY_TARGET; // 480 seconds
 

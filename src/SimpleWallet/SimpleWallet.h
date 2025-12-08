@@ -106,6 +106,11 @@ namespace CryptoNote
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool payment_id(const std::vector<std::string> &args);
+    
+    // COLD deposit secret management command
+    bool create_cold_secret(const std::vector<std::string> &args);
+    // Proof generation using stored secrets
+    bool generate_proof(const std::vector<std::string> &args);
 
     bool ask_wallet_create_if_needed();
     std::string resolveAlias(const std::string& aliasUrl);

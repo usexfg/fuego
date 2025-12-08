@@ -82,7 +82,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("generateBurnProofDataFile", jsonHandler<GenerateBurnProofDataFile::Request, GenerateBurnProofDataFile::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFile, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("generateBurnProofDataFileAuto", jsonHandler<GenerateBurnProofDataFileAuto::Request, GenerateBurnProofDataFileAuto::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGenerateBurnProofDataFileAuto, this, std::placeholders::_1, std::placeholders::_2)));
 
-  handlers.emplace("sendDeposit", jsonHandler<SendDeposit::Request, SendDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSendDeposit, this, std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("giftDeposit", jsonHandler<GiftDeposit::Request, GiftDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGiftDeposit, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("withdrawDeposit", jsonHandler<WithdrawDeposit::Request, WithdrawDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleWithdrawDeposit, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getMessagesFromExtra", jsonHandler<GetMessagesFromExtra::Request, GetMessagesFromExtra::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetMessagesFromExtra, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getDeposit", jsonHandler<GetDeposit::Request, GetDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetDeposit, this, std::placeholders::_1, std::placeholders::_2)));
@@ -536,8 +536,8 @@ std::error_code PaymentServiceJsonRpcServer::handleWithdrawDeposit(const Withdra
   return service.withdrawDeposit(request.depositId, response.transactionHash);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleSendDeposit(const SendDeposit::Request& request, SendDeposit::Response& response) {
-  return service.sendDeposit(request.amount, request.term, request.sourceAddress, request.destinationAddress, response.transactionHash);
+std::error_code PaymentServiceJsonRpcServer::handleGiftDeposit(const GiftDeposit::Request& request, GiftDeposit::Response& response) {
+  return service.giftDeposit(request.amount, request.term, request.sourceAddress, request.destinationAddress, response.transactionHash);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response) {

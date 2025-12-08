@@ -66,7 +66,7 @@ bool BurnTransactionHandler::isBurnTransaction(const std::vector<uint8_t>& txExt
     }
 
     try {
-        // Parse tx_extra to look for HEAT commitment (0x08 tag)
+        // Parse tx_extra to look for HEAT commitment (0x08 tag) or YIELD commitment (0x07 tag)
         return parseBurnTransaction(txExtra).isValid;
     } catch (const std::exception&) {
         return false;
@@ -94,6 +94,9 @@ BurnTransactionHandler::BurnTransactionData BurnTransactionHandler::parseBurnTra
             if (tag == TX_EXTRA_HEAT_COMMITMENT) {
                 // Found HEAT commitment tag (0x08)
                 return parseHeatCommitment(txExtra, pos);
+            } else if (tag == TX_EXTRA_YIELD_COMMITMENT) {
+                // Found YIELD commitment tag (0x07) for YIELD_DEPOSITS / FuegoMob
+                return parseYieldCommitment(txExtra, pos);
             } else if (tag == 0x00) { // TX_EXTRA_TAG_PADDING
                 // Skip padding
                 size_t paddingSize = 1;
@@ -122,7 +125,7 @@ BurnTransactionHandler::BurnTransactionData BurnTransactionHandler::parseBurnTra
                     }
                     shift += 7;
                     if (shift >= 32) { // Prevent infinite loop
-                        break;
+                        return data;
                     }
                 }
 
@@ -187,6 +190,75 @@ BurnTransactionHandler::BurnTransactionData BurnTransactionHandler::parseHeatCom
 
     return data;
 }
+
+BurnTransactionHandler::BurnTransactionData BurnTransactionHandler::parseYieldCommitment(const std::vector<uint8_t>& txExtra, size_t pos) {
+    BurnTransactionData data;
+
+    try {
+        // Read commitment hash (32 bytes)
+        if (pos + 32 > txExtra.size()) {
+            return data;
+        }
+
+        data.commitmentHash = Common::toHex(txExtra.data() + pos, 32);
+        pos += 32;
+
+        // Read amount (8 bytes, little-endian)
+        if (pos + 8 > txExtra.size()) {
+            return data;
+        }
+
+        data.amount = 0;
+        for (int i = 0; i < 8; ++i) {
+            data.amount |= static_cast<uint64_t>(txExtra[pos + i]) << (i * 8);
+        }
+        pos += 8;
+
+        // Skip term_months (4 bytes) and yield_scheme (variable length) for yield deposits
+        if (pos + 4 > txExtra.size()) {
+            return data;
+        }
+        pos += 4; // Skip term_months
+
+        // Skip yield_scheme length and string
+        if (pos >= txExtra.size()) {
+            return data;
+        }
+        uint8_t schemeLen = txExtra[pos];
+        pos += 1;
+        if (pos + schemeLen > txExtra.size()) {
+            return data;
+        }
+        pos += schemeLen;
+
+        // Read metadata size (1 byte)
+        if (pos >= txExtra.size()) {
+            return data;
+        }
+
+        uint8_t metadataSize = txExtra[pos];
+        pos += 1;
+
+        // Read metadata
+        if (metadataSize > 0) {
+            if (pos + metadataSize > txExtra.size()) {
+                return data;
+            }
+            data.metadata = std::string(reinterpret_cast<const char*>(txExtra.data() + pos), metadataSize);
+
+            // Try to extract Ethereum address from metadata
+            data.ethAddress = extractEthereumAddress(data.metadata);
+        }
+
+        data.isValid = true;
+
+    } catch (const std::exception&) {
+        // Parsing failed
+    }
+
+    return data;
+}
+
 
 std::string BurnTransactionHandler::extractEthereumAddress(const std::string& metadata) {
     // Look for Ethereum address pattern (0x followed by 40 hex chars)
@@ -308,7 +380,9 @@ void BurnTransactionHandler::triggerBurnDetectedCallback(const std::string& txHa
     if (m_impl->burnDetectedCallback) {
         m_impl->burnDetectedCallback(txHash, amount, ethAddress);
     }
-}
+};
+
+// BurnTransactionManager implementation
 
 // BurnTransactionManager implementation
 class BurnTransactionManager::Impl {

@@ -27,6 +27,9 @@ file(GLOB_RECURSE SimpleWallet SimpleWallet/*)
 file(GLOB_RECURSE Optimizer Optimizer/*)
 file(GLOB_RECURSE SimpleWalletLib SimpleWallet/*)
 
+# Tor integration
+add_subdirectory(TorIntegration)
+
 # Eldernode services
 add_subdirectory(EldernodeIndexManager)
 add_subdirectory(BurnDepositValidationService)
@@ -130,6 +133,7 @@ add_library(Logging STATIC ${Logging})
 add_library(NodeRpcProxy STATIC ${NodeRpcProxy})
 add_library(Rpc STATIC ${Rpc})
 add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
+add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
 
 if(TARGET upnpc-static)
     add_dependencies(P2P upnpc-static)
@@ -166,16 +170,23 @@ add_executable(Optimizer ${Optimizer})
 # Add TestnetWallet executable
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
 target_link_libraries(testnet-wallet-cli PRIVATE
+    SimpleWalletLib
     Wallet
     NodeRpcProxy
+    JsonRpcServer
     Transfers
     Rpc
     Http
     CryptoNoteCore
+    Crypto
+    P2P
     System
     Logging
     Common
-    Crypto
+    InProcessNode
+    upnpc-static
+    BlockchainExplorer
+    TorIntegration
     ${Boost_LIBRARIES}
     Serialization
 )
@@ -196,6 +207,7 @@ target_link_libraries(Daemon PRIVATE
     Crypto
     upnpc-static
     BlockchainExplorer
+    TorIntegration
     ${Boost_LIBRARIES}
     Serialization
 )
@@ -244,6 +256,7 @@ target_link_libraries(PaymentGateService PRIVATE
     InProcessNode
     upnpc-static
     BlockchainExplorer
+    TorIntegration
     ${Boost_LIBRARIES}
     Serialization
 )
@@ -273,6 +286,7 @@ target_link_libraries(SimpleWallet PRIVATE
     Common
     Crypto
     BlockchainExplorer
+    TorIntegration
     ${Boost_LIBRARIES}
     Serialization
 )

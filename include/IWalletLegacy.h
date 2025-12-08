@@ -107,6 +107,9 @@ public:
   virtual void sendTransactionCompleted(TransactionId transactionId, std::error_code result) {}
   virtual void transactionUpdated(TransactionId transactionId) {}
   virtual void depositsUpdated(const std::vector<DepositId>& depositIds) {}
+  virtual void burnSecretCreated(const std::string& txHash) {}
+  virtual void burnProofGenerated(const std::string& txHash) {}
+  virtual void coldDepositSecretCreated(const std::string& txHash) {}
 };
 
 class IWalletLegacy {

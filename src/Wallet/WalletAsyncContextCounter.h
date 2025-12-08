@@ -1,7 +1,7 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2022, Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2016-2019 The Karbowanec developers
-// Copyright (c) 2012-2018 The CryptoNote developers
+// Copyright (c) 2016-2019, The Karbowanec developers
+// Copyright (c) 2012-2018, The CryptoNote developers
 //
 // This file is part of Fuego.
 //
@@ -17,16 +17,16 @@
 
 #pragma once
 
-#include <condition_variable>
-#include <mutex>
-#include <stdint.h>
+#include <cstdint>
+#include <memory>
 
 namespace CryptoNote {
 
 class WalletAsyncContextCounter
 {
 public:
-  WalletAsyncContextCounter() : m_asyncContexts(0) {}
+  WalletAsyncContextCounter();
+  ~WalletAsyncContextCounter();
 
   void addAsyncContext();
   void delAsyncContext();
@@ -35,9 +35,8 @@ public:
   void waitAsyncContextsFinish();
 
 private:
-  uint32_t m_asyncContexts;
-  std::condition_variable m_cv;
-  std::mutex m_mutex;
+  struct Impl;
+  std::unique_ptr<Impl> m_impl;
 };
 
 } //namespace CryptoNote

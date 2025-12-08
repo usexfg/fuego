@@ -101,11 +101,11 @@ namespace CryptoNote
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 		// MAINNET DEPOSITS
-		const uint64_t DEPOSIT_MIN_AMOUNT = 8000000000;
-		const uint64_t YIELD_DEPOSIT_MIN_AMOUNT = 10000000;
-		const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units)
-		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 HEAT)
-		const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 8000000000;  // 800 XFG (8,000,000,000 HEAT)
+		const uint64_t DEPOSIT_MIN_AMOUNT = 8000000000;   // 800 XFG for CD rewards
+    const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units) 8M
+    const uint64_t YIELD_DEPOSIT_MIN_AMOUNT = 80000000;  // 8 XFG (80,000,000 atomic units) 80M
+		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 [8M]HEAT)
+		const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 8000000000;  // 800 XFG (8,000,000,000 [8B]HEAT)
 		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
     const uint32_t DEPOSIT_MAX_TERM_v1 = 5480;
     const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */

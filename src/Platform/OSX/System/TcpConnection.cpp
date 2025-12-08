@@ -24,6 +24,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// Define SO_NOSIGPIPE if not already defined (macOS specific)
+#ifndef SO_NOSIGPIPE
+#define SO_NOSIGPIPE 0x1022
+#endif
+
 #include "Dispatcher.h"
 #include <System/ErrorMessage.h>
 #include <System/InterruptedException.h>

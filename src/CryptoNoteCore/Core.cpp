@@ -1244,4 +1244,8 @@ bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
 }
 
+uint64_t core::getBurnedXfgAtHeight(size_t height) const {
+  return m_blockchain.getBurnedXfgAtHeight(height);
+}
+
 }

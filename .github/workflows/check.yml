@@ -15,10 +15,19 @@ jobs:
     env:
       BOOST_ROOT: ""
     steps:
+      - name: Cache vcpkg (Windows)
+        uses: actions/cache@v4
+        with:
+          path: C:\vcpkg\installed
+          key: ${{ runner.os }}-vcpkg-check-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-check-
+            ${{ runner.os }}-vcpkg-
+
       - uses: actions/checkout@v4
 
       - name: Prepare version
-        shell: powershell
+        shell: pwsh
         id: setup
         run: |
           $os="windows"
@@ -29,7 +38,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3
 
       - name: Install Boost via Chocolatey
-        shell: powershell
+        shell: pwsh
         run: |
           Write-Host "Installing Boost via Chocolatey..."
           choco install boost-msvc-14.3 -y
@@ -47,7 +56,7 @@ jobs:
             exit 1
           }
       - name: Verify Boost Installation
-        shell: powershell
+        shell: pwsh
         run: |
           Write-Host "Verifying Boost installation..."
           Write-Host "BOOST_ROOT: $env:BOOST_ROOT"
@@ -63,27 +72,51 @@ jobs:
 
           if (Test-Path "$env:BOOST_ROOT\boost") {
             Write-Host "✓ boost subdirectory found"
-          }
-          else {
+          } else {
             Write-Warning "boost subdirectory not found!"
           }
 
+          # Verify jsoncpp will be installed via vcpkg
+          Write-Host "jsoncpp will be installed via vcpkg during Build step"
+
       - name: Build
-        shell: powershell
+        shell: pwsh
         id: build
         run: |
           $ErrorActionPreference = "Stop"
           $build_folder = "build"
           $sha = "${{ github.sha }}"
           $xfg_ver = $sha.SubString(0,7)
-          $release_name = "fuego-cli-win64-v$xfg_ver"
+          $release_name="fuego-cli-win64-v$xfg_ver"
 
           Write-Host "Creating build folder..."
           mkdir "$build_folder" -Force
           cd "$build_folder"
 
-          Write-Host "Configuring CMake with BOOST_ROOT: $env:BOOST_ROOT"
-          cmake -G "Visual Studio 17 2022" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT" -DBOOST_INCLUDEDIR="$env:BOOST_ROOT\boost" -DBoost_NO_SYSTEM_PATHS=ON ..
+          # Initialize vcpkg
+          if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
+            Write-Host "Initializing vcpkg..."
+            git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+            cd C:/vcpkg
+            .\bootstrap-vcpkg.bat
+            .\vcpkg integrate install
+            cd ../../build
+          }
+
+          # Install jsoncpp and Boost via vcpkg for consistency
+          Write-Host "Installing jsoncpp and Boost via vcpkg..."
+          C:/vcpkg/vcpkg.exe install --triplet x64-windows jsoncpp boost-date-time boost-filesystem boost-program-options boost-regex boost-system boost-thread
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg installation failed" }
+
+          # Configure CMake with vcpkg toolchain (matches build.yml)
+          Write-Host "Configuring CMake with vcpkg toolchain..."
+          Write-Host "Checking vcpkg installed packages:"
+          C:/vcpkg/vcpkg.exe list
+          Write-Host "Running CMake configuration..."
+          cmake -G "Visual Studio 17 2022" -A x64 `
+            -DBUILD_TESTS=ON `
+            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+            -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
           if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed" }
           msbuild fuegoX.sln /p:Configuration=Release /m /v:minimal
           if ($LASTEXITCODE -ne 0) { throw "Build failed" }
@@ -118,6 +151,44 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
+
+          # Debug JSON installation locations
+          echo "=== JSONcpp Installation Debug ==="
+          echo "Looking for json.h files:"
+          find /usr -name "json.h" -type f 2>/dev/null | head -5
+          echo "libjsoncpp-dev package contents (first 20 lines):"
+          dpkg -L libjsoncpp-dev 2>/dev/null | head -20
+
+          # Create system-level symlink for jsoncpp
+          echo "=== Setting up jsoncpp symlinks ==="
+          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
+            echo "Created system symlink: /usr/include/json -> /usr/include/jsoncpp/json"
+          elif [ -d "/usr/include/x86_64-linux-gnu/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json /usr/include/json
+            echo "Created system symlink: /usr/include/json -> /usr/include/x86_64-linux-gnu/jsoncpp/json"
+          elif [ ! -d "/usr/include/json" ]; then
+            echo "Creating manual directory /usr/include/json"
+            sudo mkdir -p /usr/include/json
+            if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
+              sudo cp -r /usr/include/jsoncpp/json/* /usr/include/json/
+              echo "Copied jsoncpp headers to /usr/include/json"
+            elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
+              sudo cp -r /usr/include/x86_64-linux-gnu/jsoncpp/json/* /usr/include/json/
+              echo "Copied multiarch jsoncpp headers to /usr/include/json"
+            fi
+          fi
+
+          # Verify the headers are accessible
+          echo "=== Verification ==="
+          if [ -f "/usr/include/json/json.h" ]; then
+            echo "SUCCESS: Found /usr/include/json/json.h"
+            ls -la /usr/include/json/ | head -5
+          else
+            echo "ERROR: Could not find or create /usr/include/json/json.h"
+            echo "All include dirs containing json:"
+            find /usr/include -type d -name "*json*" 2>/dev/null
+          fi
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
@@ -153,6 +224,44 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
+
+          # Debug JSON installation locations
+          echo "=== JSONcpp Installation Debug ==="
+          echo "Looking for json.h files:"
+          find /usr -name "json.h" -type f 2>/dev/null | head -5
+          echo "libjsoncpp-dev package contents (first 20 lines):"
+          dpkg -L libjsoncpp-dev 2>/dev/null | head -20
+
+          # Create system-level symlink for jsoncpp
+          echo "=== Setting up jsoncpp symlinks ==="
+          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
+            echo "Created system symlink: /usr/include/json -> /usr/include/jsoncpp/json"
+          elif [ -d "/usr/include/x86_64-linux-gnu/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
+            sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json /usr/include/json
+            echo "Created system symlink: /usr/include/json -> /usr/include/x86_64-linux-gnu/jsoncpp/json"
+          elif [ ! -d "/usr/include/json" ]; then
+            echo "Creating manual directory /usr/include/json"
+            sudo mkdir -p /usr/include/json
+            if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
+              sudo cp -r /usr/include/jsoncpp/json/* /usr/include/json/
+              echo "Copied jsoncpp headers to /usr/include/json"
+            elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
+              sudo cp -r /usr/include/x86_64-linux-gnu/jsoncpp/json/* /usr/include/json/
+              echo "Copied multiarch jsoncpp headers to /usr/include/json"
+            fi
+          fi
+
+          # Verify the headers are accessible
+          echo "=== Verification ==="
+          if [ -f "/usr/include/json/json.h" ]; then
+            echo "SUCCESS: Found /usr/include/json/json.h"
+            ls -la /usr/include/json/ | head -5
+          else
+            echo "ERROR: Could not find or create /usr/include/json/json.h"
+            echo "All include dirs containing json:"
+            find /usr/include -type d -name "*json*" 2>/dev/null
+          fi
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')

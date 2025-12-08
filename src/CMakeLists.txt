@@ -156,11 +156,7 @@ add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})
 
-# Link jsoncpp to executables that use JSON
-target_link_libraries(Daemon ${JSONCPP_LIBRARIES})
-target_link_libraries(TestnetDaemon ${JSONCPP_LIBRARIES})
-target_link_libraries(SimpleWallet ${JSONCPP_LIBRARIES})
-target_link_libraries(PaymentGateService ${JSONCPP_LIBRARIES})
+# JSON libraries will be linked through keyword signatures below
 
 # Add TestnetWallet executable
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
@@ -184,6 +180,7 @@ target_link_libraries(testnet-wallet-cli PRIVATE
     TorIntegration
     ${Boost_LIBRARIES}
     Serialization
+    ${JSONCPP_LIBRARIES}
 )
 set_target_properties(testnet-wallet-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src")
 
@@ -205,6 +202,7 @@ target_link_libraries(Daemon PRIVATE
     TorIntegration
     ${Boost_LIBRARIES}
     Serialization
+    ${JSONCPP_LIBRARIES}
 )
 target_link_libraries(TestnetDaemon PRIVATE
     CryptoNoteCore
@@ -219,6 +217,7 @@ target_link_libraries(TestnetDaemon PRIVATE
     BlockchainExplorer
     ${Boost_LIBRARIES}
     Serialization
+    ${JSONCPP_LIBRARIES}
 )
 target_link_libraries(SimpleWallet PRIVATE
     Wallet
@@ -233,6 +232,7 @@ target_link_libraries(SimpleWallet PRIVATE
     Crypto
     ${Boost_LIBRARIES}
     Serialization
+    ${JSONCPP_LIBRARIES}
 )
 target_link_libraries(PaymentGateService PRIVATE
     PaymentGate
@@ -300,10 +300,9 @@ target_link_libraries(PaymentGateService PRIVATE
     System
     Logging
     Common
-    InProcessNode
-    BlockchainExplorer
-    ${Boost_LIBRARIES}
     Serialization
+    ${Boost_LIBRARIES}
+    ${JSONCPP_LIBRARIES}
 )
 
 target_link_libraries(Optimizer PRIVATE
@@ -316,6 +315,7 @@ target_link_libraries(Optimizer PRIVATE
     Crypto
     ${Boost_LIBRARIES}
     Serialization
+    ${JSONCPP_LIBRARIES}
 )
 
 # --------------------------

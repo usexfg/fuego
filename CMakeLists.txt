@@ -118,6 +118,10 @@ if(NOT JSONCPP_FOUND)
   find_package(jsoncpp QUIET)
 endif()
 
+# Default values in case none of the below detection methods work
+set(JSONCPP_INCLUDE_DIRS "")
+set(JSONCPP_LIBRARIES "")
+
 if(NOT JSONCPP_FOUND)
   # Try common installation paths
   if(EXISTS "/usr/include/json/json.h")
@@ -139,6 +143,14 @@ if(NOT JSONCPP_FOUND)
   else()
     message(FATAL_ERROR "jsoncpp not found in standard locations. Please install jsoncpp.")
   endif()
+endif()
+
+# Ensure variables are always defined for linking
+if(NOT JSONCPP_LIBRARIES)
+  set(JSONCPP_LIBRARIES "jsoncpp")
+endif()
+if(NOT JSONCPP_INCLUDE_DIRS)
+  set(JSONCPP_INCLUDE_DIRS "/usr/include/json")
 endif()
 
 include_directories(SYSTEM ${JSONCPP_INCLUDE_DIRS})

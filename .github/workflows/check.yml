@@ -103,10 +103,21 @@ jobs:
             cd ../../build
           }
 
-          # Install jsoncpp and Boost via vcpkg for consistency
-          Write-Host "Installing jsoncpp and Boost via vcpkg..."
-          C:/vcpkg/vcpkg.exe install --triplet x64-windows jsoncpp boost-date-time boost-filesystem boost-program-options boost-regex boost-system boost-thread
+          # Install jsoncpp, Boost, and ICU via vcpkg for consistency
+          Write-Host "Installing jsoncpp, Boost, and ICU via vcpkg..."
+          C:/vcpkg/vcpkg.exe install --triplet x64-windows jsoncpp boost-date-time boost-filesystem boost-program-options boost-regex boost-system boost-thread icu
           if ($LASTEXITCODE -ne 0) { throw "vcpkg installation failed" }
+
+          # Verify ICU installation
+          Write-Host "Verifying ICU installation..."
+          C:/vcpkg/vcpkg.exe list | findstr icu
+          $icuPath = Get-ChildItem "C:/vcpkg/installed/x64-windows" -Filter "*icu*" -Directory
+          if ($icuPath) {
+            Write-Host "Found ICU at: $($icuPath.FullName)"
+            Get-ChildItem "$($icuPath.FullName)/lib" -Filter "icu*.dll" | Select-Object -First 5
+          } else {
+            Write-Warning "ICU not found in vcpkg installation"
+          }
 
           # Configure CMake with vcpkg toolchain (matches build.yml)
           Write-Host "Configuring CMake with vcpkg toolchain..."
@@ -116,7 +127,12 @@ jobs:
           cmake -G "Visual Studio 17 2022" -A x64 `
             -DBUILD_TESTS=ON `
             -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
-            -DCMAKE_POLICY_DEFAULT_CMP0167=OLD ..
+            -DCMAKE_POLICY_DEFAULT_CMP0167=OLD `
+            -DICU_ROOT="C:/vcpkg/installed/x64-windows" `
+            -DICU_INCLUDE_DIR="C:/vcpkg/installed/x64-windows/include" `
+            -DICU_LIBRARY="C:/vcpkg/installed/x64-windows/lib/icuuc.lib" `
+            -DICU_I18N_LIBRARY="C:/vcpkg/installed/x64-windows/lib/icuin.lib" `
+            -DICU_DATA_LIBRARY="C:/vcpkg/installed/x64-windows/lib/icudt.lib" ..
           if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed" }
           msbuild fuegoX.sln /p:Configuration=Release /m /v:minimal
           if ($LASTEXITCODE -ne 0) { throw "Build failed" }

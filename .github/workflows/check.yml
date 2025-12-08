@@ -118,18 +118,38 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
-          # Verify jsoncpp installation and create symlink if needed
-          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
-            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
-            echo "Created symlink for jsoncpp headers"
+
+          # Debug jsoncpp installation
+          echo "=== Debugging jsoncpp installation ==="
+          find /usr -name "json.h" 2>/dev/null | head -5
+          echo "Package contents of libjsoncpp-dev:"
+          dpkg -L libjsoncpp-dev | head -10
+
+          # Create JSON wrapper to handle different jsoncpp installations
+          sudo mkdir -p /tmp/json-wrapper/json
+          # Check different possible locations for jsoncpp headers
+          if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json/* /tmp/json-wrapper/json/
+            echo "Found jsoncpp at /usr/include/jsoncpp/json/"
+          elif [ -f "/usr/include/json/json.h" ]; then
+            sudo ln -sf /usr/include/json/* /tmp/json-wrapper/json/
+            echo "Found jsoncpp at /usr/include/json/"
+          elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
+            sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json/* /tmp/json-wrapper/json/
+            echo "Found jsoncpp at /usr/include/x86_64-linux-gnu/jsoncpp/json/"
+          else
+            echo "Warning: Could not find jsoncpp headers in expected locations"
           fi
+          ls -la /tmp/json-wrapper/json/ || echo "JSON wrapper directory is empty"
+          # Add wrapper path to CMAKE_PREFIX_PATH to make it discoverable
+          echo "CMAKE_PREFIX_PATH=/tmp/json-wrapper:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
           release_name=fuego-cli-ubuntu-2204-dev"$xfg_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
+          cmake ../.. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="${{ env.CMAKE_PREFIX_PATH }}"
           make -j$(nproc)
           mkdir -p "$release_name"
           exeFiles=()
@@ -158,18 +178,38 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
-          # Verify jsoncpp installation and create symlink if needed
-          if [ -d "/usr/include/jsoncpp" ] && [ ! -d "/usr/include/json" ]; then
-            sudo ln -sf /usr/include/jsoncpp/json /usr/include/json
-            echo "Created symlink for jsoncpp headers"
+
+          # Debug jsoncpp installation
+          echo "=== Debugging jsoncpp installation ==="
+          find /usr -name "json.h" 2>/dev/null | head -5
+          echo "Package contents of libjsoncpp-dev:"
+          dpkg -L libjsoncpp-dev | head -10
+
+          # Create JSON wrapper to handle different jsoncpp installations
+          sudo mkdir -p /tmp/json-wrapper/json
+          # Check different possible locations for jsoncpp headers
+          if [ -f "/usr/include/jsoncpp/json/json.h" ]; then
+            sudo ln -sf /usr/include/jsoncpp/json/* /tmp/json-wrapper/json/
+            echo "Found jsoncpp at /usr/include/jsoncpp/json/"
+          elif [ -f "/usr/include/json/json.h" ]; then
+            sudo ln -sf /usr/include/json/* /tmp/json-wrapper/json/
+            echo "Found jsoncpp at /usr/include/json/"
+          elif [ -f "/usr/include/x86_64-linux-gnu/jsoncpp/json/json.h" ]; then
+            sudo ln -sf /usr/include/x86_64-linux-gnu/jsoncpp/json/* /tmp/json-wrapper/json/
+            echo "Found jsoncpp at /usr/include/x86_64-linux-gnu/jsoncpp/json/"
+          else
+            echo "Warning: Could not find jsoncpp headers in expected locations"
           fi
+          ls -la /tmp/json-wrapper/json/ || echo "JSON wrapper directory is empty"
+          # Add wrapper path to CMAKE_PREFIX_PATH to make it discoverable
+          echo "CMAKE_PREFIX_PATH=/tmp/json-wrapper:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
           release_name=fuego-cli-ubuntu-2404-dev"$xfg_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
+          cmake ../.. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="${{ env.CMAKE_PREFIX_PATH }}"
           make -j$(nproc)
           mkdir -p "$release_name"
           exeFiles=()

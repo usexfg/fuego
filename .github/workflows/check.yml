@@ -15,6 +15,15 @@ jobs:
     env:
       BOOST_ROOT: ""
     steps:
+      - name: Cache vcpkg (Windows)
+        uses: actions/cache@v4
+        with:
+          path: C:\vcpkg\installed
+          key: ${{ runner.os }}-vcpkg-check-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-check-
+            ${{ runner.os }}-vcpkg-
+
       - uses: actions/checkout@v4
 
       - name: Prepare version
@@ -33,7 +42,6 @@ jobs:
         run: |
           Write-Host "Installing Boost via Chocolatey..."
           choco install boost-msvc-14.3 -y
-          choco install jsoncpp -y
 
           Write-Host "Locating Boost installation..."
           $boostPath = Get-ChildItem "C:\local" -Directory -Filter "boost_*" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
@@ -68,13 +76,8 @@ jobs:
             Write-Warning "boost subdirectory not found!"
           }
 
-          # Verify jsoncpp installation
-          Write-Host "Verifying jsoncpp installation..."
-          if (Test-Path "C:\ProgramData\chocolatey\lib\jsoncpp\") {
-            Write-Host "✓ jsoncpp found via chocolatey"
-          } else {
-            Write-Warning "jsoncpp not found via chocolatey"
-          }
+          # Verify jsoncpp will be installed via vcpkg
+          Write-Host "jsoncpp will be installed via vcpkg during Build step"
 
       - name: Build
         shell: pwsh
@@ -90,8 +93,23 @@ jobs:
           mkdir "$build_folder" -Force
           cd "$build_folder"
 
+          # Initialize vcpkg
+          if (-not (Test-Path "C:/vcpkg/vcpkg.exe")) {
+            Write-Host "Initializing vcpkg..."
+            git clone https://github.com/Microsoft/vcpkg.git C:/vcpkg
+            cd C:/vcpkg
+            .\bootstrap-vcpkg.bat
+            .\vcpkg integrate install
+            cd ../../build
+          }
+
+          # Install jsoncpp via vcpkg
+          Write-Host "Installing jsoncpp via vcpkg..."
+          C:/vcpkg/vcpkg.exe install --triplet x64-windows jsoncpp
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg installation failed" }
+
           Write-Host "Configuring CMake with BOOST_ROOT: $env:BOOST_ROOT"
-          cmake -G "Visual Studio 17 2022" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT" -DBOOST_INCLUDEDIR="$env:BOOST_ROOT\boost" -DBoost_NO_SYSTEM_PATHS=ON ..
+          cmake -G "Visual Studio 17 2022" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT" -DBOOST_INCLUDEDIR="$env:BOOST_ROOT\boost" -DBoost_NO_SYSTEM_PATHS=ON -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
           if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed" }
           msbuild fuegoX.sln /p:Configuration=Release /m /v:minimal
           if ($LASTEXITCODE -ne 0) { throw "Build failed" }

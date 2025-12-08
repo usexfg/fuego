@@ -135,6 +135,9 @@ add_library(Rpc STATIC ${Rpc})
 add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
 add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
 
+# Link jsoncpp to CryptoNoteCore that includes JSON headers
+target_link_libraries(CryptoNoteCore PUBLIC ${JSONCPP_LIBRARIES})
+
 if(TARGET upnpc-static)
     add_dependencies(P2P upnpc-static)
     target_link_libraries(P2P PUBLIC upnpc-static)
@@ -147,6 +150,8 @@ else()
 endif()
 add_library(Serialization STATIC ${Serialization})
 target_link_libraries(Serialization PUBLIC Common)
+# Link jsoncpp for any potential JSON serialization
+target_link_libraries(Serialization PUBLIC ${JSONCPP_LIBRARIES})
 add_library(System STATIC ${System})
 
 # Fix ucontext compilation issues on macOS
@@ -160,12 +165,20 @@ add_library(Transfers STATIC ${Transfers})
 add_library(Wallet STATIC ${Wallet} ${WalletLegacy})
 add_library(PaymentGate STATIC ${PaymentGate})
 add_library(JsonRpcServer STATIC ${JsonRpcServer})
+# Link jsoncpp for JSON-RPC server functionality
+target_link_libraries(JsonRpcServer PUBLIC ${JSONCPP_LIBRARIES})
 add_library(SimpleWalletLib STATIC ${SimpleWallet})
 add_executable(Daemon ${Daemon})
 add_executable(TestnetDaemon Daemon/DaemonCommandsHandler.cpp Daemon/DaemonCommandsHandler.h TestnetDaemon/TestnetDaemon.cpp)
 add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})
+
+# Link jsoncpp to executables that use JSON
+target_link_libraries(Daemon ${JSONCPP_LIBRARIES})
+target_link_libraries(TestnetDaemon ${JSONCPP_LIBRARIES})
+target_link_libraries(SimpleWallet ${JSONCPP_LIBRARIES})
+target_link_libraries(PaymentGateService ${JSONCPP_LIBRARIES})
 
 # Add TestnetWallet executable
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)

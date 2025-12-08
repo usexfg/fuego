@@ -105,8 +105,7 @@ jobs:
           path: ${{ steps.build.outputs.artifact_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-          
+
   build-ubuntu22:
     name: Ubuntu 22.04
     runs-on: ubuntu-22.04
@@ -118,7 +117,7 @@ jobs:
         run: |
           set -e
           sudo apt-get update
-          sudo apt-get install -y build-essential libboost-all-dev cmake
+          sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
@@ -153,7 +152,7 @@ jobs:
         run: |
           set -e
           sudo apt-get update
-          sudo apt-get install -y build-essential libboost-all-dev cmake
+          sudo apt-get install -y build-essential libboost-all-dev cmake libjsoncpp-dev
           build_folder="build/debug"
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
@@ -200,7 +199,7 @@ jobs:
           xfg_ver=${GITHUB_SHA::7}
           xfg_ver_folder=$(echo $xfg_ver | sed 's/\.//g')
           release_name=fuego-cli-macos-${{ matrix.arch }}-dev"$xfg_ver"
-          brew install gcc boost cmake
+          brew install gcc boost cmake jsoncpp
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch_flag }} ..

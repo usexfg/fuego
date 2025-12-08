@@ -140,7 +140,10 @@ add_library(Logging STATIC ${Logging})
 add_library(NodeRpcProxy STATIC ${NodeRpcProxy})
 add_library(Rpc STATIC ${Rpc})
 add_library(P2P STATIC ${CryptoNoteProtocol} ${P2p})
-add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
+# Check if target exists to prevent duplicate definition
+if(NOT TARGET CryptoNoteCore)
+  add_library(CryptoNoteCore STATIC ${CryptoNoteCore})
+endif()
 
 # Link jsoncpp to CryptoNoteCore that includes JSON headers
 target_include_directories(CryptoNoteCore SYSTEM PUBLIC ${JSONCPP_INCLUDE_DIRS})

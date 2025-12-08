@@ -197,14 +197,31 @@ else()
         list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/icu4c" "/usr/local/opt/icu4c")
     endif()
 
-    find_package(ICU REQUIRED COMPONENTS data i18n uc)
+    # Special handling for vcpkg on Windows
+    if(WIN32 AND DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
+        message(STATUS "Using vcpkg toolchain, configuring ICU search...")
+        # First try to find ICU without specifying components (vcpkg way)
+        find_package(ICU QUIET)
+        if(NOT ICU_FOUND)
+            # If that fails, try with explicit components
+            find_package(ICU REQUIRED COMPONENTS data i18n uc)
+        endif()
+    else()
+        # Standard ICU detection for non-vcpkg builds
+        find_package(ICU REQUIRED COMPONENTS data i18n uc)
+    endif()
 
     if(ICU_FOUND)
         message(STATUS "Found ICU includes: ${ICU_INCLUDE_DIRS}")
         message(STATUS "Found ICU libraries: ${ICU_LIBRARIES}")
+        message(STATUS "ICU version: ${ICU_VERSION}")
         include_directories(${ICU_INCLUDE_DIRS})
     else()
-        message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
+        if(WIN32)
+            message(FATAL_ERROR "ICU not found! Make sure it's installed via vcpkg.")
+        else()
+            message(FATAL_ERROR "ICU not found, install via Homebrew: brew install icu4c")
+        endif()
     endif()
 
     # On macOS, ensure we have the correct ICU library paths

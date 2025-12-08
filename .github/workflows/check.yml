@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Prepare version
-        shell: powershell
+        shell: pwsh
         id: setup
         run: |
           $os="windows"
@@ -29,10 +29,11 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3
 
       - name: Install Boost via Chocolatey
-        shell: powershell
+        shell: pwsh
         run: |
           Write-Host "Installing Boost via Chocolatey..."
           choco install boost-msvc-14.3 -y
+          choco install jsoncpp -y
 
           Write-Host "Locating Boost installation..."
           $boostPath = Get-ChildItem "C:\local" -Directory -Filter "boost_*" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
@@ -47,7 +48,7 @@ jobs:
             exit 1
           }
       - name: Verify Boost Installation
-        shell: powershell
+        shell: pwsh
         run: |
           Write-Host "Verifying Boost installation..."
           Write-Host "BOOST_ROOT: $env:BOOST_ROOT"
@@ -63,20 +64,27 @@ jobs:
 
           if (Test-Path "$env:BOOST_ROOT\boost") {
             Write-Host "✓ boost subdirectory found"
-          }
-          else {
+          } else {
             Write-Warning "boost subdirectory not found!"
           }
 
+          # Verify jsoncpp installation
+          Write-Host "Verifying jsoncpp installation..."
+          if (Test-Path "C:\ProgramData\chocolatey\lib\jsoncpp\") {
+            Write-Host "✓ jsoncpp found via chocolatey"
+          } else {
+            Write-Warning "jsoncpp not found via chocolatey"
+          }
+
       - name: Build
-        shell: powershell
+        shell: pwsh
         id: build
         run: |
           $ErrorActionPreference = "Stop"
           $build_folder = "build"
           $sha = "${{ github.sha }}"
           $xfg_ver = $sha.SubString(0,7)
-          $release_name = "fuego-cli-win64-v$xfg_ver"
+          $release_name="fuego-cli-win64-v$xfg_ver"
 
           Write-Host "Creating build folder..."
           mkdir "$build_folder" -Force

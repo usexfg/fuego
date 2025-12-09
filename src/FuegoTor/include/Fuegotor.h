@@ -1,102 +1,83 @@
+// Copyright (c) 2017-2025 Fuego Developers
+//
+// This file is part of Fuego.
+//
+// Fuego is free & open source software distributed in the hope
+// that it will be useful, but WITHOUT ANY WARRANTY; without even
+// the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+// PURPOSE. You may redistribute it and/or modify it under the terms
+// of the GNU General Public License v3 or later versions as published
+// by the Free Software Foundation. Fuego includes elements written
+// by third parties. See file labeled LICENSE for more details.
+// You should have received a copy of the GNU General Public License
+// along with Fuego. If not, see <https://www.gnu.org/licenses/>.
+
 #pragma once
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <functional>
-#include <atomic>
-#include <thread>
-#include <mutex>
+// Use C-style types to avoid C++ standard library issues
+extern "C" {
+#include <stdint.h>
+#include <stdbool.h>
+}
 
 namespace CryptoNote {
-
-// Forward declarations
-class FuegoTorManager;
-class FuegoTorConnection;
 
 /**
  * @brief FuegoTor connection status enumeration
  */
 enum class FuegoTorStatus {
-    DISCONNECTED,   // Not connected to Tor
-    CONNECTING,     // Attempting to connect
-    CONNECTED,      // Successfully connected
-    ERROR,          // Connection error
-    UNKNOWN         // Status unknown
+    DISCONNECTED = 0,  // Not connected to Tor
+    CONNECTING,       // Attempting to connect
+    CONNECTED,        // Successfully connected
+    ERROR             // Connection error
 };
 
 /**
  * @brief FuegoTor configuration structure
  */
 struct FuegoTorConfig {
-    bool enabled = false;                    // Enable FuegoTor integration
-    std::string socksHost = "127.0.0.1";     // SOCKS5 proxy host
-    uint16_t socksPort = 9050;              // SOCKS5 proxy port
-    std::string controlHost = "127.0.0.1";  // Tor control host
-    uint16_t controlPort = 9051;            // Tor control port
-    std::string dataDirectory = "";         // Tor data directory
-    std::string hiddenServiceDir = "";      // Hidden service directory
-    uint16_t hiddenServicePort = 8081;      // Hidden service port
-    bool autoStart = false;                 // Auto-start Tor if not running
-    uint32_t connectionTimeout = 30000;    // Connection timeout (ms)
-    uint32_t circuitTimeout = 60000;       // Circuit timeout (ms)
-    bool enableHiddenService = false;       // Enable hidden service
-    std::string hiddenServiceAddress = "";  // Hidden service address
-    
-    // Tor authentication
-    std::string controlPassword = "";        // Control connection password
-    bool cookieAuthentication = true;        // Use cookie authentication
-    
-    // Circuit configuration
-    uint32_t maxCircuitBuildTime = 60000;   // Maximum time to build a circuit (ms)
-    uint32_t circuitIdleTime = 300000;      // Time before circuit is considered idle (ms)
-    std::vector<std::string> exitNodes;     // Preferred exit node fingerprints
-    std::vector<std::string> entryNodes;    // Preferred entry node fingerprints
-    std::vector<std::string> excludeNodes;  // Nodes to exclude from circuits
-    
-    // Stream isolation
-    bool streamIsolation = true;             // Enable stream isolation
-    std::string streamIsolationGroupId = "fuego"; // Stream isolation group ID
-    
-    // Logging
-    std::string logLevel = "NOTICE";         // Tor log level
-    std::string logFile = "";                // Tor log file path
+    bool enabled;                             // Enable FuegoTor integration
+    const char* socksHost;                    // SOCKS5 proxy host
+    uint16_t socksPort;                      // SOCKS5 proxy port
+    const char* controlHost;                  // Tor control host
+    uint16_t controlPort;                    // Tor control port
+    const char* dataDirectory;                // Tor data directory
+    const char* hiddenServiceDir;             // Hidden service directory
+    uint16_t hiddenServicePort;               // Hidden service port
+    bool autoStart;                           // Auto-start Tor if not running
+    uint32_t connectionTimeout;               // Connection timeout (ms)
+    uint32_t circuitTimeout;                  // Circuit timeout (ms)
+    bool enableHiddenService;                 // Enable hidden service
+    const char* hiddenServiceAddress;         // Hidden service address
 };
 
 /**
  * @brief FuegoTor connection information
  */
 struct FuegoTorConnectionInfo {
-    std::string address;                     // Connection address
-    uint16_t port = 0;                      // Connection port
-    std::string onionAddress;               // Onion address (if applicable)
-    FuegoTorStatus status = FuegoTorStatus::UNKNOWN;  // Connection status
-    uint32_t latency = 0;                  // Connection latency (ms)
-    std::string errorMessage;              // Error message (if any)
+    char address[256];                        // Connection address
+    uint16_t port;                           // Connection port
+    char onionAddress[64];                   // Onion address (if applicable)
+    FuegoTorStatus status;                   // Connection status
+    uint32_t latency;                        // Connection latency (ms)
+    char errorMessage[256];                  // Error message (if any)
 };
 
 /**
  * @brief FuegoTor statistics
  */
 struct FuegoTorStats {
-    uint32_t totalConnections = 0;          // Total connections made
-    uint32_t successfulConnections = 0;     // Successful connections
-    uint32_t failedConnections = 0;        // Failed connections
-    uint32_t bytesTransferred = 0;          // Total bytes transferred
-    uint32_t averageLatency = 0;            // Average connection latency
-    uint32_t circuitCount = 0;              // Active circuit count
-    std::string torVersion;                 // Tor version string
+    uint32_t totalConnections;                // Total connections made
+    uint32_t successfulConnections;           // Successful connections
+    uint32_t failedConnections;              // Failed connections
+    uint32_t bytesTransferred;               // Total bytes transferred
+    uint32_t averageLatency;                 // Average connection latency
+    uint32_t circuitCount;                   // Active circuit count
+    char torVersion[32];                     // Tor version string
 };
 
 /**
- * @brief FuegoTor event callback types
- */
-using FuegoTorStatusCallback = std::function<void(FuegoTorStatus status, const std::string& message)>;
-using FuegoTorConnectionCallback = std::function<void(const FuegoTorConnectionInfo& info)>;
-using FuegoTorErrorCallback = std::function<void(const std::string& error)>;
-
-/**
- * @brief Main FuegoTor integration manager
+ * @brief FuegoTor manager operations
  */
 class FuegoTorManager {
 public:
@@ -144,33 +125,18 @@ public:
      * @brief Create a Tor connection
      * @param address Target address
      * @param port Target port
-     * @return Connection info
+     * @param info Output connection information
+     * @return true if connection created successfully
      */
-    FuegoTorConnectionInfo createConnection(const std::string& address, uint16_t port);
+    bool createConnection(const char* address, uint16_t port, FuegoTorConnectionInfo& info);
     
     /**
      * @brief Get hidden service address
-     * @return Hidden service address (empty if not enabled)
+     * @param buffer Output buffer for address
+     * @param bufferSize Size of the buffer
+     * @return true if hidden service is available
      */
-    std::string getHiddenServiceAddress() const;
-    
-    /**
-     * @brief Set status callback
-     * @param callback Status change callback
-     */
-    void setStatusCallback(FuegoTorStatusCallback callback);
-    
-    /**
-     * @brief Set connection callback
-     * @param callback Connection event callback
-     */
-    void setConnectionCallback(FuegoTorConnectionCallback callback);
-    
-    /**
-     * @brief Set error callback
-     * @param callback Error event callback
-     */
-    void setErrorCallback(FuegoTorErrorCallback callback);
+    bool getHiddenServiceAddress(char* buffer, size_t bufferSize) const;
     
     /**
      * @brief Update configuration
@@ -186,76 +152,25 @@ public:
     FuegoTorConfig getConfig() const;
 
 private:
-    class Impl;
-    std::unique_ptr<Impl> m_impl;
-};
-
-/**
- * @brief Individual Tor connection
- */
-class FuegoTorConnection {
-public:
+    FuegoTorConfig m_config;
+    FuegoTorStatus m_status;
+    FuegoTorStats m_stats;
+    bool m_initialized;
+    
     /**
-     * @brief Constructor
-     * @param manager Tor manager reference
+     * @brief Test SOCKS5 connection
+     * @return true if connection is successful
+     */
+    bool testSocksConnection();
+    
+    /**
+     * @brief Create SOCKS5 connection
      * @param address Target address
      * @param port Target port
+     * @param info Output connection information
+     * @return true if connection is successful
      */
-    FuegoTorConnection(FuegoTorManager& manager, const std::string& address, uint16_t port);
-    
-    /**
-     * @brief Destructor
-     */
-    ~FuegoTorConnection();
-    
-    /**
-     * @brief Connect to target
-     * @return true if connection successful
-     */
-    bool connect();
-    
-    /**
-     * @brief Disconnect from target
-     */
-    void disconnect();
-    
-    /**
-     * @brief Check if connected
-     * @return true if connected
-     */
-    bool isConnected() const;
-    
-    /**
-     * @brief Send data
-     * @param data Data to send
-     * @param size Data size
-     * @return Number of bytes sent
-     */
-    size_t send(const void* data, size_t size);
-    
-    /**
-     * @brief Receive data
-     * @param buffer Buffer to receive data
-     * @param size Buffer size
-     * @return Number of bytes received
-     */
-    size_t receive(void* buffer, size_t size);
-    
-    /**
-     * @brief Get connection info
-     * @return Connection information
-     */
-    FuegoTorConnectionInfo getInfo() const;
-    
-    /**
-     * @brief Get connection latency
-     * @return Latency in milliseconds
-     */
-    uint32_t getLatency() const;
-
-private:
-    class Impl;
-    std::unique_ptr<Impl> m_impl;
+    bool createSocksConnection(const char* address, uint16_t port, FuegoTorConnectionInfo& info);
 };
 
 /**
@@ -270,48 +185,17 @@ namespace TorUtils {
     
     /**
      * @brief Get Tor version string
-     * @return Version string (empty if not available)
+     * @param buffer Output buffer for version
+     * @param bufferSize Size of the buffer
+     * @return true if version was retrieved successfully
      */
-    std::string getTorVersion();
-    
-    /**
-     * @brief Generate random onion address
-     * @return Random onion address
-     */
-    std::string generateOnionAddress();
-    
-    /**
-     * @brief Validate onion address format
-     * @param address Address to validate
-     * @return true if valid onion address
-     */
-    bool isValidOnionAddress(const std::string& address);
-    
-    /**
-     * @brief Convert regular address to onion address
-     * @param address Regular address
-     * @return Onion address (if available)
-     */
-    std::string resolveToOnion(const std::string& address);
+    bool getTorVersion(char* buffer, size_t bufferSize);
     
     /**
      * @brief Get default Tor configuration
      * @return Default configuration
      */
     FuegoTorConfig getDefaultConfig();
-    
-    /**
-     * @brief Load configuration from file
-     * @param filename Configuration file path
-     * @return Loaded configuration
-     */
-    FuegoTorConfig loadConfigFromFile(const std::string& filename);
-    
-    /**
-     * @brief Save configuration to file
-     * @param config Configuration to save
-     * @param filename Configuration file path
-     * @return true if save successful
-     */
-    bool saveConfigToFile(const FuegoTorConfig& config, const std::string& filename);
 }
+
+} // namespace CryptoNote

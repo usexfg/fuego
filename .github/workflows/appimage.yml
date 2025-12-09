@@ -9,9 +9,8 @@ on:
 jobs:
   build-appimage:
     name: AppImage Linux
-    runs-on: ubuntu-20.04  # Older base for better compatibility
+    runs-on: ubuntu-20.04 # Older base for better compatibility
     steps:
-
       - uses: actions/checkout@v4
 
       # -------------------- Cache Dependencies --------------------
@@ -64,7 +63,7 @@ jobs:
             <text x="128" y="240" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#FFFFFF">FUEGO</text>
           </svg>
           EOF
-          
+
           # Convert SVG to PNG using ImageMagick if available, otherwise use a fallback
           if command -v convert >/dev/null 2>&1; then
             sudo apt-get install -y imagemagick
@@ -81,27 +80,27 @@ jobs:
           xfg_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||' || echo "dev")
           release_name="fuego-cli-linux-appimage-v$xfg_ver"
           appdir="Fuego.AppDir"
-          
+
           mkdir "$build_folder"
           cd "$build_folder"
-          
+
           # Configure with all the fixes
           cmake -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=/usr \
                 -DCMAKE_POLICY_DEFAULT_CMP0167=OLD \
                 ..
-          
+
           # Build
           ninja -j$(nproc)
           cd ..
-          
+
           # Create AppDir structure
           mkdir -p "$appdir/usr/bin"
           mkdir -p "$appdir/usr/share/applications"
           mkdir -p "$appdir/usr/share/icons/hicolor/256x256/apps"
           mkdir -p "$appdir/usr/share/pixmaps"
-          
+
           # Copy binaries
           echo "Copying binaries..."
           for f in build/src/*; do
@@ -111,18 +110,18 @@ jobs:
               cp "$f" "$appdir/usr/bin/"
             fi
           done
-          
+
           # List what we have
           echo "Binaries in AppDir:"
           ls -la "$appdir/usr/bin/"
-          
+
           # Copy icon
           if [ -f icons/fuego.png ]; then
             cp icons/fuego.png "$appdir/usr/share/icons/hicolor/256x256/apps/"
             cp icons/fuego.png "$appdir/usr/share/pixmaps/"
             cp icons/fuego.png "$appdir/"
           fi
-          
+
           # Create desktop file
           cat > "$appdir/fuego.desktop" << 'EOF'
           [Desktop Entry]
@@ -136,17 +135,17 @@ jobs:
           Keywords=cryptocurrency;blockchain;fuego;wallet;daemon;
           StartupNotify=true
           EOF
-          
+
           # Copy desktop file to proper location
           cp "$appdir/fuego.desktop" "$appdir/usr/share/applications/"
-          
+
           # Create AppRun
           cat > "$appdir/AppRun" << 'EOF'
           #!/bin/bash
           HERE="$(dirname "$(readlink -f "${0}")")"
           export PATH="${HERE}/usr/bin:${PATH}"
           export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
-          
+
           # Check what binary to run based on arguments or available binaries
           if [ -x "${HERE}/usr/bin/fuegod" ]; then
             DEFAULT_BINARY="fuegod"
@@ -156,7 +155,7 @@ jobs:
             echo "No Fuego binaries found!"
             exit 1
           fi
-          
+
           # If no arguments, show help
           if [ $# -eq 0 ]; then
             echo "Fuego AppImage - Available commands:"
@@ -169,7 +168,7 @@ jobs:
             echo "   or: $0 --help"
             exit 0
           fi
-          
+
           # Check if first argument is a known binary
           BINARY_NAME="$1"
           if [ -x "${HERE}/usr/bin/${BINARY_NAME}" ]; then
@@ -181,36 +180,36 @@ jobs:
           fi
           EOF
           chmod +x "$appdir/AppRun"
-          
+
           # Validate desktop file
           desktop-file-validate "$appdir/fuego.desktop" || echo "Desktop file validation completed"
-          
+
           # Build AppImage
           echo "Building AppImage..."
           ARCH=x86_64 ./appimagetool "$appdir" "$release_name.AppImage"
-          
+
           # Verify AppImage was created
           if [ ! -f "$release_name.AppImage" ]; then
             echo "ERROR: AppImage was not created!"
             exit 1
           fi
-          
+
           # Make it executable
           chmod +x "$release_name.AppImage"
-          
+
           # Test AppImage
           echo "Testing AppImage..."
           ./"$release_name.AppImage" --help || echo "AppImage test completed"
-          
+
           # Calculate checksums
           sha256=$(sha256sum "$release_name.AppImage" | awk '{print toupper($1)}')
           filesize=$(stat -c%s "$release_name.AppImage")
-          
+
           echo "AppImage created successfully:"
           echo "  File: $release_name.AppImage"
           echo "  Size: $filesize bytes"
           echo "  SHA256: $sha256"
-          
+
           # Set outputs
           asset_path="./$release_name.AppImage"
           echo "sha256=${sha256}" >> $GITHUB_OUTPUT
@@ -234,21 +233,21 @@ jobs:
           name: Fuego CLI Suite v${{ steps.build.outputs.xfg_version }}
           body: |
             🐧 [Download AppImage](../../releases/download/${{ steps.build.outputs.xfg_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
-            
+
             `SHA256: ${{ steps.build.outputs.sha256 }}`
             `Size: ${{ steps.build.outputs.filesize }} bytes`
-            
+
             **AppImage Usage:**
             ```bash
             # Make executable
             chmod +x ${{ steps.build.outputs.release_name }}
-            
+
             # Run daemon
             ./${{ steps.build.outputs.release_name }} fuegod
-            
+
             # Run wallet
             ./${{ steps.build.outputs.release_name }} fuego-wallet-cli
-            
+
             # Show help
             ./${{ steps.build.outputs.release_name }} --help
             ```

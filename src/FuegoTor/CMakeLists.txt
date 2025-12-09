@@ -99,8 +99,10 @@ add_library(Fuegotor STATIC ${FUEGOTOR_SOURCES})
 set_target_properties(Fuegotor PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION 1
-    OUTPUT_NAME "libfuegotor"
+    OUTPUT_NAME "FuegoTor"
 )
+
+
 
 # Compiler-specific options
 if(MSVC)

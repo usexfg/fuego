@@ -229,7 +229,7 @@ target_link_libraries(Daemon PRIVATE
     Crypto
     upnpc-static
     BlockchainExplorer
-    FuegoTor
+    Fuegotor
     ${Boost_LIBRARIES}
     Serialization
     ${JSONCPP_LIBRARIES}
@@ -281,10 +281,10 @@ target_link_libraries(PaymentGateService PRIVATE
     InProcessNode
     upnpc-static
     BlockchainExplorer
-    FuegoTor
+    Fuegotor
     ${Boost_LIBRARIES}
     Serialization
-)
+  )
 target_link_libraries(Optimizer PRIVATE
     PaymentGate
     Rpc
@@ -310,8 +310,7 @@ target_link_libraries(SimpleWallet PRIVATE
     Logging
     Common
     Crypto
-    BlockchainExplorer
-    FuegoTor
+    Fuegotor
     ${Boost_LIBRARIES}
     Serialization
 )

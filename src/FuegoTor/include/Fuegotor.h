@@ -13,7 +13,6 @@ namespace CryptoNote {
 // Forward declarations
 class FuegoTorManager;
 class FuegoTorConnection;
-class FuegoTorConfig;
 
 /**
  * @brief FuegoTor connection status enumeration
@@ -43,6 +42,25 @@ struct FuegoTorConfig {
     uint32_t circuitTimeout = 60000;       // Circuit timeout (ms)
     bool enableHiddenService = false;       // Enable hidden service
     std::string hiddenServiceAddress = "";  // Hidden service address
+    
+    // Tor authentication
+    std::string controlPassword = "";        // Control connection password
+    bool cookieAuthentication = true;        // Use cookie authentication
+    
+    // Circuit configuration
+    uint32_t maxCircuitBuildTime = 60000;   // Maximum time to build a circuit (ms)
+    uint32_t circuitIdleTime = 300000;      // Time before circuit is considered idle (ms)
+    std::vector<std::string> exitNodes;     // Preferred exit node fingerprints
+    std::vector<std::string> entryNodes;    // Preferred entry node fingerprints
+    std::vector<std::string> excludeNodes;  // Nodes to exclude from circuits
+    
+    // Stream isolation
+    bool streamIsolation = true;             // Enable stream isolation
+    std::string streamIsolationGroupId = "fuego"; // Stream isolation group ID
+    
+    // Logging
+    std::string logLevel = "NOTICE";         // Tor log level
+    std::string logFile = "";                // Tor log file path
 };
 
 /**
@@ -183,12 +201,12 @@ public:
      * @param address Target address
      * @param port Target port
      */
-    TorConnection(TorManager& manager, const std::string& address, uint16_t port);
+    FuegoTorConnection(FuegoTorManager& manager, const std::string& address, uint16_t port);
     
     /**
      * @brief Destructor
      */
-    ~TorConnection();
+    ~FuegoTorConnection();
     
     /**
      * @brief Connect to target
@@ -227,7 +245,7 @@ public:
      * @brief Get connection info
      * @return Connection information
      */
-    TorConnectionInfo getInfo() const;
+    FuegoTorConnectionInfo getInfo() const;
     
     /**
      * @brief Get connection latency
@@ -280,14 +298,14 @@ namespace TorUtils {
      * @brief Get default Tor configuration
      * @return Default configuration
      */
-    TorConfig getDefaultConfig();
+    FuegoTorConfig getDefaultConfig();
     
     /**
      * @brief Load configuration from file
      * @param filename Configuration file path
      * @return Loaded configuration
      */
-    TorConfig loadConfigFromFile(const std::string& filename);
+    FuegoTorConfig loadConfigFromFile(const std::string& filename);
     
     /**
      * @brief Save configuration to file
@@ -295,9 +313,5 @@ namespace TorUtils {
      * @param filename Configuration file path
      * @return true if save successful
      */
-    bool saveConfigToFile(const TorConfig& config, const std::string& filename);
+    bool saveConfigToFile(const FuegoTorConfig& config, const std::string& filename);
 }
-
-};
-
-} // namespace CryptoNote

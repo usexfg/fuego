@@ -1,4 +1,4 @@
-#include "TorIntegration.h"
+#include "../include/Fuegotor.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -23,23 +23,23 @@
 namespace CryptoNote {
 
 // TorManager Implementation
-class TorManager::Impl {
+class FuegoTorManager::Impl {
 public:
-    TorConfig config;
-    std::atomic<TorStatus> status{TorStatus::DISCONNECTED};
-    TorStats stats;
+    FuegoTorConfig config;
+    std::atomic<FuegoTorStatus> status{FuegoTorStatus::DISCONNECTED};
+    FuegoTorStats stats;
     mutable std::mutex mutex;
     
     // Callbacks
-    TorStatusCallback statusCallback;
-    TorConnectionCallback connectionCallback;
-    TorErrorCallback errorCallback;
+    FuegoTorStatusCallback statusCallback;
+    FuegoTorConnectionCallback connectionCallback;
+    FuegoTorErrorCallback errorCallback;
     
     // Thread management
     std::thread monitorThread;
     std::atomic<bool> running{false};
     
-    Impl(const TorConfig& cfg) : config(cfg) {}
+    Impl(const FuegoTorConfig& cfg) : config(cfg), statusCallback(nullptr), connectionCallback(nullptr), errorCallback(nullptr) {}
     
     ~Impl() {
         shutdown();
@@ -48,13 +48,13 @@ public:
     bool initialize() {
         std::lock_guard<std::mutex> lock(mutex);
         
-        if (status.load() != TorStatus::DISCONNECTED) {
+        if (status.load() != FuegoTorStatus::DISCONNECTED) {
             return true; // Already initialized
         }
         
         // Check if Tor is available
         if (!TorUtils::isTorInstalled()) {
-            setStatus(TorStatus::ERROR, "Tor is not installed on this system");
+            setStatus(FuegoTorStatus::ERROR, "Tor is not installed on this system");
             return false;
         }
         
@@ -99,18 +99,18 @@ public:
         return stats;
     }
     
-    TorConnectionInfo createConnection(const std::string& address, uint16_t port) {
-        TorConnectionInfo info;
+    FuegoTorConnectionInfo createConnection(const std::string& address, uint16_t port) {
+        FuegoTorConnectionInfo info;
         info.address = address;
         info.port = port;
-        info.status = TorStatus::CONNECTING;
+        info.status = FuegoTorStatus::CONNECTING;
         
         // Create SOCKS5 connection
         if (createSocksConnection(address, port, info)) {
-            info.status = TorStatus::CONNECTED;
+            info.status = FuegoTorStatus::CONNECTED;
             stats.successfulConnections++;
         } else {
-            info.status = TorStatus::ERROR;
+            info.status = FuegoTorStatus::ERROR;
             stats.failedConnections++;
         }
         
@@ -128,22 +128,22 @@ public:
         return config.hiddenServiceAddress;
     }
     
-    void setStatusCallback(TorStatusCallback callback) {
+    void setStatusCallback(FuegoTorStatusCallback callback) {
         std::lock_guard<std::mutex> lock(mutex);
         statusCallback = callback;
     }
     
-    void setConnectionCallback(TorConnectionCallback callback) {
+    void setConnectionCallback(FuegoTorConnectionCallback callback) {
         std::lock_guard<std::mutex> lock(mutex);
         connectionCallback = callback;
     }
     
-    void setErrorCallback(TorErrorCallback callback) {
+    void setErrorCallback(FuegoTorErrorCallback callback) {
         std::lock_guard<std::mutex> lock(mutex);
         errorCallback = callback;
     }
     
-    bool updateConfig(const TorConfig& newConfig) {
+    bool updateConfig(const FuegoTorConfig& newConfig) {
         std::lock_guard<std::mutex> lock(mutex);
         
         // Validate new configuration
@@ -165,13 +165,13 @@ public:
         return true;
     }
     
-    TorConfig getConfig() const {
+    FuegoTorConfig getConfig() const {
         std::lock_guard<std::mutex> lock(mutex);
         return config;
     }
 
 private:
-    void setStatus(TorStatus newStatus, const std::string& message) {
+    void setStatus(FuegoTorStatus newStatus, const std::string& errorMessage = "") {
         status.store(newStatus);
         
         if (statusCallback) {
@@ -253,7 +253,7 @@ private:
         return true;
     }
     
-    bool validateConfig(const TorConfig& cfg) {
+    bool validateConfig(const FuegoTorConfig& cfg) {
         // Basic configuration validation
         if (cfg.socksPort == 0 || cfg.socksPort > 65535) {
             return false;
@@ -284,62 +284,62 @@ private:
 };
 
 // TorManager Public Interface
-TorManager::TorManager(const TorConfig& config) : m_impl(std::make_unique<Impl>(config)) {}
+FuegoTorManager::FuegoTorManager(const FuegoTorConfig& config) : m_impl(std::make_unique<Impl>(config)) {}
 
-TorManager::~TorManager() = default;
+FuegoTorManager::~FuegoTorManager() = default;
 
-bool TorManager::initialize() {
+bool FuegoTorManager::initialize() {
     return m_impl->initialize();
 }
 
-void TorManager::shutdown() {
+void FuegoTorManager::shutdown() {
     m_impl->shutdown();
 }
 
-bool TorManager::isTorAvailable() const {
+bool FuegoTorManager::isTorAvailable() const {
     return m_impl->isTorAvailable();
 }
 
-TorStatus TorManager::getStatus() const {
+FuegoTorStatus FuegoTorManager::getStatus() const {
     return m_impl->getStatus();
 }
 
-TorStats TorManager::getStats() const {
+FuegoTorStats FuegoTorManager::getStats() const {
     return m_impl->getStats();
 }
 
-TorConnectionInfo TorManager::createConnection(const std::string& address, uint16_t port) {
+FuegoTorConnectionInfo FuegoTorManager::createConnection(const std::string& address, uint16_t port) {
     return m_impl->createConnection(address, port);
 }
 
-std::string TorManager::getHiddenServiceAddress() const {
+std::string FuegoTorManager::getHiddenServiceAddress() const {
     return m_impl->getHiddenServiceAddress();
 }
 
-void TorManager::setStatusCallback(TorStatusCallback callback) {
+void FuegoTorManager::setStatusCallback(FuegoTorStatusCallback callback) {
     m_impl->setStatusCallback(callback);
 }
 
-void TorManager::setConnectionCallback(TorConnectionCallback callback) {
+void FuegoTorManager::setConnectionCallback(FuegoTorConnectionCallback callback) {
     m_impl->setConnectionCallback(callback);
 }
 
-void TorManager::setErrorCallback(TorErrorCallback callback) {
+void FuegoTorManager::setErrorCallback(FuegoTorErrorCallback callback) {
     m_impl->setErrorCallback(callback);
 }
 
-bool TorManager::updateConfig(const TorConfig& config) {
+bool FuegoTorManager::updateConfig(const FuegoTorConfig& config) {
     return m_impl->updateConfig(config);
 }
 
-TorConfig TorManager::getConfig() const {
+FuegoTorConfig FuegoTorManager::getConfig() const {
     return m_impl->getConfig();
 }
 
 // TorConnection Implementation
-class TorConnection::Impl {
+class FuegoTorConnection::Impl {
 public:
-    TorManager& manager;
+    FuegoTorManager& manager;
     std::string address;
     uint16_t port;
     std::atomic<bool> connected{false};
@@ -353,12 +353,12 @@ public:
     }
 };
 
-TorConnection::TorConnection(TorManager& manager, const std::string& address, uint16_t port)
-    : m_impl(std::make_unique<Impl>(manager, address, port)) {}
+FuegoTorConnection::FuegoTorConnection(FuegoTorManager& manager, const std::string& address, uint16_t port)
+    : m_impl(new Impl(manager, address, port)) {}
 
-TorConnection::~TorConnection() = default;
+FuegoTorConnection::~FuegoTorConnection() = default;
 
-bool TorConnection::connect() {
+bool FuegoTorConnection::connect() {
     m_impl->info = m_impl->manager.createConnection(m_impl->address, m_impl->port);
     m_impl->connected.store(m_impl->info.status == TorStatus::CONNECTED);
     return m_impl->connected.load();
@@ -497,8 +497,8 @@ std::string resolveToOnion(const std::string& address) {
     return "";
 }
 
-TorConfig getDefaultConfig() {
-    TorConfig config;
+FuegoTorConfig TorUtils::getDefaultConfig() {
+    FuegoTorConfig config;
     config.enabled = false;
     config.socksHost = "127.0.0.1";
     config.socksPort = 9050;
@@ -516,8 +516,8 @@ TorConfig getDefaultConfig() {
     return config;
 }
 
-TorConfig loadConfigFromFile(const std::string& filename) {
-    TorConfig config = getDefaultConfig();
+FuegoTorConfig TorUtils::loadConfigFromFile(const std::string& filename) {
+    FuegoTorConfig config = getDefaultConfig();
     
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -571,7 +571,7 @@ TorConfig loadConfigFromFile(const std::string& filename) {
     return config;
 }
 
-bool saveConfigToFile(const TorConfig& config, const std::string& filename) {
+bool TorUtils::saveConfigToFile(const FuegoTorConfig& config, const std::string& filename) {
     std::ofstream file(filename);
     if (!file.is_open()) {
         return false;
@@ -592,6 +592,122 @@ bool saveConfigToFile(const TorConfig& config, const std::string& filename) {
     file << "hidden_service_address=" << config.hiddenServiceAddress << std::endl;
     
     return true;
+}
+
+// TorUtils implementations
+bool TorUtils::isTorInstalled() {
+#ifdef _WIN32
+    // Check if tor.exe is in PATH
+    std::string command = "where tor";
+#else
+    // Check if tor is in PATH
+    std::string command = "which tor";
+#endif
+    
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) return false;
+    
+    char buffer[128];
+    bool found = (fgets(buffer, sizeof(buffer), pipe) != nullptr);
+    pclose(pipe);
+    return found;
+}
+
+std::string TorUtils::getTorVersion() {
+#ifdef _WIN32
+    std::string command = "tor --version";
+#else
+    std::string command = "tor --version";
+#endif
+    
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) return "";
+    
+    char buffer[256];
+    std::string result = "";
+    if (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        result = buffer;
+        // Remove newline character
+        if (!result.empty() && result.back() == '\n') {
+            result.pop_back();
+        }
+    }
+    
+    pclose(pipe);
+    return result;
+}
+
+std::string TorUtils::generateOnionAddress() {
+    // This is a placeholder implementation
+    // In a real implementation, this would generate a proper onion address
+    static const char chars[] = "abcdefghijklmnopqrstuvwxyz234567";
+    std::string address = "";
+    
+    // Generate 16 random characters for v2 onion address
+    for (int i = 0; i < 16; i++) {
+        address += chars[rand() % (sizeof(chars) - 1)];
+    }
+    
+    return address + ".onion";
+}
+
+bool TorUtils::isValidOnionAddress(const std::string& address) {
+    // Basic validation for v2 and v3 onion addresses
+    if (address.length() < 8 || address.substr(address.length() - 6) != ".onion") {
+        return false;
+    }
+    
+    std::string prefix = address.substr(0, address.length() - 6);
+    
+    // v2 onion addresses are exactly 16 characters long
+    // v3 onion addresses are exactly 56 characters long
+    if (prefix.length() != 16 && prefix.length() != 56) {
+        return false;
+    }
+    
+    // Check if all characters are valid
+    for (char c : prefix) {
+        if (!((c >= 'a' && c <= 'z') || (c >= '2' && c <= '7'))) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+std::string TorUtils::resolveToOnion(const std::string& address) {
+    // This is a placeholder implementation
+    // In a real implementation, this would resolve a regular address to an onion address
+    if (!isValidOnionAddress(address)) {
+        return generateOnionAddress();
+    }
+    return address;
+}
+
+TorConfig TorUtils::getDefaultConfig() {
+    TorConfig config;
+    config.enabled = false;
+    config.socksHost = "127.0.0.1";
+    config.socksPort = 9050;
+    config.controlHost = "127.0.0.1";
+    config.controlPort = 9051;
+    config.dataDirectory = "";
+    config.hiddenServiceDir = "";
+    config.hiddenServicePort = 8081;
+    config.autoStart = false;
+    config.connectionTimeout = 30000;
+    config.circuitTimeout = 60000;
+    config.enableHiddenService = false;
+    config.hiddenServiceAddress = "";
+    config.controlPassword = "";
+    config.cookieAuthentication = true;
+    config.maxCircuitBuildTime = 60000;
+    config.circuitIdleTime = 300000;
+    config.streamIsolation = true;
+    config.streamIsolationGroupId = "fuego";
+    config.logLevel = "NOTICE";
+    config.logFile = "";
+    return config;
 }
 
 } // namespace TorUtils

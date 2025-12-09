@@ -71,15 +71,15 @@ jobs:
          echo "=== Verifying repository structure ==="
          echo "Source directory contents:"
          ls -la src | head -20
-         if [ ! -d "src/TorIntegration" ]; then
-           echo "ERROR: TorIntegration directory not found!"
+         if [ ! -d "src/FuegoTor" ]; then
+           echo "ERROR: FuegoTor directory not found!"
            echo "All directories in src:"
            ls -la src
            exit 1
          else
-           echo "✓ TorIntegration directory found"
-           echo "TorIntegration directory contents:"
-           ls -la src/TorIntegration
+           echo "✓ FuegoTor directory found"
+           echo "FuegoTor directory contents:"
+           ls -la src/FuegoTor
          fi
 
          # Create system-level symlink for jsoncpp

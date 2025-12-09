@@ -79,11 +79,11 @@ endif()
 # Include directories
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../CryptoNoteCore
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../System
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Logging
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Serialization
+    ${CMAKE_SOURCE_DIR}/src/CryptoNoteCore
+    ${CMAKE_SOURCE_DIR}/src/Common
+    ${CMAKE_SOURCE_DIR}/src/System
+    ${CMAKE_SOURCE_DIR}/src/Logging
+    ${CMAKE_SOURCE_DIR}/src/Serialization
     ${FUEGOTOR_EXTRA_INCLUDE_DIRS}
 )
 

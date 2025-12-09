@@ -33,7 +33,7 @@ file(GLOB_RECURSE Optimizer Optimizer/*)
 file(GLOB_RECURSE SimpleWalletLib SimpleWallet/*)
 
 # Tor integration
-add_subdirectory(TorIntegration)
+add_subdirectory(FuegoTor)
 
 # Eldernode services
 add_subdirectory(EldernodeIndexManager)
@@ -207,7 +207,7 @@ target_link_libraries(testnet-wallet-cli PRIVATE
     InProcessNode
     upnpc-static
     BlockchainExplorer
-    TorIntegration
+    FuegoTor
     ${Boost_LIBRARIES}
     Serialization
     ${JSONCPP_LIBRARIES}
@@ -229,7 +229,7 @@ target_link_libraries(Daemon PRIVATE
     Crypto
     upnpc-static
     BlockchainExplorer
-    TorIntegration
+    FuegoTor
     ${Boost_LIBRARIES}
     Serialization
     ${JSONCPP_LIBRARIES}
@@ -281,7 +281,7 @@ target_link_libraries(PaymentGateService PRIVATE
     InProcessNode
     upnpc-static
     BlockchainExplorer
-    TorIntegration
+    FuegoTor
     ${Boost_LIBRARIES}
     Serialization
 )
@@ -311,7 +311,7 @@ target_link_libraries(SimpleWallet PRIVATE
     Common
     Crypto
     BlockchainExplorer
-    TorIntegration
+    FuegoTor
     ${Boost_LIBRARIES}
     Serialization
 )

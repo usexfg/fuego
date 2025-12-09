@@ -32,7 +32,7 @@ namespace CryptoNote
 		const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER = 500000000;
 		const size_t CRYPTONOTE_MAX_BLOCK_BLOB_SIZE = 8000000;
 		const size_t CRYPTONOTE_MAX_TX_SIZE = 1000000000;
-    const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
+        const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 1753191; /* "fire" address prefix */
 		const size_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 60;
 		const uint64_t DIFFICULTY_TARGET_DRGL = 81;
 		const unsigned EMISSION_SPEED_FACTOR = 18;
@@ -51,8 +51,11 @@ namespace CryptoNote
 		const uint64_t MINIMUM_FEE_V2 = UINT64_C(80000);	/* 0.008 XFG */
 		const uint64_t MINIMUM_FEE = MINIMUM_FEE_V2;
 		const uint64_t MINIMUM_FEE_BANKING = UINT64_C(80000);  /* 0.008 XFG */
-		const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(20000); /* < 0.002 XFG */
-		const size_t   MINIMUM_MIXIN = 2;
+		const uint64_t MINIMUM_FEE_BANKING_PERCENT = UINT64_C(80000);  /* 0.008 XFG */ // 0.08% (1250/1) [0.125% 800]
+
+		const uint64_t MINIMUM_FEE_BURN = UINT64_C(80000);  /* 0.008 XFG */
+		const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(10000); /* < 0.001 XFG */
+		const size_t   MINIMUM_MIXIN = 2;  // from GUI- use MinTXmixin
 
 		const size_t   CRYPTONOTE_COIN_VERSION                       = 1;
 		const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT 	         = 7;
@@ -95,29 +98,29 @@ namespace CryptoNote
 		const double   DMWDA_BLOCK_STEALING_TIME_THRESHOLD           = 0.05; // 5% of target time threshold for fast blocks
 
         // MIXIN
-		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;
+		const uint64_t MIN_TX_MIXIN_SIZE                             = 2;  // Legacy mixin
 		const uint64_t MIN_TX_MIXIN_SIZE_V10                         = 8;  // Maxmix min starting from BlockMajorVersion 10
 		const uint64_t MAX_TX_MIXIN_SIZE                             = 18;
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 		// MAINNET DEPOSITS
 		const uint64_t DEPOSIT_MIN_AMOUNT = 8000000000;   // 800 XFG for CD rewards
-    const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units) 8M
-    const uint64_t YIELD_DEPOSIT_MIN_AMOUNT = 80000000;  // 8 XFG (80,000,000 atomic units) 80M
-		const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 [8M]HEAT)
+      const uint64_t BURN_DEPOSIT_MIN_AMOUNT = 8000000;  // 0.8 XFG (8,000,000 atomic units) 8M
+     const uint64_t YIELD_DEPOSIT_MIN_AMOUNT = 80000000;  // 8 XFG (80,000,000 atomic units) 80M
+	  const uint64_t BURN_DEPOSIT_STANDARD_AMOUNT = 8000000;  // Standard burn: 0.8 XFG (8,000,000 [8M]HEAT)
 		const uint64_t BURN_DEPOSIT_LARGE_AMOUNT = 8000000000;  // 800 XFG (8,000,000,000 [8B]HEAT)
-		const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
-    const uint32_t DEPOSIT_MAX_TERM_v1 = 5480;
-    const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
-    const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
-    const uint32_t DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
-    const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
-    const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
+		 const uint32_t DEPOSIT_MIN_TERM_v1 = 5480;  //blocks
+         const uint32_t DEPOSIT_MAX_TERM_v1 = 5480;
+       const uint32_t DEPOSIT_MIN_TERM = 16440;  //blocks		 /* one month=5480 ( 3 months (16440) for release ) OverviewFrame::depositParamsChanged */
+      const uint32_t DEPOSIT_MAX_TERM = 16440;  		 /* 3 month standard */
+      const uint32_t DEPOSIT_TERM_FOREVER = ((uint32_t)(-1));  // Forever term for burn transactions
+       const uint32_t DEPOSIT_TERM_YIELD = DEPOSIT_MIN_TERM;     // 16440 blocks (3 months) for yield deposits
+        const uint32_t DEPOSIT_TERM_BURN = DEPOSIT_TERM_FOREVER;  // 4294967295 for burn deposits
 
-    static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
+        static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
 
-    const uint64_t MULTIPLIER_FACTOR = 100;		 /* legacy deposits */
+        const uint64_t MULTIPLIER_FACTOR = 100;		 /* legacy deposits */
 		const uint32_t END_MULTIPLIER_BLOCK = 50; /* legacy deposits */
 
 		static constexpr uint64_t POISSON_CHECK_TRIGGER = 10; // Reorg size that triggers poisson timestamp check
@@ -148,12 +151,12 @@ namespace CryptoNote
  		const uint32_t UPGRADE_HEIGHT_V4                             = 300000; //{Dracarys}
  		const uint32_t UPGRADE_HEIGHT_V5                             = 324819; //{Ironborn}  CN7  (variant1)
  		const uint32_t UPGRADE_HEIGHT_V6                             = 345678; //{Ice&fire}  CN8  (variant2)
-    const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
+        const uint32_t UPGRADE_HEIGHT_V7                             = 657000; //Apotheosis  Fango
 		const uint32_t UPGRADE_HEIGHT_V8                             = 800000; //Dragonborne (emission|deposits)
-    const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
-    const uint32_t UPGRADE_HEIGHT_V10                            = 980000; //Dynamigo  (dmwda|dynamixin|ethernalXFG)
+        const uint32_t UPGRADE_HEIGHT_V9                             = 826420; //Godflame  (emission|UPX2|Fuego)
+        const uint32_t UPGRADE_HEIGHT_V10                            = 980000; //Veryfire  (dmwda|dynamaxin|ethernalXFG)
 
-	  const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
+	    const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 
@@ -170,7 +173,7 @@ namespace CryptoNote
 
 	} // namespace parameters
 
-  const char CRYPTONOTE_NAME[] = "fuego";
+    const char CRYPTONOTE_NAME[] = "fuego";
 	const char GENESIS_COINBASE_TX_HEX[] = "013c01ff0001b4bcc29101029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101bd4e0bf284c04d004fd016a21405046e8267ef81328cabf3017c4c24b273b25a";
 
 	const uint8_t  TRANSACTION_VERSION_1                         =  1;
@@ -224,8 +227,8 @@ namespace CryptoNote
 	const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT = 2000; // 2 seconds
 	const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000; // 2 minutes
 	const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;  // 5 seconds
-  const uint32_t P2P_IP_BLOCKTIME         = (60 * 60 * 24);  // 24 hr
-  const uint32_t P2P_IP_FAILS_BEFORE_BLOCK  =  45;
+    const uint32_t P2P_IP_BLOCKTIME         = (60 * 60 * 24);  // 24 hr
+    const uint32_t P2P_IP_FAILS_BEFORE_BLOCK  =  45;
 	const char P2P_STAT_TRUSTED_PUB_KEY[] = "";
 
 	// Seed Nodes

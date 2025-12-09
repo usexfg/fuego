@@ -76,19 +76,19 @@ jobs:
             Write-Warning "boost subdirectory not found!"
           }
 
-          # Verify TorIntegration directory exists
+          # Verify FuegoTor directory exists
           Write-Host "Verifying repository structure..."
           Write-Host "Source directory contents:"
           Get-ChildItem src | Select-Object -First 15
-          if (-not (Test-Path "src/TorIntegration")) {
-            Write-Error "TorIntegration directory not found!"
+          if (-not (Test-Path "src/FuegoTor")) {
+            Write-Error "FuegoTor directory not found!"
             Write-Host "All directories in src:"
             Get-ChildItem src -Directory
             exit 1
           } else {
-            Write-Host "✓ TorIntegration directory found"
-            Write-Host "TorIntegration directory contents:"
-            Get-ChildItem src/TorIntegration
+            Write-Host "✓ FuegoTor directory found"
+            Write-Host "FuegoTor directory contents:"
+            Get-ChildItem src/FuegoTor
           }
 
         - name: Build
@@ -180,15 +180,15 @@ jobs:
           echo "=== Verifying repository structure ==="
           echo "Source directory contents:"
           ls -la src | head -20
-          if [ ! -d "src/TorIntegration" ]; then
-            echo "ERROR: TorIntegration directory not found!"
+          if [ ! -d "src/FuegoTor" ]; then
+            echo "ERROR: FuegoTor directory not found!"
             echo "All directories in src:"
             ls -la src
             exit 1
           else
-            echo "✓ TorIntegration directory found"
-            echo "TorIntegration directory contents:"
-            ls -la src/TorIntegration
+            echo "✓ FuegoTor directory found"
+            echo "FuegoTor directory contents:"
+            ls -la src/FuegoTor
           fi
 
           # Debug JSON installation locations
@@ -268,15 +268,15 @@ jobs:
           echo "=== Verifying repository structure ==="
           echo "Source directory contents:"
           ls -la src | head -20
-          if [ ! -d "src/TorIntegration" ]; then
-            echo "ERROR: TorIntegration directory not found!"
+          if [ ! -d "src/FuegoTor" ]; then
+            echo "ERROR: FuegoTor directory not found!"
             echo "All directories in src:"
             ls -la src
             exit 1
           else
-            echo "✓ TorIntegration directory found"
-            echo "TorIntegration directory contents:"
-            ls -la src/TorIntegration
+            echo "✓ FuegoTor directory found"
+            echo "FuegoTor directory contents:"
+            ls -la src/FuegoTor
           fi
 
           # Debug JSON installation locations
@@ -363,15 +363,15 @@ jobs:
           echo "=== Verifying repository structure ==="
           echo "Source directory contents:"
           ls -la src | head -20
-          if [ ! -d "src/TorIntegration" ]; then
-            echo "ERROR: TorIntegration directory not found!"
+          if [ ! -d "src/FuegoTor" ]; then
+            echo "ERROR: FuegoTor directory not found!"
             echo "All directories in src:"
             ls -la src
             exit 1
           else
-            echo "✓ TorIntegration directory found"
-            echo "TorIntegration directory contents:"
-            ls -la src/TorIntegration
+            echo "✓ FuegoTor directory found"
+            echo "FuegoTor directory contents:"
+            ls -la src/FuegoTor
           fi
 
       - name: Build

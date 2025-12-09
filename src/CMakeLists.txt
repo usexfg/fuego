@@ -194,10 +194,10 @@ target_link_libraries(testnet-wallet-cli PRIVATE
     SimpleWalletLib
     Wallet
     NodeRpcProxy
-    JsonRpcServer
     Transfers
     Rpc
     Http
+    Fuegotor
     CryptoNoteCore
     Crypto
     P2P

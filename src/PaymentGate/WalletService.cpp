@@ -613,6 +613,10 @@ namespace PaymentService
                                   readyEvent(dispatcher),
                                   refreshContext(dispatcher)
   {
+    // Initialize staged unlock storage with a path based on the wallet file
+    std::string stagedUnlockStoragePath = config.walletFile + ".stagedunlock";
+    m_stagedUnlockStorage.init(stagedUnlockStoragePath);
+    
     readyEvent.set();
   }
 
@@ -639,6 +643,7 @@ namespace PaymentService
   void WalletService::saveWallet()
   {
     wallet.save();
+    m_stagedUnlockStorage.save();
     logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet is saved";
   }
 

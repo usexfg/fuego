@@ -91,11 +91,11 @@ jobs:
             Get-ChildItem src/FuegoTor
           }
 
-        - name: Build
-          shell: pwsh
-          id: build
-          run: |
-            $ErrorActionPreference = "Stop"
+      - name: Build
+        shell: pwsh
+        id: build
+        run: |
+          $ErrorActionPreference = "Stop"
           $build_folder = "build"
           $sha = "${{ github.sha }}"
           $xfg_ver = $sha.SubString(0,7)

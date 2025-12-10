@@ -177,7 +177,14 @@ func startNode(m model) model {
 		return m
 	}
 	path := binPath("fuegod")
-	cmd := exec.Command(path, fmt.Sprintf("--rpc-bind-port=%d", nodeRPCPort), fmt.Sprintf("--data-dir=%s", filepath.Join(os.TempDir(), "fuego-node-data")))
+	// Use existing Fuego data directory instead of creating a new one
+	var dataDir string
+	if runtime.GOOS == "darwin" {
+		dataDir = filepath.Join(os.Getenv("HOME"), "Library/Application Support/Fuego")
+	} else {
+		dataDir = filepath.Join(os.Getenv("HOME"), ".fuego")
+	}
+	cmd := exec.Command(path, fmt.Sprintf("--rpc-bind-port=%d", nodeRPCPort), fmt.Sprintf("--data-dir=%s", dataDir))
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
 	if err := cmd.Start(); err != nil {
@@ -308,11 +315,11 @@ func elderfierMenu(m model) model {
 	m.appendLog("═══════════════════════════════════════")
 	m.appendLog("  ELDERFIER DASHBOARD (READ/WRITE)")
 	m.appendLog("═══════════════════════════════════════")
-	
+
 	// Check if wallet has confirmed EFdeposit
 	status, err := walletRpcCall(walletRPCPort, "get_stake_status", map[string]interface{}{})
 	hasStake := err == nil && status != nil
-	
+
 	if !hasStake {
 		m.appendLog("⚠️  No Elderfier stake detected")
 		m.appendLog("")
@@ -325,11 +332,11 @@ func elderfierMenu(m model) model {
 		m.appendLog("  [1] Start Elderfyre Stayking Process")
 		m.appendLog("  [2] Check Stake Status")
 		m.appendLog("  [0] Return to Main Menu")
-		
+
 		var choice int
 		fmt.Print("\nSelect option: ")
 		fmt.Scanln(&choice)
-		
+
 		switch choice {
 		case 1:
 			return startElderfyreStayking(m)
@@ -342,20 +349,20 @@ func elderfierMenu(m model) model {
 		case 0:
 			m.appendLog("Returning to main menu...")
 		}
-		
+
 		m.appendLog("═══════════════════════════════════════")
 		return m
 	}
-	
+
 	// Wallet has confirmed EFdeposit - show full dashboard
 	m.appendLog("✅ Elderfier Status: ACTIVE")
 	m.appendLog("Stake: " + fmt.Sprintf("%v", status))
 	m.appendLog("")
-	
+
 	// Elder Council Inbox with voting/consensus
 	m.appendLog("📬 ELDER COUNCIL INBOX")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	inbox, err := walletRpcCall(walletRPCPort, "get_elder_inbox", map[string]interface{}{})
 	if err != nil {
 		m.appendLog("⚠️  Inbox unavailable: " + err.Error())
@@ -363,7 +370,7 @@ func elderfierMenu(m model) model {
 		m.appendLog("Pending Items: " + fmt.Sprintf("%v", inbox))
 	}
 	m.appendLog("")
-	
+
 	// Menu options
 	m.appendLog("Options:")
 	m.appendLog("  [1] View Consensus Requests")
@@ -372,11 +379,11 @@ func elderfierMenu(m model) model {
 	m.appendLog("  [4] Manage Stake")
 	m.appendLog("  [5] Update ENindex Keys")
 	m.appendLog("  [0] Return to Main Menu")
-	
+
 	var choice int
 	fmt.Print("\nSelect option: ")
 	fmt.Scanln(&choice)
-	
+
 	switch choice {
 	case 1:
 		return viewConsensusRequests(m)
@@ -391,7 +398,7 @@ func elderfierMenu(m model) model {
 	case 0:
 		m.appendLog("Returning to main menu...")
 	}
-	
+
 	m.appendLog("═══════════════════════════════════════")
 	m.statusMsg = "Elderfier dashboard accessed"
 	return m
@@ -402,69 +409,69 @@ func startElderfyreStayking(m model) model {
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("  ELDERFYRE STAYKING PROCESS")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	// Step 1: Create stake deposit
 	m.appendLog("Step 1: Create Elderfier Stake Deposit")
 	m.appendLog("Minimum stake required: 10000 XFG")
 	m.appendLog("")
-	
+
 	var amount float64
 	fmt.Print("Enter stake amount (XFG): ")
 	fmt.Scanln(&amount)
-	
+
 	if amount < 10000 {
 		m.appendLog("❌ Minimum stake is 10000 XFG")
 		return m
 	}
-	
+
 	amountAtomic := int64(amount * 100000000)
 	stakeParams := map[string]interface{}{
 		"amount": amountAtomic,
 		"type":   "elderfier_stake",
 	}
-	
+
 	m.appendLog(fmt.Sprintf("Creating stake deposit: %.2f XFG...", amount))
-	
+
 	stakeRes, err := walletRpcCall(walletRPCPort, "create_stake_deposit", stakeParams)
 	if err != nil {
 		m.appendLog("❌ Stake creation failed: " + err.Error())
 		return m
 	}
-	
+
 	txHash := fmt.Sprintf("%v", stakeRes["tx_hash"])
 	m.appendLog("✅ Stake deposit created: " + txHash)
 	m.appendLog("")
-	
+
 	// Step 2: Generate 8-char Elderfier ID
 	m.appendLog("Step 2: Generate Elderfier ID")
 	m.appendLog("Enter your 8-character Elderfier ID")
 	m.appendLog("(alphanumeric, unique identifier)")
-	
+
 	var elderID string
 	fmt.Print("Elderfier ID (8 chars): ")
 	fmt.Scanln(&elderID)
-	
+
 	if len(elderID) != 8 {
 		m.appendLog("❌ ID must be exactly 8 characters")
 		return m
 	}
-	
+
 	m.appendLog("✅ Elderfier ID: " + elderID)
 	m.appendLog("")
-	
+
 	// Step 3: Register keys to ENindex
 	m.appendLog("Step 3: Register Keys to ENindex")
-	
+
 	// Get wallet address/keys
 	addressRes, err := walletRpcCall(walletRPCPort, "getAddresses", map[string]interface{}{})
 	if err != nil {
 		m.appendLog("❌ Failed to get wallet address: " + err.Error())
 		return m
 	}
-	
+
 	address := fmt.Sprintf("%v", addressRes)
 	m.appendLog("Public Address: " + address)
-	
+
 	// Register to ENindex
 	enindexParams := map[string]interface{}{
 		"elder_id":      elderID,
@@ -472,9 +479,9 @@ func startElderfyreStayking(m model) model {
 		"address":       address,
 		"stake_amount":  amountAtomic,
 	}
-	
+
 	m.appendLog("Registering to ENindex...")
-	
+
 	enRes, err := walletRpcCall(walletRPCPort, "register_to_enindex", enindexParams)
 	if err != nil {
 		m.appendLog("⚠️  ENindex registration: " + err.Error())
@@ -482,7 +489,7 @@ func startElderfyreStayking(m model) model {
 	} else {
 		m.appendLog("✅ Registered to ENindex: " + fmt.Sprintf("%v", enRes))
 	}
-	
+
 	m.appendLog("")
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("🎉 ELDERFYRE STAYKING COMPLETE!")
@@ -496,7 +503,7 @@ func startElderfyreStayking(m model) model {
 	m.appendLog("You can now access Elder Council Inbox")
 	m.appendLog("once your stake is confirmed (10 blocks)")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	m.statusMsg = "Elderfyre Stayking complete"
 	return m
 }
@@ -506,16 +513,16 @@ func viewConsensusRequests(m model) model {
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("  CONSENSUS REQUESTS")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	requests, err := walletRpcCall(walletRPCPort, "get_consensus_requests", map[string]interface{}{})
 	if err != nil {
 		m.appendLog("⚠️  Failed to fetch requests: " + err.Error())
 		return m
 	}
-	
+
 	m.appendLog("Pending Consensus Requests:")
 	m.appendLog(fmt.Sprintf("%v", requests))
-	
+
 	return m
 }
 
@@ -524,38 +531,38 @@ func voteOnPendingItems(m model) model {
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("  VOTE ON PENDING ITEMS")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	// Get pending items
 	items, err := walletRpcCall(walletRPCPort, "get_pending_votes", map[string]interface{}{})
 	if err != nil {
 		m.appendLog("⚠️  No pending votes: " + err.Error())
 		return m
 	}
-	
+
 	m.appendLog("Pending votes: " + fmt.Sprintf("%v", items))
 	m.appendLog("")
-	
+
 	var itemID string
 	var vote string
-	
+
 	fmt.Print("Enter item ID to vote on: ")
 	fmt.Scanln(&itemID)
-	
+
 	fmt.Print("Vote (approve/reject): ")
 	fmt.Scanln(&vote)
-	
+
 	voteParams := map[string]interface{}{
 		"item_id": itemID,
 		"vote":    vote,
 	}
-	
+
 	res, err := walletRpcCall(walletRPCPort, "submit_vote", voteParams)
 	if err != nil {
 		m.appendLog("❌ Vote failed: " + err.Error())
 	} else {
 		m.appendLog("✅ Vote submitted: " + fmt.Sprintf("%v", res))
 	}
-	
+
 	return m
 }
 
@@ -564,32 +571,32 @@ func reviewBurn2MintRequests(m model) model {
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("  BURN2MINT CONSENSUS REQUESTS")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	requests, err := walletRpcCall(walletRPCPort, "get_burn2mint_requests", map[string]interface{}{})
 	if err != nil {
 		m.appendLog("⚠️  No pending burn requests: " + err.Error())
 		return m
 	}
-	
+
 	m.appendLog("Pending Burn2Mint Requests:")
 	m.appendLog(fmt.Sprintf("%v", requests))
 	m.appendLog("")
-	
+
 	var txHash string
 	var approve string
-	
+
 	fmt.Print("Enter burn TX hash to review: ")
 	fmt.Scanln(&txHash)
-	
+
 	fmt.Print("Approve consensus proof? (yes/no): ")
 	fmt.Scanln(&approve)
-	
+
 	if approve == "yes" {
 		proofParams := map[string]interface{}{
 			"tx_hash": txHash,
 			"approve": true,
 		}
-		
+
 		res, err := walletRpcCall(walletRPCPort, "provide_consensus_proof", proofParams)
 		if err != nil {
 			m.appendLog("❌ Consensus failed: " + err.Error())
@@ -599,7 +606,7 @@ func reviewBurn2MintRequests(m model) model {
 	} else {
 		m.appendLog("Consensus denied")
 	}
-	
+
 	return m
 }
 
@@ -608,26 +615,26 @@ func manageStake(m model) model {
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("  STAKE MANAGEMENT")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	status, _ := walletRpcCall(walletRPCPort, "get_stake_status", map[string]interface{}{})
-	
+
 	m.appendLog("Current Stake: " + fmt.Sprintf("%v", status))
 	m.appendLog("")
 	m.appendLog("Options:")
 	m.appendLog("  [1] Increase Stake")
 	m.appendLog("  [2] View Stake Details")
 	m.appendLog("  [0] Back")
-	
+
 	var choice int
 	fmt.Print("\nSelect: ")
 	fmt.Scanln(&choice)
-	
+
 	switch choice {
 	case 1:
 		var addAmount float64
 		fmt.Print("Additional stake amount: ")
 		fmt.Scanln(&addAmount)
-		
+
 		params := map[string]interface{}{
 			"amount": int64(addAmount * 100000000),
 		}
@@ -640,7 +647,7 @@ func manageStake(m model) model {
 	case 2:
 		m.appendLog("Stake Details: " + fmt.Sprintf("%v", status))
 	}
-	
+
 	return m
 }
 
@@ -649,26 +656,26 @@ func updateENindexKeys(m model) model {
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("  UPDATE ENINDEX KEYS")
 	m.appendLog("─────────────────────────────────────")
-	
+
 	m.appendLog("Current ENindex registration will be updated")
 	m.appendLog("")
-	
+
 	var newID string
 	fmt.Print("New Elderfier ID (8 chars, or press Enter to keep): ")
 	fmt.Scanln(&newID)
-	
+
 	params := map[string]interface{}{}
 	if len(newID) == 8 {
 		params["elder_id"] = newID
 	}
-	
+
 	res, err := walletRpcCall(walletRPCPort, "update_enindex", params)
 	if err != nil {
 		m.appendLog("⚠️  Update failed: " + err.Error())
 	} else {
 		m.appendLog("✅ ENindex updated: " + fmt.Sprintf("%v", res))
 	}
-	
+
 	return m
 }
 
@@ -677,7 +684,7 @@ func burn2MintMenu(m model) model {
 	m.appendLog("═══════════════════════════════════════")
 	m.appendLog("  BURN2MINT: XFG → HEAT")
 	m.appendLog("═══════════════════════════════════════")
-	
+
 	// Step 1: Choose burn amount
 	m.appendLog("Burn options:")
 	m.appendLog("  1) Small burn: 0.8 XFG (minimum)")
@@ -685,7 +692,7 @@ func burn2MintMenu(m model) model {
 	fmt.Print("Choose (1 or 2): ")
 	var choice int
 	fmt.Scanln(&choice)
-	
+
 	var amount float64
 	if choice == 2 {
 		amount = 800.0
@@ -694,7 +701,7 @@ func burn2MintMenu(m model) model {
 		amount = 0.8
 		m.appendLog("Selected: Small burn (0.8 XFG)")
 	}
-	
+
 	// Step 2: Create burn_deposit transaction
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("Step 1/4: Creating burn deposit...")
@@ -708,7 +715,7 @@ func burn2MintMenu(m model) model {
 	}
 	txHash := fmt.Sprintf("%v", burnRes["tx_hash"])
 	m.appendLog("✅ Burn tx created: " + txHash)
-	
+
 	// Step 3: Wait for confirmations
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("Step 2/4: Waiting for confirmations...")
@@ -717,12 +724,12 @@ func burn2MintMenu(m model) model {
 		time.Sleep(1 * time.Second)
 	}
 	m.appendLog("✅ Transaction confirmed")
-	
+
 	// Step 4: Request Elderfier consensus proof
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("Step 3/4: Requesting Elderfier consensus...")
 	m.appendLog("  → Querying Elder Council for burn proof")
-	
+
 	consensusParams := map[string]interface{}{
 		"tx_hash": txHash,
 		"amount":  amountAtomic,
@@ -734,27 +741,27 @@ func burn2MintMenu(m model) model {
 		m.statusMsg = "Consensus failed"
 		return m
 	}
-	
+
 	eldernodeProof := fmt.Sprintf("%v", consensusRes["eldernode_proof"])
 	m.appendLog("✅ Elderfier consensus received")
 	m.appendLog("  Proof: " + eldernodeProof[:32] + "...")
-	
+
 	// Step 5: Generate STARK proof using consensus as input
 	m.appendLog("─────────────────────────────────────")
 	m.appendLog("Step 4/4: Generating XFG-STARK proof...")
-	
+
 	xfgStarkPath := binPath("xfg-stark")
 	if _, err := exec.LookPath("xfg-stark"); err == nil || xfgStarkPath != "xfg-stark" {
 		m.appendLog("  → Running: xfg-stark generate-proof")
-		
+
 		// Use elderfier consensus proof as inputs
-		cmd := exec.Command(xfgStarkPath, 
+		cmd := exec.Command(xfgStarkPath,
 			"generate-proof",
 			"--tx-hash", txHash,
 			"--amount", fmt.Sprintf("%d", amountAtomic),
 			"--eldernode-proof", eldernodeProof,
 		)
-		
+
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			m.appendLog("❌ STARK generation failed: " + err.Error())
@@ -762,10 +769,10 @@ func burn2MintMenu(m model) model {
 			m.statusMsg = "STARK proof failed"
 			return m
 		}
-		
+
 		m.appendLog("✅ STARK proof generated successfully")
 		m.appendLog("  Output: " + string(out)[:min(100, len(out))] + "...")
-		
+
 		// Step 6: Ready for L2 submission
 		m.appendLog("─────────────────────────────────────")
 		m.appendLog("🎉 Burn2Mint preparation complete!")
@@ -779,7 +786,7 @@ func burn2MintMenu(m model) model {
 		m.appendLog("  3. Receive HEAT on Ethereum L1")
 		m.appendLog("")
 		m.appendLog("⚠️  Remember: Include 20% gas buffer to avoid restart!")
-		
+
 	} else {
 		m.appendLog("⚠️  xfg-stark CLI not found")
 		m.appendLog("  Please install xfg-stark to generate proofs")
@@ -788,7 +795,7 @@ func burn2MintMenu(m model) model {
 		m.appendLog("      --tx-hash " + txHash + " \\")
 		m.appendLog("      --eldernode-proof " + eldernodeProof)
 	}
-	
+
 	m.appendLog("═══════════════════════════════════════")
 	m.statusMsg = "Burn2Mint flow complete"
 	return m

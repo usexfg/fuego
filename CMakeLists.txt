@@ -92,7 +92,7 @@ endif()
 
 # First try with all required components
 # Note: boost_system is header-only in Boost 1.69+ so we don't require it as a component
-set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options variant system uuid)
 
 # Try to find coroutine component (may not be available in all Boost versions)
 find_package(Boost 1.74 COMPONENTS coroutine QUIET)

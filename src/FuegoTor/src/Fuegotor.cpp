@@ -19,13 +19,20 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 #ifdef _WIN32
+// Define Windows version before including headers
+#define WIN32_LEAN_AND_MEAN
+#define _WINSOCKAPI_
+#define _WINSOCK2API_
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 #include <io.h>
 #define _close close
-#define _popen popen
-#define _pclose pclose
+#define _popen _popen
+#define _pclose _pclose
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "iphlpapi.lib")
+#pragma comment(lib, "wsock32.lib")
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -158,6 +165,15 @@ bool FuegoTorManager::updateConfig(const FuegoTorConfig& config) {
     if (config.hiddenServicePort == 0) {
         return false;
     }
+
+#ifdef _WIN32
+    // Initialize Winsock on Windows
+    WSADATA wsaData;
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) {
+        return false;
+    }
+#endif
     
     m_config = config;
     

@@ -147,15 +147,15 @@ bool FuegoTorManager::getHiddenServiceAddress(char* buffer, size_t bufferSize) c
 
 bool FuegoTorManager::updateConfig(const FuegoTorConfig& config) {
     // Validate new configuration
-    if (config.socksPort == 0 || config.socksPort > 65535) {
+    if (config.socksPort == 0) {
         return false;
     }
     
-    if (config.controlPort == 0 || config.controlPort > 65535) {
+    if (config.controlPort == 0) {
         return false;
     }
     
-    if (config.hiddenServicePort == 0 || config.hiddenServicePort > 65535) {
+    if (config.hiddenServicePort == 0) {
         return false;
     }
     

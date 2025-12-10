@@ -192,13 +192,15 @@ add_executable(Optimizer ${Optimizer})
 add_executable(testnet-wallet-cli TestnetWallet/TestnetWallet.cpp)
 
 # Set proper linker flags to find FuegoTor library
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
+# FuegoTor library path is handled by target_link_directories
+# No global link_directories needed to avoid path duplication
 
 # Add link directory to ensure FuegoTor can be found for all relevant targets
-target_link_directories(PaymentGateService PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
-target_link_directories(SimpleWallet PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
-target_link_directories(Daemon PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
-target_link_directories(testnet-wallet-cli PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
+set(FUEGOTOR_LIB_PATH ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
+target_link_directories(PaymentGateService PRIVATE ${FUEGOTOR_LIB_PATH})
+target_link_directories(SimpleWallet PRIVATE ${FUEGOTOR_LIB_PATH})
+target_link_directories(Daemon PRIVATE ${FUEGOTOR_LIB_PATH})
+target_link_directories(testnet-wallet-cli PRIVATE ${FUEGOTOR_LIB_PATH})
 
 target_link_libraries(testnet-wallet-cli PRIVATE
     SimpleWalletLib

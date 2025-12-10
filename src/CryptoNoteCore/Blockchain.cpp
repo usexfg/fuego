@@ -2185,8 +2185,9 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
   }
 
 
-  auto longhashTimeStart = std::chrono::steady_clock::now();
+auto longhashTimeStart = std::chrono::steady_clock::now();
   Crypto::Hash proof_of_work = NULL_HASH;
+
   if (m_checkpoints.is_in_checkpoint_zone(getCurrentBlockchainHeight())) {
     if (!m_checkpoints.check_block(getCurrentBlockchainHeight(), blockHash)) {
       logger(ERROR, BRIGHT_RED) <<
@@ -2195,11 +2196,18 @@ bool Blockchain::pushBlock(const Block &blockData, const std::vector<Transaction
       return false;
     }
   } else {
-    if (!m_currency.checkProofOfWork(m_cn_context, blockData, currentDifficulty, proof_of_work)) {
+    // Skip difficulty validation only for FOUNDATIONAL blocks, ie anything < 800k
+    // Fixes daemon's backwards compatibility issues syncing with early blocks
+    if (getCurrentBlockchainHeight() < 800000) {
       logger(INFO, BRIGHT_WHITE) <<
-        "Block " << blockHash << ", has too weak proof of work: " << proof_of_work << ", expected difficulty: " << currentDifficulty;
-      bvc.m_verification_failed = true;
-      return false;
+        "Skipping difficulty validation for historical block " << blockHash << " at height " << getCurrentBlockchainHeight();
+    } else {
+      if (!m_currency.checkProofOfWork(m_cn_context, blockData, currentDifficulty, proof_of_work)) {
+        logger(INFO, BRIGHT_WHITE) <<
+          "Block " << blockHash << ", has too weak proof of work: " << proofOfWork << ", expected difficulty: " << currentDifficulty;
+        bvc.m_verification_failed = true;
+        return false;
+      }
     }
   }
 

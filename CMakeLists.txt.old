@@ -15,7 +15,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo Release CACHE STRING INTERNAL)
-set(CMAKE_SKIP_INSTALL_RULES ON)
+# Only set CMAKE_SKIP_INSTALL_RULES if not already set to avoid warnings
+if(NOT CMAKE_SKIP_INSTALL_RULES)
+  set(CMAKE_SKIP_INSTALL_RULES ON)
+endif()
 set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_SUPPRESS_REGENERATION ON)
 
@@ -252,7 +255,6 @@ endif()
 # --------------------------
 add_subdirectory(external)
 add_subdirectory(src)
-add_subdirectory(tui)
 
 # --------------------------
 # ICU linking for executables (macOS)
@@ -265,7 +267,4 @@ if(APPLE AND ICU_FOUND)
             target_link_libraries(${exec_target} PRIVATE ${ICU_LIBRARIES})
         endif()
     endforeach()
-
-    # Note: TUI is a Go application and doesn't need ICU linking
-    # The Go TUI component is built separately with its own dependencies
 endif()

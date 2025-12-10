@@ -2204,7 +2204,7 @@ auto longhashTimeStart = std::chrono::steady_clock::now();
     } else {
       if (!m_currency.checkProofOfWork(m_cn_context, blockData, currentDifficulty, proof_of_work)) {
         logger(INFO, BRIGHT_WHITE) <<
-          "Block " << blockHash << ", has too weak proof of work: " << proofOfWork << ", expected difficulty: " << currentDifficulty;
+          "Block " << blockHash << ", has too weak proof of work: " << proof_of_work << ", expected difficulty: " << currentDifficulty;
         bvc.m_verification_failed = true;
         return false;
       }

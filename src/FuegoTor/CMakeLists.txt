@@ -100,6 +100,7 @@ set_target_properties(Fuegotor PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION 1
     OUTPUT_NAME "FuegoTor"
+    ARCHIVE_OUTPUT_NAME "FuegoTor"
 )
 
 

@@ -203,15 +203,20 @@ target_link_libraries(testnet-wallet-cli PRIVATE
     P2P
     System
     Logging
-    Common
-    InProcessNode
-    upnpc-static
-    BlockchainExplorer
-    FuegoTor
-    ${Boost_LIBRARIES}
-    Serialization
-    ${JSONCPP_LIBRARIES}
-)
+    # Set proper linker flags to find FuegoTor library
+    link_libraries(Daemon PRIVATE
+        Common
+        InProcessNode
+        upnpc-static
+        BlockchainExplorer
+        Fuegotor
+        ${Boost_LIBRARIES}
+        Serialization
+        ${JSONCPP_LIBRARIES}
+        # Add link directory to ensure FuegoTor can be found
+        link_directories(PaymentGateService PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
+        link_directories(SimpleWallet PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
+        link_directories(Daemon PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
 set_target_properties(testnet-wallet-cli PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src")
 
 if (MSVC)
@@ -225,15 +230,17 @@ target_link_libraries(Daemon PRIVATE
     System
     Http
     Logging
-    Common
-    Crypto
-    upnpc-static
-    BlockchainExplorer
-    Fuegotor
-    ${Boost_LIBRARIES}
-    Serialization
-    ${JSONCPP_LIBRARIES}
-)
+    target_link_libraries(testnet-wallet-cli PRIVATE
+        Common
+        Upnpc-static
+        BlockchainExplorer
+        Fuegotor
+        ${Boost_LIBRARIES}
+        Serialization
+        ${JSONCPP_LIBRARIES}
+    )
+    # Add link directory to ensure FuegoTor can be found
+    link_directories(testnet-wallet-cli PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
 target_link_libraries(TestnetDaemon PRIVATE
     CryptoNoteCore
     P2P
@@ -342,10 +349,15 @@ target_link_libraries(Optimizer PRIVATE
     Logging
     Common
     Crypto
+    Fuegotor
     ${Boost_LIBRARIES}
     Serialization
     ${JSONCPP_LIBRARIES}
 )
+    # Add link directory to ensure FuegoTor can be found
+    link_directories(PaymentGateService PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
+# Add link directory to ensure FuegoTor can be found
+link_directories(Optimizer PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src/FuegoTor)
 
 # --------------------------
 # ICU linking is handled in root CMakeLists.txt

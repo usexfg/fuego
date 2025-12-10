@@ -18,15 +18,11 @@ find_package(OpenSSL QUIET)
 
 # Platform-specific libraries
 if(WIN32)
-    # Windows-specific libraries
-    find_library(WS2_32_LIB ws2_32)
-    find_library(WSOCK32_LIB wsock32)
-    find_library(IPHLPAPI_LIB iphlpapi)
-
+    # Windows-specific libraries - use direct names as they're always available
     set(FUEGOTOR_PLATFORM_LIBS
-        ${WS2_32_LIB}
-        ${WSOCK32_LIB}
-        ${IPHLPAPI_LIB}
+        ws2_32
+        wsock32
+        iphlpapi
     )
 elseif(APPLE)
     # macOS-specific libraries
@@ -160,6 +156,11 @@ target_link_libraries(Fuegotor PRIVATE
     ${FUEGOTOR_PLATFORM_LIBS}
     ${FUEGOTOR_EXTRA_LIBS}
 )
+
+# Ensure Windows libraries are properly linked on Windows
+if(WIN32)
+    target_link_libraries(Fuegotor PRIVATE ws2_32 wsock32 iphlpapi)
+endif()
 
 # Conditional Tor library linking
 if(ENABLE_TOR_LIB AND HAVE_TOR_LIB)

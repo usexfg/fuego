@@ -47,7 +47,7 @@ add_custom_command(
     OUTPUT ${TUI_BUILD_DIR}/fuego-tui
     COMMAND ${CMAKE_COMMAND} -E make_directory ${TUI_BUILD_DIR}
     COMMAND ${GO_EXECUTABLE} mod tidy
-    COMMAND ${CMAKE_COMMAND} -E env GOOS=${CMAKE_SYSTEM_NAME}
+    COMMAND ${CMAKE_COMMAND} -E env
             ${GO_EXECUTABLE} build -o ${TUI_BUILD_DIR}/fuego-tui
     WORKING_DIRECTORY ${TUI_SOURCE_DIR}
     DEPENDS ${TUI_SOURCE_DIR}/*.go ${TUI_SOURCE_DIR}/go.mod ${TUI_SOURCE_DIR}/go.sum

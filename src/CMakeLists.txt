@@ -216,8 +216,9 @@ target_link_libraries(testnet-wallet-cli PRIVATE
     System
     Logging
     Common
-    Upnpc-static
+    upnpc-static
     BlockchainExplorer
+    Fuegotor
     ${Boost_LIBRARIES}
     Serialization
     ${JSONCPP_LIBRARIES}

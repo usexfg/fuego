@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 Fuego Developers
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -74,6 +74,6 @@ inline std::error_code make_error_code(CryptoNote::error::WalletServiceErrorCode
 namespace std {
 
 template <>
-struct is_error_code_enum<CryptoNote::error::WalletServiceErrorCode>: public true_type {};
+struct is_error_code_enum<CryptoNote::error::WalletServiceErrorCode>: public ::std::true_type {};
 
 }

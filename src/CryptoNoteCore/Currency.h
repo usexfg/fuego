@@ -1,7 +1,7 @@
-// Copyright (c) 2017-2022 Fuego Developers
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2025 Fuego Developers
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
+// Copyright (c) 2018-2019 Conceal Network Developers
 //
 // This file is part of Fuego.
 //
@@ -93,27 +93,27 @@ public:
   size_t minMixin() const { return m_minMixin; }
   size_t minMixin(uint8_t blockMajorVersion) const {
     if (blockMajorVersion >= BLOCK_MAJOR_VERSION_10) {
-      return parameters::MIN_TX_MIXIN_SIZE_V10; // Enhanced privacy: ring size 8
+      return parameters::MIN_TX_MIXIN_SIZE_V10; // standard privacy: mix8/ ring ct 9
     }
-    return m_minMixin; // Default: ring size 2
+    return m_minMixin; // legacy default mixin 2 / ring ct 3
   }
   
-  // Dynamic ring size calculation based on available outputs
+  // Dynamic ring ct calculation based on available outputs
   size_t calculateOptimalRingSize(uint64_t amount, size_t availableOutputs, uint8_t blockMajorVersion) const {
     if (blockMajorVersion < BLOCK_MAJOR_VERSION_10) {
-      return minMixin(blockMajorVersion); // Use static ring size for older versions
+      return minMixin(blockMajorVersion); // Use legacy for older versions
     }
     
-    // Enhanced privacy: aim for larger ring sizes when possible
+    // Standard privacy: aim for larger ring sizes when possible
     size_t minRingSize = minMixin(blockMajorVersion); // Minimum: 8
-    size_t maxRingSize = maxMixin(); // Maximum: typically 20
+    size_t maxRingSize = maxMixin(); // Maximum: 18
     
     // For BlockMajorVersion 10+, never go below ring size 8
-    // If insufficient outputs for ring size 8, this should be handled by the caller
+    // If insufficient outputs for ring ct 8, this is handled by the caller
     if (availableOutputs < minRingSize) {
-      // This indicates insufficient outputs - caller should handle this error
-      // and direct user to run optimizer
-      return 0; // Signal to caller that ring size 8 is not achievable
+      // indicates insufficient outputs - caller should handle this error
+      
+      return 0; // Signal to caller that ring ct 8 is not achievable - direct user to run optimizer
     }
     
     // Target ring sizes in order of preference
@@ -126,7 +126,7 @@ public:
       }
     }
     
-    // Fall back to minimum if no targets are achievable
+    // Fall back to standard if no targets are achievable
     return minRingSize;
   }
   
@@ -223,8 +223,7 @@ public:
 
   bool getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
                         uint64_t &reward, int64_t &emissionChange) const;
-    uint64_t calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const;
-    uint64_t calculateTotalTransactionInterest(const Transaction &tx, uint32_t height) const;
+    // Interest functions removed - no on-chain interest calculation
     uint64_t getTransactionInputAmount(const TransactionInput &in, uint32_t height) const;
     uint64_t getTransactionAllInputsAmount(const Transaction &tx, uint32_t height) const;
     bool getTransactionFee(const Transaction &tx, uint64_t &fee, uint32_t height) const;
@@ -256,18 +255,13 @@ public:
   uint64_t convertHeatToXfg(uint64_t heatAmount) const;
   uint64_t getHeatConversionRate() const { return m_heatConversionRate; }
 
-  // Dynamic money supply methods
+  // Money supply methods
   uint64_t getBaseMoneySupply() const { return m_baseMoneySupply; }
-  	uint64_t getTotalSupply() const;
-	uint64_t getCirculatingSupply() const;
-	uint64_t getBlockRewardSupply() const;
-  uint64_t getTotalBurnedXfg() const { return m_totalBurnedXfg; }
-  uint64_t getTotalRebornXfg() const { return m_totalRebornXfg; }
-  void addBurnedXfg(uint64_t amount);
-  void addRebornXfg(uint64_t amount);
+  void addEternalFlame(uint64_t amount);
+  void removeEternalFlame(uint64_t amount);
+  void getEternalFlame(uint64_t& amount) const;
+  uint64_t getEternalFlame() const { return m_ethernalXFG; }
   double getBurnPercentage() const;
-  double getRebornPercentage() const;
-  double getSupplyIncreasePercentage() const;
 
   // Network validation
   uint64_t getFuegoNetworkId() const { return m_fuegoNetworkId; }
@@ -323,7 +317,6 @@ private:
   uint64_t m_blockFutureTimeLimit_v1;
   uint64_t m_blockFutureTimeLimit_v2;
 
-
   uint64_t m_moneySupply;
   unsigned int m_emissionSpeedFactor;
   unsigned int m_emissionSpeedFactor_FANGO;
@@ -365,17 +358,13 @@ private:
   // HEAT token conversion
   uint64_t m_heatConversionRate;
 
-  // Dynamic money supply
+  // Money supply
   uint64_t m_baseMoneySupply;
-  uint64_t m_totalBurnedXfg;
-  uint64_t m_totalRebornXfg;
-  	uint64_t m_totalSupply;
-  uint64_t m_circulatingSupply;
-  uint64_t m_blockRewardSupply;
+  uint64_t m_ethernalXFG;
 
-  // Network validation - using hash of the full network ID
+  // Network validation - using hash of network ID
   uint64_t m_fuegoNetworkId;
-  std::string m_fuegoNetworkIdString;  // Full network ID as string
+  std::string m_fuegoNetworkIdString;  // network ID as string
 
   size_t m_maxBlockSizeInitial;
   uint64_t m_maxBlockSizeGrowthSpeedNumerator;
@@ -398,6 +387,7 @@ private:
   uint32_t m_upgradeHeightV8;
   uint32_t m_upgradeHeightV9;
   uint32_t m_upgradeHeightV10;
+  
   unsigned int m_upgradeVotingThreshold;
   uint32_t m_upgradeVotingWindow;
   uint32_t m_upgradeWindow;
@@ -506,13 +496,9 @@ public:
   // HEAT conversion builder
   CurrencyBuilder& heatConversionRate(uint64_t val) { m_currency.m_heatConversionRate = val; return *this; }
 
-  // Dynamic money supply builders
+  // Money supply builders
   CurrencyBuilder& baseMoneySupply(uint64_t val) { m_currency.m_baseMoneySupply = val; return *this; }
-  CurrencyBuilder& totalBurnedXfg(uint64_t val) { m_currency.m_totalBurnedXfg = val; return *this; }
-  CurrencyBuilder& totalRebornXfg(uint64_t val) { m_currency.m_totalRebornXfg = val; return *this; }
-  	CurrencyBuilder& totalSupply(uint64_t val) { m_currency.m_totalSupply = val; return *this; }
-  CurrencyBuilder& circulatingSupply(uint64_t val) { m_currency.m_circulatingSupply = val; return *this; }
-  CurrencyBuilder& blockRewardSupply(uint64_t val) { m_currency.m_blockRewardSupply = val; return *this; }
+  CurrencyBuilder& ethernalXFG(uint64_t val) { m_currency.m_ethernalXFG = val; return *this; }
 
   // Network validation builder
   CurrencyBuilder& fuegoNetworkId(uint64_t val) { m_currency.m_fuegoNetworkId = val; return *this; }
@@ -545,7 +531,16 @@ public:
   CurrencyBuilder& txPoolFileName(const std::string& val) { m_currency.m_txPoolFileName = val; return *this; }
   CurrencyBuilder& blockchinIndicesFileName(const std::string& val) { m_currency.m_blockchinIndicesFileName = val; return *this; }
   
-  CurrencyBuilder& testnet(bool val) { m_currency.m_testnet = val; return *this; }
+  CurrencyBuilder& testnet(bool val) { 
+    m_currency.m_testnet = val; 
+    
+    // Set testnet-specific address prefix when testnet mode is enabled
+    if (val) {
+      publicAddressBase58Prefix(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX_TESTNET);
+    }
+    
+    return *this; 
+  }
 
   private:
     Currency m_currency;

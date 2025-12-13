@@ -124,7 +124,7 @@ public:
     case DEPOSIT_LOCKED:           return "Deposit is locked";
     case DEPOSIT_WRONG_TERM:       return "Incorrect term";
     case DAEMON_NOT_SYNCED:        return "Daemon is not synchronized";
-    case INSUFFICIENT_OUTPUTS_FOR_RING_SIZE: return "Insufficient outputs for minimum ring size. Please run wallet optimizer to consolidate outputs.";
+    case INSUFFICIENT_OUTPUTS_FOR_RING_SIZE: return "Insufficient outputs for transaction amount. Please run wallet optimizer to consolidate outputs.";
         default:
       return "Unknown error";
     }
@@ -145,6 +145,6 @@ inline std::error_code make_error_code(CryptoNote::error::WalletErrorCodes e) {
 namespace std {
 
 template <>
-struct is_error_code_enum<CryptoNote::error::WalletErrorCodes>: public true_type {};
+struct is_error_code_enum<CryptoNote::error::WalletErrorCodes>: public ::std::true_type {};
 
 }

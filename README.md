@@ -4,6 +4,7 @@
 Based upon the CryptoNote protocol & philosophy.
 
 #### Resources
+-   [TUI Documentation](#terminal-user-interface-tui)
 
 -   [Website](https://usexfg.org)
 -   Explorer: <http://fuego.spaceportx.net>
@@ -73,13 +74,47 @@ cd fuego
 make
 ```
 
+Note: This will also build the TUI (Terminal User Interface) if Go is installed.
+
 5. Starting Fuego daemon
 ```
 cd fuego/build/release/src `
 ./fuegod
 ````
 try --help from within dæmon for a full list of available commands
-or <code>./fuegod --help</code> when outside of dæmon 
+or <code>./fuegod --help</code> when outside of dæmon
+
+### Terminal User Interface (TUI)
+
+Fuego includes a Go-based Terminal User Interface for easy management of nodes and wallets. The TUI provides full support for Elderfier Staking and Burn2Mint flows.
+
+#### Building the TUI
+
+If you have Go 1.20+ installed, the TUI will be built automatically when running `make`. You can also build it separately:
+
+```bash
+make build-tui
+```
+
+#### Running the TUI
+
+```bash
+./tui/build/fuego-tui
+```
+
+Navigate with arrow keys or j/k, select with Enter, quit with q or Ctrl+C.
+
+#### TUI Features
+
+- Start/Stop Node
+- Start Wallet RPC
+- Create Wallet
+- Get Balance
+- Send Transaction
+- Elderfier Menu (staking and voting)
+- Burn2Mint Menu (XFG→HEAT conversion)
+
+For detailed documentation, see `tui/README.md`.
 _________________________________________________________
 For the most user-friendly graphic interface experience
 

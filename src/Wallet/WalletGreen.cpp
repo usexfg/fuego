@@ -77,7 +77,8 @@ namespace
   {
     int index = 0;
     return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights](uint64_t sum, const CryptoNote::TransactionOutputInformation &deposit) {
-      return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
+      // Interest calculation removed - no on-chain interest
+      return sum + deposit.amount;
     });
   }
 
@@ -535,7 +536,7 @@ namespace CryptoNote
      which includes the term, and then after that the change outputs */
 
     /* Add the deposit outputs to the transaction */
-    auto depositIndex = transaction->addOutput(
+    auto bankingIndex = transaction->addOutput(
         neededMoney - fee,
         {destAddr},
         1,
@@ -687,6 +688,13 @@ namespace CryptoNote
 
     /* Return the transaction hash */
     transactionHash = Common::podToHex(transaction->getTransactionHash());
+    
+    /* Store staged unlock preference if requested */
+    /* if (useStagedUnlock && !isBurnDeposit) {
+      // Store the staged unlock preference for this deposit
+      m_logger(DEBUGGING, BRIGHT_GREEN) << "Deposit created with staged unlock preference: " << transactionHash;
+    } */
+    
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
   }
 
@@ -1973,17 +1981,17 @@ namespace CryptoNote
     return m_transactions.get<RandomAccessIndex>()[transactionIndex];
   }
 
-  Deposit WalletGreen::getDeposit(size_t depositIndex) const
+  Deposit WalletGreen::getDeposit(size_t bankingIndex) const
   {
     throwIfNotInitialized();
     throwIfStopped();
 
-    if (m_deposits.size() <= depositIndex)
+    if (m_deposits.size() <= bankingIndex)
     {
       throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_DOESNOT_EXIST));
     }
 
-    return m_deposits.get<RandomAccessIndex>()[depositIndex];
+    return m_deposits.get<RandomAccessIndex>()[bankingIndex];
   }
 
   size_t WalletGreen::getTransactionTransferCount(size_t transactionIndex) const
@@ -3496,7 +3504,7 @@ namespace CryptoNote
     deposit.creatingTransactionId = creatingTransactionId;
     deposit.term = depositOutput.term;
     deposit.spendingTransactionId = WALLET_INVALID_TRANSACTION_ID;
-    deposit.interest = currency.calculateInterest(deposit.amount, deposit.term, height);
+    // Interest calculation removed - no on-chain interest
     deposit.height = height;
     deposit.unlockHeight = height + depositOutput.term;
     deposit.locked = true;
@@ -3506,13 +3514,13 @@ namespace CryptoNote
 
   DepositId WalletGreen::insertDeposit(
       const Deposit &deposit,
-      size_t depositIndexInTransaction,
+      size_t bankingIndexInTransaction,
       const Hash &transactionHash)
   {
 
     Deposit info = deposit;
 
-    info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
+    info.outputInTransaction = static_cast<uint32_t>(bankingIndexInTransaction);
     info.transactionHash = transactionHash;
 
     auto &hashIndex = m_transactions.get<TransactionIndex>();

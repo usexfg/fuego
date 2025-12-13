@@ -36,11 +36,11 @@ class ISerializer;
 
 namespace std {
   template<>
-  struct hash<std::tuple<Crypto::Hash, uint32_t>> {
-    size_t operator()(const std::tuple<Crypto::Hash, uint32_t>& item) const {
+  struct hash<::std::tuple<::Crypto::Hash, uint32_t>> {
+    size_t operator()(const ::std::tuple<::Crypto::Hash, uint32_t>& item) const {
       size_t hash = 0;
-      boost::hash_combine(hash, std::get<0>(item));
-      boost::hash_combine(hash, std::get<1>(item));
+      boost::hash_combine(hash, ::std::get<0>(item));
+      boost::hash_combine(hash, ::std::get<1>(item));
       return hash;
     }
   };
@@ -107,7 +107,7 @@ public:
 
   std::vector<TransactionId> deleteOutdatedTransactions();
 
-  DepositId insertDeposit(const Deposit& deposit, size_t depositIndexInTransaction, const Crypto::Hash& transactionHash);
+  DepositId insertDeposit(const Deposit& deposit, size_t bankingIndexInTransaction, const Crypto::Hash& transactionHash);
   bool getDepositInTransactionInfo(DepositId depositId, Crypto::Hash& transactionHash, uint32_t& outputInTransaction);
 
   std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const;
@@ -119,7 +119,7 @@ private:
   TransferId insertTransfers(const std::vector<WalletLegacyTransfer>& transfers);
   void updateUnconfirmedTransactions();
 
-  void restoreTransactionOutputToDepositIndex();
+  void restoreTransactionOutputToBankingIndex();
   std::vector<DepositId> createNewDeposits(TransactionId creatingTransactionId,
                                            const std::vector<TransactionOutputInformation>& depositOutputs,
                                            const Currency& currency,
@@ -150,7 +150,7 @@ private:
   UserDeposits m_deposits;
   WalletUnconfirmedTransactions m_unconfirmedTransactions;
   //tuple<Creating transaction hash, outputIndexInTransaction> -> depositId
-  std::unordered_map<std::tuple<Crypto::Hash, uint32_t>, DepositId> m_transactionOutputToDepositIndex;
+  std::unordered_map<std::tuple<Crypto::Hash, uint32_t>, DepositId> m_transactionOutputToBankingIndex;
   UserPaymentIndex m_paymentsIndex;
 };
 

@@ -16,13 +16,14 @@
 // along with Fuego. If not, see <https://www.gnu.org/licenses/>.
 
 #include "TransactionExtra.h"
+#include "CryptoNoteTools.h"
+#include "crypto/hash.h"
 #include "crypto/chacha8.h"
 #include "Common/int-util.h"
 #include "Common/MemoryInputStream.h"
 #include "Common/StreamTools.h"
 #include "Common/StringTools.h"
 #include "Common/Varint.h"
-#include "CryptoNoteTools.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "crypto/keccak.h"
@@ -133,8 +134,113 @@ namespace CryptoNote
           }
           break;
         }
+
+        case TX_EXTRA_ELDERFIER_MESSAGE:
+        {
+          TransactionExtraElderfierMessage message;
+          if (getElderfierMessageFromExtra(transactionExtra, message)) {
+            transactionExtraFields.push_back(message);
+          } else {
+            return false;
+          }
+          break;
+        }
+
+        case TX_EXTRA_HEAT_COMMITMENT:
+        {
+          TransactionExtraHeatCommitment heatCommitment;
+          if (getHeatCommitmentFromExtra(transactionExtra, heatCommitment)) {
+            transactionExtraFields.push_back(heatCommitment);
+          } else {
+            return false;
+          }
+          break;
+        }
+
+        case TX_EXTRA_ENCRYPTED_MEDIA_MESSAGE:
+        {
+          TransactionExtraEncryptedMediaMessage message;
+          if (getEncryptedMediaMessageFromExtra(transactionExtra, message)) {
+            transactionExtraFields.push_back(message);
+          }
+          break;
+        }
+
+        case TX_EXTRA_YIELD_COMMITMENT:
+        {
+          TransactionExtraYieldCommitment yieldCommitment;
+          if (getYieldCommitmentFromExtra(transactionExtra, yieldCommitment)) {
+            transactionExtraFields.push_back(yieldCommitment);
+          } else {
+            return false;
+          }
+          break;
+        }
+
+        case TX_EXTRA_MEDIA_ATTACHMENT:
+        {
+          TransactionExtraMediaAttachment attachment;
+          if (getMediaAttachmentFromExtra(transactionExtra, attachment)) {
+            transactionExtraFields.push_back(attachment);
+          } else {
+            return false;
+          }
+          break;
+        }
+
+        case TX_EXTRA_MEDIA_TRANSFER_REQUEST:
+        {
+          TransactionExtraMediaTransferRequest request;
+          if (getMediaTransferRequestFromExtra(transactionExtra, request)) {
+            transactionExtraFields.push_back(request);
+          } else {
+            return false;
+          }
+          break;
+        }
+
+        case TX_EXTRA_MEDIA_TRANSFER_RESPONSE:
+        {
+          TransactionExtraMediaTransferResponse response;
+          if (getMediaTransferResponseFromExtra(transactionExtra, response)) {
+            transactionExtraFields.push_back(response);
+          }
+          break;
+        }
+        case TX_EXTRA_CD_DEPOSIT_SECRET:
+        {
+          TransactionExtraCDDepositSecret cdDepositSecret;
+          if (getCDDepositSecretFromExtra(transactionExtra, cdDepositSecret)) {
+            transactionExtraFields.push_back(cdDepositSecret);
+          } else {
+            return false;
+          }
+          break;
+        }
+
+        case TX_EXTRA_BURN_RECEIPT:
+        {
+          TransactionExtraBurnReceipt burnReceipt;
+          if (getBurnReceiptFromExtra(transactionExtra, burnReceipt)) {
+            transactionExtraFields.push_back(burnReceipt);
+          } else {
+            return false;
+          }
+          break;
+        }
+
+        case TX_EXTRA_DEPOSIT_RECEIPT:
+        {
+          TransactionExtraDepositReceipt depositReceipt;
+          if (getDepositReceiptFromExtra(transactionExtra, depositReceipt)) {
+            transactionExtraFields.push_back(depositReceipt);
+          } else {
+            return false;
+          }
+          break;
         }
       }
+    }
     }
     catch (std::exception &)
     {
@@ -192,6 +298,11 @@ namespace CryptoNote
       return addElderfierDepositToExtra(extra, t);
     }
 
+    bool operator()(const TransactionExtraElderfierMessage &t)
+    {
+      return addElderfierMessageToExtra(extra, t);
+    }
+
     bool operator()(const TransactionExtraHeatCommitment &t)
     {
       return addHeatCommitmentToExtra(extra, t);
@@ -205,6 +316,36 @@ namespace CryptoNote
     bool operator()(const TransactionExtraCDDepositSecret &t)
     {
       return addCDDepositSecretToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraEncryptedMediaMessage &t)
+    {
+      return addEncryptedMediaMessageToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraMediaAttachment &t)
+    {
+      return addMediaAttachmentToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraMediaTransferRequest &t)
+    {
+      return addMediaTransferRequestToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraMediaTransferResponse &t)
+    {
+      return addMediaTransferResponseToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraBurnReceipt &t)
+    {
+      return addBurnReceiptToExtra(extra, t);
+    }
+
+    bool operator()(const TransactionExtraDepositReceipt &t)
+    {
+      return addDepositReceiptToExtra(extra, t);
     }
 
   };
@@ -529,8 +670,8 @@ namespace CryptoNote
   std::string TransactionExtraElderfierDeposit::toString() const
   {
     std::ostringstream oss;
-    oss << "ElderfierDeposit{hash=" << Common::podToHex(depositHash) 
-        << ", amount=" << depositAmount 
+    oss << "ElderfierDeposit{hash=" << Common::podToHex(depositHash)
+        << ", amount=" << depositAmount
         << ", address=" << elderfierAddress
         << ", securityWindow=" << securityWindow
         << ", slashable=" << (isSlashable ? "true" : "false") << "}";
@@ -546,24 +687,24 @@ namespace CryptoNote
     deposit.securityWindow = securityWindow;
     deposit.metadata = metadata;
     deposit.isSlashable = true; // Always true for contingency deposits
-    
+
     return addElderfierDepositToExtra(extra, deposit);
   }
 
   bool addElderfierDepositToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraElderfierDeposit& deposit)
   {
     tx_extra.push_back(TX_EXTRA_ELDERFIER_DEPOSIT);
-    
+
     // Serialize deposit hash (32 bytes)
     tx_extra.insert(tx_extra.end(), deposit.depositHash.data, deposit.depositHash.data + sizeof(deposit.depositHash.data));
-    
+
     // Serialize amount (8 bytes, little-endian)
     uint64_t amount = deposit.depositAmount;
     for (int i = 0; i < 8; ++i) {
       tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
       amount >>= 8;
     }
-    
+
     // Serialize address length and data
     uint32_t addrLen = static_cast<uint32_t>(deposit.elderfierAddress.length());
     for (int i = 0; i < 4; ++i) {
@@ -571,14 +712,14 @@ namespace CryptoNote
       addrLen >>= 8;
     }
     tx_extra.insert(tx_extra.end(), deposit.elderfierAddress.begin(), deposit.elderfierAddress.end());
-    
+
     // Serialize security window (4 bytes, little-endian)
     uint32_t window = deposit.securityWindow;
     for (int i = 0; i < 4; ++i) {
       tx_extra.push_back(static_cast<uint8_t>(window & 0xFF));
       window >>= 8;
     }
-    
+
     // Serialize metadata size and data
     uint32_t metaLen = static_cast<uint32_t>(deposit.metadata.size());
     for (int i = 0; i < 4; ++i) {
@@ -586,7 +727,7 @@ namespace CryptoNote
       metaLen >>= 8;
     }
     tx_extra.insert(tx_extra.end(), deposit.metadata.begin(), deposit.metadata.end());
-    
+
     // Serialize signature size and data
     uint32_t sigLen = static_cast<uint32_t>(deposit.signature.size());
     for (int i = 0; i < 4; ++i) {
@@ -594,10 +735,10 @@ namespace CryptoNote
       sigLen >>= 8;
     }
     tx_extra.insert(tx_extra.end(), deposit.signature.begin(), deposit.signature.end());
-    
+
     // Serialize slashable flag (1 byte)
     tx_extra.push_back(deposit.isSlashable ? 1 : 0);
-    
+
     return true;
   }
 
@@ -606,14 +747,14 @@ namespace CryptoNote
     if (tx_extra.empty() || tx_extra[0] != TX_EXTRA_ELDERFIER_DEPOSIT) {
       return false;
     }
-    
+
     size_t pos = 1;
-    
+
     // Deserialize deposit hash (32 bytes)
     if (pos + 32 > tx_extra.size()) return false;
     std::memcpy(deposit.depositHash.data, &tx_extra[pos], 32);
     pos += 32;
-    
+
     // Deserialize amount (8 bytes, little-endian)
     if (pos + 8 > tx_extra.size()) return false;
     deposit.depositAmount = 0;
@@ -621,7 +762,7 @@ namespace CryptoNote
       deposit.depositAmount |= static_cast<uint64_t>(tx_extra[pos + i]) << (i * 8);
     }
     pos += 8;
-    
+
     // Deserialize address length and data
     if (pos + 4 > tx_extra.size()) return false;
     uint32_t addrLen = 0;
@@ -629,11 +770,11 @@ namespace CryptoNote
       addrLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
     }
     pos += 4;
-    
+
     if (pos + addrLen > tx_extra.size()) return false;
     deposit.elderfierAddress.assign(reinterpret_cast<const char*>(&tx_extra[pos]), addrLen);
     pos += addrLen;
-    
+
     // Deserialize security window (4 bytes, little-endian)
     if (pos + 4 > tx_extra.size()) return false;
     deposit.securityWindow = 0;
@@ -641,7 +782,7 @@ namespace CryptoNote
       deposit.securityWindow |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
     }
     pos += 4;
-    
+
     // Deserialize metadata size and data
     if (pos + 4 > tx_extra.size()) return false;
     uint32_t metaLen = 0;
@@ -649,11 +790,11 @@ namespace CryptoNote
       metaLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
     }
     pos += 4;
-    
+
     if (pos + metaLen > tx_extra.size()) return false;
     deposit.metadata.assign(&tx_extra[pos], &tx_extra[pos] + metaLen);
     pos += metaLen;
-    
+
     // Deserialize signature size and data
     if (pos + 4 > tx_extra.size()) return false;
     uint32_t sigLen = 0;
@@ -661,40 +802,321 @@ namespace CryptoNote
       sigLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
     }
     pos += 4;
-    
+
     if (pos + sigLen > tx_extra.size()) return false;
     deposit.signature.assign(&tx_extra[pos], &tx_extra[pos] + sigLen);
     pos += sigLen;
-    
+
     // Deserialize slashable flag (1 byte)
     if (pos >= tx_extra.size()) return false;
     deposit.isSlashable = (tx_extra[pos] != 0);
-    
+
     return true;
   }
+
+  // TransactionExtraElderfierMessage methods
+  bool TransactionExtraElderfierMessage::serialize(ISerializer& s)
+  {
+    s(senderKey, "senderKey");
+    s(recipientKey, "recipientKey");
+    s(messageType, "messageType");
+    s(timestamp, "timestamp");
+    s(messageData, "messageData");
+    s(signature, "signature");
+
+    // Consensus fields (0xEF specific)
+    s(consensusRequired, "consensusRequired");
+
+    // Handle consensus type serialization (enum to uint8_t)
+    uint8_t consensusTypeValue = static_cast<uint8_t>(consensusType);
+    s(consensusTypeValue, "consensusType");
+
+    // For deserialization, restore the enum value
+    // Note: This is a bit of a hack, but works for serialization
+    if (consensusTypeValue <= static_cast<uint8_t>(ElderfierConsensusType::WITNESS)) {
+      consensusType = static_cast<ElderfierConsensusType>(consensusTypeValue);
+    }
+
+    s(requiredThreshold, "requiredThreshold");
+    s(targetDepositHash, "targetDepositHash");
+
+    return true;
+  }
+
+  bool TransactionExtraElderfierMessage::isValid() const
+  {
+    // Basic validation
+    if (timestamp == 0 || messageData.empty() || signature.empty() || messageType == 0) {
+      return false;
+    }
+
+    // Consensus validation
+    if (consensusRequired) {
+      if (requiredThreshold == 0 || requiredThreshold > 100) {
+        return false;
+      }
+
+      // For quorum consensus, target deposit hash must be specified (for 0xE8 intervention)
+      if (consensusType == ElderfierConsensusType::QUORUM && targetDepositHash == Crypto::Hash()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool TransactionExtraElderfierMessage::requiresQuorumConsensus() const
+  {
+    return consensusRequired && consensusType == ElderfierConsensusType::QUORUM;
+  }
+
+  std::string TransactionExtraElderfierMessage::toString() const
+  {
+    std::ostringstream oss;
+    oss << "ElderfierMessage{sender=" << Common::podToHex(senderKey)
+        << ", recipient=" << Common::podToHex(recipientKey)
+        << ", type=" << messageType
+        << ", timestamp=" << timestamp
+        << ", dataSize=" << messageData.size()
+        << ", sigSize=" << signature.size()
+        << ", consensusRequired=" << (consensusRequired ? "true" : "false");
+
+    if (consensusRequired) {
+      oss << ", consensusType=";
+      switch (consensusType) {
+        case ElderfierConsensusType::QUORUM: oss << "QUORUM"; break;
+        case ElderfierConsensusType::PROOF: oss << "PROOF"; break;
+        case ElderfierConsensusType::WITNESS: oss << "WITNESS"; break;
+        default: oss << "UNKNOWN"; break;
+      }
+      oss << ", threshold=" << requiredThreshold << "%"
+          << ", targetDeposit=" << Common::podToHex(targetDepositHash);
+    }
+
+    oss << "}";
+    return oss.str();
+  }
+
+  // Elderfier Message helper functions (messaging/monitoring)
+
+  // Create Elderfier message with Quorum consensus (for 0xE8 deposit slashing)
+  bool createElderfierQuorumMessage(const Crypto::PublicKey& senderKey,
+                                   const Crypto::PublicKey& recipientKey,
+                                   const Crypto::Hash& targetDepositHash,
+                                   uint32_t messageType,
+                                   const std::vector<uint8_t>& messageData,
+                                   uint64_t timestamp,
+                                   TransactionExtraElderfierMessage& message)
+  {
+    message.senderKey = senderKey;
+    message.recipientKey = recipientKey;
+    message.messageType = messageType;
+    message.timestamp = timestamp;
+    message.messageData = messageData;
+
+    // Set quorum consensus requirements
+    message.consensusRequired = true;
+    message.consensusType = ElderfierConsensusType::QUORUM;
+    message.requiredThreshold = 80; // >80% agreement required
+    message.targetDepositHash = targetDepositHash;
+
+    // Generate signature (placeholder - would use actual crypto)
+    message.signature = std::vector<uint8_t>(64, 0xAA); // Placeholder signature
+
+    return message.isValid();
+  }
+
+  // Create Elderfier message with Proof consensus
+  bool createElderfierProofMessage(const Crypto::PublicKey& senderKey,
+                                  const Crypto::PublicKey& recipientKey,
+                                  uint32_t messageType,
+                                  const std::vector<uint8_t>& messageData,
+                                  uint64_t timestamp,
+                                  TransactionExtraElderfierMessage& message)
+  {
+    message.senderKey = senderKey;
+    message.recipientKey = recipientKey;
+    message.messageType = messageType;
+    message.timestamp = timestamp;
+    message.messageData = messageData;
+
+    // Set proof consensus requirements
+    message.consensusRequired = true;
+    message.consensusType = ElderfierConsensusType::PROOF;
+    message.requiredThreshold = 100; // Proof must be cryptographically valid
+    message.targetDepositHash = Crypto::Hash(); // Not targeting a deposit
+
+    // Generate signature (placeholder)
+    message.signature = std::vector<uint8_t>(64, 0xBB);
+
+    return message.isValid();
+  }
+
+  // Create Elderfier message with Witness consensus
+  bool createElderfierWitnessMessage(const Crypto::PublicKey& senderKey,
+                                    const Crypto::PublicKey& recipientKey,
+                                    uint32_t messageType,
+                                    const std::vector<uint8_t>& messageData,
+                                    uint64_t timestamp,
+                                    TransactionExtraElderfierMessage& message)
+  {
+    message.senderKey = senderKey;
+    message.recipientKey = recipientKey;
+    message.messageType = messageType;
+    message.timestamp = timestamp;
+    message.messageData = messageData;
+
+    // Set witness consensus requirements
+    message.consensusRequired = true;
+    message.consensusType = ElderfierConsensusType::WITNESS;
+    message.requiredThreshold = 50; // Simple majority for witness consensus
+    message.targetDepositHash = Crypto::Hash(); // Not targeting a deposit
+
+    // Generate signature (placeholder)
+    message.signature = std::vector<uint8_t>(64, 0xCC);
+
+    return message.isValid();
+  }
+
+  bool addElderfierMessageToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraElderfierMessage& message)
+  {
+    tx_extra.push_back(TX_EXTRA_ELDERFIER_MESSAGE);
+
+    // Serialize sender key (32 bytes)
+    tx_extra.insert(tx_extra.end(), message.senderKey.data, message.senderKey.data + sizeof(message.senderKey.data));
+
+    // Serialize recipient key (32 bytes)
+    tx_extra.insert(tx_extra.end(), message.recipientKey.data, message.recipientKey.data + sizeof(message.recipientKey.data));
+
+    // Serialize message type (4 bytes, little-endian)
+    uint32_t msgType = message.messageType;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(msgType & 0xFF));
+      msgType >>= 8;
+    }
+
+    // Serialize timestamp (8 bytes, little-endian)
+    uint64_t timestamp = message.timestamp;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(timestamp & 0xFF));
+      timestamp >>= 8;
+    }
+
+    // Serialize message data size and data
+    uint32_t dataLen = static_cast<uint32_t>(message.messageData.size());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(dataLen & 0xFF));
+      dataLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), message.messageData.begin(), message.messageData.end());
+
+    // Serialize signature size and data
+    uint32_t sigLen = static_cast<uint32_t>(message.signature.size());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(sigLen & 0xFF));
+      sigLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), message.signature.begin(), message.signature.end());
+
+    return true;
+  }
+
+  bool createTxExtraWithElderfierMessage(const Crypto::PublicKey& senderKey, const Crypto::PublicKey& recipientKey, uint32_t messageType, uint64_t timestamp, const std::vector<uint8_t>& messageData, std::vector<uint8_t>& extra)
+  {
+    TransactionExtraElderfierMessage message;
+    message.senderKey = senderKey;
+    message.recipientKey = recipientKey;
+    message.messageType = messageType;
+    message.timestamp = timestamp;
+    message.messageData = messageData;
+    // Note: signature should be added by the caller after creating the message
+
+    return addElderfierMessageToExtra(extra, message);
+  }
+
+  bool getElderfierMessageFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraElderfierMessage& message)
+  {
+    if (tx_extra.empty() || tx_extra[0] != TX_EXTRA_ELDERFIER_MESSAGE) {
+      return false;
+    }
+
+    size_t pos = 1;
+
+    // Deserialize sender key (32 bytes)
+    if (pos + 32 > tx_extra.size()) return false;
+    std::memcpy(message.senderKey.data, &tx_extra[pos], 32);
+    pos += 32;
+
+    // Deserialize recipient key (32 bytes)
+    if (pos + 32 > tx_extra.size()) return false;
+    std::memcpy(message.recipientKey.data, &tx_extra[pos], 32);
+    pos += 32;
+
+    // Deserialize message type (4 bytes, little-endian)
+    if (pos + 4 > tx_extra.size()) return false;
+    message.messageType = 0;
+    for (int i = 0; i < 4; ++i) {
+      message.messageType |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+
+    // Deserialize timestamp (8 bytes, little-endian)
+    if (pos + 8 > tx_extra.size()) return false;
+    message.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+      message.timestamp |= static_cast<uint64_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 8;
+
+    // Deserialize message data size and data
+    if (pos + 4 > tx_extra.size()) return false;
+    uint32_t dataLen = 0;
+    for (int i = 0; i < 4; ++i) {
+      dataLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+
+    if (pos + dataLen > tx_extra.size()) return false;
+    message.messageData.assign(&tx_extra[pos], &tx_extra[pos + dataLen]);
+    pos += dataLen;
+
+    // Deserialize signature size and data
+    if (pos + 4 > tx_extra.size()) return false;
+    uint32_t sigLen = 0;
+    for (int i = 0; i < 4; ++i) {
+      sigLen |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+
+    if (pos + sigLen > tx_extra.size()) return false;
+    message.signature.assign(&tx_extra[pos], &tx_extra[pos + sigLen]);
+
+    return true;
+  }
+
   // HEAT commitment helper functions
   bool addHeatCommitmentToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraHeatCommitment &commitment)
   {
     tx_extra.push_back(TX_EXTRA_HEAT_COMMITMENT);
-    
+
     // Serialize commitment hash (32 bytes)
     tx_extra.insert(tx_extra.end(), commitment.commitment.data, commitment.commitment.data + sizeof(commitment.commitment.data));
-    
+
     // Serialize amount (8 bytes, little-endian)
     uint64_t amount = commitment.amount;
     for (int i = 0; i < 8; ++i) {
       tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
       amount >>= 8;
     }
-    
+
     // Serialize metadata size and data
     uint8_t metadataSize = static_cast<uint8_t>(commitment.metadata.size());
     tx_extra.push_back(metadataSize);
-    
+
     if (metadataSize > 0) {
       tx_extra.insert(tx_extra.end(), commitment.metadata.begin(), commitment.metadata.end());
     }
-    
+
     return true;
   }
 
@@ -704,7 +1126,7 @@ namespace CryptoNote
     heatCommitment.commitment = commitment;       //  Only commitment hash
     heatCommitment.amount = amount;
     heatCommitment.metadata = metadata;
-    
+
     return addHeatCommitmentToExtra(extra, heatCommitment);
   }
 
@@ -719,37 +1141,37 @@ namespace CryptoNote
   bool addYieldCommitmentToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraYieldCommitment &commitment)
   {
     tx_extra.push_back(TX_EXTRA_YIELD_COMMITMENT);
-    
+
     // Serialize commitment hash (32 bytes)
     tx_extra.insert(tx_extra.end(), commitment.commitment.data, commitment.commitment.data + sizeof(commitment.commitment.data));
-    
+
     // Serialize amount (8 bytes, little-endian)
     uint64_t amount = commitment.amount;
     for (int i = 0; i < 8; ++i) {
       tx_extra.push_back(static_cast<uint8_t>(amount & 0xFF));
       amount >>= 8;
     }
-    
+
     // Serialize term_months (4 bytes, little-endian)
     uint32_t term_months = commitment.term_months;
     for (int i = 0; i < 4; ++i) {
       tx_extra.push_back(static_cast<uint8_t>(term_months & 0xFF));
       term_months >>= 8;
     }
-    
+
     // Serialize yield_scheme length and string
     uint8_t schemeLen = static_cast<uint8_t>(commitment.yield_scheme.size());
     tx_extra.push_back(schemeLen);
     tx_extra.insert(tx_extra.end(), commitment.yield_scheme.begin(), commitment.yield_scheme.end());
-    
+
     // Serialize metadata size and data
     uint8_t metadataSize = static_cast<uint8_t>(commitment.metadata.size());
     tx_extra.push_back(metadataSize);
-    
+
     if (metadataSize > 0) {
       tx_extra.insert(tx_extra.end(), commitment.metadata.begin(), commitment.metadata.end());
     }
-    
+
     return true;
   }
 
@@ -761,7 +1183,7 @@ namespace CryptoNote
     yieldCommitment.term_months = term_months;
     yieldCommitment.yield_scheme = yield_scheme;
     yieldCommitment.metadata = metadata;
-    
+
     return addYieldCommitmentToExtra(extra, yieldCommitment);
   }
 
@@ -888,46 +1310,51 @@ namespace CryptoNote
 
     return createTxExtraWithHeatCommitment(commitment, amount_atomic, metadata, extra);
   }
- 
+
   // CD Deposit Secret helper functions
   bool addCDDepositSecretToExtra(std::vector<uint8_t> &tx_extra, const TransactionExtraCDDepositSecret &deposit_secret)
   {
+    // Validate term code and APR combination
+    if (!validateCDTermAndAPR(deposit_secret.term_code, deposit_secret.apr_basis_points)) {
+      return false; // Invalid term/APR combination
+    }
+
     tx_extra.push_back(TX_EXTRA_CD_DEPOSIT_SECRET);
-    
+
     // Serialize secret key (32 bytes)
     if (deposit_secret.secret_key.size() != 32) {
       return false; // Invalid secret key size
     }
     tx_extra.insert(tx_extra.end(), deposit_secret.secret_key.begin(), deposit_secret.secret_key.end());
-    
+
     // Serialize XFG amount (8 bytes, little-endian)
     uint64_t xfg_amount = deposit_secret.xfg_amount;
     for (int i = 0; i < 8; ++i) {
       tx_extra.push_back(static_cast<uint8_t>(xfg_amount & 0xFF));
       xfg_amount >>= 8;
     }
-    
+
     // Serialize APR basis points (4 bytes, little-endian)
     uint32_t apr_basis_points = deposit_secret.apr_basis_points;
     for (int i = 0; i < 4; ++i) {
       tx_extra.push_back(static_cast<uint8_t>(apr_basis_points & 0xFF));
       apr_basis_points >>= 8;
     }
-    
+
     // Serialize term code (1 byte)
     tx_extra.push_back(deposit_secret.term_code);
-    
+
     // Serialize chain code (1 byte)
     tx_extra.push_back(deposit_secret.chain_code);
-    
+
     // Serialize metadata size and data
     uint8_t metadataSize = static_cast<uint8_t>(deposit_secret.metadata.size());
     tx_extra.push_back(metadataSize);
-    
+
     if (metadataSize > 0) {
       tx_extra.insert(tx_extra.end(), deposit_secret.metadata.begin(), deposit_secret.metadata.end());
     }
-    
+
     return true;
   }
 
@@ -940,7 +1367,7 @@ namespace CryptoNote
     depositSecret.term_code = term_code;
     depositSecret.chain_code = chain_code;
     depositSecret.metadata = metadata;
-    
+
     return addCDDepositSecretToExtra(extra, depositSecret);
   }
 
@@ -949,6 +1376,815 @@ namespace CryptoNote
     // Implementation would parse the extra field to extract CD deposit secret
     // This is a placeholder - full implementation would need proper parsing logic
     return false;
+  }
+
+  // CD Deposit validation helper functions
+  bool validateCDTermAndAPR(uint8_t term_code, uint32_t apr_basis_points)
+  {
+    switch (term_code)
+    {
+      case CD_TERM_3MO_8PCT:
+        return apr_basis_points == CD_APR_8PCT;
+      case CD_TERM_9MO_18PCT:
+        return apr_basis_points == CD_APR_18PCT;
+      case CD_TERM_1YR_21PCT:
+        return apr_basis_points == CD_APR_21PCT;
+      case CD_TERM_3YR_33PCT:
+        return apr_basis_points == CD_APR_33PCT;
+      case CD_TERM_5YR_80PCT:
+        return apr_basis_points == CD_APR_80PCT;
+      default:
+        return false; // Invalid term code
+    }
+  }
+
+  uint64_t getCDTermDays(uint8_t term_code)
+  {
+    switch (term_code)
+    {
+      case CD_TERM_3MO_8PCT:
+        return 90;    // 3 months
+      case CD_TERM_9MO_18PCT:
+        return 270;   // 9 months
+      case CD_TERM_1YR_21PCT:
+        return 365;   // 1 year
+      case CD_TERM_3YR_33PCT:
+        return 1095;  // 3 years
+      case CD_TERM_5YR_80PCT:
+        return 1825;  // 5 years
+      default:
+        return 0;     // Invalid
+    }
+  }
+
+  double getCDAPRPercent(uint8_t term_code)
+  {
+    switch (term_code)
+    {
+      case CD_TERM_3MO_8PCT:
+        return 8.0;
+      case CD_TERM_9MO_18PCT:
+        return 18.0;
+      case CD_TERM_1YR_21PCT:
+        return 21.0;
+      case CD_TERM_3YR_33PCT:
+        return 33.0;
+      case CD_TERM_5YR_80PCT:
+        return 80.0;
+      default:
+        return 0.0;
+    }
+  }
+
+  // ============================================================================
+  // ENCRYPTED MEDIA MESSAGE IMPLEMENTATIONS
+  // ============================================================================
+
+  // TransactionExtraEncryptedMediaMessage implementation
+  bool TransactionExtraEncryptedMediaMessage::encrypt(const std::vector<uint8_t>& mediaData,
+                                                     const AccountPublicAddress& recipient,
+                                                     const KeyPair& senderKeys) {
+    try {
+      // Generate ECDH shared secret
+      Crypto::KeyDerivation derivation;
+      if (!Crypto::generate_key_derivation(recipient.viewPublicKey, senderKeys.secretKey, derivation)) {
+        return false;
+      }
+
+      // Derive encryption key from shared secret
+      Crypto::PublicKey ecdhKey;
+      Crypto::derive_public_key(derivation, 0, recipient.spendPublicKey, ecdhKey);
+      encryptionKey.assign(ecdhKey.data, ecdhKey.data + sizeof(Crypto::PublicKey));
+
+      // Generate random nonce for AES-GCM
+      encryptionNonce.resize(12);
+      for (size_t i = 0; i < 12; ++i) {
+        encryptionNonce[i] = static_cast<uint8_t>(Crypto::rand<uint8_t>());
+      }
+
+      // Compute SHA3-256 hash of original media content
+      uint8_t hash[32];
+      keccak(mediaData.data(), mediaData.size(), hash, sizeof(hash));
+      mediaHash.assign(reinterpret_cast<char*>(hash), 32);
+
+      // TODO: implement AES-256-GCM encryption
+      // For now, store unencrypted data (needs proper crypto implementation)
+      encryptedContent = mediaData;
+
+      // Create signature data (all fields except signature itself)
+      std::vector<uint8_t> signatureData;
+      signatureData.insert(signatureData.end(), senderKey.data, senderKey.data + sizeof(Crypto::PublicKey));
+      signatureData.insert(signatureData.end(), recipientKey.data, recipientKey.data + sizeof(Crypto::PublicKey));
+
+      // Add timestamp (8 bytes, little-endian)
+      for (int i = 0; i < 8; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((timestamp >> (i * 8)) & 0xFF));
+      }
+
+      // Add TTL (8 bytes, little-endian)
+      for (int i = 0; i < 8; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((ttl >> (i * 8)) & 0xFF));
+      }
+
+      // Add media type (4 bytes, little-endian)
+      for (int i = 0; i < 4; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((mediaType >> (i * 8)) & 0xFF));
+      }
+
+      signatureData.insert(signatureData.end(), mediaHash.begin(), mediaHash.end());
+      signatureData.insert(signatureData.end(), encryptedContent.begin(), encryptedContent.end());
+      signatureData.insert(signatureData.end(), encryptionNonce.begin(), encryptionNonce.end());
+      signatureData.insert(signatureData.end(), encryptionKey.begin(), encryptionKey.end());
+
+      // Sign the data
+      signature.resize(64); // Ed25519 signature size
+      Crypto::Signature sig;
+      Crypto::Hash prefixHash;
+      keccak(signatureData.data(), signatureData.size(), prefixHash.data, sizeof(prefixHash));
+      Crypto::generate_signature(prefixHash, senderKeys.publicKey, senderKeys.secretKey, sig);
+      memcpy(signature.data(), &sig, sizeof(sig));
+
+      return true;
+    } catch (...) {
+      return false;
+    }
+  }
+
+  bool TransactionExtraEncryptedMediaMessage::decrypt(std::vector<uint8_t>& mediaData,
+                                                     const Crypto::SecretKey& recipientPrivateKey) const {
+    try {
+      // Verify signature first
+      if (!verifySignature()) {
+        return false;
+      }
+
+      // TODO: implement ECDH key derivation and AES-256-GCM decryption
+      // For now, return the encrypted content (needs crypto implementation)
+      mediaData = encryptedContent;
+
+      return true;
+    } catch (...) {
+      return false;
+    }
+  }
+
+  bool TransactionExtraEncryptedMediaMessage::verifySignature() const {
+    try {
+      // Recreate signature data
+      std::vector<uint8_t> signatureData;
+      signatureData.insert(signatureData.end(), senderKey.data, senderKey.data + sizeof(Crypto::PublicKey));
+      signatureData.insert(signatureData.end(), recipientKey.data, recipientKey.data + sizeof(Crypto::PublicKey));
+
+      // Add timestamp (8 bytes, little-endian)
+      for (int i = 0; i < 8; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((timestamp >> (i * 8)) & 0xFF));
+      }
+
+      // Add TTL (8 bytes, little-endian)
+      for (int i = 0; i < 8; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((ttl >> (i * 8)) & 0xFF));
+      }
+
+      // Add media type (4 bytes, little-endian)
+      for (int i = 0; i < 4; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((mediaType >> (i * 8)) & 0xFF));
+      }
+
+      signatureData.insert(signatureData.end(), mediaHash.begin(), mediaHash.end());
+      signatureData.insert(signatureData.end(), encryptedContent.begin(), encryptedContent.end());
+      signatureData.insert(signatureData.end(), encryptionNonce.begin(), encryptionNonce.end());
+      signatureData.insert(signatureData.end(), encryptionKey.begin(), encryptionKey.end());
+
+      // Verify signature
+      Crypto::Signature sig;
+      if (signature.size() != sizeof(sig)) {
+        return false;
+      }
+      memcpy(&sig, signature.data(), sizeof(sig));
+
+      Crypto::Hash prefixHash;
+      keccak(signatureData.data(), signatureData.size(), prefixHash.data, sizeof(prefixHash));
+      return Crypto::check_signature(prefixHash, senderKey, sig);
+    } catch (...) {
+      return false;
+    }
+  }
+
+  bool TransactionExtraEncryptedMediaMessage::isExpired(uint64_t currentTime) const {
+    return (timestamp + ttl) < currentTime;
+  }
+
+  std::string TransactionExtraEncryptedMediaMessage::getMediaTypeString() const {
+    switch (mediaType) {
+      case MEDIA_TYPE_TEXT: return "text";
+      case MEDIA_TYPE_IMAGE: return "image";
+      case MEDIA_TYPE_VIDEO: return "video";
+      case MEDIA_TYPE_AUDIO: return "audio";
+      case MEDIA_TYPE_DOCUMENT: return "document";
+      case MEDIA_TYPE_ARCHIVE: return "archive";
+      case MEDIA_TYPE_EXECUTABLE: return "executable";
+      default: return "other";
+    }
+  }
+
+
+  bool TransactionExtraEncryptedMediaMessage::isValid() const {
+    // Basic validation
+    if (mediaHash.length() != 32) return false;
+    if (encryptionNonce.size() != 12) return false;
+    if (encryptionKey.size() != 32) return false;
+    if (signature.size() != 64) return false;
+    if (ttl == 0 || ttl > 365 * 24 * 60 * 60) return false; // Max 1 year TTL
+    if (mediaSize > MAX_MEDIA_FILE_SIZE) return false; // Max 100MB
+    if (mediaType > MEDIA_TYPE_OTHER) return false;
+
+    return verifySignature();
+  }
+
+  // TransactionExtraMediaAttachment implementation
+
+  bool TransactionExtraMediaAttachment::isValid() const {
+    if (chunkIndex >= totalChunks) return false;
+    if (chunkData.size() > MAX_MEDIA_CHUNK_SIZE) return false;
+    if (chunkData.empty()) return false;
+    return verifyIntegrity();
+  }
+
+  bool TransactionExtraMediaAttachment::verifyIntegrity() const {
+    uint8_t hash[32];
+    keccak(chunkData.data(), chunkData.size(), hash, sizeof(hash));
+    Crypto::Hash computedHash;
+    memcpy(&computedHash, hash, sizeof(hash));
+    return chunkHash == computedHash;
+  }
+
+  // TransactionExtraMediaTransferRequest implementation
+
+  bool TransactionExtraMediaTransferRequest::isValid() const {
+    if (mediaHash == Crypto::Hash{}) return false;
+    if (priority > TRANSFER_PRIORITY_CRITICAL) return false;
+    if (signature.size() != 64) return false;
+    return verifySignature();
+  }
+
+  bool TransactionExtraMediaTransferRequest::verifySignature() const {
+    try {
+      std::vector<uint8_t> signatureData;
+      signatureData.insert(signatureData.end(), mediaHash.data, mediaHash.data + sizeof(Crypto::Hash));
+      signatureData.insert(signatureData.end(), requesterKey.data, requesterKey.data + sizeof(Crypto::PublicKey));
+
+      // Add timestamp (8 bytes, little-endian)
+      for (int i = 0; i < 8; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((timestamp >> (i * 8)) & 0xFF));
+      }
+
+      // Add priority (4 bytes, little-endian)
+      for (int i = 0; i < 4; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((priority >> (i * 8)) & 0xFF));
+      }
+
+      Crypto::Signature sig;
+      if (signature.size() != sizeof(sig)) return false;
+      memcpy(&sig, signature.data(), sizeof(sig));
+
+      Crypto::Hash prefixHash;
+      keccak(signatureData.data(), signatureData.size(), prefixHash.data, sizeof(prefixHash));
+      return Crypto::check_signature(prefixHash, requesterKey, sig);
+    } catch (...) {
+      return false;
+    }
+  }
+
+  // TransactionExtraMediaTransferResponse implementation
+
+  bool TransactionExtraMediaTransferResponse::isValid() const {
+    if (mediaHash == Crypto::Hash{}) return false;
+    if (responseCode > TRANSFER_RESPONSE_STORAGE_FULL) return false;
+    if (responseMessage.length() > 256) return false; // Max message length
+    if (signature.size() != 64) return false;
+    return verifySignature();
+  }
+
+  bool TransactionExtraMediaTransferResponse::verifySignature() const {
+    try {
+      std::vector<uint8_t> signatureData;
+      signatureData.insert(signatureData.end(), mediaHash.data, mediaHash.data + sizeof(Crypto::Hash));
+      signatureData.insert(signatureData.end(), responderKey.data, responderKey.data + sizeof(Crypto::PublicKey));
+
+      // Add timestamp (8 bytes, little-endian)
+      for (int i = 0; i < 8; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((timestamp >> (i * 8)) & 0xFF));
+      }
+
+      // Add response code (4 bytes, little-endian)
+      for (int i = 0; i < 4; ++i) {
+        signatureData.push_back(static_cast<uint8_t>((responseCode >> (i * 8)) & 0xFF));
+      }
+
+      signatureData.insert(signatureData.end(), responseMessage.begin(), responseMessage.end());
+
+      Crypto::Signature sig;
+      if (signature.size() != sizeof(sig)) return false;
+      memcpy(&sig, signature.data(), sizeof(sig));
+
+      Crypto::Hash prefixHash;
+      keccak(signatureData.data(), signatureData.size(), prefixHash.data, sizeof(prefixHash));
+      return Crypto::check_signature(prefixHash, responderKey, sig);
+    } catch (...) {
+      return false;
+    }
+  }
+
+  // ============================================================================
+  // HELPER FUNCTION IMPLEMENTATIONS
+  // ============================================================================
+
+  bool createTxExtraWithEncryptedMediaMessage(const Crypto::PublicKey& senderKey,
+                                             const Crypto::PublicKey& recipientKey,
+                                             uint64_t ttl,
+                                             uint32_t mediaType,
+                                             const std::vector<uint8_t>& mediaData,
+                                             const AccountPublicAddress& recipientAddr,
+                                             const KeyPair& senderKeys,
+                                             std::vector<uint8_t>& extra) {
+    try {
+      TransactionExtraEncryptedMediaMessage message;
+      message.senderKey = senderKey;
+      message.recipientKey = recipientKey;
+      message.timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count());
+      message.ttl = ttl;
+      message.mediaType = mediaType;
+      message.mediaSize = mediaData.size();
+
+      if (!message.encrypt(mediaData, recipientAddr, senderKeys)) {
+        return false;
+      }
+
+      return addEncryptedMediaMessageToExtra(extra, message);
+    } catch (...) {
+      return false;
+    }
+  }
+
+  bool addEncryptedMediaMessageToExtra(std::vector<uint8_t>& tx_extra,
+                                      const TransactionExtraEncryptedMediaMessage& message) {
+    if (!message.isValid()) return false;
+
+    tx_extra.push_back(TX_EXTRA_ENCRYPTED_MEDIA_MESSAGE);
+
+    // Serialize sender key (32 bytes)
+    tx_extra.insert(tx_extra.end(), message.senderKey.data, message.senderKey.data + sizeof(message.senderKey.data));
+
+    // Serialize recipient key (32 bytes)
+    tx_extra.insert(tx_extra.end(), message.recipientKey.data, message.recipientKey.data + sizeof(message.recipientKey.data));
+
+    // Serialize timestamp (8 bytes, little-endian)
+    uint64_t timestamp = message.timestamp;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(timestamp & 0xFF));
+      timestamp >>= 8;
+    }
+
+    // Serialize TTL (8 bytes, little-endian)
+    uint64_t ttl = message.ttl;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(ttl & 0xFF));
+      ttl >>= 8;
+    }
+
+    // Serialize media type (4 bytes, little-endian)
+    uint32_t mediaType = message.mediaType;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(mediaType & 0xFF));
+      mediaType >>= 8;
+    }
+
+    // Serialize media hash (32 bytes)
+    tx_extra.insert(tx_extra.end(), message.mediaHash.begin(), message.mediaHash.end());
+
+    // Serialize media size (8 bytes, little-endian)
+    uint64_t mediaSize = message.mediaSize;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(mediaSize & 0xFF));
+      mediaSize >>= 8;
+    }
+
+    // Serialize encrypted content size and data
+    uint32_t contentLen = static_cast<uint32_t>(message.encryptedContent.size());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(contentLen & 0xFF));
+      contentLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), message.encryptedContent.begin(), message.encryptedContent.end());
+
+    // Serialize encryption nonce (12 bytes)
+    tx_extra.insert(tx_extra.end(), message.encryptionNonce.begin(), message.encryptionNonce.end());
+
+    // Serialize encryption key (32 bytes)
+    tx_extra.insert(tx_extra.end(), message.encryptionKey.begin(), message.encryptionKey.end());
+
+    // Serialize signature (64 bytes)
+    tx_extra.insert(tx_extra.end(), message.signature.begin(), message.signature.end());
+
+    return true;
+  }
+
+  bool getEncryptedMediaMessageFromExtra(const std::vector<uint8_t>& tx_extra,
+                                        TransactionExtraEncryptedMediaMessage& message) {
+    // implementation would parse the extra field
+    // placeholder - full implementation needs proper parsing logic
+    return false;
+  }
+
+  // Media Attachment helper functions
+  bool createTxExtraWithMediaAttachment(const Crypto::Hash& messageId,
+                                       uint32_t chunkIndex,
+                                       uint32_t totalChunks,
+                                       const std::vector<uint8_t>& chunkData,
+                                       std::vector<uint8_t>& extra) {
+    TransactionExtraMediaAttachment attachment;
+    attachment.messageId = messageId;
+    attachment.chunkIndex = chunkIndex;
+    attachment.totalChunks = totalChunks;
+    attachment.chunkData = chunkData;
+
+    // Compute chunk hash
+    uint8_t hash[32];
+    keccak(chunkData.data(), chunkData.size(), hash, sizeof(hash));
+    memcpy(&attachment.chunkHash, hash, sizeof(hash));
+
+    return addMediaAttachmentToExtra(extra, attachment);
+  }
+
+  bool addMediaAttachmentToExtra(std::vector<uint8_t>& tx_extra,
+                                const TransactionExtraMediaAttachment& attachment) {
+    if (!attachment.isValid()) return false;
+
+    tx_extra.push_back(TX_EXTRA_MEDIA_ATTACHMENT);
+
+    // Serialize message ID (32 bytes)
+    tx_extra.insert(tx_extra.end(), attachment.messageId.data, attachment.messageId.data + sizeof(attachment.messageId.data));
+
+    // Serialize chunk index (4 bytes, little-endian)
+    uint32_t chunkIndex = attachment.chunkIndex;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(chunkIndex & 0xFF));
+      chunkIndex >>= 8;
+    }
+
+    // Serialize total chunks (4 bytes, little-endian)
+    uint32_t totalChunks = attachment.totalChunks;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(totalChunks & 0xFF));
+      totalChunks >>= 8;
+    }
+
+    // Serialize chunk data size and data
+    uint32_t dataLen = static_cast<uint32_t>(attachment.chunkData.size());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(dataLen & 0xFF));
+      dataLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), attachment.chunkData.begin(), attachment.chunkData.end());
+
+    // Serialize chunk hash (32 bytes)
+    tx_extra.insert(tx_extra.end(), attachment.chunkHash.data, attachment.chunkHash.data + sizeof(attachment.chunkHash.data));
+
+    return true;
+  }
+
+  bool getMediaAttachmentFromExtra(const std::vector<uint8_t>& tx_extra,
+                                  TransactionExtraMediaAttachment& attachment) {
+    // implementation would parse the extra field
+    // This is a placeholder - full implementation needs proper parsing logic
+    return false;
+  }
+
+  // Media Transfer Request/Response helper functions
+  bool createTxExtraWithMediaTransferRequest(const Crypto::Hash& mediaHash,
+                                            const Crypto::PublicKey& requesterKey,
+                                            uint32_t priority,
+                                            const Crypto::SecretKey& requesterSecretKey,
+                                            std::vector<uint8_t>& extra) {
+    TransactionExtraMediaTransferRequest request;
+    request.mediaHash = mediaHash;
+    request.requesterKey = requesterKey;
+    request.timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count());
+    request.priority = priority;
+
+    // Create signature data
+    std::vector<uint8_t> signatureData;
+    signatureData.insert(signatureData.end(), mediaHash.data, mediaHash.data + sizeof(Crypto::Hash));
+    signatureData.insert(signatureData.end(), requesterKey.data, requesterKey.data + sizeof(Crypto::PublicKey));
+
+    for (int i = 0; i < 8; ++i) {
+      signatureData.push_back(static_cast<uint8_t>((request.timestamp >> (i * 8)) & 0xFF));
+    }
+
+    for (int i = 0; i < 4; ++i) {
+      signatureData.push_back(static_cast<uint8_t>((priority >> (i * 8)) & 0xFF));
+    }
+
+    // Sign the data
+    request.signature.resize(64);
+    Crypto::Signature sig;
+    Crypto::Hash prefixHash;
+    keccak(signatureData.data(), signatureData.size(), prefixHash.data, sizeof(prefixHash));
+    Crypto::generate_signature(prefixHash, requesterKey, requesterSecretKey, sig);
+    memcpy(request.signature.data(), &sig, sizeof(sig));
+
+    return addMediaTransferRequestToExtra(extra, request);
+  }
+
+  bool addMediaTransferRequestToExtra(std::vector<uint8_t>& tx_extra,
+                                     const TransactionExtraMediaTransferRequest& request) {
+    if (!request.isValid()) return false;
+
+    tx_extra.push_back(TX_EXTRA_MEDIA_TRANSFER_REQUEST);
+
+    // Serialize media hash (32 bytes)
+    tx_extra.insert(tx_extra.end(), request.mediaHash.data, request.mediaHash.data + sizeof(request.mediaHash.data));
+
+    // Serialize requester key (32 bytes)
+    tx_extra.insert(tx_extra.end(), request.requesterKey.data, request.requesterKey.data + sizeof(request.requesterKey.data));
+
+    // Serialize timestamp (8 bytes, little-endian)
+    uint64_t timestamp = request.timestamp;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(timestamp & 0xFF));
+      timestamp >>= 8;
+    }
+
+    // Serialize priority (4 bytes, little-endian)
+    uint32_t priority = request.priority;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(priority & 0xFF));
+      priority >>= 8;
+    }
+
+    // Serialize signature (64 bytes)
+    tx_extra.insert(tx_extra.end(), request.signature.begin(), request.signature.end());
+
+    return true;
+  }
+
+  bool getMediaTransferRequestFromExtra(const std::vector<uint8_t>& tx_extra,
+                                       TransactionExtraMediaTransferRequest& request) {
+    // Implementation would parse the extra field
+    return false;
+  }
+
+  bool createTxExtraWithMediaTransferResponse(const Crypto::Hash& mediaHash,
+                                             const Crypto::PublicKey& responderKey,
+                                             uint32_t responseCode,
+                                             const std::string& responseMessage,
+                                             const Crypto::SecretKey& responderSecretKey,
+                                             std::vector<uint8_t>& extra) {
+    TransactionExtraMediaTransferResponse response;
+    response.mediaHash = mediaHash;
+    response.responderKey = responderKey;
+    response.timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::seconds>(
+      std::chrono::system_clock::now().time_since_epoch()).count());
+    response.responseCode = responseCode;
+    response.responseMessage = responseMessage;
+
+    // Create signature data
+    std::vector<uint8_t> signatureData;
+    signatureData.insert(signatureData.end(), mediaHash.data, mediaHash.data + sizeof(Crypto::Hash));
+    signatureData.insert(signatureData.end(), responderKey.data, responderKey.data + sizeof(Crypto::PublicKey));
+
+    for (int i = 0; i < 8; ++i) {
+      signatureData.push_back(static_cast<uint8_t>((response.timestamp >> (i * 8)) & 0xFF));
+    }
+
+    for (int i = 0; i < 4; ++i) {
+      signatureData.push_back(static_cast<uint8_t>((responseCode >> (i * 8)) & 0xFF));
+    }
+
+    signatureData.insert(signatureData.end(), responseMessage.begin(), responseMessage.end());
+
+    // Sign the data
+    response.signature.resize(64);
+    Crypto::Signature sig;
+    Crypto::Hash prefixHash;
+    keccak(signatureData.data(), signatureData.size(), prefixHash.data, sizeof(prefixHash));
+    Crypto::generate_signature(prefixHash, responderKey, responderSecretKey, sig);
+    memcpy(response.signature.data(), &sig, sizeof(sig));
+
+    return addMediaTransferResponseToExtra(extra, response);
+  }
+
+  bool addMediaTransferResponseToExtra(std::vector<uint8_t>& tx_extra,
+                                      const TransactionExtraMediaTransferResponse& response) {
+    if (!response.isValid()) return false;
+
+    tx_extra.push_back(TX_EXTRA_MEDIA_TRANSFER_RESPONSE);
+
+    // Serialize media hash (32 bytes)
+    tx_extra.insert(tx_extra.end(), response.mediaHash.data, response.mediaHash.data + sizeof(response.mediaHash.data));
+
+    // Serialize responder key (32 bytes)
+    tx_extra.insert(tx_extra.end(), response.responderKey.data, response.responderKey.data + sizeof(response.responderKey.data));
+
+    // Serialize timestamp (8 bytes, little-endian)
+    uint64_t timestamp = response.timestamp;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(timestamp & 0xFF));
+      timestamp >>= 8;
+    }
+
+    // Serialize response code (4 bytes, little-endian)
+    uint32_t responseCode = response.responseCode;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(responseCode & 0xFF));
+      responseCode >>= 8;
+    }
+
+    // Serialize response message size and data
+    uint32_t msgLen = static_cast<uint32_t>(response.responseMessage.size());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(msgLen & 0xFF));
+      msgLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), response.responseMessage.begin(), response.responseMessage.end());
+
+    // Serialize signature (64 bytes)
+    tx_extra.insert(tx_extra.end(), response.signature.begin(), response.signature.end());
+
+    return true;
+  }
+
+  bool getMediaTransferResponseFromExtra(const std::vector<uint8_t>& tx_extra,
+                                        TransactionExtraMediaTransferResponse& response) {
+    // Implementation would parse the extra field
+    return false;
+  }
+
+  // Burn receipt functions
+  bool getBurnReceiptFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraBurnReceipt& burnReceipt)
+  {
+    if (tx_extra.empty() || tx_extra[0] != TX_EXTRA_BURN_RECEIPT) {
+      return false;
+    }
+
+    size_t pos = 1;
+
+    // Parse proof_pubkey (32 bytes)
+    if (pos + sizeof(Crypto::PublicKey) > tx_extra.size()) return false;
+    std::memcpy(&burnReceipt.proof_pubkey, &tx_extra[pos], sizeof(Crypto::PublicKey));
+    pos += sizeof(Crypto::PublicKey);
+
+    // Parse tx_hash (variable length)
+    if (pos >= tx_extra.size()) return false;
+    uint32_t hashLen = 0;
+    for (int i = 0; i < 4 && pos < tx_extra.size(); ++i, ++pos) {
+      hashLen |= static_cast<uint32_t>(tx_extra[pos]) << (i * 8);
+    }
+    if (pos + hashLen > tx_extra.size()) return false;
+    burnReceipt.tx_hash.assign(reinterpret_cast<const char*>(&tx_extra[pos]), hashLen);
+    pos += hashLen;
+
+    // Parse timestamp (8 bytes)
+    if (pos + 8 > tx_extra.size()) return false;
+    burnReceipt.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+      burnReceipt.timestamp |= static_cast<uint64_t>(tx_extra[pos + i]) << (i * 8);
+    }
+
+    return true;
+  }
+
+  bool addBurnReceiptToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraBurnReceipt& burnReceipt)
+  {
+    tx_extra.push_back(TX_EXTRA_BURN_RECEIPT);
+
+    // Add proof_pubkey
+    tx_extra.insert(tx_extra.end(), reinterpret_cast<const uint8_t*>(&burnReceipt.proof_pubkey),
+                    reinterpret_cast<const uint8_t*>(&burnReceipt.proof_pubkey) + sizeof(Crypto::PublicKey));
+
+    // Add tx_hash length and data
+    uint32_t hashLen = static_cast<uint32_t>(burnReceipt.tx_hash.length());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(hashLen & 0xFF));
+      hashLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), burnReceipt.tx_hash.begin(), burnReceipt.tx_hash.end());
+
+    // Add timestamp
+    uint64_t timestamp = burnReceipt.timestamp;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(timestamp & 0xFF));
+      timestamp >>= 8;
+    }
+
+    return true;
+  }
+
+  // Deposit receipt functions
+  bool getDepositReceiptFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraDepositReceipt& depositReceipt)
+  {
+    if (tx_extra.empty() || tx_extra[0] != TX_EXTRA_DEPOSIT_RECEIPT) {
+      return false;
+    }
+
+    size_t pos = 1;
+
+    // Parse proof_pubkey (32 bytes)
+    if (pos + sizeof(Crypto::PublicKey) > tx_extra.size()) return false;
+    std::memcpy(&depositReceipt.proof_pubkey, &tx_extra[pos], sizeof(Crypto::PublicKey));
+    pos += sizeof(Crypto::PublicKey);
+
+    // Parse tx_hash (variable length)
+    if (pos >= tx_extra.size()) return false;
+    uint32_t hashLen = 0;
+    for (int i = 0; i < 4 && pos < tx_extra.size(); ++i, ++pos) {
+      hashLen |= static_cast<uint32_t>(tx_extra[pos]) << (i * 8);
+    }
+    if (pos + hashLen > tx_extra.size()) return false;
+    depositReceipt.tx_hash.assign(reinterpret_cast<const char*>(&tx_extra[pos]), hashLen);
+    pos += hashLen;
+
+    // Parse timestamp (8 bytes)
+    if (pos + 8 > tx_extra.size()) return false;
+    depositReceipt.timestamp = 0;
+    for (int i = 0; i < 8; ++i) {
+      depositReceipt.timestamp |= static_cast<uint64_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 8;
+
+    // Parse term_months (4 bytes)
+    if (pos + 4 > tx_extra.size()) return false;
+    depositReceipt.term_months = 0;
+    for (int i = 0; i < 4; ++i) {
+      depositReceipt.term_months |= static_cast<uint32_t>(tx_extra[pos + i]) << (i * 8);
+    }
+    pos += 4;
+
+    // Parse deposit_type (variable length)
+    if (pos >= tx_extra.size()) return false;
+    uint32_t typeLen = 0;
+    for (int i = 0; i < 4 && pos < tx_extra.size(); ++i, ++pos) {
+      typeLen |= static_cast<uint32_t>(tx_extra[pos]) << (i * 8);
+    }
+    if (pos + typeLen > tx_extra.size()) return false;
+    depositReceipt.deposit_type.assign(reinterpret_cast<const char*>(&tx_extra[pos]), typeLen);
+
+    return true;
+  }
+
+  bool addDepositReceiptToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDepositReceipt& depositReceipt)
+  {
+    tx_extra.push_back(TX_EXTRA_DEPOSIT_RECEIPT);
+
+    // Add proof_pubkey
+    tx_extra.insert(tx_extra.end(), reinterpret_cast<const uint8_t*>(&depositReceipt.proof_pubkey),
+                    reinterpret_cast<const uint8_t*>(&depositReceipt.proof_pubkey) + sizeof(Crypto::PublicKey));
+
+    // Add tx_hash length and data
+    uint32_t hashLen = static_cast<uint32_t>(depositReceipt.tx_hash.length());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(hashLen & 0xFF));
+      hashLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), depositReceipt.tx_hash.begin(), depositReceipt.tx_hash.end());
+
+    // Add timestamp
+    uint64_t timestamp = depositReceipt.timestamp;
+    for (int i = 0; i < 8; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(timestamp & 0xFF));
+      timestamp >>= 8;
+    }
+
+    // Add term_months
+    uint32_t termMonths = depositReceipt.term_months;
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(termMonths & 0xFF));
+      termMonths >>= 8;
+    }
+
+    // Add deposit_type length and data
+    uint32_t typeLen = static_cast<uint32_t>(depositReceipt.deposit_type.length());
+    for (int i = 0; i < 4; ++i) {
+      tx_extra.push_back(static_cast<uint8_t>(typeLen & 0xFF));
+      typeLen >>= 8;
+    }
+    tx_extra.insert(tx_extra.end(), depositReceipt.deposit_type.begin(), depositReceipt.deposit_type.end());
+
+    return true;
+  }
+
+  bool createTxExtraWithBurnReceipt(const TransactionExtraBurnReceipt& burnReceipt, std::vector<uint8_t>& extra)
+  {
+    extra.clear();
+    return addBurnReceiptToExtra(extra, burnReceipt);
+  }
+
+  bool createTxExtraWithDepositReceipt(const TransactionExtraDepositReceipt& depositReceipt, std::vector<uint8_t>& extra)
+  {
+    extra.clear();
+    return addDepositReceiptToExtra(extra, depositReceipt);
   }
 
 } // namespace CryptoNote

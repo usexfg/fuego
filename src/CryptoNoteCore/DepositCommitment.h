@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2025 Elderfire Privacy Council
+// Copyright (c) 2017-2025 Elderfire Privacy Group
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2014-2017 The XDN developers
 // Copyright (c) 2012-2018 The CryptoNote developers
@@ -32,7 +32,7 @@ struct DepositCommitment {
     CommitmentType type;
     Crypto::Hash commitment;
     std::vector<uint8_t> metadata;
-    
+
     DepositCommitment() : type(CommitmentType::YIELD) {}
     DepositCommitment(CommitmentType t, const Crypto::Hash& c, const std::vector<uint8_t>& m = {})
         : type(t), commitment(c), metadata(m) {}
@@ -45,30 +45,30 @@ public:
     static DepositCommitment generateHeatCommitment(
         uint64_t xfgAmount,
         const std::vector<uint8_t>& metadata = {});
-    
+
     // Generate HEAT commitment and return secret for local storage
     static std::pair<DepositCommitment, Crypto::SecretKey> generateHeatCommitmentWithSecret(
         uint64_t xfgAmount,
         const std::vector<uint8_t>& metadata = {});
-    
+
     // Generate YIELD commitment for interest-bearing deposits
     static DepositCommitment generateYieldCommitment(
         uint64_t term,
         uint64_t amount,
         const std::vector<uint8_t>& metadata = {});
-    
+
     // Generate appropriate commitment based on deposit term
     static DepositCommitment generateCommitment(
         uint64_t term,
         uint64_t amount,
         const std::vector<uint8_t>& metadata = {});
-    
+
     // Validate commitment data
     static bool validateCommitment(const DepositCommitment& commitment);
-    
+
     // Convert XFG to HEAT (0.8 XFG = 8M HEAT)
     static uint64_t convertXfgToHeat(uint64_t xfgAmount);
-    
+
     // Convert HEAT to XFG
     static uint64_t convertHeatToXfg(uint64_t heatAmount);
 };

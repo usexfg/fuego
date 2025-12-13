@@ -1,7 +1,5 @@
-// Copyright (c) 2017-2025 Elderfire Privacy Council
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Copyright (c) 2014-2017 The XDN developers
-// Copyright (c) 2012-2018 The CryptoNote developers
+// Copyright (c) 2017-2026 Fuego Developers
+// Copyright (c) 2025 Elderfire Privacy Group
 //
 // This file is part of Fuego.
 //
@@ -22,8 +20,13 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <regex>
+#include <algorithm>
 
 namespace CryptoNote {
+
+// Helper structure for BPDF validation
+
 
 std::error_code BurnProofDataFileGenerator::generateBPDF(
     const std::string& txHash,
@@ -115,9 +118,55 @@ std::error_code BurnProofDataFileGenerator::extractSecretFromTransaction(
 }
 
 bool BurnProofDataFileGenerator::validateBPDF(const std::string& filePath) {
-    // TODO: Implement BPDF validation
-    // This would validate the JSON structure and cryptographic hashes
-    return false;
+    try {
+        // Read the BPDF file
+        std::ifstream file(filePath);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        std::string jsonContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
+        
+        // Parse JSON content
+        Common::JsonValue json;
+        try {
+            json = Common::JsonValue::fromString(jsonContent);
+        } catch (...) {
+            return false;
+        }
+        
+        // Validate JSON structure
+        if (!validateJsonStructure(json)) {
+            return false;
+        }
+        
+        // Extract data for validation
+        BPDFData data;
+        if (!extractBPDFData(json, data)) {
+            return false;
+        }
+        
+        // Validate cryptographic hashes
+        if (!validateCryptographicHashes(data)) {
+            return false;
+        }
+        
+        // Validate data integrity
+        if (!validateDataIntegrity(data)) {
+            return false;
+        }
+        
+        // Validate format and constraints
+        if (!validateFormatConstraints(data)) {
+            return false;
+        }
+        
+        return true;
+        
+    } catch (const std::exception&) {
+        return false;
+    }
 }
 
 Crypto::Hash BurnProofDataFileGenerator::calculateNullifier(const Crypto::SecretKey& secret) {
@@ -217,6 +266,286 @@ std::error_code BurnProofDataFileGenerator::saveToFile(const std::string& jsonDa
     } catch (const std::exception&) {
         return std::make_error_code(std::errc::io_error);
     }
+}
+
+// BPDF Validation Helper Functions
+
+bool BurnProofDataFileGenerator::validateJsonStructure(const Common::JsonValue& json) {
+    // Check if root is an object
+    if (json.getType() != Common::JsonValue::OBJECT) {
+        return false;
+    }
+    
+    // Validate required top-level sections
+    const std::vector<std::string> requiredSections = {
+        "metadata", "cryptographic_data", "user_data", "security"
+    };
+    
+    for (const auto& section : requiredSections) {
+        if (!json.contains(section) || json(section).getType() != Common::JsonValue::OBJECT) {
+            return false;
+        }
+    }
+    
+    // Validate metadata section
+    const Common::JsonValue& metadata = json("metadata");
+    const std::vector<std::string> metadataFields = {
+        "version", "proof_type", "transaction_hash", "created_at", "format_version"
+    };
+    
+    for (const auto& field : metadataFields) {
+        if (!metadata.contains(field)) {
+            return false;
+        }
+    }
+    
+    // Validate cryptographic_data section
+    const Common::JsonValue& cryptoData = json("cryptographic_data");
+    const std::vector<std::string> cryptoFields = {
+        "secret", "nullifier", "commitment", "block_height", "xfg_amount", "tx_extra_hash"
+    };
+    
+    for (const auto& field : cryptoFields) {
+        if (!cryptoData.contains(field)) {
+            return false;
+        }
+    }
+    
+    // Validate user_data section
+    const Common::JsonValue& userData = json("user_data");
+    const std::vector<std::string> userFields = {
+        "recipient_address", "recipient_hash", "heat_amount", 
+        "xfg_amount_formatted", "heat_amount_formatted", "transaction_timestamp"
+    };
+    
+    for (const auto& field : userFields) {
+        if (!userData.contains(field)) {
+            return false;
+        }
+    }
+    
+    // Validate security section
+    const Common::JsonValue& security = json("security");
+    if (!security.contains("genesis_validation") || security("genesis_validation").getType() != Common::JsonValue::OBJECT) {
+        return false;
+    }
+    
+    const Common::JsonValue& genesisValidation = security("genesis_validation");
+    const std::vector<std::string> genesisFields = {
+        "genesis_transaction_hash", "genesis_block_hash", "genesis_timestamp",
+        "genesis_validation_hash", "fuego_network_id", "network_validation_hash"
+    };
+    
+    for (const auto& field : genesisFields) {
+        if (!genesisValidation.contains(field)) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool BurnProofDataFileGenerator::extractBPDFData(const Common::JsonValue& json, BPDFData& data) {
+    try {
+        // Extract metadata
+        const Common::JsonValue& metadata = json("metadata");
+        data.version = metadata("version").getString();
+        data.proofType = metadata("proof_type").getString();
+        data.transactionHash = metadata("transaction_hash").getString();
+        data.createdAt = static_cast<uint64_t>(metadata("created_at").getInteger());
+        data.formatVersion = metadata("format_version").getString();
+        
+        // Extract cryptographic data
+        const Common::JsonValue& cryptoData = json("cryptographic_data");
+        data.secret = cryptoData("secret").getString();
+        data.nullifier = cryptoData("nullifier").getString();
+        data.commitment = cryptoData("commitment").getString();
+        data.blockHeight = static_cast<uint32_t>(cryptoData("block_height").getInteger());
+        data.xfgAmount = static_cast<uint64_t>(cryptoData("xfg_amount").getInteger());
+        data.txExtraHash = cryptoData("tx_extra_hash").getString();
+        
+        // Extract user data
+        const Common::JsonValue& userData = json("user_data");
+        data.recipientAddress = userData("recipient_address").getString();
+        data.recipientHash = userData("recipient_hash").getString();
+        data.heatAmount = static_cast<uint64_t>(userData("heat_amount").getInteger());
+        data.xfgAmountFormatted = userData("xfg_amount_formatted").getString();
+        data.heatAmountFormatted = userData("heat_amount_formatted").getString();
+        data.transactionTimestamp = static_cast<uint64_t>(userData("transaction_timestamp").getInteger());
+        
+        // Extract security data
+        const Common::JsonValue& security = json("security");
+        data.signature = security("signature").getString();
+        data.checksum = security("checksum").getString();
+        data.signaturePubkey = security("signature_pubkey").getString();
+        data.integrityHash = security("integrity_hash").getString();
+        
+        // Extract genesis validation data
+        const Common::JsonValue& genesisValidation = security("genesis_validation");
+        data.genesisTransactionHash = genesisValidation("genesis_transaction_hash").getString();
+        data.genesisBlockHash = genesisValidation("genesis_block_hash").getString();
+        data.genesisTimestamp = static_cast<uint64_t>(genesisValidation("genesis_timestamp").getInteger());
+        data.genesisValidationHash = genesisValidation("genesis_validation_hash").getString();
+        data.fuegoNetworkId = static_cast<uint64_t>(genesisValidation("fuego_network_id").getInteger());
+        data.networkValidationHash = genesisValidation("network_validation_hash").getString();
+        
+        return true;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+bool BurnProofDataFileGenerator::validateCryptographicHashes(const BPDFData& data) {
+    // Validate secret format (should be 0x + 64 hex chars)
+    if (!isValidHexString(data.secret, 66)) { // 0x + 64 chars
+        return false;
+    }
+    
+    // Extract secret key
+    std::string secretHex = data.secret.substr(2); // Remove 0x prefix
+    Crypto::SecretKey secret;
+    if (!Common::fromHex(secretHex, secret.data, sizeof(secret.data))) {
+        return false;
+    }
+    
+    // Validate nullifier calculation
+    Crypto::Hash expectedNullifier = calculateNullifier(secret);
+    std::string expectedNullifierHex = "0x" + Common::podToHex(expectedNullifier);
+    if (data.nullifier != expectedNullifierHex) {
+        return false;
+    }
+    
+    // Validate commitment calculation
+    Crypto::Hash expectedCommitment = calculateCommitment(secret, data.xfgAmount);
+    std::string expectedCommitmentHex = "0x" + Common::podToHex(expectedCommitment);
+    if (data.commitment != expectedCommitmentHex) {
+        return false;
+    }
+    
+    // Validate recipient hash calculation
+    Crypto::Hash expectedRecipientHash = calculateRecipientHash(data.recipientAddress);
+    std::string expectedRecipientHashHex = "0x" + Common::podToHex(expectedRecipientHash);
+    if (data.recipientHash != expectedRecipientHashHex) {
+        return false;
+    }
+    
+    // Validate tx extra hash calculation
+    Crypto::Hash expectedTxExtraHash = calculateTxExtraHash(secret);
+    std::string expectedTxExtraHashHex = "0x" + Common::podToHex(expectedTxExtraHash);
+    if (data.txExtraHash != expectedTxExtraHashHex) {
+        return false;
+    }
+    
+    return true;
+}
+
+bool BurnProofDataFileGenerator::validateDataIntegrity(const BPDFData& data) {
+    // Validate proof type
+    if (data.proofType != "XFG_BURN") {
+        return false;
+    }
+    
+    // Validate version format
+    if (data.version != "1.0") {
+        return false;
+    }
+    
+    // Validate format version
+    if (data.formatVersion != "1.0") {
+        return false;
+    }
+    
+    // Validate timestamps are reasonable (not in future, not too old)
+    uint64_t currentTime = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    if (data.createdAt > currentTime || data.createdAt < (currentTime - 31536000)) { // 1 year ago
+        return false;
+    }
+    
+    if (data.transactionTimestamp > currentTime || data.transactionTimestamp < (currentTime - 31536000)) {
+        return false;
+    }
+    
+    // Validate XFG amount
+    if (!isValidXfgAmount(data.xfgAmount)) {
+        return false;
+    }
+    
+    // Validate heat amount calculation (should be 10x XFG amount)
+    if (data.heatAmount != (data.xfgAmount * 10)) {
+        return false;
+    }
+    
+    // Validate formatted amounts
+    double expectedXfgFormatted = data.xfgAmount / 10000000.0;
+    std::ostringstream expectedXfgStr;
+    expectedXfgStr << expectedXfgFormatted << " XFG";
+    if (data.xfgAmountFormatted != expectedXfgStr.str()) {
+        return false;
+    }
+    
+    std::ostringstream expectedHeatStr;
+    expectedHeatStr << data.heatAmount << " HEAT";
+    if (data.heatAmountFormatted != expectedHeatStr.str()) {
+        return false;
+    }
+    
+    return true;
+}
+
+bool BurnProofDataFileGenerator::validateFormatConstraints(const BPDFData& data) {
+    // Validate Arbitrum address format
+    if (!isValidArbitrumAddress(data.recipientAddress)) {
+        return false;
+    }
+    
+    // Validate transaction hash format (should be hex string)
+    if (!isValidHexString(data.transactionHash, 64)) {
+        return false;
+    }
+    
+    // Validate genesis transaction hash format
+    if (!isValidHexString(data.genesisTransactionHash, 64)) {
+        return false;
+    }
+    
+    // Validate genesis block hash format
+    if (!isValidHexString(data.genesisBlockHash, 64)) {
+        return false;
+    }
+    
+    // Validate network ID
+    if (std::to_string(data.fuegoNetworkId) != "93385046440755750514194170694064996624") {
+        return false;
+    }
+    
+    // Validate genesis timestamp (should be 0 for Fuego)
+    if (data.genesisTimestamp != 0) {
+        return false;
+    }
+    
+    // Validate block height (should be 0 for burn transactions)
+    if (data.blockHeight != 0) {
+        return false;
+    }
+    
+    return true;
+}
+
+bool BurnProofDataFileGenerator::isValidHexString(const std::string& str, size_t expectedLength) {
+    if (str.length() != expectedLength) {
+        return false;
+    }
+    
+    // Check if all characters are hex
+    for (char c : str) {
+        if (!isxdigit(c)) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 } // namespace CryptoNote

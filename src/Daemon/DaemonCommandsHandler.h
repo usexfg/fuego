@@ -1,5 +1,5 @@
-// Copyright (c) 2017-2022 Fuego Developers
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2017-2025 Fuego Developers
+// Copyright (c) 2018-2019 Conceal Network Developers
 // Copyright (c) 2016-2019 The Karbowanec developers
 // Copyright (c) 2012-2018 The CryptoNote developers
 //
@@ -84,4 +84,5 @@ private:
   bool print_ban(const std::vector<std::string>& args);
   bool ban(const std::vector<std::string>& args);
   bool unban(const std::vector<std::string>& args);
+  bool get_burned_xfg(const std::vector<std::string>& args);
 };

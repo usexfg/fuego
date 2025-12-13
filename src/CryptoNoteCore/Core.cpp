@@ -478,7 +478,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
       }
 
       b.parentBlock.majorVersion = BLOCK_MAJOR_VERSION_1;
-      b.parentBlock.majorVersion = BLOCK_MINOR_VERSION_0;
+      b.parentBlock.minorVersion = BLOCK_MINOR_VERSION_0;
       b.parentBlock.transactionCount = 1;
       TransactionExtraMergeMiningTag mm_tag = boost::value_initialized<decltype(mm_tag)>();
 
@@ -492,15 +492,15 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     b.timestamp = time(NULL);
 
 
-    
+
     // Courtesy of Jagerman
     // https://github.com/graft-project/GraftNetwork/pull/118/commits
- 
+
     // If some other node has submitted enough blocks with forged future
     // timestamps, legitimate nodes end up providing their pools with a block
     // template that cannot be accepted -- it fails the requirement that a block
     // timestamp be greater than the median of the recent block window.
-    // 
+    //
     // This fix allows the node to increase the timestamp to the median (i.e. the
     // minimum required) if the timestamp would be rejected so that it doesn't
     // end up handing out impossible-to-accept block templates.
@@ -511,7 +511,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
 
     if(height >= m_currency.timestampCheckWindow(b.majorVersion)) {
       std::vector<uint64_t> timestamps;
-      for(size_t offset = height - m_currency.timestampCheckWindow(b.majorVersion); offset < height; ++offset) { 
+      for(size_t offset = height - m_currency.timestampCheckWindow(b.majorVersion); offset < height; ++offset) {
 
         timestamps.push_back(m_blockchain.getBlockTimestamp(offset));
       }
@@ -520,7 +520,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
           b.timestamp = median_ts;
       }
     }
-//	
+//
     median_size = m_blockchain.getCurrentCumulativeBlocksizeLimit() / 2;
     already_generated_coins = m_blockchain.getCoinsInCirculation();
   }
@@ -537,9 +537,9 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
      */
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
   bool r = m_currency.constructMinerTx(b.majorVersion, height, median_size, already_generated_coins, txs_size, fee, adr, b.baseTransaction, ex_nonce, 11);
-  if (!r) { 
-    logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, first chance"; 
-    return false; 
+  if (!r) {
+    logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, first chance";
+    return false;
   }
 
   size_t cumulative_size = txs_size + getObjectBinarySize(b.baseTransaction);
@@ -1242,6 +1242,10 @@ bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
 
 bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
+}
+
+uint64_t core::getBurnedXfgAtHeight(size_t height) const {
+  return m_blockchain.getBurnedXfgAtHeight(height);
 }
 
 }

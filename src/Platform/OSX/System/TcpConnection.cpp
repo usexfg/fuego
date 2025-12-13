@@ -12,6 +12,7 @@
 #include <sys/errno.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 #include "Dispatcher.h"
 #include <System/ErrorMessage.h>
@@ -220,9 +221,11 @@ std::pair<Ipv4Address, uint16_t> TcpConnection::getPeerAddressAndPort() const {
 
 TcpConnection::TcpConnection(Dispatcher& dispatcher, int socket) : dispatcher(&dispatcher), connection(socket), readContext(nullptr), writeContext(nullptr) {
   int val = 1;
+#ifdef SO_NOSIGPIPE
   if (setsockopt(connection, SOL_SOCKET, SO_NOSIGPIPE, (void*)&val, sizeof val) == -1) {
     throw std::runtime_error("TcpConnection::TcpConnection, setsockopt failed, " + lastErrorMessage());
   }
+#endif
 }
 
 }

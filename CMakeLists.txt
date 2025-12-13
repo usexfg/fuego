@@ -3,6 +3,10 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif()
+
 include(CheckCXXCompilerFlag)
 set(VERSION "0.2")
 # Packaged from main commits
@@ -92,7 +96,8 @@ endif()
 
 # First try with all required components
 # Note: boost_system is header-only in Boost 1.69+ so we don't require it as a component
-set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options variant system uuid)
+# Note: boost_variant, boost_system, and boost_uuid are header-only in Boost 1.89+ so we don't require them as components
+set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options)
 
 # Try to find coroutine component (may not be available in all Boost versions)
 find_package(Boost 1.74 COMPONENTS coroutine QUIET)
